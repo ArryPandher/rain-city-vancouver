@@ -494,5 +494,47 @@
     "sourceTimestamp": "2026-11-14T10:48:21Z",
     "reproduce": "node scripts/fetch-roads.mjs",
     "modifications": "Projected to game metres; excludes indoor/underground/construction/proposed ways; retains lane count, one-way direction, width and sidewalk tags."
+  },
+  {
+    "file": "textures/houses/painted-wood-color.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_planks_clean/white_planks_clean_diff_1k.jpg",
+    "license": "CC0",
+    "credit": "Rob Tuytel / Poly Haven",
+    "changes": "1K JPEG converted to WebP at quality 94"
+  },
+  {
+    "file": "textures/houses/painted-wood-normal.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_planks_clean/white_planks_clean_nor_gl_1k.jpg",
+    "license": "CC0",
+    "credit": "Rob Tuytel / Poly Haven",
+    "changes": "1K JPEG converted to WebP at quality 94"
+  },
+  {
+    "file": "textures/houses/painted-wood-roughness.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_planks_clean/white_planks_clean_rough_1k.jpg",
+    "license": "CC0",
+    "credit": "Rob Tuytel / Poly Haven",
+    "changes": "1K JPEG converted to WebP at quality 94"
+  },
+  {
+    "file": "textures/houses/grey-roof-color.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_roof_01/grey_roof_01_diff_1k.jpg",
+    "license": "CC0",
+    "credit": "Rob Tuytel / Poly Haven",
+    "changes": "1K JPEG converted to WebP at quality 94"
+  },
+  {
+    "file": "textures/houses/grey-roof-normal.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_roof_01/grey_roof_01_nor_gl_1k.jpg",
+    "license": "CC0",
+    "credit": "Rob Tuytel / Poly Haven",
+    "changes": "1K JPEG converted to WebP at quality 94"
+  },
+  {
+    "file": "textures/houses/grey-roof-roughness.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_roof_01/grey_roof_01_rough_1k.jpg",
+    "license": "CC0",
+    "credit": "Rob Tuytel / Poly Haven",
+    "changes": "1K JPEG converted to WebP at quality 94"
   }
 ]

@@ -5,9 +5,18 @@ import { Batcher, walls, flatPolygon } from "./geometry";
 import { specialBuilding } from "./vancouver-landmarks";
 import { CollisionWorld } from "./collision";
 import { shopInteriorMaterials, shopWindow } from "./shop-interiors";
-import { hasStorefront, isResidential } from "./building-use";
+import {
+  hasStorefront,
+  isResidential,
+  isHouse,
+  isIndustrial,
+  isUtilityBuilding,
+} from "./building-use";
 import type { ArchitecturalDetail } from "./detailed-architecture";
 import { ericksonPlace } from "./erickson-place";
+import { buildingHeight } from "./building-profile";
+import { pitchedRoof } from "./pitched-roof";
+import { houseMaterial } from "./house-material";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 function tint(g: T.BufferGeometry, c: T.Color) {
   const a = new Float32Array(g.getAttribute("position").count * 3);
@@ -87,6 +96,29 @@ export function architecture(
     metalness: 0.65,
     roughness: 0.38,
   });
+  const pitchedMaterial = new T.MeshStandardMaterial({
+    color: 0xa6adb0,
+    roughness: 0.94,
+    map: m.texture("houses/grey-roof-color.webp", true),
+    normalMap: m.texture("houses/grey-roof-normal.webp"),
+    roughnessMap: m.texture("houses/grey-roof-roughness.webp"),
+    normalScale: new T.Vector2(0.45, 0.45),
+  });
+  const utilityColor = m.texture("concrete_tile_facade-color.jpg", true),
+    utilityNormal = m.texture("concrete_tile_facade-normal.jpg");
+  for (const texture of [utilityColor, utilityNormal])
+    texture.repeat.set(8, 17);
+  const utilityMaterial = new T.MeshStandardMaterial({
+    map: utilityColor,
+    normalMap: utilityNormal,
+    roughness: 0.96,
+    normalScale: new T.Vector2(0.22, 0.22),
+    vertexColors: true,
+    side: T.DoubleSide,
+  });
+  const homeMaterial = houseMaterial(m),
+    gableMaterial = houseMaterial(m, false);
+  m.facades.push(homeMaterial);
   m.facades.forEach((mat) => {
     mat.vertexColors = true;
     mat.side = T.DoubleSide;
@@ -99,17 +131,38 @@ export function architecture(
     }
     const [x, z] = centroid(b.pts),
       rand = seeded(hash(b.id)),
-      h = Math.max(4, (b.levels ?? 2 + rand() * 5) * 3.2),
+      nominalHeight = buildingHeight(b),
+      pitched = pitchedRoof(b, nominalHeight),
+      h = pitched?.bodyHeight ?? nominalHeight,
       style = h > 35 ? Math.floor(rand() * 8) : 8 + Math.floor(rand() * 4),
-      heritage = h < 34 && x > -1300 && x < 1750 && z > -700 && z < 1350,
-      mat = heritage
-        ? m.photoFacades[Math.floor(rand() * m.photoFacades.length)]
-        : m.facades[style];
+      heritage =
+        h < 34 &&
+        !isHouse(b.kind) &&
+        !isIndustrial(b.kind) &&
+        !isUtilityBuilding(b.kind) &&
+        (!b.startYear || b.startYear < 1950) &&
+        x > -1300 &&
+        x < 1750 &&
+        z > -700 &&
+        z < 1350,
+      mat =
+        isIndustrial(b.kind) || isUtilityBuilding(b.kind)
+          ? utilityMaterial
+          : isHouse(b.kind)
+            ? homeMaterial
+            : heritage
+              ? m.photoFacades[Math.floor(rand() * m.photoFacades.length)]
+              : m.facades[style];
     const color = new T.Color().setHSL(
       0.06 + rand() * 0.13,
       0.025 + rand() * 0.055,
       heritage ? 0.87 + rand() * 0.12 : 0.62 + rand() * 0.3,
     );
+    if (isHouse(b.kind))
+      color.setHex(
+        [0xe7ded0, 0xc5d1cb, 0xbfcbce, 0xd5cabb, 0xc8b6a7][hash(b.id) % 5],
+      );
+    if (b.wallColor) color.set(b.wallColor);
     const xs = b.pts.filter((_, i) => !(i % 2)),
       zs = b.pts.filter((_, i) => i % 2),
       w = Math.max(...xs) - Math.min(...xs),
@@ -134,7 +187,30 @@ export function architecture(
         towerGeo.translate(0, podium, 0);
         shell.add(tint(towerGeo, color), mat, x, z);
       } else shell.add(tint(walls(outline, h), color), mat, x, z);
-      shell.add(flatPolygon(outline, [], h, 8), m.roof, x, z);
+      if (pitched) {
+        shell.add(pitched.roof, pitchedMaterial, x, z);
+        if (pitched.gables.getAttribute("position").count)
+          shell.add(
+            tint(pitched.gables, color),
+            isHouse(b.kind) ? gableMaterial : utilityMaterial,
+            x,
+            z,
+          );
+        else pitched.gables.dispose();
+        if (detailed)
+          for (const [ax, ay, az, bx, by, bz] of pitched.edges) {
+            const direction = new T.Vector3(bx - ax, by - ay, bz - az),
+              trim = new T.BoxGeometry(0.2, direction.length(), 0.3);
+            trim.applyQuaternion(
+              new T.Quaternion().setFromUnitVectors(
+                new T.Vector3(0, 1, 0),
+                direction.normalize(),
+              ),
+            );
+            trim.translate((ax + bx) / 2, (ay + by) / 2 + 0.03, (az + bz) / 2);
+            detail.add(trim, ledge, x, z);
+          }
+      } else shell.add(flatPolygon(outline, [], h, 8), m.roof, x, z);
       count++;
       // Parapets, ledges, floor plates and corner piers make the silhouette dimensional.
       for (let i = 0; detailed && i < outline.length; i += 2) {
@@ -146,20 +222,23 @@ export function architecture(
           len = Math.hypot(bx - ax, bz - az),
           angle = -Math.atan2(bz - az, bx - ax);
         if (len < 1.2) continue;
-        detail.add(
-          sideBox(
-            (ax + bx) / 2,
-            h + 0.27,
-            (az + bz) / 2,
-            len,
-            0.55,
-            0.35,
-            angle,
-          ),
-          ledge,
-          x,
-          z,
-        );
+        if (!pitched)
+          detail.add(
+            sideBox(
+              (ax + bx) / 2,
+              h + (pitched ? 0.03 : 0.27),
+              (az + bz) / 2,
+              len,
+              pitched ? 0.16 : 0.55,
+              0.35,
+              angle,
+            ),
+            ledge,
+            x,
+            z,
+          );
+        if (isHouse(b.kind))
+          detail.add(sideBox(ax, h / 2, az, 0.16, h, 0.16, angle), ledge, x, z);
         if (h > 35 && style < 3) {
           const midX = (ax + bx) / 2,
             midZ = (az + bz) / 2;
@@ -212,6 +291,7 @@ export function architecture(
         }
         if (
           tower &&
+          isResidential(b.kind) &&
           h < 180 &&
           style >= 3 &&
           style <= 6 &&
@@ -304,7 +384,7 @@ export function architecture(
         }
       }
       // A stepped crown and roof equipment break up the uniformly flat tower tops.
-      if (h > 30 && detailed) {
+      if (h > 30 && detailed && !b.height) {
         const rh = 2 + rand() * 4,
           rw = Math.min(10, w * 0.3),
           rd = Math.min(12, d * 0.3);
@@ -363,10 +443,10 @@ export function architecture(
           detail.add(
             sideBox(
               ax + (bx - ax) * doorT + nx * 0.01,
-              1.65,
+              isHouse(b.kind) ? 1.32 : 1.65,
               az + (bz - az) * doorT + nz * 0.01,
-              2.18,
-              3.1,
+              isHouse(b.kind) ? 1.45 : 2.18,
+              isHouse(b.kind) ? 2.45 : 3.1,
               0.02,
               angle,
             ),
@@ -381,14 +461,19 @@ export function architecture(
             y: 0.15,
             z: az + (bz - az) * doorT + nz * 0.02,
             angle,
-            width: 1.4,
-            height: 2.8,
+            width: isHouse(b.kind) ? 1.1 : 1.4,
+            height: isHouse(b.kind) ? 2.2 : 2.8,
           });
           // The generated residential texture repeats every 3 m horizontally and
           // 3.2 m vertically. Align modeled frames to those existing openings.
-          if (!heritage && !tower && h >= 6 && h < 35) {
+          if (!heritage && !tower && h >= (isHouse(b.kind) ? 3 : 6) && h < 35) {
+            const windowHeight = isHouse(b.kind) ? 1.7 : 2.55;
             for (let along = 1.5; along < len - 1.0; along += 3) {
-              for (let base = 0.4; base + 2.55 < h; base += 3.2) {
+              for (
+                let base = isHouse(b.kind) ? 0.75 : 0.4;
+                base + windowHeight < h;
+                base += 3.2
+              ) {
                 if (base < 1 && Math.abs(along - doorT * len) < 1.7) continue;
                 const t = along / len;
                 architecturalDetails.push({
@@ -398,8 +483,8 @@ export function architecture(
                   y: base,
                   z: az + (bz - az) * t + nz * 0.025,
                   angle,
-                  width: 1.9,
-                  height: 2.55,
+                  width: isHouse(b.kind) ? 1.45 : 1.9,
+                  height: windowHeight,
                 });
               }
             }

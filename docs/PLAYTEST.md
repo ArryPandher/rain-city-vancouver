@@ -107,3 +107,9 @@ Actual input verified walking, a 29.0 km/h Stanley Park bicycle ride and car acc
 ### Junction marking follow-up
 
 Lane paint is trimmed at shared junction nodes and separately mapped marked pedestrian crossings; straight road-way joins retain dash continuity. Two regression checks cover crossing/collinear behavior and marked versus unmarked pedestrian crossings (35 tests total). Granville before/after views confirmed that lane dividers no longer cut through the inspected intersection and crosswalk. Local rendering remained around 30 fps with an empty recorded runtime error list.
+
+## Building heights and house roofs — 2026-11-14
+
+An OSM metadata layer joins 20,054 building records to existing footprints, including 263 metre heights and 1,780 roof shapes. Explicit heights take priority, with building-use-specific estimates where height/floor tags are missing. Authored landmarks retain their geometry. Houses now use gabled, hipped or pyramidal roofs where supported, painted-wood PBR walls, grey roof tiles, roof-edge fascia and corner boards. Gable ends use plain cladding so repeated windows cannot be cut by roof slopes. Utility/industrial façades are opaque and residential balcony rules no longer apply to offices.
+
+All 39 tests and the production build pass. Roof checks cover total tagged height, upward normals, no degenerate slivers, complete concave-footprint coverage and flat/tall-building fallbacks. Pacific Street day, oblique gable and night views were inspected at 1440×900 Balanced; final actual W input moved the player 5.8 m with no recorded runtime/shader errors. Scene samples were approximately 27–33 fps on the M2. Six CC0 material maps add about 1 MB; exact source/author records and fetch scripts are committed. Heights and materials remain approximate where tags are absent. The historical City 2009 dataset was investigated but is not used by this release.

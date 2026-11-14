@@ -1,0 +1,9 @@
+# Building heights and roofs
+
+The game joins a 2026-11-14 OpenStreetMap/Overpass tag extract to its existing footprint IDs. The distributed metadata contains 20,054 records, including 263 tagged metre heights and 1,780 roof-shape tags. Exact source timestamp, attribution and counts are embedded in `public/data/vancouver-building-tags.json`; `scripts/fetch-building-tags.mjs` reproduces the extract. Geographic database derivatives remain ODbL.
+
+Authored landmark models retain their existing geometry. Other buildings prefer an explicit height, then existing floor counts, then use-specific height estimates. Houses default to two floors, garages to one, and industrial buildings to a low utilitarian volume. Missing house roofs default to gabled; supported tagged gabled, hipped and pyramidal roofs are clipped to the original footprint triangles. Flat or unsupported roof shapes retain flat roofs. Roofs above 24 m or larger than 2,000 square metres retain the previous treatment. Roofs respect total tagged height; with only floor counts the estimated roof rises above the eaves. These remain approximate massing models, especially on complex roof plans.
+
+Painted wood and roof tiles are generic CC0 Poly Haven materials, with exact files and authors in `public/textures/houses/SOURCES.json`. House window masks, roof geometry and fascia are original. Industrial and utility buildings use opaque concrete façades. Apartment balcony generation is restricted to residential tags. Metadata for material names is retained for future refinement; most material-name and roof-color tags are not yet rendered.
+
+The City of Vancouver 2009 building-footprint/height dataset was inspected for possible future reference. Its old collection date and limited strong footprint matches made it unsuitable as the current default. It is not included in the distributed game and has not been used to assign building heights here.

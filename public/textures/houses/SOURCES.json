@@ -1,0 +1,56 @@
+[
+  {
+    "id": "white_planks_clean",
+    "title": "White Planks Clean",
+    "source": "https://polyhaven.com/a/white_planks_clean",
+    "license": "CC0",
+    "licenseUrl": "https://polyhaven.com/license",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "files": {
+      "painted-wood-color.webp": {
+        "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_planks_clean/white_planks_clean_diff_1k.jpg",
+        "sourceMd5": "50b7addfff3f66b46c0182d23faf2882",
+        "modification": "1K JPEG converted to WebP at quality 94"
+      },
+      "painted-wood-normal.webp": {
+        "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_planks_clean/white_planks_clean_nor_gl_1k.jpg",
+        "sourceMd5": "12225d3539c1404b79eb5d21e7d28a89",
+        "modification": "1K JPEG converted to WebP at quality 94"
+      },
+      "painted-wood-roughness.webp": {
+        "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_planks_clean/white_planks_clean_rough_1k.jpg",
+        "sourceMd5": "ae63701219ba6fa760868c43f18dd1eb",
+        "modification": "1K JPEG converted to WebP at quality 94"
+      }
+    }
+  },
+  {
+    "id": "grey_roof_01",
+    "title": "Grey Roof 01",
+    "source": "https://polyhaven.com/a/grey_roof_01",
+    "license": "CC0",
+    "licenseUrl": "https://polyhaven.com/license",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "files": {
+      "grey-roof-color.webp": {
+        "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_roof_01/grey_roof_01_diff_1k.jpg",
+        "sourceMd5": "f58db8b990cc7ad0405ad86d6427b923",
+        "modification": "1K JPEG converted to WebP at quality 94"
+      },
+      "grey-roof-normal.webp": {
+        "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_roof_01/grey_roof_01_nor_gl_1k.jpg",
+        "sourceMd5": "dc0fd84b608c1329fe60a6f304a680eb",
+        "modification": "1K JPEG converted to WebP at quality 94"
+      },
+      "grey-roof-roughness.webp": {
+        "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_roof_01/grey_roof_01_rough_1k.jpg",
+        "sourceMd5": "06b200f384bb438da3612b39432cd2a7",
+        "modification": "1K JPEG converted to WebP at quality 94"
+      }
+    }
+  }
+]

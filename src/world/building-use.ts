@@ -32,3 +32,9 @@ export function isResidential(kind?: string) {
     homes.has(kind ?? "") || kind === "residential" || kind === "apartments"
   );
 }
+
+export const isHouse = (kind?: string) => homes.has(kind ?? "");
+export const isUtilityBuilding = (kind?: string) =>
+  ["garage", "garages", "shed", "roof", "carport"].includes(kind ?? "");
+export const isIndustrial = (kind?: string) =>
+  ["industrial", "warehouse"].includes(kind ?? "");

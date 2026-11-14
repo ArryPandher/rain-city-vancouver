@@ -30,6 +30,14 @@ export interface Building {
   name?: string;
   kind?: string;
   levels?: number;
+  height?: number;
+  roofShape?: string;
+  roofHeight?: number;
+  roofMaterial?: string;
+  roofColor?: string;
+  wallMaterial?: string;
+  wallColor?: string;
+  startYear?: number;
   pts: number[];
 }
 export interface CityData {
@@ -179,6 +187,21 @@ export async function loadCity(): Promise<CityData> {
     d.roads = roads.roads;
   } catch (e) {
     console.warn("Detailed road layer unavailable; using the base map", e);
+  }
+  try {
+    const response = await fetch(
+      `${import.meta.env.BASE_URL}data/vancouver-building-tags.json`,
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const metadata = await response.json();
+    for (const building of d.buildings) {
+      const attrs = metadata.buildings?.[building.id];
+      if (!attrs) continue;
+      const levels = building.levels ?? attrs.levels;
+      Object.assign(building, attrs, { levels });
+    }
+  } catch (e) {
+    console.warn("Building metadata unavailable; using the base map", e);
   }
   return d;
 }
