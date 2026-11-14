@@ -2,7 +2,7 @@ import * as T from "three";
 import { CityData, centroid, hash, seeded, Road, segmentPoint } from "./data";
 import { Materials, label } from "./materials";
 import { Batcher, walls, flatPolygon } from "./geometry";
-import { specialBuilding } from "./landmarks";
+import { specialBuilding } from "./vancouver-landmarks";
 import { CollisionWorld } from "./collision";
 function tint(g: T.BufferGeometry, c: T.Color) {
   const a = new Float32Array(g.getAttribute("position").count * 3);
@@ -83,11 +83,14 @@ export function architecture(
       rand = seeded(hash(b.id)),
       h = Math.max(4, (b.levels ?? 2 + rand() * 5) * 3.2),
       style = h > 35 ? Math.floor(rand() * 8) : 8 + Math.floor(rand() * 4),
-      mat = m.facades[style];
+      heritage = h < 34 && x > -1300 && x < 1750 && z > -700 && z < 1350,
+      mat = heritage
+        ? m.photoFacades[Math.floor(rand() * m.photoFacades.length)]
+        : m.facades[style];
     const color = new T.Color().setHSL(
       0.06 + rand() * 0.13,
       0.025 + rand() * 0.055,
-      0.62 + rand() * 0.3,
+      heritage ? 0.87 + rand() * 0.12 : 0.62 + rand() * 0.3,
     );
     const xs = b.pts.filter((_, i) => !(i % 2)),
       zs = b.pts.filter((_, i) => i % 2),
@@ -147,6 +150,90 @@ export function architecture(
               x,
               z,
             );
+        }
+        if (
+          tower &&
+          h < 180 &&
+          style >= 3 &&
+          style <= 6 &&
+          len > 9 &&
+          i % 4 === 0 &&
+          x > -1700 &&
+          x < 1650 &&
+          z > -1800
+        ) {
+          const midX = (ax + bx) / 2,
+            midZ = (az + bz) / 2;
+          let nx = -(bz - az) / len,
+            nz = (bx - ax) / len;
+          if (nx * (midX - x) + nz * (midZ - z) < 0) {
+            nx = -nx;
+            nz = -nz;
+          }
+          for (let floor = podium + 3.2; floor < h - 2; floor += 3.2) {
+            const balconyWidth = Math.min(len - 1, 8.4);
+            detail.add(
+              sideBox(
+                midX + nx * 0.65,
+                floor,
+                midZ + nz * 0.65,
+                balconyWidth,
+                0.18,
+                1.45,
+                angle,
+              ),
+              ledge,
+              x,
+              z,
+            );
+            detail.add(
+              sideBox(
+                midX + nx * 1.3,
+                floor + 0.64,
+                midZ + nz * 1.3,
+                balconyWidth,
+                1.12,
+                0.045,
+                angle,
+              ),
+              shopGlass,
+              x,
+              z,
+            );
+            detail.add(
+              sideBox(
+                midX + nx * 1.33,
+                floor + 1.24,
+                midZ + nz * 1.33,
+                balconyWidth,
+                0.04,
+                0.05,
+                angle,
+              ),
+              frames,
+              x,
+              z,
+            );
+            for (const side of [-1, 1])
+              detail.add(
+                sideBox(
+                  midX +
+                    Math.cos(angle) * side * balconyWidth * 0.48 +
+                    nx * 0.65,
+                  floor + 0.64,
+                  midZ -
+                    Math.sin(angle) * side * balconyWidth * 0.48 +
+                    nz * 0.65,
+                  0.045,
+                  1.14,
+                  1.45,
+                  angle,
+                ),
+                shopGlass,
+                x,
+                z,
+              );
+          }
         }
         if (h > 35 && i % 4 === 0) {
           detail.add(

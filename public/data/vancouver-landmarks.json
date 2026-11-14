@@ -1,0 +1,746 @@
+[
+  {
+    "id": "canada-place",
+    "name": "Canada Place",
+    "origin": [
+      -123.11112,
+      49.28863
+    ],
+    "height": 81.5,
+    "bounds": {
+      "min": [
+        -249.60459899902344,
+        -8.136680653520693e-15,
+        -112.69781494140625
+      ],
+      "max": [
+        246.11936950683594,
+        81.5,
+        133.09417724609375
+      ]
+    },
+    "file": "models/vancouver/canada-place.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/canada-place-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/canada-place/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Revised after the independent FIX review: opaque fabric curtains and straight diagonal edge stays removed; continuous doubly curved tensile shells retain all five paired peaks, deep curved valleys and exposed 46.35 m mast tips. Pale oval end-hall drum and shallow dome, convex hotel harbour bow, rounded rear corners, strong horizontal facade bands and two setback podium terraces added. Sail heights/curvature, hall location/dimensions and hotel bow/podium levels remain photographic estimates within the mapped envelope. Hotel height 81.5 m is the supplied secondary-source value. Lower dock arcade depth, interiors, horns, gardens, signage and animated sail lighting remain simplified or omitted. Far retains the corrected silhouette. Cityscape and Full 3D world not tested yet, integration is checked separately; independent re-review pending.",
+    "references": [
+      {
+        "label": "DA Architects: project, 1986 completion, five sails and 34,840 m²",
+        "url": "https://www.da-architects.ca/projects/canada-place-pan-pacific-hotel/"
+      },
+      {
+        "label": "Government of Canada: five replacement sails, 2010",
+        "url": "https://www.canada.ca/en/news/archive/2010/07/canada-place-begins-work-replace-iconic-sails.html"
+      },
+      {
+        "label": "Canada Place identity and 81.5 m height (supplied dossier)",
+        "url": "https://en.wikipedia.org/wiki/Canada_Place"
+      },
+      {
+        "label": "OSM main pier way",
+        "url": "https://www.openstreetmap.org/way/223635729"
+      },
+      {
+        "label": "OSM hotel relation",
+        "url": "https://www.openstreetmap.org/relation/16532084"
+      },
+      {
+        "label": "Dietmar Rabich: 2022 five-sails side photograph, CC BY-SA 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_(BC,_Canada),_Canada_Place_--_2022_--_1847.jpg"
+      },
+      {
+        "label": "Pan Pacific: Heritage Horns, CC BY 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Heritage_Horns_at_the_Pan_Pacific_Vancouver.jpg"
+      },
+      {
+        "label": "Spyder212: waterfront overview, CC BY-SA 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Canada_Place_with_Downtown_Vancouver,_British_Columbia,_Canada_Masson.jpg"
+      },
+      {
+        "label": "Canmenwalker: exhibition hall 2026, CC BY 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Exhibition_hall_in_Canada_Place_2026.JPG"
+      },
+      {
+        "label": "Nicolas Untz: Canada Place Landing, 2001, CC BY-SA 2.0; rounded hall, hotel bow and terraces",
+        "url": "https://commons.wikimedia.org/wiki/File:Canada_Place_Landing.jpg"
+      }
+    ]
+  },
+  {
+    "id": "science-world-vancouver",
+    "name": "Science World",
+    "origin": [
+      -123.10391135,
+      49.27334995
+    ],
+    "height": 47.2,
+    "bounds": {
+      "min": [
+        -32.070064544677734,
+        0,
+        -57.59925842285156
+      ],
+      "max": [
+        68.30746459960938,
+        47.33000183105469,
+        34.54811096191406
+      ]
+    },
+    "file": "models/vancouver/science-world-vancouver.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/science-world-vancouver-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/science-world-vancouver/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Diameter 40 m (BC Government and mapped dome); overall apex approximately 47 m (engineer interview). Podium 10 m and east gallery 14 m mapped OSM heights; center/cut elevation, panel subdivision, node lights, mullions, red piers, roof modules and tension masts estimated from reference photographs. Opaque silver panels approximate reflective glass without an environment texture. No interior, piles below plaza, exact lettering, plaza/seawall, temporary wrap or neighboring outbuilding. Lamps are geometric warm points; lighting patterns not animated. Source/export inspection establishes asset readiness; independent reviewer and runtime integration remain separate.",
+    "references": [
+      {
+        "label": "File:Science World in Vancouver during 2026 FIFA World Cup.jpg — Quintin Soloviev, CC BY 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Science_World_in_Vancouver_during_2026_FIFA_World_Cup.jpg"
+      },
+      {
+        "label": "File:Science World (10930112275).jpg — GoToVan from Vancouver, Canada, CC BY 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Science_World_(10930112275).jpg"
+      },
+      {
+        "label": "File:Science World at TELUS World of Science.jpg — Differense, CC BY-SA 3.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Science_World_at_TELUS_World_of_Science.jpg"
+      },
+      {
+        "label": "File:Vancouver Science World Dome.jpg — Janusz Sobolewski, CC BY 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_Science_World_Dome.jpg"
+      },
+      {
+        "label": "Science World: history of the Expo 86 dome, Bruno Freschi",
+        "url": "https://www.scienceworld.ca/stories/built-to-be-torn-down-dreamed-to-last-the-history-behind-science-worlds-dome/"
+      },
+      {
+        "label": "Summit BIM: consulting structural engineer reports 47 m dome and 2011 retrofit",
+        "url": "https://summitbim.com/just-published-moving-into-the-21st-century-science-world-reaps-benefits-of-bim/"
+      },
+      {
+        "label": "BC Government: 40 m diameter temporary 2026 FIFA dome wrap",
+        "url": "https://news.gov.bc.ca/releases/2026TACS0022-000498"
+      },
+      {
+        "label": "Mapped Science World outline (OSM 37084312)",
+        "url": "https://www.openstreetmap.org/way/37084312"
+      }
+    ]
+  },
+  {
+    "id": "bc-place",
+    "name": "BC Place",
+    "origin": [
+      -123.112006654,
+      49.276698485
+    ],
+    "height": 77.5,
+    "bounds": {
+      "min": [
+        -116.88990020751953,
+        -1.4901161415892261e-9,
+        -115.03974914550781
+      ],
+      "max": [
+        116.58170318603516,
+        77.6106948852539,
+        114.15078735351562
+      ]
+    },
+    "file": "models/vancouver/bc-place.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/bc-place-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/bc-place/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Open-roof state of the 2011 renovated stadium. Mapped outer envelope approximately 233 × 194 m along its axes; 36 masts rise 47.5 m above a photograph-estimated 30 m ringbeam (77.5 m total). The mapped envelope includes the mast crown. Shape, mast taper/lean, facade heights, gate locations, cloth billows and cable routing are estimates; a radial cable approximation is used rather than an engineering cable-net replica. Night uses a static pink illuminated facade band, not the real colour-changing animation. Interior has simplified stepped red bands, not individual seats. No neighbours, plaza, screens imagery, branding, photo textures or scanned meshes are shipped. In-app terrain and provider replacement require separate checks; no shared file changes.",
+    "references": [
+      {
+        "label": "Government of BC: 36 masts, 50 m mast lengths, 2011 roof",
+        "url": "https://archive.news.gov.bc.ca/releases/news_releases_2009-2013/2011SU0010-000190.htm"
+      },
+      {
+        "label": "Roof fabric designer Tony Hogg: 100 × 85 m retractable area and central pod",
+        "url": "https://www.tonyhoggdesign.co.uk/site/projects_58.asp?catID=94"
+      },
+      {
+        "label": "Geiger Engineers project article: 47.5 m mast rise and 227 × 186 m clear spans",
+        "url": "https://www.structuremag.org/article/bc-place-revitalization/"
+      },
+      {
+        "label": "Mapped stadium outline",
+        "url": "https://www.openstreetmap.org/way/24705904"
+      },
+      {
+        "label": "OSM licence",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "label": "Aerial reference by Quintin Soloviev (CC BY 4.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:BC_Place_(Vancouver).jpg"
+      },
+      {
+        "label": "Interior reference by Aeacad (CC0)",
+        "url": "https://commons.wikimedia.org/wiki/File:BC_Place_-_Canada_vs_Qatar.jpg"
+      },
+      {
+        "label": "Interior roof reference by Nicki Dugan Pogue (CC BY-SA 2.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:BC_Place_(19186581723)_(2).jpg"
+      }
+    ]
+  },
+  {
+    "id": "harbour-centre",
+    "name": "Harbour Centre (Vancouver Lookout)",
+    "origin": [
+      -123.11221471052632,
+      49.28468226842105
+    ],
+    "height": 177.1,
+    "bounds": {
+      "min": [
+        -31.857372283935547,
+        0,
+        -54.99555969238281
+      ],
+      "max": [
+        78.86214447021484,
+        177.10000610351562,
+        56.0712776184082
+      ]
+    },
+    "file": "models/vancouver/harbour-centre.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/harbour-centre-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/harbour-centre/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Mapped office roof 116 m, saucer envelope 38.5 m, rim about 148 m and mast about 177 m; model tip 177.1 m follows the published pinnacle convention. CTBUH 147 m is architectural height, not the office roof; advertised 168 m elevation is not used as local-grade geometry. Saucer bands, roof profile, windows/reveals, static glass elevator cabins, mast collars, simplified flag and Spencer decoration are photo-based estimates. Podium interiors, signage text, small antennas and moving lifts/restaurant are omitted; common flat podium base simplifies the actual slope. Night uses sparse warm windows, not a measured lighting survey. Independent review accepted PASS-WITH-NITS, recognisability 5/5; palette follow-up darkens tower/underside concrete to warm tan #a8957c (dark #635d55), retaining pale eaves and cream Spencer masonry. In-app placement and Tesla hardware performance remain untested.",
+    "references": [
+      {
+        "label": "Harbour Centre facts / published height conventions",
+        "url": "https://en.wikipedia.org/wiki/Harbour_Centre"
+      },
+      {
+        "label": "CTBUH architectural height, office floors and completion",
+        "url": "https://www.skyscrapercenter.com/building/harbour-centre/4144"
+      },
+      {
+        "label": "Building plans height and entrance grade conventions",
+        "url": "https://skyscraperpage.com/b60/vancouver/harbour-centre"
+      },
+      {
+        "label": "Official Vancouver Lookout",
+        "url": "https://vancouverlookout.com/"
+      },
+      {
+        "label": "OSM full Harbour Centre envelope",
+        "url": "https://www.openstreetmap.org/way/1371268997"
+      },
+      {
+        "label": "OSM office tower part",
+        "url": "https://www.openstreetmap.org/way/363385368"
+      },
+      {
+        "label": "OSM saucer maximum envelope",
+        "url": "https://www.openstreetmap.org/way/363385371"
+      },
+      {
+        "label": "File:Harbour Centre, Vancouver, Canadá, 2017-08-14, DD 30.jpg · Diego Delso (CC BY-SA 4.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:Harbour_Centre,_Vancouver,_Canad%C3%A1,_2017-08-14,_DD_30.jpg"
+      },
+      {
+        "label": "File:Vancouver Lookout, Harbour Centre.jpg · David Herrera (CC BY 2.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_Lookout,_Harbour_Centre.jpg"
+      },
+      {
+        "label": "File:Vancouver Lookout Lobby 2018.jpg · Wpcpey (CC BY-SA 4.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_Lookout_Lobby_2018.jpg"
+      },
+      {
+        "label": "File:Vancouver Lookout Interior 2018.jpg · Wpcpey (CC BY-SA 4.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_Lookout_Interior_2018.jpg"
+      },
+      {
+        "label": "File:Spencer Building Vancouver 02.JPG · Xicotencatl (CC BY-SA 4.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:Spencer_Building_Vancouver_02.JPG"
+      },
+      {
+        "label": "File:Vancouver (BC, Canada), Harbour Centre -- 2022 -- 1843.jpg · Dietmar Rabich (CC BY-SA 4.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_(BC,_Canada),_Harbour_Centre_--_2022_--_1843.jpg"
+      }
+    ]
+  },
+  {
+    "id": "vancouver-house",
+    "name": "Vancouver House",
+    "origin": [
+      -123.1310292,
+      49.274925625
+    ],
+    "height": 155.6,
+    "bounds": {
+      "min": [
+        -28.121646881103516,
+        0,
+        -58.12432861328125
+      ],
+      "max": [
+        44.01473617553711,
+        155.60000610351562,
+        68.89559936523438
+      ]
+    },
+    "file": "models/vancouver/vancouver-house.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/vancouver-house-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/vancouver-house/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Mapped upper envelope 43.3 x 28.8 m, baked plan rotation -46 degrees from east (+u bearing 44 degrees). The eastern corner unfolds from a half-area triangular plate above 30 m to the full rectangle by 115 m. Its exact curve, 3.8 m balcony module, two-floor phasing, 1.05 m ledge recesses, 2.6 m glass inset and colours are estimates, not surveyed. Low site-wide retail plinth 4.2 m and nine-storey site-tail wings to 27 m are estimated from the OSM envelope and developer description; they are a deliberately simplified podium. Far preserves all storey bands but doubles bay widths and omits rails, mullions and apartment lights. Roof plant and crown details estimated. No signage, interiors, furniture, swimming pool, Spinning Chandelier or detached buildings. Current height and floor counts differ from the older dossier and marketed levels. Near rails are opaque glass-colour geometry; lighting is a sparse invented apartment pattern.",
+    "references": [
+      {
+        "label": "Current architectural height, floors and completion · Skyscraper Center",
+        "url": "https://www.skyscrapercenter.com/building/id/13987"
+      },
+      {
+        "label": "Developer identity and nine-storey podium · Westbank",
+        "url": "https://westbankcorp.com/body-of-work/vancouver-house"
+      },
+      {
+        "label": "Architect · BIG",
+        "url": "https://big.dk/projects/van"
+      },
+      {
+        "label": "Expansion above bridge-clearance datum · International Highrise Award",
+        "url": "https://www.international-highrise-award.com/en/best-high-rises/20222023/vancouver-house/"
+      },
+      {
+        "label": "Mapped podium · OSM way 742009401",
+        "url": "https://www.openstreetmap.org/way/742009401"
+      },
+      {
+        "label": "Mapped upper tower envelope · OSM way 1092241825",
+        "url": "https://www.openstreetmap.org/way/1092241825"
+      },
+      {
+        "label": "Photograph · Haatu, CC BY 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_House_-_22.jpg"
+      },
+      {
+        "label": "Photograph · W & J, CC BY-SA 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:The_Tower_Rises,_Vancouver_House,_Vancouver.jpg"
+      },
+      {
+        "label": "Photograph · Ken Lund, CC BY-SA 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_House,_Vancouver,_British_Columbia_04_-_Nov_30,_2019.jpg"
+      }
+    ]
+  },
+  {
+    "id": "fairmont-hotel-vancouver",
+    "name": "Fairmont Hotel Vancouver",
+    "origin": [
+      -123.12096,
+      49.28384
+    ],
+    "height": 112.47,
+    "bounds": {
+      "min": [
+        -67.03585815429688,
+        0,
+        -43.907196044921875
+      ],
+      "max": [
+        45.357818603515625,
+        112.47000122070312,
+        59.1281852722168
+      ]
+    },
+    "file": "models/vancouver/fairmont-hotel-vancouver.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/fairmont-hotel-vancouver-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/fairmont-hotel-vancouver/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Published tip 112.47 m, architectural height 110.64 m and 17 floors; OSM levels 15/40/60/80/105 m. Window spacing, dormers, gargoyles, chimney lantern and canopy are photo estimates; ornament is simplified. No textures, interior, temporary scaffolding or neighbors. Runtime and independent review remain separate gates. Review correction 2026-10-12: Sharpened both dormer rows with tall pointed copper caps and attached sill cornices; replaced the flat triangular frontispiece surface with a closed stepped stone pediment, paired attached pilasters and tiered cornices with copper coping. Both LODs keep the refined outline. Shared vertices are merged locally to recover far byte headroom without removing window rhythm or roof features.",
+    "references": [
+      {
+        "label": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Hotel_Vancouver"
+      },
+      {
+        "label": "Fairmont official hotel page",
+        "url": "https://www.fairmont.com/en/hotels/vancouver/fairmont-hotel-vancouver.html"
+      },
+      {
+        "label": "Mapped hotel outline",
+        "url": "https://www.openstreetmap.org/way/139571554"
+      },
+      {
+        "label": "File:Facade of Hotel Vancouver - Vancouver - BC - Canada (37269677994) (2).jpg — Adam Jones from Kelowna, BC, Canada, CC BY-SA 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Facade_of_Hotel_Vancouver_-_Vancouver_-_BC_-_Canada_(37269677994)_(2).jpg"
+      },
+      {
+        "label": "File:Hotel vanc 2007.jpg — Ken Walker kgw@lunar.ca, CC BY 2.5",
+        "url": "https://commons.wikimedia.org/wiki/File:Hotel_vanc_2007.jpg"
+      },
+      {
+        "label": "File:Hotel Vancouver 01.JPG — Xicotencatl, CC BY-SA 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Hotel_Vancouver_01.JPG"
+      },
+      {
+        "label": "File:Luxury Fairmont Hotel in Vancouver (44723867431).jpg — dronepicr, CC BY 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Luxury_Fairmont_Hotel_in_Vancouver_(44723867431).jpg"
+      },
+      {
+        "label": "File:Fairmont Hotel Vancouver (42914514460).jpg — dronepicr, CC BY 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Fairmont_Hotel_Vancouver_(42914514460).jpg"
+      },
+      {
+        "label": "File:Fairmont Vancouver Hotel (2651640206).jpg — TravelingOtter from Houston, Texas, USA, CC BY-SA 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Fairmont_Vancouver_Hotel_(2651640206).jpg"
+      }
+    ]
+  },
+  {
+    "id": "marine-building",
+    "name": "Marine Building",
+    "origin": [
+      -123.11710198836293,
+      49.287513755091574
+    ],
+    "height": 98,
+    "bounds": {
+      "min": [
+        -29.27705955505371,
+        -1.9073486612342094e-7,
+        -26.554697036743164
+      ],
+      "max": [
+        37.05186462402344,
+        98,
+        28.381471633911133
+      ]
+    },
+    "file": "models/vancouver/marine-building.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/marine-building-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/marine-building/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Published height 97.8 m, mapped finial 98 m. Setback heights mapped from OSM. Northeastern podium is estimated at 22 m except the mapped 8 m porch; facade grid, ribs, portal and ornament are photo approximations. Separate window rows/bays survive far LOD. Reliefs suggest scallops, waves and a sailing ship, rather than reproducing the detailed historical sculptures. No interior, signage, textures or scanned geometry. No Tesla hardware measurements. Review b5a: strengthened grouped pale terra-cotta piers, green spandrels, stepped pendant crown frames and carved pale/green portal voussoirs in both LODs. Near piers replace the original wall and project 0.22 m with closed returns; far retains separate flush window quads in cut wall openings, eliminating buried reveals without losing rows/bays. Existing nine OSM ownership ways and rigid grade retained; no provider overlap was established by obscured app views. Ornamental proportions and marine motifs remain photo-based abstractions. Current exported costs: near 20,055 triangles / 7 draws / 881,776 bytes; far 7,206 triangles / 7 draws / 260,156 bytes. Scoped geometry QA and depth checks pass with zero material cycles; fresh both-mode app recapture and independent re-review remain with the lead.",
+    "references": [
+      {
+        "label": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Marine_Building"
+      },
+      {
+        "label": "OSM building outline and part heights",
+        "url": "https://www.openstreetmap.org/way/125579375"
+      },
+      {
+        "label": "File:Marine Building in 1947.jpg · Major James Skitt Matthews (1878-1970) · Public domain",
+        "url": "https://commons.wikimedia.org/wiki/File:Marine_Building_in_1947.jpg"
+      },
+      {
+        "label": "File:Marine Building Lobby 2018.jpg · Wpcpey · CC BY-SA 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Marine_Building_Lobby_2018.jpg"
+      },
+      {
+        "label": "File:Marine Building Entrance 2018.jpg · Wpcpey · CC BY-SA 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Marine_Building_Entrance_2018.jpg"
+      },
+      {
+        "label": "File:Marine Building from granville.jpg · Bobanny · Public domain",
+        "url": "https://commons.wikimedia.org/wiki/File:Marine_Building_from_granville.jpg"
+      },
+      {
+        "label": "File:Marine-bldg.jpg · Arnold C · Attribution",
+        "url": "https://commons.wikimedia.org/wiki/File:Marine-bldg.jpg"
+      },
+      {
+        "label": "File:Marine Bldg zeppelin decoration.jpg · Alethe · CC BY-SA 3.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Marine_Bldg_zeppelin_decoration.jpg"
+      }
+    ]
+  },
+  {
+    "id": "vancouver-public-library",
+    "name": "Vancouver Public Library (Library Square)",
+    "origin": [
+      -123.11563,
+      49.27975
+    ],
+    "height": 86,
+    "bounds": {
+      "min": [
+        -53.86174011230469,
+        0,
+        -51.93080139160156
+      ],
+      "max": [
+        83.90679931640625,
+        86,
+        72.55840301513672
+      ]
+    },
+    "file": "models/vancouver/vancouver-public-library.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/vancouver-public-library-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/vancouver-public-library/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Review b8a finding 1: far now retains all seven core rows and the exact near office-floor elevations. Savings come from continuous flat jamb skins, single inter-floor gap panels, fewer horizontal bay subdivisions, omitted reveals and planting tops instead of concealed thin-box faces. Finding 2: spatially varied lighting avoids aligned luminous rows across neighbouring tower parts. Far glow panes occupy only the middle of a coarse bay, with ordinary glass on each side and dark opaque gaps at every actual floor. No floors are combined vertically. The ellipse, gallery orders, spiral fins, canopy and mapped ownership are retained. near 50,650 triangles / 6 draws / 2153.8 KiB; far 10,444 triangles / 6 draws / 468.1 KiB. Final reference comparison: tmp/top-cities/shots/vancouver-public-library/review-fix-final/comparison.jpg. Original procedural texture-free source; reliefs and bay dimensions estimated from references. Deterministic QA and depth check pass; revised both-mode app captures and independent re-review pending.",
+    "references": [
+      {
+        "label": "Safdie Architects: 1995 Library Square, materials, nine-storey core and colonnade",
+        "url": "https://www.safdiearchitects.com/projects/vancouver-library-square"
+      },
+      {
+        "label": "VPL architectural history",
+        "url": "https://www.vpl.ca/guides/vancouver-library-square-architectural-guide/history-and-specifics"
+      },
+      {
+        "label": "OSM Central Library outline",
+        "url": "https://www.openstreetmap.org/way/37111640"
+      },
+      {
+        "label": "Roof garden 2018 — GoToVan, CC BY 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_Public_Library_Roof_Garden_2018.jpg"
+      },
+      {
+        "label": "Central Library concourse — GoToVan, CC BY 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_Public_Central_Library_(36907920883).jpg"
+      },
+      {
+        "label": "Level 4 2018 — Wpcpey, CC BY-SA 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_Public_Library_Level_4_2018.jpg"
+      }
+    ]
+  },
+  {
+    "id": "rogers-arena",
+    "name": "Rogers Arena",
+    "origin": [
+      -123.10889,
+      49.27778
+    ],
+    "height": 35,
+    "bounds": {
+      "min": [
+        -59.68266677856445,
+        0,
+        -79.13739013671875
+      ],
+      "max": [
+        77.70626831054688,
+        35,
+        47.366661071777344
+      ]
+    },
+    "file": "models/vancouver/rogers-arena.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/rogers-arena-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/rogers-arena/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Heights (35 m crown, 26 m eave, 22 m outer facade, 32 m drum), cylindrical entry geometry, window spacing and roof curvature are estimates from reference photos, not a survey. Aquilini Centre West is cut out of the arena ownership ring; both adjacent apartment towers stay provider-owned. No road or viaduct geometry is included. No photos or textures ship.",
+    "references": [
+      {
+        "label": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Rogers_Arena"
+      },
+      {
+        "label": "Official arena parking and entrance directions",
+        "url": "https://rogersarena.com/parking-and-directions/"
+      },
+      {
+        "label": "OSM arena outline (four levels, opened 1995)",
+        "url": "https://www.openstreetmap.org/way/24705911"
+      },
+      {
+        "label": "OSM dome roof part (five levels)",
+        "url": "https://www.openstreetmap.org/way/497813171"
+      },
+      {
+        "label": "Quintin Soloviev — Rogers Arena (Vancouver), CC BY 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Rogers_Arena_(Vancouver).jpg"
+      },
+      {
+        "label": "Hucul002 — Rogers Arena, CC BY-SA 3.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Rogers_Arena.jpg"
+      },
+      {
+        "label": "Buchanan-Hermit — Vancouver-gmplace3, Attribution",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver-gmplace3.jpg"
+      }
+    ]
+  },
+  {
+    "id": "vancouver-art-gallery",
+    "name": "Vancouver Art Gallery (Robson Square)",
+    "origin": [
+      -123.12046,
+      49.28287
+    ],
+    "height": 26.5,
+    "bounds": {
+      "min": [
+        -64.4639663696289,
+        -5.563100202721216e-8,
+        -39.870697021484375
+      ],
+      "max": [
+        36.65218734741211,
+        26.5,
+        35.68857192993164
+      ]
+    },
+    "file": "models/vancouver/vancouver-art-gallery.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/vancouver-art-gallery-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/vancouver-art-gallery/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "b11b review correction: neutral grey foundation/stone/trim and dark copper; deep stepped portico cornices, four distinct Ionic shafts, shaded entrance recessed 6.4 m behind them, grade-supported framing piers, attached wing columns and six paired tall bays per wing retained in both LODs; near mullions 12 cm ahead of inset glass, far mullions dropped; zero dropped depth-cycle edges. Part heights and envelope from OSM; facade proportions, capitals, cupola and reclining lions estimated/stylised. No interiors, exhibition banners, plaza or adjoining Robson Square canopies. Near 25,193 tris / 5 draws / 844 KiB; far 10,701 / 5 / 361 KiB. Fresh reference/export comparison: tmp/top-cities/vancouver-art-gallery/review-fix/reference-export-comparison.jpg; independent re-review, app recapture, device performance and terrain lifecycle remain pending.",
+    "references": [
+      {
+        "label": "Canadian Register of Historic Places: dates, materials, four Ionic columns, lions and copper dome",
+        "url": "https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=7439"
+      },
+      {
+        "label": "OSM former courthouse envelope",
+        "url": "https://www.openstreetmap.org/way/69701736"
+      },
+      {
+        "label": "Vancouver Art Gallery (29787380987), dronepicr, CC BY 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_Art_Gallery_(29787380987).jpg"
+      },
+      {
+        "label": "Art Gallery (229999805), Ian Spence, CC BY 3.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Art_Gallery_(229999805).jpeg"
+      },
+      {
+        "label": "Robson Square from third floor, Jason Vanderhill, public domain",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_Art_Gallery_Robson_Square_from_third_floor.jpg"
+      }
+    ]
+  },
+  {
+    "id": "gastown-steam-clock",
+    "name": "Gastown Steam Clock",
+    "origin": [
+      -123.10889,
+      49.28438
+    ],
+    "height": 5,
+    "bounds": {
+      "min": [
+        -1.8553485870361328,
+        -2.38418573772492e-9,
+        -1.8553485870361328
+      ],
+      "max": [
+        1.8553485870361328,
+        5,
+        1.8553485870361328
+      ]
+    },
+    "file": "models/vancouver/gastown-steam-clock.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/gastown-steam-clock-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/gastown-steam-clock/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "Sourced: about 5 m total height (the model's whistle tip is 5.00 m) and the layout of four dials, a pagoda roof and five whistles. Estimated from photographs: every stage height and width (plinth 0.92 m, shaft 0.58 m, cabinet 0.84 m, cornice 1.0 m), the whistle diameters, the arched works windows (the real ones show the weights and a bell behind glass), the dial size, and the bollard ring. The plaque and vent are on one side only, assigned to the south-south-east face. Not modelled: the steam plume, the neighbouring lamp post and flower baskets, the plaque's lettering, the gilt blossoms' colours and the Roman numerals' shapes (ticks stand in). The brick pad is a stylised 3 m patch of the mapped brick corner, 8 cm proud. Far drops the numerals, hands, grille, plaque, blossoms and chains but keeps the stages, arched windows, dials and all five whistles. The site is flat local grade.",
+    "references": [
+      {
+        "label": "Steam clock · Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Steam_clock"
+      },
+      {
+        "label": "Gastown Steam Clock · Leonard G. (CC SA 1.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:GastownSteamClock.jpg"
+      },
+      {
+        "label": "Gastown Steam Clock 1920 · Dietmar Rabich (CC BY-SA 4.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_(BC,_Canada),_Gastown_Steam_Clock_--_2022_--_1920.jpg"
+      },
+      {
+        "label": "Gastown Steam Clock 1908 · Dietmar Rabich (CC BY-SA 4.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:Vancouver_(BC,_Canada),_Gastown_Steam_Clock_--_2022_--_1908.jpg"
+      },
+      {
+        "label": "Plaque · Jonathan Rodgers (CC BY-SA 3.0)",
+        "url": "https://commons.wikimedia.org/wiki/File:Gastown_Steam_Clock_Plaque1.jpg"
+      }
+    ]
+  },
+  {
+    "id": "waterfront-station-vancouver",
+    "name": "Waterfront Station",
+    "origin": [
+      -123.11167,
+      49.28583
+    ],
+    "height": 23,
+    "bounds": {
+      "min": [
+        -61.34730529785156,
+        -1.9533115512023304e-15,
+        -44.18143081665039
+      ],
+      "max": [
+        36.92854309082031,
+        23,
+        64.45659637451172
+      ]
+    },
+    "file": "models/vancouver/waterfront-station-vancouver.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/waterfront-station-vancouver-near.glb",
+    "sourceCode": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/waterfront-station-vancouver/geometry.js",
+    "license": "CC-BY-4.0",
+    "attribution": "Codriver; geographic placement © OpenStreetMap contributors",
+    "copyright": "© 2026 Codriver (original commissioned model)",
+    "notes": "OSM height 23 m; facade length approximately 118 m from mapped controls. Column profiles, window spacing, rooflights and rear circulation heights are estimated. Detailed interiors, distant rail platforms and the SeaBus bridge beyond the owned annex are omitted. No reference photography or third-party mesh is distributed.",
+    "references": [
+      {
+        "label": "Vancouver Heritage Foundation: Canadian Pacific Station, 601 W Cordova; 1914 and ten freestanding Ionic columns",
+        "url": "https://www.heritagesitefinder.ca/location/601-w-cordova-st-vancouver-bc"
+      },
+      {
+        "label": "RJC Engineers: four-storey steel station with ornamental terracotta and brick",
+        "url": "https://www.rjc.ca/project-details/the-station.html"
+      },
+      {
+        "label": "Wikipedia: identity, architects, 1914 opening",
+        "url": "https://en.wikipedia.org/wiki/Waterfront_station_(Vancouver)"
+      },
+      {
+        "label": "OpenStreetMap: station headhouse, height 23 m",
+        "url": "https://www.openstreetmap.org/way/78393326"
+      },
+      {
+        "label": "OpenStreetMap: attached rear circulation roof",
+        "url": "https://www.openstreetmap.org/way/208599561"
+      },
+      {
+        "label": "File:Waterfront station track and bridge to seabus 2026.JPG — Canmenwalker; CC BY 4.0; reference only",
+        "url": "https://commons.wikimedia.org/wiki/File:Waterfront_station_track_and_bridge_to_seabus_2026.JPG"
+      },
+      {
+        "label": "File:Waterfront station 2025.jpg — Canmenwalker; CC BY 4.0; reference only",
+        "url": "https://commons.wikimedia.org/wiki/File:Waterfront_station_2025.jpg"
+      },
+      {
+        "label": "File:Waterfront Station Vancouver 1923.jpg — Matthews, James Skitt, Major (1878-1970); Public domain; reference only",
+        "url": "https://commons.wikimedia.org/wiki/File:Waterfront_Station_Vancouver_1923.jpg"
+      }
+    ]
+  }
+]

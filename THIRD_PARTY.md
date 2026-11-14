@@ -8,7 +8,21 @@ Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright
 
 ## Photography — Poly Haven / CC0
 
-Asphalt 02, Concrete Pavement, Aerial Grass Rock, Belfast Sunset PureSky, Kloofendal Overcast PureSky, Kloofendal 48d Partly Cloudy PureSky, Modern Evening Street, Tree Small 02 foliage, Fir Tree 01 branches and bark, and additional architectural texture maps are from [Poly Haven](https://polyhaven.com), licensed [CC0](https://creativecommons.org/publicdomain/zero/1.0/). Exact files and source URLs are recorded in `public/asset-manifest.json`. The broadleaf and fir branch cards are modified/cropped/composited from those photographs.
+Asphalt 02, Concrete Pavement, Aerial Grass Rock, Belfast Sunset PureSky, Kloofendal Overcast PureSky, Kloofendal 48d Partly Cloudy PureSky, Modern Evening Street, Tree Small 02 detailed tree and foliage, Cobblestone Floor 05, Fir Tree 01 branches and bark, and additional architectural texture maps are from [Poly Haven](https://polyhaven.com), licensed [CC0](https://creativecommons.org/publicdomain/zero/1.0/). Exact files and source URLs are recorded in `public/asset-manifest.json`. The broadleaf and fir branch cards are modified/cropped/composited from those photographs.
+
+## Vancouver landmark models — Codriver / CC BY 4.0
+
+Canada Place, Harbour Centre, Science World, BC Place, Rogers Arena, Vancouver House, Fairmont Hotel Vancouver, Marine Building, Vancouver Public Library, Vancouver Art Gallery, Waterfront Station and Gastown Steam Clock are from [Codriver's 3D asset library](https://3d-assets.codriver.io/). © 2026 Codriver; geographic placement © OpenStreetMap contributors. Models are licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Source models remain unchanged; runtime adaptations add material response, photographic surface textures and geographic placement. Geographic estimates and simplifications are recorded in each source manifest.
+
+See [the model catalog](public/data/vancouver-landmarks.json), [source manifests](docs/sources/) and [the original model license](docs/sources/CODRIVER-MODEL-LICENSE.md). These are detailed authored interpretations, not surveyed photogrammetry.
+
+## Vancouver photography — Wikimedia Commons / CC BY-SA
+
+- [North shore pan.JPG](https://commons.wikimedia.org/wiki/File:North_shore_pan.JPG), **Selmo**, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Cropped/feathered photographic horizon, with weather tinting. The horizon is scenery rather than explorable mountain terrain.
+- [Vancouver Hotel Vogue 2010.jpg](https://commons.wikimedia.org/wiki/File:Vancouver_Hotel_Vogue_2010.jpg) and [Vancouver Palms Hotel 2011.jpg](https://commons.wikimedia.org/wiki/File:Vancouver_Palms_Hotel_2011.jpg), **Canadian2006**, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/).
+- [Gastown-19.JPG](https://commons.wikimedia.org/wiki/File:Gastown-19.JPG), **Xicotencatl**, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+
+Façade derivatives are perspective corrected, cropped, colour balanced, and accompanied by derived roughness maps. All image derivatives retain their source's CC BY-SA license; they are not covered by the code's MIT license. Heritage photographs are used as surface references across appropriate districts, not claimed as an exact photographic reconstruction of every address. Full attribution and modifications: [photography sources](public/textures/vancouver/SOURCES.json). Reproduction script: [vancouver-photo-textures.py](scripts/vancouver-photo-textures.py).
 
 ## Concept car — CC BY 4.0
 
@@ -25,6 +39,6 @@ Khronos and 3D Commerce marks embedded in the original asset belong to their res
 - Three.js: MIT, three.js authors.
 - Vite, TypeScript, and build dependencies: their included package licenses.
 - Barlow and Barlow Condensed: Jeremy Tribby, SIL Open Font License 1.1.
-- Rain City code, procedural characters, bicycles, fallback vehicles, landmark models and generated effects: original work, MIT (see LICENSE).
+- Rain City code, procedural characters, bicycles, fallback vehicles, bridge/boat/Robson terrace models and generated effects: original work, MIT (see LICENSE).
 
 This game is independent and is not affiliated with Rockstar Games or Grand Theft Auto. No Rockstar assets are used.

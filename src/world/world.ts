@@ -17,7 +17,9 @@ import { Materials, mesh, box, label, BASE } from "./materials";
 import { Batcher, flatPolygon, ribbon, walls } from "./geometry";
 import { CollisionWorld, BRIDGES } from "./collision";
 import { architecture } from "./architecture";
-import { buildLandmarks, specialBuilding } from "./landmarks";
+import { buildLandmarks } from "./landmarks";
+import { loadVancouverLandmarks } from "./vancouver-landmarks";
+import { DetailedTrees, TreeInstance } from "./detailed-trees";
 export type Weather = "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -32,6 +34,9 @@ export class World {
   time = 0;
   skyTextures: Record<string, T.Texture> = {};
   nightLights: T.MeshStandardMaterial[] = [];
+  northShore?: T.MeshBasicMaterial;
+  detailedTrees?: DetailedTrees;
+  treeSamples: TreeInstance[] = [];
   stats = { buildings: 0, trees: 0, roads: 0 };
   constructor(
     public scene: T.Scene,
@@ -60,10 +65,16 @@ export class World {
     this.roads();
     await new Promise((r) => setTimeout(r, 20));
     report("Raising the downtown skyline", 0.3);
+    const accurateLandmarks = new T.Group();
+    this.root.add(accurateLandmarks);
+    await loadVancouverLandmarks(accurateLandmarks, this.materials);
+    this.mergeStatic(accurateLandmarks);
     this.buildings();
     await new Promise((r) => setTimeout(r, 20));
     report("Planting Stanley Park", 0.49);
     this.vegetation();
+    this.detailedTrees = await DetailedTrees.load(this.scene);
+    this.detailedTrees.samples = this.treeSamples;
     await new Promise((r) => setTimeout(r, 20));
     report("Building the waterfront", 0.68);
     const landmarkRoot = new T.Group();
@@ -222,6 +233,7 @@ export class World {
   roads() {
     const b = new Batcher(this.root, 450),
       m = this.materials;
+    const cobble = m.pbr("cobblestone_floor_05", 0xb1aaa2, 0.88);
     const stripes = new T.MeshStandardMaterial({
       color: 0xdfd8c0,
       roughness: 0.6,
@@ -229,7 +241,11 @@ export class World {
     for (const r of this.data.roads) {
       const [x, z] = centroid(r.pts),
         width = roadWidth(r),
-        street = isStreet(r);
+        street = isStreet(r),
+        historic =
+          /^(Water Street|Alexander Street)$/.test(r.name ?? "") &&
+          x > 450 &&
+          x < 1800;
       const height = (x: number, z: number) => this.collision.height(x, z);
       if (street)
         b.add(
@@ -239,14 +255,55 @@ export class World {
           z,
           "curb",
         );
+      if (street)
+        for (let i = 0; i < r.pts.length - 2; i += 2) {
+          const ax = r.pts[i],
+            az = r.pts[i + 1],
+            bx = r.pts[i + 2],
+            bz = r.pts[i + 3],
+            len = Math.hypot(bx - ax, bz - az);
+          if (len < 20) continue;
+          const dx = (bx - ax) / len,
+            dz = (bz - az) / len;
+          for (const side of [-1, 1]) {
+            const offset = side * (width / 2 + 1.25),
+              points = [
+                ax + dx * 7 + dz * offset,
+                az + dz * 7 - dx * offset,
+                bx - dx * 7 + dz * offset,
+                bz - dz * 7 - dx * offset,
+              ];
+            b.add(
+              ribbon(points, 2.5, 0.15, height, 4),
+              m.concrete,
+              x,
+              z,
+              "sidewalk",
+            );
+            const curbOffset = side * (width / 2 + 0.08),
+              curb = [
+                ax + dx * 7 + dz * curbOffset,
+                az + dz * 7 - dx * curbOffset,
+                bx - dx * 7 + dz * curbOffset,
+                bz - dz * 7 - dx * curbOffset,
+              ];
+            b.add(
+              ribbon(curb, 0.17, 0.17, height, 4),
+              m.stone,
+              x,
+              z,
+              "curb-edge",
+            );
+          }
+        }
       b.add(
         ribbon(r.pts, width, street ? 0.082 : 0.11, height, 5),
-        street ? m.asphalt : m.concrete,
+        historic ? cobble : street ? m.asphalt : m.concrete,
         x,
         z,
         "road",
       );
-      if (street && r.kind !== "residential") {
+      if (street && !historic && r.kind !== "residential") {
         for (let i = 0; i < r.pts.length - 2; i += 2) {
           const ax = r.pts[i],
             az = r.pts[i + 1],
@@ -421,6 +478,7 @@ export class World {
         dummy.scale.set(h * 0.023, h * 0.7, h * 0.023);
         dummy.updateMatrix();
         trunk.setMatrixAt(i, dummy.matrix);
+        const trunkMatrix = dummy.matrix.clone();
         const pine = h > 14 && t > 0.2;
         if (pine) {
           dummy.position.set(x, h * 0.4, z);
@@ -435,6 +493,18 @@ export class World {
           dummy.updateMatrix();
           leaves.setMatrixAt(li, dummy.matrix);
           color.setHSL(0.16 + t * 0.09, 0.08 + t * 0.08, 0.65 + t * 0.2);
+          this.treeSamples.push({
+            x,
+            z,
+            height: h,
+            rotation: t * 6.28,
+            crown: leaves,
+            crownIndex: li,
+            crownMatrix: dummy.matrix.clone(),
+            trunk,
+            trunkIndex: i,
+            trunkMatrix,
+          });
           leaves.setColorAt(li++, color);
         }
       }
@@ -481,6 +551,59 @@ export class World {
           if (this.collision.water(x, z) || this.collision.blocked(x, z, 0.5))
             continue;
           const h = this.collision.height(x, z);
+          if (
+            /^(Water Street|Alexander Street|Carrall Street)$/.test(
+              r.name ?? "",
+            ) &&
+            x > 450 &&
+            x < 1800
+          ) {
+            const add = (
+              g: T.BufferGeometry,
+              mat: T.Material,
+              xx = x,
+              yy = h,
+              zz = z,
+            ) => {
+              g.translate(xx, yy, zz);
+              b.add(g, mat, x, z);
+            };
+            add(
+              new T.CylinderGeometry(0.13, 0.24, 5.3, 10),
+              m.dark,
+              x,
+              h + 2.65,
+              z,
+            );
+            add(new T.BoxGeometry(0.54, 0.18, 0.54), m.dark, x, h + 0.16, z);
+            add(
+              new T.CylinderGeometry(0.23, 0.38, 0.65, 10),
+              m.dark,
+              x,
+              h + 0.52,
+              z,
+            );
+            for (let q = 0; q < 5; q++) {
+              const angle = q * Math.PI * 0.5,
+                radius = q === 4 ? 0 : 0.64,
+                yy = q === 4 ? 5.8 : 5.1;
+              const xx = x + Math.sin(angle) * radius,
+                zz = z + Math.cos(angle) * radius;
+              const arm = new T.CylinderGeometry(0.045, 0.045, 0.86, 8);
+              arm.rotateZ(q === 4 ? 0 : Math.PI * 0.38);
+              arm.rotateY(angle);
+              add(arm, m.dark, (x + xx) / 2, h + 4.65, (z + zz) / 2);
+              add(new T.SphereGeometry(0.25, 12, 8), lampMat, xx, h + yy, zz);
+              add(
+                new T.CylinderGeometry(0.11, 0.16, 0.18, 8),
+                m.dark,
+                xx,
+                h + yy - 0.29,
+                zz,
+              );
+            }
+            continue;
+          }
           let geo: T.BufferGeometry = new T.CylinderGeometry(0.055, 0.09, 8, 6);
           geo.translate(x, h + 4, z);
           b.add(geo, m.dark, x, z);
@@ -495,6 +618,48 @@ export class World {
             geo = new T.CylinderGeometry(0.23, 0.23, 0.85, 10);
             geo.translate(x + 1, h + 0.43, z);
             b.add(geo, m.dark, x, z);
+          }
+        }
+        if (
+          /^(Granville Street|Robson Street|West Georgia Street|West Hastings Street|Burrard Street)$/.test(
+            r.name ?? "",
+          ) &&
+          ax > -1800 &&
+          ax < 1900 &&
+          az > -1600 &&
+          az < 1450 &&
+          len > 28
+        ) {
+          const cable = (points: T.Vector3[]) => {
+            const curve = new T.CatmullRomCurve3(points);
+            b.add(
+              new T.TubeGeometry(curve, 8, 0.018, 4, false),
+              m.dark,
+              ax,
+              az,
+            );
+          };
+          for (const lane of [-2.8, 2.8])
+            for (const conductor of [-0.25, 0.25]) {
+              const off = lane + conductor;
+              cable([
+                new T.Vector3(ax + dz * off, 6.1, az - dx * off),
+                new T.Vector3(
+                  (ax + bx) / 2 + dz * off,
+                  5.88,
+                  (az + bz) / 2 - dx * off,
+                ),
+                new T.Vector3(bx + dz * off, 6.1, bz - dx * off),
+              ]);
+            }
+          for (let t = 12; t < len; t += 48) {
+            const xx = ax + dx * t,
+              zz = az + dz * t;
+            cable([
+              new T.Vector3(xx + dz * offset, 6.45, zz - dx * offset),
+              new T.Vector3(xx, 6.0, zz),
+              new T.Vector3(xx - dz * offset, 6.45, zz + dx * offset),
+            ]);
           }
         }
         if (r.name && i === 0 && len > 38) {
@@ -618,43 +783,32 @@ export class World {
     this.chunks.push(...batch.finish());
   }
   mountains() {
-    const rand = seeded(451);
-    for (let layer = 0; layer < 3; layer++) {
-      const width = 28000,
-        depth = 5500,
-        g = new T.PlaneGeometry(width, depth, 200, 35);
-      g.rotateX(-Math.PI / 2);
-      const p = g.getAttribute("position"),
-        colors: number[] = [];
-      for (let i = 0; i < p.count; i++) {
-        const x = p.getX(i),
-          z = p.getZ(i);
-        const ridge =
-          (Math.sin(x * 0.0007 + layer * 2) * 0.5 + 0.5) * 650 +
-          (Math.sin(x * 0.0017 + 0.6) + 1) * 270 +
-          (Math.cos(x * 0.0034) * 0.5 + 0.5) * 180;
-        const profile = Math.pow(Math.sin((z / depth + 0.5) * Math.PI), 1.4);
-        let y = (600 + ridge + rand() * 60) * profile;
-        p.setY(i, y);
-        const snow = y > 1250 ? Math.min(1, (y - 1250) / 240) : 0;
-        const c = new T.Color(layer === 0 ? 0x5c7277 : 0x859598).lerp(
-          new T.Color(0xe3e9e7),
-          snow,
-        );
-        colors.push(c.r, c.g, c.b);
-      }
-      g.setAttribute("color", new T.Float32BufferAttribute(colors, 3));
-      g.computeVertexNormals();
-      const mountain = mesh(
-        g,
-        new T.MeshStandardMaterial({ vertexColors: true, roughness: 1 }),
-        this.root,
-        2000,
-        -70,
-        -6600 - layer * 1600,
+    const photo = new T.TextureLoader().load(
+      `${BASE}textures/vancouver/north-shore.webp`,
+    );
+    photo.colorSpace = T.SRGBColorSpace;
+    photo.anisotropy = 8;
+    this.northShore = new T.MeshBasicMaterial({
+      map: photo,
+      transparent: true,
+      depthWrite: false,
+      fog: false,
+      toneMapped: false,
+    });
+    this.northShore.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <map_fragment>",
+        "#include <map_fragment>\ndiffuseColor.a *= smoothstep(0.0,0.13,vMapUv.x)*(1.0-smoothstep(0.87,1.0,vMapUv.x));",
       );
-      mountain.castShadow = false;
-    }
+    };
+    const horizon = new T.Mesh(
+      new T.PlaneGeometry(48000, 3954),
+      this.northShore,
+    );
+    horizon.position.set(800, 960, -14000);
+    horizon.renderOrder = -1;
+    horizon.name = "Photographic North Shore mountain horizon";
+    this.root.add(horizon);
   }
   createRain() {
     const a = new Float32Array(2000 * 3),
@@ -680,6 +834,9 @@ export class World {
   }
   setWeather(w: Weather) {
     this.weather = w;
+    this.northShore?.color.set(
+      w === "night" ? 0x233953 : w === "overcast" ? 0x9eafbb : 0xddd6ce,
+    );
     const night = w === "night",
       rain = w === "overcast";
     if (this.skyTextures[w]) this.scene.background = this.skyTextures[w];
@@ -707,6 +864,7 @@ export class World {
 
   update(dt: number, x: number, z: number) {
     this.time += dt;
+    this.detailedTrees?.update(x, z);
     this.water.uniforms.time.value = this.time;
     const sx = Math.round(x / 2) * 2,
       sz = Math.round(z / 2) * 2;

@@ -623,6 +623,9 @@ class Game {
   }
   setQuality(q: string) {
     this.quality = q;
+    if (this.world?.detailedTrees)
+      this.world.detailedTrees.budget =
+        q === "high" ? 96 : q === "low" ? 0 : 64;
     const ratio =
       q === "high"
         ? Math.min(2, devicePixelRatio)

@@ -161,5 +161,210 @@
     "license": "CC-BY-4.0",
     "credit": "Eric Chadwick / Darmstadt Graphics Group GmbH; source model by Unity Fan",
     "modifications": "Mesh simplification for ambient traffic"
+  },
+  {
+    "file": "textures/cobblestone_floor_05-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/cobblestone_floor_05/cobblestone_floor_05_diff_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/cobblestone_floor_05-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/cobblestone_floor_05/cobblestone_floor_05_nor_gl_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/cobblestone_floor_05-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/cobblestone_floor_05/cobblestone_floor_05_rough_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/vancouver/north-shore.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:North_shore_pan.JPG",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Selmo",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/vogue-heritage.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Vancouver_Hotel_Vogue_2010.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Canadian2006",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/vogue-heritage-roughness.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Vancouver_Hotel_Vogue_2010.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Canadian2006",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/vogue-masonry.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Vancouver_Hotel_Vogue_2010.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Canadian2006",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/palms-arches.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Vancouver_Palms_Hotel_2011.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Canadian2006",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/palms-arches-roughness.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Vancouver_Palms_Hotel_2011.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Canadian2006",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/palms-sash.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Vancouver_Palms_Hotel_2011.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Canadian2006",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/palms-sash-roughness.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Vancouver_Palms_Hotel_2011.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Canadian2006",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/gastown-arches.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Gastown-19.JPG",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "credit": "Xicotencatl",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/gastown-arches-roughness.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Gastown-19.JPG",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "credit": "Xicotencatl",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/gastown-lofts.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Gastown-19.JPG",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "credit": "Xicotencatl",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "textures/vancouver/gastown-lofts-roughness.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Gastown-19.JPG",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "credit": "Xicotencatl",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "file": "models/vancouver/canada-place.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/canada-place-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/science-world-vancouver.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/science-world-vancouver-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/bc-place.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/bc-place-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/harbour-centre.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/harbour-centre-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/vancouver-house.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/vancouver-house-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/fairmont-hotel-vancouver.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/fairmont-hotel-vancouver-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/marine-building.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/marine-building-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/vancouver-public-library.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/vancouver-public-library-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/rogers-arena.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/rogers-arena-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/vancouver-art-gallery.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/vancouver-art-gallery-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/gastown-steam-clock.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/gastown-steam-clock-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver/waterfront-station-vancouver.glb",
+    "source": "https://3d-assets.codriver.io/models/buildings/waterfront-station-vancouver-near.glb",
+    "license": "CC-BY-4.0",
+    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
+  },
+  {
+    "file": "models/vancouver-street-tree.glb",
+    "source": "https://polyhaven.com/a/tree_small_02",
+    "license": "CC0",
+    "credit": "Poly Haven",
+    "changes": "Simplified to 24,687 triangles, WebP textures, dynamic near-field instance pool."
   }
 ]

@@ -27,6 +27,7 @@ export class Materials {
   });
   yellow = new T.MeshStandardMaterial({ color: 0xd9bf6a, roughness: 0.6 });
   facades: T.MeshStandardMaterial[] = [];
+  photoFacades: T.MeshStandardMaterial[] = [];
   roof = new T.MeshStandardMaterial({ color: 0x647276, roughness: 0.8 });
   constructor() {
     this.asphalt = this.pbr("asphalt_02", 0x92999b, 0.48);
@@ -35,6 +36,31 @@ export class Materials {
     this.concrete = this.pbr("concrete_pavement", 0xb4b0a7, 0.84);
     this.grass = this.pbr("aerial_grass_rock", 0x688052, 0.97);
     for (let i = 0; i < 12; i++) this.facades.push(this.facade(i));
+    const photos: [string, number, number][] = [
+      ["palms-arches", 10, 4.5],
+      ["palms-sash", 10, 3.8],
+      ["vogue-heritage", 10, 13],
+      ["gastown-arches", 15, 6],
+      ["gastown-lofts", 16, 13],
+    ];
+    for (const [id, w, h] of photos) {
+      const map = this.texture(`vancouver/${id}.webp`, true),
+        rough = this.texture(`vancouver/${id}-roughness.webp`);
+      map.repeat.set(24 / w, 51.2 / h);
+      rough.repeat.copy(map.repeat);
+      this.photoFacades.push(
+        new T.MeshStandardMaterial({
+          map,
+          roughnessMap: rough,
+          bumpMap: rough,
+          bumpScale: 0.08,
+          roughness: 0.94,
+          metalness: 0.13,
+          vertexColors: true,
+          side: T.DoubleSide,
+        }),
+      );
+    }
   }
   texture(name: string, color = false) {
     const t = this.loader.load(`${BASE}textures/${name}`);

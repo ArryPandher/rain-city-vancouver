@@ -1,0 +1,57 @@
+[
+  {
+    "id": "northshore",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/North_shore_pan.JPG",
+    "title": "North shore pan.JPG",
+    "author": "Selmo",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "derivatives": [
+      "north-shore.webp"
+    ],
+    "source": "https://commons.wikimedia.org/wiki/File:North_shore_pan.JPG",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "id": "vogue",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Vancouver_Hotel_Vogue_2010.jpg",
+    "title": "Vancouver Hotel Vogue 2010.jpg",
+    "author": "Canadian2006",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "derivatives": [
+      "vogue-heritage.webp",
+      "vogue-masonry.webp"
+    ],
+    "source": "https://commons.wikimedia.org/wiki/File:Vancouver_Hotel_Vogue_2010.jpg",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "id": "palms",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Vancouver_Palms_Hotel_2011.jpg",
+    "title": "Vancouver Palms Hotel 2011.jpg",
+    "author": "Canadian2006",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "derivatives": [
+      "palms-arches.webp",
+      "palms-sash.webp"
+    ],
+    "source": "https://commons.wikimedia.org/wiki/File:Vancouver_Palms_Hotel_2011.jpg",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  },
+  {
+    "id": "gastown",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/a/ac/Gastown-19.JPG",
+    "title": "Gastown-19.JPG",
+    "author": "Xicotencatl",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "derivatives": [
+      "gastown-arches.webp",
+      "gastown-lofts.webp"
+    ],
+    "source": "https://commons.wikimedia.org/wiki/File:Gastown-19.JPG",
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+  }
+]
