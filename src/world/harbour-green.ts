@@ -602,8 +602,10 @@ export function buildHarbourGreen(
       front(-1.4, 2.2),
       [0, 0, 1, 0, 1, 1, 0, 1],
     );
-    for (const u of [-1.1, 1.1])
-      mesh.beam(front(u, 0), front(u, 2.22), 0.06, metal, 8);
+    for (const u of [-1.1, 1.1]) {
+      const back: Vertex3 = [x + ux * u + uz * 0.1, y, z + uz * u - ux * 0.1];
+      mesh.beam(back, [back[0], y + 2.22, back[2]], 0.06, metal, 8);
+    }
     const a = front(-1.4, 0),
       b = front(1.4, 0);
     collision.addBarrier(a[0], a[2], b[0], b[2], 0.08, y + 2.2);
