@@ -10,6 +10,8 @@ export interface VehicleModel {
   body: T.Object3D;
   kind: "car" | "bike";
   color: number;
+  crank?: T.Group;
+  pedals?: T.Group[];
 }
 function hull(sections: number[][], mat: T.Material, parent: T.Object3D) {
   const p: number[] = [],
@@ -313,8 +315,25 @@ export function makeBike(m: Materials): VehicleModel {
     new T.Vector3(0.32, 1.24, 0.49),
     0.025,
   );
-  box(group, rubber, 0.14, 0.4, 0, 0.24, 0.035, 0.1);
-  box(group, rubber, -0.14, 0.4, 0, 0.24, 0.035, 0.1);
+  const crank = new T.Group(),
+    pedals: T.Group[] = [];
+  crank.position.y = 0.4;
+  group.add(crank);
+  for (const side of [-1, 1]) {
+    const pedal = new T.Group();
+    pedal.position.set(side * 0.17, 0, side * 0.15);
+    crank.add(pedal);
+    pedals.push(pedal);
+    box(pedal, rubber, 0, 0, 0, 0.2, 0.035, 0.1);
+    beam(
+      crank,
+      m.chrome,
+      new T.Vector3(side * 0.14, 0, 0),
+      new T.Vector3(side * 0.14, 0, side * 0.15),
+      0.017,
+      8,
+    );
+  }
   const brakes = new T.MeshStandardMaterial({
       color: 0xf32120,
       emissive: 0xf32120,
@@ -336,5 +355,7 @@ export function makeBike(m: Materials): VehicleModel {
     body: group,
     kind: "bike",
     color: 0xc87839,
+    crank,
+    pedals,
   };
 }

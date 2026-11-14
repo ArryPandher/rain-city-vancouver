@@ -42,3 +42,9 @@ Khronos and 3D Commerce marks embedded in the original asset belong to their res
 - Rain City code, procedural characters, bicycles, fallback vehicles, bridge/boat/Robson terrace models and generated effects: original work, MIT (see LICENSE).
 
 This game is independent and is not affiliated with Rockstar Games or Grand Theft Auto. No Rockstar assets are used.
+
+## Rigged protagonist — CharacterCreator / MakeHuman / CC0
+
+The clothed protagonist, 53-joint skeleton, skin/hair/clothing textures and twelve animation clips were exported from [CharacterCreator](https://github.com/kblood/CharacterCreator) by Kasper Olesen, using MakeHuman's CC0 system assets. Generated asset data is **CC0-1.0**, as explicitly granted in the upstream [license notes](docs/sources/CHARACTER-ASSET-LICENSE.md). The generator's GPL program code is not included in Rain City; this game loads a static GLB using Three.js and its own animation/pose controller.
+
+The body was configured for this game, exported with baked proportions, short hair, T-shirt, jeans and boots, and fitted animations. In-game changes include a plain forest-green shirt, darker denim, 1.84 m scale, animation blending, hand/weapon attachments and bicycle pose fitting. Export settings are preserved in [rain-city-protagonist-settings.json](docs/sources/rain-city-protagonist-settings.json). The character is original to this configuration and does not reproduce a Rockstar character.

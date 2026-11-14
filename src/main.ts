@@ -4,7 +4,9 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { loadDetailedCharacter } from "./game/detailed-character";
 import { loadDetailedCar } from "./world/detailed-car";
+import { ContactOcclusion } from "./rendering/contact-occlusion";
 import { loadCity, LANDMARKS, geo, ungeo } from "./world/data";
 import { World, Weather } from "./world/world";
 import { UI } from "./ui/ui";
@@ -22,6 +24,7 @@ class Game {
   renderer: T.WebGLRenderer;
   composer: EffectComposer;
   bloom: UnrealBloomPass;
+  contactOcclusion: ContactOcclusion;
   world!: World;
   actors!: Actors;
   character!: Character;
@@ -75,14 +78,21 @@ class Game {
     this.renderer.toneMappingExposure = 1.08;
     this.renderer.info.autoReset = false;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = T.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = T.PCFShadowMap;
     this.renderer.outputColorSpace = T.SRGBColorSpace;
     const target = new T.WebGLRenderTarget(innerWidth, innerHeight, {
       samples: 4,
       type: T.HalfFloatType,
     });
+    target.depthTexture = new T.DepthTexture(
+      innerWidth,
+      innerHeight,
+      T.UnsignedIntType,
+    );
     this.composer = new EffectComposer(this.renderer, target);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.contactOcclusion = new ContactOcclusion(this.scene, this.camera);
+    this.composer.addPass(this.contactOcclusion);
     this.bloom = new UnrealBloomPass(
       new T.Vector2(innerWidth, innerHeight),
       0.21,
@@ -185,6 +195,10 @@ class Game {
     await loadDetailedCar().catch((e) =>
       console.warn("Detailed car unavailable; using built-in model", e),
     );
+    ui.loading("Preparing your character", 0.89);
+    await loadDetailedCharacter().catch((e) =>
+      console.warn("Detailed character unavailable; using built-in model", e),
+    );
     this.actors = new Actors(this.world);
     this.character = makeCharacter(this.world.materials);
     this.scene.add(this.character.group, this.camera);
@@ -239,7 +253,7 @@ class Game {
     this.character.group.visible = false;
     this.setQuality(localStorage.getItem("rain-city-quality") || "balanced");
     const w = localStorage.getItem("rain-city-weather");
-    if (w && ["golden", "overcast", "night"].includes(w))
+    if (w && ["day", "golden", "overcast", "night"].includes(w))
       this.world.setWeather(w as Weather);
     ui.loading("Warming up the renderer", 0.95);
     this.setCamera(true);
@@ -392,14 +406,18 @@ class Game {
       );
     }
     if (c === "KeyT") {
-      const list: Weather[] = ["golden", "overcast", "night"];
-      this.setWeather(list[(list.indexOf(this.world.weather) + 1) % 3]);
+      const list: Weather[] = ["day", "golden", "overcast", "night"];
+      this.setWeather(
+        list[(list.indexOf(this.world.weather) + 1) % list.length],
+      );
       ui.toast(
-        this.world.weather === "golden"
-          ? "Golden hour"
-          : this.world.weather === "night"
-            ? "Vancouver after dark"
-            : "Vancouver rain",
+        this.world.weather === "day"
+          ? "Pacific daylight"
+          : this.world.weather === "golden"
+            ? "Golden hour"
+            : this.world.weather === "night"
+              ? "Vancouver after dark"
+              : "Vancouver rain",
       );
     }
     if (c === "KeyH") {
@@ -625,7 +643,7 @@ class Game {
     this.quality = q;
     if (this.world?.detailedTrees)
       this.world.detailedTrees.budget =
-        q === "high" ? 96 : q === "low" ? 0 : 64;
+        q === "high" ? 48 : q === "low" ? 0 : 24;
     const ratio =
       q === "high"
         ? Math.min(2, devicePixelRatio)
@@ -636,6 +654,10 @@ class Game {
     this.composer.setPixelRatio(ratio);
     this.renderer.shadowMap.enabled = q !== "low";
     this.bloom.enabled = q !== "low";
+    this.contactOcclusion.enabled = q !== "low";
+    this.contactOcclusion.updateGtaoMaterial({
+      samples: q === "high" ? 16 : 8,
+    });
     this.resize();
     try {
       localStorage.setItem("rain-city-quality", q);
@@ -899,7 +921,13 @@ class Game {
       if (v.kind === "bike") {
         this.character.group.position.copy(v.model.group.position);
         this.character.group.rotation.y = s.heading;
-        this.character.update(this.time, Math.abs(s.speed), false, true);
+        this.character.update(
+          this.time,
+          Math.abs(s.speed),
+          false,
+          true,
+          v.model.group.userData.pedalPhase ?? 0,
+        );
       }
       this.audio.update(s.speed, true, v.kind === "bike", throttle);
     } else {
@@ -998,7 +1026,9 @@ class Game {
         ? "22:16"
         : this.world.weather === "overcast"
           ? "14:08"
-          : "17:42";
+          : this.world.weather === "day"
+            ? "13:24"
+            : "17:42";
     ui.show("speed-panel", !!veh);
     ui.show("ammo", !veh && !this.combat.holstered);
     ui.show("crosshair", !veh && !this.combat.holstered);

@@ -20,7 +20,7 @@ import { architecture } from "./architecture";
 import { buildLandmarks } from "./landmarks";
 import { loadVancouverLandmarks } from "./vancouver-landmarks";
 import { DetailedTrees, TreeInstance } from "./detailed-trees";
-export type Weather = "golden" | "overcast" | "night";
+export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
   materials = new Materials();
@@ -29,7 +29,7 @@ export class World {
   sun = new T.DirectionalLight(0xffe0b3, 3.2);
   ambient = new T.HemisphereLight(0xc6dfed, 0x697265, 2.0);
   water!: T.ShaderMaterial;
-  weather: Weather = "golden";
+  weather: Weather = "day";
   rain!: T.Points;
   time = 0;
   skyTextures: Record<string, T.Texture> = {};
@@ -46,16 +46,16 @@ export class World {
     scene.add(this.root);
     scene.add(this.sun, this.sun.target, this.ambient);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(2048, 2048);
-    this.sun.shadow.camera.left = -95;
-    this.sun.shadow.camera.right = 95;
-    this.sun.shadow.camera.top = 95;
-    this.sun.shadow.camera.bottom = -95;
+    this.sun.shadow.mapSize.set(4096, 4096);
+    this.sun.shadow.camera.left = -80;
+    this.sun.shadow.camera.right = 80;
+    this.sun.shadow.camera.top = 80;
+    this.sun.shadow.camera.bottom = -80;
     this.sun.shadow.camera.near = 1;
     this.sun.shadow.camera.far = 650;
     this.sun.shadow.bias = -0.0005;
     this.sun.shadow.normalBias = 0.14;
-    this.sun.shadow.radius = 2.5;
+    this.sun.shadow.radius = 3.5;
     scene.fog = new T.FogExp2(0xc2cbd0, 0.00032);
   }
   async build(report: (text: string, n: number) => void) {
@@ -88,14 +88,19 @@ export class World {
     this.createRain();
     try {
       const loader = new RGBELoader();
-      const [sunset, overcast, env] = await Promise.all(
-        ["sunset", "overcast", "city-reflections"].map((name) =>
+      const [sunset, overcast, env, daylight] = await Promise.all(
+        ["sunset", "overcast", "city-reflections", "sky"].map((name) =>
           loader.loadAsync(`${BASE}textures/${name}.hdr`),
         ),
       );
-      for (const t of [sunset, overcast, env])
+      for (const t of [sunset, overcast, env, daylight])
         t.mapping = T.EquirectangularReflectionMapping;
-      this.skyTextures = { golden: sunset, overcast, night: sunset };
+      this.skyTextures = {
+        day: daylight,
+        golden: sunset,
+        overcast,
+        night: sunset,
+      };
       this.scene.environment = env;
       this.scene.background = sunset;
       this.scene.backgroundRotation.y = 2.3;
@@ -111,7 +116,7 @@ export class World {
       object.matrixAutoUpdate = false;
       object.matrixWorldAutoUpdate = false;
     });
-    this.setWeather("golden");
+    this.setWeather("day");
     report("Ready to explore", 1);
   }
   addEasternRoad() {
@@ -169,7 +174,9 @@ export class World {
         mat = new T.MeshStandardMaterial({ color: 0xb2a894, roughness: 1 });
       const [x, z] = centroid(a.pts);
       try {
-        b.add(flatPolygon(a.pts, a.holes, 0.0, 8), mat, x, z);
+        const elevation =
+          mat === m.concrete ? 0.02 : a.kind === "beach" ? -0.005 : -0.02;
+        b.add(flatPolygon(a.pts, a.holes, elevation, 5), mat, x, z);
       } catch {}
     }
     const cityBase = mesh(
@@ -297,7 +304,7 @@ export class World {
           }
         }
       b.add(
-        ribbon(r.pts, width, street ? 0.082 : 0.11, height, 5),
+        ribbon(r.pts, width, street ? 0.092 : 0.07, height, historic ? 1.6 : 5),
         historic ? cobble : street ? m.asphalt : m.concrete,
         x,
         z,
@@ -331,6 +338,14 @@ export class World {
       }
       this.stats.roads++;
     }
+    for (const group of b.groups.values())
+      for (const geometry of group.geo) {
+        const p = geometry.getAttribute("position"),
+          uv = geometry.getAttribute("uv");
+        const scale = group.mat === cobble ? 1.6 : 5;
+        for (let i = 0; i < p.count; i++)
+          uv.setXY(i, p.getX(i) / scale, p.getZ(i) / scale);
+      }
     this.chunks.push(...b.finish(false));
   }
   buildings() {
@@ -838,20 +853,33 @@ export class World {
       w === "night" ? 0x233953 : w === "overcast" ? 0x9eafbb : 0xddd6ce,
     );
     const night = w === "night",
-      rain = w === "overcast";
+      rain = w === "overcast",
+      day = w === "day";
     if (this.skyTextures[w]) this.scene.background = this.skyTextures[w];
-    this.sun.color.set(night ? 0xaec9f9 : rain ? 0xcbd9e2 : 0xffc28c);
-    this.sun.intensity = night ? 0.32 : rain ? 1.1 : 3.1;
-    this.ambient.intensity = night ? 0.4 : rain ? 1.45 : 0.9;
-    this.ambient.color.set(night ? 0x4f6d90 : rain ? 0xb7c8d1 : 0xb4c8d8);
-    this.scene.backgroundIntensity = night ? 0.045 : rain ? 0.67 : 0.85;
+    this.sun.color.set(
+      night ? 0xaec9f9 : rain ? 0xcbd9e2 : day ? 0xffefd9 : 0xffc28c,
+    );
+    this.sun.intensity = night ? 0.32 : rain ? 1.1 : day ? 3.4 : 3.1;
+    this.ambient.intensity = night ? 0.4 : rain ? 1.45 : day ? 1.15 : 0.9;
+    this.ambient.color.set(
+      night ? 0x4f6d90 : rain ? 0xb7c8d1 : day ? 0xc7deef : 0xb4c8d8,
+    );
+    this.scene.backgroundIntensity = night
+      ? 0.045
+      : rain
+        ? 0.67
+        : day
+          ? 1
+          : 0.85;
     this.scene.environmentIntensity = night ? 0.45 : rain ? 0.72 : 0.8;
     const fog = this.scene.fog as T.FogExp2;
-    fog.color.set(night ? 0x182a3c : rain ? 0x9aaeb8 : 0xb3b1b0);
-    fog.density = night ? 0.0006 : rain ? 0.00055 : 0.00023;
+    fog.color.set(
+      night ? 0x182a3c : rain ? 0x9aaeb8 : day ? 0xb2c8d4 : 0xb3b1b0,
+    );
+    fog.density = night ? 0.0006 : rain ? 0.00055 : day ? 0.00015 : 0.00023;
     this.materials.setNight(night ? 1 : 0.1);
-    this.materials.asphalt.roughness = rain ? 0.25 : 0.5;
-    this.materials.asphalt.metalness = rain ? 0.22 : 0.08;
+    this.materials.asphalt.roughness = rain ? 0.45 : night ? 0.65 : 1;
+    this.materials.asphalt.metalness = 0;
     this.rain.visible = rain;
     this.water.uniforms.deep.value.set(
       night ? 0x091923 : rain ? 0x344d57 : 0x294956,
@@ -868,7 +896,11 @@ export class World {
     this.water.uniforms.time.value = this.time;
     const sx = Math.round(x / 2) * 2,
       sz = Math.round(z / 2) * 2;
-    this.sun.position.set(sx - 220, 110, sz + 170);
+    this.sun.position.set(
+      sx - 220,
+      this.weather === "day" ? 330 : 110,
+      sz + 170,
+    );
     this.sun.target.position.set(sx, 0, sz);
     this.rain.position.set(x, 0, z);
     if (this.rain.visible) {

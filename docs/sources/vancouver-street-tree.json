@@ -5,5 +5,5 @@
   "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/tree_small_02/tree_small_02_1k.gltf",
   "license": "CC0-1.0",
   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-  "changes": "Mesh simplification and WebP texture conversion; near-field instancing in Rain City."
+  "changes": "Leaf-by-leaf silhouette reduction, branch simplification and WebP texture conversion; near-field instancing in Rain City."
 }

@@ -361,7 +361,15 @@ export class Actors {
         -s.steer * Math.min(1, Math.abs(s.speed) / 12) * 0.1;
       v.model.body.position.y =
         Math.sin(this.timer * 18) * Math.min(0.007, Math.abs(s.speed) * 0.0004);
-    } else g.rotation.z = -s.steer * Math.min(0.38, Math.abs(s.speed) * 0.025);
+    } else {
+      g.rotation.z = -s.steer * Math.min(0.38, Math.abs(s.speed) * 0.025);
+      const phase =
+        (g.userData.pedalPhase ?? 0) +
+        dt * Math.min(8, Math.abs(s.speed) * 0.9);
+      g.userData.pedalPhase = phase;
+      if (v.model.crank) v.model.crank.rotation.x = -phase;
+      v.model.pedals?.forEach((p) => (p.rotation.x = phase));
+    }
   }
   nearest(x: number, z: number, r = 7) {
     let nearest: Vehicle | null = null,

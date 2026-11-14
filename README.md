@@ -10,7 +10,7 @@ This is a substantial independent browser prototype. It is not a full AAA game, 
 
 ## Play
 
-Use a desktop browser with WebGL 2, a keyboard and a mouse. Choose **Enter Vancouver** to drive or **Explore on foot**. Click the game to capture the mouse; Escape releases it. The first load prepares the city and shaders. Balanced graphics is recommended for laptops. Settings include High and Performance modes, golden hour, rain and night. M opens fast travel and activities.
+Use a desktop browser with WebGL 2, a keyboard and a mouse. Choose **Enter Vancouver** to drive or **Explore on foot**. Click the game to capture the mouse; Escape releases it. The first load prepares the city and shaders. Balanced graphics is recommended for laptops. Settings include High and Performance modes, Pacific daylight, golden hour, rain and night. M opens fast travel and activities.
 
 ## Controls
 
@@ -49,6 +49,6 @@ GitHub Actions builds and deploys `main` to GitHub Pages. No service keys or pai
 
 ## Technology and assets
 
-Three.js, TypeScript and Vite. Chunked geometry, PBR road and ground photography, HDR sky/environment lighting, animated water, shadows, bloom, licensed detailed vehicle assets, 12 geographically placed Vancouver landmark models, photographic heritage façades and North Shore horizon, detailed trees, and original procedural architecture and characters. The game prioritizes a useful playable world over perfect geographic fidelity.
+Three.js, TypeScript and Vite. Chunked geometry, PBR road and ground photography, HDR sky/environment lighting, animated water, sun shadows, contact occlusion, bloom, licensed detailed vehicle assets, 12 geographically placed Vancouver landmark models, photographic heritage façades and North Shore horizon, detailed trees, a textured rigged protagonist with blended walking/running animations, and procedural architecture and pedestrians. The game prioritizes a useful playable world over perfect geographic fidelity.
 
-Code: MIT. Map database: ODbL, © OpenStreetMap contributors. Poly Haven materials/models: CC0. Vancouver photographs and derivatives: CC BY-SA 3.0/4.0. Codriver landmark models: CC BY 4.0. Car Concept: Eric Chadwick / Darmstadt Graphics Group GmbH, CC BY 4.0, based on Unity Fan’s CC0 source. See [THIRD_PARTY.md](THIRD_PARTY.md) and [asset manifest](public/asset-manifest.json) for exact sources and modifications.
+Code: MIT. Map database: ODbL, © OpenStreetMap contributors. Poly Haven materials/models and CharacterCreator/MakeHuman generated character data: CC0. Vancouver photographs and derivatives: CC BY-SA 3.0/4.0. Codriver landmark models: CC BY 4.0. Car Concept: Eric Chadwick / Darmstadt Graphics Group GmbH, CC BY 4.0, based on Unity Fan’s CC0 source. See [THIRD_PARTY.md](THIRD_PARTY.md) and [asset manifest](public/asset-manifest.json) for exact sources and modifications.

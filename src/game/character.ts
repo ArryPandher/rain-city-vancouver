@@ -1,4 +1,5 @@
 import * as T from "three";
+import { makeDetailedCharacter } from "./detailed-character";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { mesh, box, Materials, beam } from "../world/materials";
 export interface Character {
@@ -8,7 +9,13 @@ export interface Character {
   legs: T.Group[];
   head: T.Group;
   rightHand: T.Group;
-  update: (t: number, speed: number, aim: boolean, bike?: boolean) => void;
+  update: (
+    t: number,
+    speed: number,
+    aim: boolean,
+    bike?: boolean,
+    cyclePhase?: number,
+  ) => void;
 }
 const fabricCache = new Map<string, T.CanvasTexture>();
 function fabric(kind: string) {
@@ -58,6 +65,10 @@ function garment(profile: number[][], depth: number) {
   return g;
 }
 export function makeCharacter(m: Materials, variant = 0): Character {
+  if (variant === 0) {
+    const detailed = makeDetailedCharacter();
+    if (detailed) return detailed;
+  }
   const group = new T.Group(),
     hips = new T.Group();
   hips.position.y = 0.94;

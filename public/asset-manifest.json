@@ -365,6 +365,15 @@
     "source": "https://polyhaven.com/a/tree_small_02",
     "license": "CC0",
     "credit": "Poly Haven",
-    "changes": "Simplified to 24,687 triangles, WebP textures, dynamic near-field instance pool."
+    "changes": "Leaf-preserving simplification to 126,013 triangles, WebP textures, bounded near-field instance pool (24 Balanced / 48 High)."
+  },
+  {
+    "file": "models/rain-city-protagonist.glb",
+    "source": "https://github.com/kblood/CharacterCreator",
+    "license": "CC0-1.0",
+    "credit": "CharacterCreator / Kasper Olesen; MakeHuman system assets",
+    "changes": "Configured baked male body with short04 hair, T-shirt, jeans, boots; 53-joint rig and 12 fitted animation clips. Plain-shirt material, darker denim, 1.84 m scale, original animation/pose controller in game.",
+    "licenseEvidence": "docs/sources/CHARACTER-ASSET-LICENSE.md",
+    "settings": "docs/sources/rain-city-protagonist-settings.json"
   }
 ]
