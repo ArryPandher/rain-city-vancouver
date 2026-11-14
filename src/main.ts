@@ -95,9 +95,9 @@ class Game {
     this.composer.addPass(this.contactOcclusion);
     this.bloom = new UnrealBloomPass(
       new T.Vector2(innerWidth, innerHeight),
-      0.21,
+      0.12,
       0.4,
-      1.05,
+      2.2,
     );
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
@@ -257,7 +257,7 @@ class Game {
     this.setQuality(localStorage.getItem("rain-city-quality") || "balanced");
     const w = localStorage.getItem("rain-city-weather");
     if (w && ["day", "golden", "overcast", "night"].includes(w))
-      this.world.setWeather(w as Weather);
+      this.setWeather(w as Weather);
     ui.loading("Warming up the renderer", 0.95);
     this.setCamera(true);
     await this.renderer.compileAsync(this.scene, this.camera);
@@ -638,6 +638,8 @@ class Game {
   setWeather(w: Weather) {
     if (!this.world) return;
     this.world.setWeather(w);
+    this.bloom.threshold = w === "night" ? 1.15 : w === "golden" ? 1.7 : 2.2;
+    this.bloom.strength = w === "night" ? 0.21 : 0.12;
     try {
       localStorage.setItem("rain-city-weather", w);
     } catch {}

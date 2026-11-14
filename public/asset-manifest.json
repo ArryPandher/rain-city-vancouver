@@ -375,5 +375,14 @@
     "changes": "Configured baked male body with short04 hair, T-shirt, jeans, boots; 53-joint rig and 12 fitted animation clips. Plain-shirt material, darker denim, 1.84 m scale, original animation/pose controller in game.",
     "licenseEvidence": "docs/sources/CHARACTER-ASSET-LICENSE.md",
     "settings": "docs/sources/rain-city-protagonist-settings.json"
+  },
+  {
+    "file": "models/rain-city-pedestrian.glb",
+    "source": "https://github.com/kblood/CharacterCreator",
+    "license": "CC0-1.0",
+    "credit": "CharacterCreator / Kasper Olesen; MakeHuman system assets",
+    "changes": "Configured baked female body, ponytail, hoodie, jeans and boots; 53-joint rig, 12 fitted clips at 30 fps and 1024 px textures. In-game clothing/skin/height/build variants with independent animation phases.",
+    "licenseEvidence": "docs/sources/CHARACTER-ASSET-LICENSE.md",
+    "settings": "docs/sources/rain-city-pedestrian-settings.json"
   }
 ]

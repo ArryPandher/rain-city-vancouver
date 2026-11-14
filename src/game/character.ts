@@ -65,10 +65,8 @@ function garment(profile: number[][], depth: number) {
   return g;
 }
 export function makeCharacter(m: Materials, variant = 0): Character {
-  if (variant === 0) {
-    const detailed = makeDetailedCharacter();
-    if (detailed) return detailed;
-  }
+  const detailed = makeDetailedCharacter(variant);
+  if (detailed) return detailed;
   const group = new T.Group(),
     hips = new T.Group();
   hips.position.y = 0.94;

@@ -3,11 +3,21 @@ import { GLTFLoader, type GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
 import type { Character } from "./character";
 
-let template: GLTF | undefined;
+const templates: { male?: GLTF; female?: GLTF } = {};
 export async function loadDetailedCharacter() {
-  template = await new GLTFLoader().loadAsync(
-    `${import.meta.env.BASE_URL}models/rain-city-protagonist.glb`,
-  );
+  const loader = new GLTFLoader();
+  await Promise.all([
+    loader
+      .loadAsync(`${import.meta.env.BASE_URL}models/rain-city-protagonist.glb`)
+      .then((gltf) => {
+        templates.male = gltf;
+      }),
+    loader
+      .loadAsync(`${import.meta.env.BASE_URL}models/rain-city-pedestrian.glb`)
+      .then((gltf) => {
+        templates.female = gltf;
+      }),
+  ]);
 }
 
 // Aim a skinned two-bone chain at a point without assuming the asset's bone axes.
@@ -60,10 +70,16 @@ function reach(
   pointBone(b, c, start.addScaledVector(axis, distance));
 }
 
-export function makeDetailedCharacter(): Character | undefined {
+export function makeDetailedCharacter(variant = 0): Character | undefined {
+  const female = variant > 0 && variant % 3 === 0;
+  const template =
+    (female ? templates.female : templates.male) ?? templates.male;
   if (!template) return;
   const group = new T.Group();
-  group.name = "Rain City protagonist";
+  group.name = variant
+    ? `Vancouver pedestrian ${variant}`
+    : "Rain City protagonist";
+  group.userData.gender = female ? "female" : "male";
   group.userData.detailed = true;
   const body = clone(template.scene);
   group.add(body);
@@ -82,12 +98,29 @@ export function makeDetailedCharacter(): Character | undefined {
       m.envMapIntensity = 0.5;
       if (m.name === "Cloth_tshirt") {
         m.map = null;
-        m.color.setHex(0x343d37);
+        m.color.setHex(
+          [0x343d37, 0x48576e, 0x764940, 0xb5aa96, 0x303439, 0x686052][
+            variant % 6
+          ],
+        );
         m.roughness = 0.94;
+      } else if (m.name === "Cloth_hoodie") {
+        m.color.setHex(
+          [0x687f87, 0x665662, 0xa59c86, 0x4d6260, 0x75655c][
+            Math.floor(variant / 3) % 5
+          ],
+        );
+        m.roughness = 0.95;
       } else if (m.name === "Cloth_jeans") {
-        m.color.setHex(0x56677b);
+        m.color.setHex([0x56677b, 0x464c59, 0x718091][variant % 3]);
         m.roughness = 0.95;
       } else if (m.name === "Skin") {
+        if (variant)
+          m.color.setHex(
+            [0xb88769, 0x9d6f51, 0xcdac90, 0x80523c, 0xd7b59b, 0xb68a68][
+              variant % 6
+            ],
+          );
         m.roughness = 0.66;
         m.normalScale?.setScalar(0.55);
       } else if (m.name.startsWith("Hair")) m.roughness = 0.88;
@@ -97,8 +130,11 @@ export function makeDetailedCharacter(): Character | undefined {
   });
   body.updateMatrixWorld(true);
   const bounds = new T.Box3().setFromObject(body);
-  const scale = 1.84 / (bounds.max.y - bounds.min.y);
-  body.scale.setScalar(scale);
+  const height = variant
+    ? (female ? 1.64 : 1.72) + (variant % 5) * 0.035
+    : 1.84;
+  const scale = height / (bounds.max.y - bounds.min.y);
+  body.scale.set(scale * (1 + (variant % 5) * 0.018), scale, scale);
   const floor = 0.11 - bounds.min.y * scale;
   body.position.y = floor;
   const mixer = new T.AnimationMixer(body);
@@ -144,6 +180,7 @@ export function makeDetailedCharacter(): Character | undefined {
     if (next !== current) {
       current.fadeOut(0.18);
       next.reset().setEffectiveWeight(1).fadeIn(0.18).play();
+      next.time = (variant * 0.173) % next.getClip().duration;
       current = next;
     }
     current.timeScale =

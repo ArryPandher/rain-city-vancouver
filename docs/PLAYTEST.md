@@ -4,7 +4,7 @@
 
 ## Automated
 
-`npm test`: 14 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and the protagonist skeleton/locomotion clips. `npm run build` includes TypeScript checking and a production Vite build.
+`npm test`: 15 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and the protagonist skeleton/locomotion clips. `npm run build` includes TypeScript checking and a production Vite build.
 
 ## Interactive evidence
 
@@ -56,3 +56,7 @@ Roads and footprints use real map data; terrain elevation and building architect
 The public `edd711a` build was opened in Chrome. The new protagonist loaded, on-foot W input moved the player, a pistol shot reduced 15 rounds to 14, and V/W drove a summoned car at 46 km/h with 100% health. Captured runtime errors stayed empty. The wider opening camera exposed a far-plane clip in the photographic horizon; halving the scenic plane's dimensions/distance preserves its angular size while keeping it inside the camera frustum. The local follow-up build visually removes that rectangular edge. Actor downloads now overlap city preparation, and the twelve landmark GLBs fetch concurrently; local resource timings confirmed overlap (no measured public cold-load speed claim).
 
 The aerial camera now uses an 8 m near plane to retain depth precision between distant water, road and terrain layers. Third-person returns to 0.35 m and first-person to 0.08 m. The final local title capture showed stable water/roads; actual C/C input entered first-person with the pistol visible and no captured runtime errors. Representative waterfront and driving captures are committed under `docs/screenshots/`.
+
+## Pedestrian cast — 2026-11-14
+
+All 34 pedestrians now use clothed rigged models (23 male-template and 11 female-template variants), with distinct clothing/skin palettes, height/build variation and independent locomotion phases. The second CC0 export has a hoodie, jeans, boots and ponytail; its licensing and settings are preserved. Both rigs and their fitted clips pass asset checks (15 total tests). In-browser inspection confirmed all pedestrians use the detailed models, and a close pedestrian's position and leg quaternion both changed during normal simulation. Local close-up scene samples were approximately 38–44 fps with no captured runtime errors. Daytime bloom was reduced so crosswalk paint no longer glows; night retains stronger light bloom.
