@@ -1,0 +1,47 @@
+[
+  {
+    "file": "textures/cliffs/rock_face_03-color.webp",
+    "source": "https://polyhaven.com/a/rock_face_03",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_face_03/rock_face_03_diff_2k.jpg",
+    "authors": {
+      "Dario Barresi": "Photography",
+      "Rico Cilliers": "Processing"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.6999995708465576,
+      2.6999995708465576
+    ],
+    "changes": "Resized to 2K WebP. World-space triplanar projection, slope blending and broad color variation at runtime; generic rock photography, not a Vancouver scan."
+  },
+  {
+    "file": "textures/cliffs/rock_face_03-normal.webp",
+    "source": "https://polyhaven.com/a/rock_face_03",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_face_03/rock_face_03_nor_gl_2k.jpg",
+    "authors": {
+      "Dario Barresi": "Photography",
+      "Rico Cilliers": "Processing"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.6999995708465576,
+      2.6999995708465576
+    ],
+    "changes": "Resized to 2K WebP. World-space triplanar projection, slope blending and broad color variation at runtime; generic rock photography, not a Vancouver scan."
+  },
+  {
+    "file": "textures/cliffs/rock_face_03-roughness.webp",
+    "source": "https://polyhaven.com/a/rock_face_03",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_face_03/rock_face_03_rough_2k.jpg",
+    "authors": {
+      "Dario Barresi": "Photography",
+      "Rico Cilliers": "Processing"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.6999995708465576,
+      2.6999995708465576
+    ],
+    "changes": "Resized to 2K WebP. World-space triplanar projection, slope blending and broad color variation at runtime; generic rock photography, not a Vancouver scan."
+  }
+]

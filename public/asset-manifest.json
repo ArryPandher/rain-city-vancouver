@@ -796,5 +796,26 @@
     "license": "ODbL combined geographic derivative; City source Open Government Licence – Vancouver",
     "credit": "City of Vancouver and © OpenStreetMap contributors",
     "changes": "Approximate 2002 contours interpolated to a 4m grid, clipped/blended with the mapped OSM park boundary; interpreted road grades, seawall level and lake beds. See docs/sources/stanley-terrain.md."
+  },
+  {
+    "file": "textures/cliffs/rock_face_03-color.webp",
+    "source": "https://polyhaven.com/a/rock_face_03",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven — Dario Barresi (photography), Rico Cilliers (processing)",
+    "changes": "Resized to 2K WebP. World-space triplanar projection, slope blending and broad color variation at runtime; generic rock photography, not a Vancouver scan."
+  },
+  {
+    "file": "textures/cliffs/rock_face_03-normal.webp",
+    "source": "https://polyhaven.com/a/rock_face_03",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven — Dario Barresi (photography), Rico Cilliers (processing)",
+    "changes": "Resized to 2K WebP. World-space triplanar projection, slope blending and broad color variation at runtime; generic rock photography, not a Vancouver scan."
+  },
+  {
+    "file": "textures/cliffs/rock_face_03-roughness.webp",
+    "source": "https://polyhaven.com/a/rock_face_03",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven — Dario Barresi (photography), Rico Cilliers (processing)",
+    "changes": "Resized to 2K WebP. World-space triplanar projection, slope blending and broad color variation at runtime; generic rock photography, not a Vancouver scan."
   }
 ]

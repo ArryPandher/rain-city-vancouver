@@ -31,3 +31,9 @@ No Rockstar assets or Vancouver reference photographs are distributed in this fo
 
 
 The later terrain pass grounds these models on City contour-derived heights; see [Stanley terrain](stanley-terrain.md). Earlier flat-ground limitations above describe the preceding build.
+
+## Spatial rendering and coastal slopes
+
+Near/middle conifers are grouped into 32 m cells; ground props use 24 m cells. The renderer can reject each batch independently for the view and shadow cameras. Reused slots have compact matrix/color buffers that grow only as needed. Source geometry/materials are shared, while per-tree stem attributes remain independent. The total selected detail budgets are unchanged. The sunlight target and rain emitter follow ground elevation.
+
+Generated planting avoids gradients above 0.75, retaining mapped point trees; see [coastal ground](stanley-cliffs.md). This changes the procedural tree/site count on steep slopes. Forest density and species remain interpretations.

@@ -88,6 +88,14 @@ export class ForestHabitat {
       this.collision.blocked(x, z, margin)
     )
       return false;
+    const terrain = this.data.terrain;
+    if (terrain) {
+      const dx = (terrain.height(x + 2, z) - terrain.height(x - 2, z)) / 4,
+        dz = (terrain.height(x, z + 2) - terrain.height(x, z - 2)) / 4;
+      // Dense authored understory and added conifers belong on soil, not the
+      // exposed coastal faces. This does not filter surveyed point trees.
+      if (Math.hypot(dx, dz) > 0.75) return false;
+    }
     for (const road of this.collision.roads.query(x, z, 25 + margin)) {
       for (let i = 0; i < road.pts.length - 2; i += 2) {
         if (

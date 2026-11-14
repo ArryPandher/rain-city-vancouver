@@ -36,6 +36,7 @@ import { reconcileTrees, treeProfile, type TreeProfile } from "./tree-profile";
 import { ForestHabitat } from "./forest-habitat";
 import { ForestDetail, forestGround } from "./forest";
 import { terrainMeshes, type TerrainArea } from "./terrain-mesh";
+import { cliffMaterials } from "./cliff-material";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -300,7 +301,16 @@ export class World {
       } catch {}
     }
     if (elevationGrid) {
-      const ground = terrainMeshes(elevationGrid, terrainAreas, m.grass);
+      const cliff = cliffMaterials(m);
+      const ground = terrainMeshes(
+        elevationGrid,
+        terrainAreas.map((item) => ({
+          ...item,
+          material:
+            item.material === m.concrete ? item.material : cliff(item.material),
+        })),
+        cliff(m.grass),
+      );
       this.root.add(...ground);
       this.chunks.push(...ground);
     }
@@ -1023,14 +1033,15 @@ export class World {
     this.detailedArchitecture?.update(x, z);
     this.water.uniforms.time.value = this.time;
     const sx = Math.round(x / 2) * 2,
-      sz = Math.round(z / 2) * 2;
+      sz = Math.round(z / 2) * 2,
+      ground = this.collision.groundHeight(x, z);
     this.sun.position.set(
       sx - 220,
-      this.weather === "day" ? 330 : 110,
+      ground + (this.weather === "day" ? 330 : 110),
       sz + 170,
     );
-    this.sun.target.position.set(sx, 0, sz);
-    this.rain.position.set(x, 0, z);
+    this.sun.target.position.set(sx, ground, sz);
+    this.rain.position.set(x, ground, z);
     if (this.rain.visible) {
       const a = this.rain.geometry.getAttribute("position");
       for (let i = 0; i < a.count; i++) {

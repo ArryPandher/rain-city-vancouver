@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import sharp from "sharp";
+import { Terrain } from "../src/world/terrain";
 import { ForestHabitat } from "../src/world/forest-habitat";
 import { CollisionWorld } from "../src/world/collision";
 import { ORIGIN, KX, type CityData } from "../src/world/data";
@@ -192,4 +193,36 @@ test("both medium conifers retain textured branches with valid attributes and bo
       );
     }
   }
+});
+
+test("generated forest avoids steep exposed terrain while retaining gentle woodland", () => {
+  const { habitat: h } = habitat();
+  let site: [number, number] | undefined;
+  for (let x = -2400; x < -2000 && !site; x += 25)
+    for (let z = -2700; z < -2200 && !site; z += 25)
+      if (h.clear(x, z, 2.4)) site = [x, z];
+  assert.ok(site);
+  const [x, z] = site;
+  const meta = {
+    version: 1,
+    sourceYear: 2002,
+    minX: x - 4,
+    minZ: z - 4,
+    step: 4,
+    columns: 3,
+    rows: 3,
+    scale: 1,
+    binary: "",
+    lakes: [],
+  };
+  h.data.terrain = new Terrain(
+    meta,
+    new Uint16Array([10, 11, 12, 10, 11, 12, 10, 11, 12]),
+  );
+  assert.equal(h.clear(x, z, 2.4), true);
+  h.data.terrain = new Terrain(
+    meta,
+    new Uint16Array([10, 16, 22, 10, 16, 22, 10, 16, 22]),
+  );
+  assert.equal(h.clear(x, z, 2.4), false);
 });

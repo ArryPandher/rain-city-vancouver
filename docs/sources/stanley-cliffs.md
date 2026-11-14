@@ -1,0 +1,9 @@
+# Stanley Park coastal ground
+
+The exposed rock layer is guided by the photographs and geological explanation in the [Vancouver GeoTour, stop 6: Prospect Point](https://www.cgenarchive.org/vancouver-rocks.html). The source describes layered sandstone across much of Stanley Park, with resistant volcanic rock at Prospect Point and Siwash Rock. Its photographs show fractured brown-grey coastal faces beneath the forest. Those photographs are reference only and are not distributed with the game.
+
+The runtime surface uses **Rock Face 03**, photography by **Dario Barresi**, processing by **Rico Cilliers**, [Poly Haven](https://polyhaven.com/a/rock_face_03), **CC0-1.0**. This is generic rock photography chosen as a visual approximation; it is not a scan of Vancouver or a mapped geological classification. Color, OpenGL normal and roughness maps are converted to 2K WebP. World-space triplanar projection preserves their approximate 2.7 m scale on steep faces. Broad color variation reduces uniformity, and a slope blend joins rock to the existing grass and forest soil. Concrete paths keep their separate material.
+
+Generated conifers and understory sites are excluded where the sampled terrain gradient exceeds 0.75 (about 37 degrees). Surveyed/OSM point trees are not removed by this rule. The source terrain remains the approximate City contour reconstruction described in [Stanley terrain](stanley-terrain.md); its 4 m cells, interpreted shoreline and road grading limit cliff geometry. No overhangs, rockfall simulation, surveyed stratigraphy or exact cliff outlines are claimed.
+
+Reproduce with `node scripts/fetch-cliff-ground.mjs`. Exact URLs, authors, source dimensions and changes are in [SOURCES.json](../../public/textures/cliffs/SOURCES.json) and the main [asset manifest](../../public/asset-manifest.json).

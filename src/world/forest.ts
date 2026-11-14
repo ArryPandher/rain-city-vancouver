@@ -8,6 +8,7 @@ import { ForestHabitat, STANLEY_BOUNDS } from "./forest-habitat";
 import type { TreeInstance } from "./detailed-trees";
 import { calibrateStem } from "./tree-stem";
 import { selectForestLods } from "./forest-lod";
+import { SpatialInstances } from "./spatial-instances";
 
 export function forestGround(m: Materials) {
   const mat = new T.MeshStandardMaterial({
@@ -75,6 +76,7 @@ export class ForestDetail {
   private sourceWidth = [1, 1];
   private sourceStem = [0.08, 0.08];
   private pools: Pool[] = [];
+  private batches: SpatialInstances[] = [];
   private sites = new SpatialHash<Site>(40);
   private lastX = Infinity;
   private lastZ = Infinity;
@@ -160,6 +162,9 @@ export class ForestDetail {
           mesh.frustumCulled = false;
           mesh.castShadow = mesh.receiveShadow = true;
           scene.add(mesh);
+          result.batches.push(
+            new SpatialInstances(mesh, scene, 32, ["treeStemScale"]),
+          );
           (medium ? result.mediumConifers : result.conifers)[variant].push(
             mesh,
           );
@@ -219,6 +224,7 @@ export class ForestDetail {
           mesh.castShadow = kind !== "moss";
           mesh.receiveShadow = true;
           scene.add(mesh);
+          result.batches.push(new SpatialInstances(mesh, scene, 24));
           result.pools.push({
             mesh,
             kind,
@@ -418,5 +424,6 @@ export class ForestDetail {
       p.mesh.instanceMatrix.needsUpdate = true;
       if (p.mesh.instanceColor) p.mesh.instanceColor.needsUpdate = true;
     }
+    for (const batch of this.batches) batch.update();
   }
 }
