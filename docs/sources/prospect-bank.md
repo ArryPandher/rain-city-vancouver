@@ -18,4 +18,4 @@ The forecourt is a small authored polygon between the mapped outer wall, lightho
 
 ## Limits
 
-The bank outline, plant distribution, vegetation species, drainage details and retaining profile are estimated. The 2002 contour-derived cliff remains coarse and does not reproduce overhangs. Repeated plants and tree forms remain visible, and broad seaward views are costly on laptop hardware. These are improvements to the playable prototype; they do not establish AAA fidelity or a current survey of Prospect Point.
+The bank outline, plant distribution, vegetation species, drainage details and retaining profile are estimated. The 2002 contour base now has a shared one-metre interpreted detail patch, rock windows and closed forecourt cuts; see [local geology refinement](prospect-geology.md). It still does not reproduce overhangs. Repeated plants and tree forms remain visible, and broad seaward views are costly on laptop hardware. These are improvements to the playable prototype; they do not establish AAA fidelity or a current survey of Prospect Point.

@@ -15,6 +15,12 @@ export const STANLEY_BOUNDS = {
   minZ: -3440,
   maxZ: -1380,
 };
+// The general Stanley Park polygon includes this photographed wooded rim, but
+// the smaller woodland extract omits it. Keep the adjoining mapped plaza open.
+export const PROSPECT_RIM = [
+  -1680, -3380, -1640, -3400, -1608, -3408, -1588, -3396, -1600, -3360, -1638,
+  -3325, -1680, -3340,
+];
 function contains(a: Area, x: number, z: number) {
   return (
     pointInPoly(x, z, a.pts) && !a.holes?.some((h) => pointInPoly(x, z, h))
@@ -77,7 +83,8 @@ export class ForestHabitat {
       x < b.maxX &&
       z > b.minZ &&
       z < b.maxZ &&
-      this.woodlandIndex.query(x, z, 0).some((a) => contains(a, x, z)) &&
+      (this.woodlandIndex.query(x, z, 0).some((a) => contains(a, x, z)) ||
+        pointInPoly(x, z, PROSPECT_RIM)) &&
       !this.openingIndex.query(x, z, 0).some((a) => contains(a, x, z))
     );
   }
@@ -138,7 +145,9 @@ export class ForestHabitat {
           !this.clear(x, z, 2.4)
         )
           continue;
-        const h = 22 + r() * 20;
+        const h = pointInPoly(x, z, PROSPECT_RIM)
+          ? 14 + r() * 13
+          : 22 + r() * 20;
         const t = treeProfile(x, z, h, 0.4 + (h - 22) * 0.035, {
           name: "Coastal conifer interpretation",
           genus: "PSEUDOTSUGA",

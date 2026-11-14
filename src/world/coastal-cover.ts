@@ -4,6 +4,7 @@ import type { CityData } from "./data";
 import { pointInPoly, segmentPoint, roadWidth } from "./data";
 import type { CollisionWorld } from "./collision";
 import { PROSPECT_PLANTING } from "./prospect-bank";
+import { coastalGrowth, coastalSlope } from "./prospect-geology";
 export function coastalCoverMask(data: CityData, collision: CollisionWorld) {
   const minX = -1700,
     minZ = -3432,
@@ -59,15 +60,12 @@ export function coastalCoverMask(data: CityData, collision: CollisionWorld) {
         const t = Math.max(0, Math.min(1, (v - a) / (b - a)));
         return t * t * (3 - 2 * t);
       };
-      const patch =
-        Math.sin(x * 0.083 + Math.sin(z * 0.047) * 1.4) +
-        Math.cos(z * 0.072 + y * 0.07);
       pixels[offset] = Math.round(
         255 *
           fade(edge, 0, 6) *
           fade(route, 0.75, 2.5) *
           fade(y, 2, 3) *
-          fade(patch, -1.65, -0.65),
+          coastalGrowth(x, y, z, coastalSlope(data.terrain, x, z)),
       );
     }
   const texture = new T.DataTexture(pixels, width, height, T.RGBAFormat);

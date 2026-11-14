@@ -5,9 +5,9 @@ import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import sharp from "sharp";
 import { Terrain } from "../src/world/terrain";
-import { ForestHabitat } from "../src/world/forest-habitat";
+import { ForestHabitat, PROSPECT_RIM } from "../src/world/forest-habitat";
 import { CollisionWorld } from "../src/world/collision";
-import { ORIGIN, KX, type CityData } from "../src/world/data";
+import { ORIGIN, KX, pointInPoly, type CityData } from "../src/world/data";
 import { selectForestLods } from "../src/world/forest-lod";
 function habitat() {
   const d = JSON.parse(
@@ -60,7 +60,8 @@ test("forest planting keeps its height range, solid trunks and clearance from ev
   assert.ok(trees.length > 10000 && trees.length < 50000);
   for (const t of trees) {
     assert.ok(h.clear(t.x, t.z, 2.4));
-    assert.ok(t.height >= 22 && t.height <= 42);
+    const rim = pointInPoly(t.x, t.z, PROSPECT_RIM);
+    assert.ok(t.height >= (rim ? 14 : 22) && t.height <= (rim ? 27 : 42));
   }
   for (const t of trees.slice(0, 20))
     collision.addForestTrunk(t.x, t.z, t.diameter / 2);

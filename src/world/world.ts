@@ -35,10 +35,15 @@ import { ROBSON_PLANTERS, gridXZ } from "./robson-site";
 import { reconcileTrees, treeProfile, type TreeProfile } from "./tree-profile";
 import { ForestHabitat } from "./forest-habitat";
 import { ForestDetail, forestGround } from "./forest";
-import { terrainMeshes, type TerrainArea } from "./terrain-mesh";
+import {
+  terrainMeshes,
+  terrainCutWall,
+  type TerrainArea,
+} from "./terrain-mesh";
 import { cliffMaterials } from "./cliff-material";
 import { buildSeawall, seawallPavers } from "./seawall";
 import { buildProspectBank } from "./prospect-bank";
+import { addProspectGeology } from "./prospect-geology";
 import { CoastalVegetation } from "./coastal-vegetation";
 import { coastalCoverMaterials } from "./coastal-cover";
 import { PROSPECT_FORECOURT } from "./prospect-site";
@@ -92,6 +97,7 @@ export class World {
   async build(report: (text: string, n: number) => void) {
     report("Loading Vancouver’s streets", 0.12);
     this.collision = new CollisionWorld(this.data);
+    addProspectGeology(this.data, this.collision);
     this.forestHabitat = new ForestHabitat(this.data, this.collision);
     this.terrain();
     this.roads();
@@ -339,6 +345,9 @@ export class World {
         cover(cliff(m.grass)),
         this.data.ocean,
         [PROSPECT_FORECOURT],
+      );
+      ground.push(
+        terrainCutWall(elevationGrid, PROSPECT_FORECOURT, 2.06, cliff(m.stone)),
       );
       this.root.add(...ground);
       this.chunks.push(...ground);

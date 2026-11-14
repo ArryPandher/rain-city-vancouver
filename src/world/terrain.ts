@@ -12,6 +12,8 @@ export interface TerrainMetadata {
 }
 /** One sampled surface for rendering, actors, vegetation and collision. */
 export class Terrain {
+  /** Aligned finer grids replace coarse cells, including their collision surface. */
+  details: Terrain[] = [];
   constructor(
     public meta: TerrainMetadata,
     public values: Uint16Array,
@@ -55,7 +57,11 @@ export class Terrain {
       maxZ >= this.meta.minZ
     );
   }
-  height(x: number, z: number) {
+  height(x: number, z: number): number {
+    const detail = this.details.find((grid) => grid.contains(x, z));
+    return detail ? detail.height(x, z) : this.baseHeight(x, z);
+  }
+  baseHeight(x: number, z: number) {
     if (!this.contains(x, z)) return 0;
     const m = this.meta,
       u = (x - m.minX) / m.step,

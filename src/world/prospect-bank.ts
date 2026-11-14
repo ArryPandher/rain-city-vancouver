@@ -13,6 +13,7 @@ import type { Materials } from "./materials";
 import { seawallGround, seawallPavers } from "./seawall";
 import { PROSPECT_FORECOURT, prospectForecourtHeight } from "./prospect-site";
 import { PROSPECT_LIGHT_ID } from "./prospect-lighthouse";
+import { coastalGrowth, coastalSlope } from "./prospect-geology";
 
 // Interpreted from the photographed bank and anchored to mapped path/building points.
 // These are scenic retaining edges, not surveyed engineering centre lines.
@@ -43,13 +44,14 @@ export function coastalPlantSites(data: CityData, collision: CollisionWorld) {
     terrain = data.terrain;
   if (!terrain) return out;
   // Uniform surface-area sampling avoids empty vertical bands on steep faces.
-  for (let x = -1700; x < -1460; x += 4)
-    for (let z = -3432; z < -3260; z += 4) {
+  const step = terrain.details.length ? 1 : 4;
+  for (let x = -1700; x < -1460; x += step)
+    for (let z = -3432; z < -3260; z += step) {
       const vertices = [
         [x, z],
-        [x + 4, z],
-        [x, z + 4],
-        [x + 4, z + 4],
+        [x + step, z],
+        [x, z + step],
+        [x + step, z + step],
       ].map(([xx, zz]) => new T.Vector3(xx, terrain.height(xx, zz), zz));
       for (const [ti, ids] of [
         [0, [0, 2, 1]],
@@ -77,11 +79,13 @@ export function coastalPlantSites(data: CityData, collision: CollisionWorld) {
             collision.water(p.x, p.z, p.y)
           )
             continue;
-          // Broad, connected thickets with small rock windows, rather than a uniform carpet.
-          const patch =
-            Math.sin(p.x * 0.083 + Math.sin(p.z * 0.047) * 1.4) +
-            Math.cos(p.z * 0.072 + p.y * 0.07);
-          if (p.y > 8 && patch < -0.95) continue;
+          const growth = coastalGrowth(
+            p.x,
+            p.y,
+            p.z,
+            coastalSlope(terrain, p.x, p.z),
+          );
+          if (r() > growth) continue;
           const height = (p.y < 6 ? 1.15 : 0.8) + r() * 0.55,
             radius = height * 1.3 + 0.1;
           if (collision.blocked(p.x, p.z, radius, p.y)) continue;
