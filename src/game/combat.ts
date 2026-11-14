@@ -257,7 +257,22 @@ export class Combat {
         new T.BoxGeometry(1.15, 1.55, 0.12),
         new T.MeshStandardMaterial({ map: tex, roughness: 0.8 }),
       );
-      target.position.set(pos[0], 1.5, pos[1]);
+      target.position.set(
+        pos[0],
+        this.world.collision.height(...pos) + 1.5,
+        pos[1],
+      );
+      const standMat = new T.MeshStandardMaterial({
+        color: 0x484d4c,
+        metalness: 0.4,
+        roughness: 0.7,
+      });
+      const stand = new T.Mesh(new T.BoxGeometry(0.07, 0.82, 0.07), standMat);
+      stand.position.y = -1.08;
+      target.add(stand);
+      const foot = new T.Mesh(new T.BoxGeometry(0.95, 0.045, 0.7), standMat);
+      foot.position.y = -1.475;
+      target.add(foot);
       target.rotation.y = heading;
       target.userData.health = 50;
       this.world.scene.add(target);

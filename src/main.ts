@@ -9,7 +9,7 @@ import { loadCity, LANDMARKS, geo, ungeo } from "./world/data";
 import { World, Weather } from "./world/world";
 import { UI } from "./ui/ui";
 import { Actors, Vehicle } from "./game/actors";
-import { makeCharacter, Character } from "./game/character";
+import { makeCharacter, makeWeapon, Character } from "./game/character";
 import { drive, damp, angleDelta } from "./game/physics";
 import { GameAudio } from "./game/audio";
 import { Combat, WEAPONS } from "./game/combat";
@@ -29,6 +29,7 @@ class Game {
   missions!: Missions;
   audio = new GameAudio();
   vehicle: Vehicle | null = null;
+  viewWeapons: T.Group[] = [];
   player = new T.Vector3();
   heading = 0;
   velocityY = 0;
@@ -186,7 +187,23 @@ class Game {
     );
     this.actors = new Actors(this.world);
     this.character = makeCharacter(this.world.materials);
-    this.scene.add(this.character.group);
+    this.scene.add(this.character.group, this.camera);
+    for (let i = 0; i < 3; i++) {
+      const weapon = makeWeapon(this.world.materials, i);
+      weapon.rotation.set(0, Math.PI, 0);
+      weapon.position.set(0.19, -0.2, -0.36);
+      weapon.visible = false;
+      this.camera.add(weapon);
+      this.viewWeapons.push(weapon);
+      const skin = new T.MeshStandardMaterial({
+        color: 0xb58b6e,
+        roughness: 0.85,
+      });
+      const hand = new T.Mesh(new T.CapsuleGeometry(0.035, 0.055, 4, 12), skin);
+      hand.position.set(0.012, -0.085, -0.005);
+      hand.rotation.x = -0.45;
+      weapon.add(hand);
+    }
     this.combat = new Combat(
       this.world,
       this.actors,
@@ -657,6 +674,24 @@ class Game {
     if (ui.mapOpen) ui.drawMap();
   }
   setCamera(immediate = false, dt = 0.016) {
+    this.viewWeapons.forEach((w, i) => {
+      w.visible =
+        !ui.introOpen &&
+        !this.photo &&
+        !this.vehicle &&
+        this.cameraMode === 2 &&
+        !this.combat?.holstered &&
+        this.combat?.selected === i;
+      w.position.set(
+        this.aiming ? 0.06 : 0.17,
+        -0.2 +
+          Math.sin(this.time * 8) * Math.min(0.008, this.footSpeed * 0.0015),
+        this.aiming ? -0.52 : -0.48,
+      );
+      w.rotation.x = this.combat
+        ? Math.min(0.11, this.combat.cooldown * 0.25)
+        : 0;
+    });
     if (ui.introOpen) {
       const p = geo(49.2858, -123.1081);
       this.camera.position.set(

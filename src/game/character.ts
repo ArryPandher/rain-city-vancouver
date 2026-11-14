@@ -350,8 +350,23 @@ export function makeWeapon(m: Materials, type: number) {
       roughness: 0.78,
     });
   const len = type === 0 ? 0.24 : type === 1 ? 0.68 : 0.82;
-  box(g, steel, 0, 0, len * 0.22, 0.055, 0.06, len * 0.65);
-  box(g, grip, 0, -0.075, 0, 0.045, 0.13, 0.065);
+  mesh(
+    new RoundedBoxGeometry(0.055, 0.06, len * 0.65, 3, 0.005),
+    steel,
+    g,
+    0,
+    0,
+    len * 0.22,
+  );
+  const handle = mesh(
+    new RoundedBoxGeometry(0.048, 0.137, 0.067, 3, 0.009),
+    grip,
+    g,
+    0,
+    -0.078,
+    0,
+  );
+  handle.rotation.x = -0.16;
   const barrel = mesh(
     new T.CylinderGeometry(
       type === 2 ? 0.017 : 0.012,
@@ -367,12 +382,52 @@ export function makeWeapon(m: Materials, type: number) {
   );
   barrel.rotation.x = Math.PI / 2;
   if (type > 0) {
-    box(g, grip, 0, -0.032, -0.16, 0.07, 0.11, 0.26);
-    box(g, grip, 0, -0.04, 0.24, 0.073, 0.07, 0.22);
+    mesh(
+      new RoundedBoxGeometry(0.07, 0.11, 0.26, 3, 0.012),
+      grip,
+      g,
+      0,
+      -0.032,
+      -0.16,
+    );
+    mesh(
+      new RoundedBoxGeometry(0.073, 0.07, 0.22, 3, 0.01),
+      grip,
+      g,
+      0,
+      -0.04,
+      0.24,
+    );
+    for (let i = 0; i < 12; i++)
+      box(g, steel, 0, 0.066, 0.015 + i * 0.022, 0.057, 0.012, 0.011);
     box(g, steel, 0, -0.13, 0.105, 0.038, 0.16, 0.07);
     box(g, m.dark, 0, 0.063, 0.14, 0.03, 0.03, 0.16);
   } else {
-    box(g, m.chrome, 0, 0.04, 0.04, 0.025, 0.01, 0.09);
+    box(g, m.dark, 0, 0.04, -0.015, 0.035, 0.018, 0.013);
+    box(g, m.dark, 0, 0.04, 0.16, 0.009, 0.017, 0.014);
+    for (const side of [-1, 1])
+      for (let i = 0; i < 7; i++)
+        box(
+          g,
+          m.dark,
+          side * 0.0283,
+          0.002,
+          -0.018 + i * 0.007,
+          0.002,
+          0.042,
+          0.002,
+        );
+    box(g, m.dark, 0.0285, 0.012, 0.075, 0.002, 0.016, 0.034);
+    for (let i = 0; i < 9; i++)
+      box(g, m.dark, 0, -0.042 - i * 0.009, -0.035, 0.041, 0.002, 0.004);
+    const muzzle = mesh(
+      new T.CircleGeometry(0.008, 16),
+      m.dark,
+      g,
+      0,
+      0,
+      len * 0.96 + 0.0005,
+    );
   }
   const trigger = new T.TorusGeometry(0.024, 0.004, 5, 10, Math.PI * 1.6);
   const t = mesh(trigger, steel, g, 0, -0.055, 0.068);
