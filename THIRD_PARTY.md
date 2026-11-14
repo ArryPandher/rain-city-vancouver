@@ -8,11 +8,15 @@ Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright
 
 ## Photography — Poly Haven / CC0
 
-Asphalt 02, Concrete Pavement, Aerial Grass Rock, Belfast Sunset PureSky, Kloofendal Overcast PureSky, Kloofendal 48d Partly Cloudy PureSky, Modern Evening Street, Tree Small 02 detailed tree and foliage, Cobblestone Floor 05, Fir Tree 01 branches and bark, and additional architectural texture maps are from [Poly Haven](https://polyhaven.com), licensed [CC0](https://creativecommons.org/publicdomain/zero/1.0/). Exact files and source URLs are recorded in `public/asset-manifest.json`. The broadleaf and fir branch cards are modified/cropped/composited from those photographs.
+Asphalt 02, Concrete Pavement, Aerial Grass Rock, Belfast Sunset PureSky, Kloofendal Overcast PureSky, Kloofendal 48d Partly Cloudy PureSky, Modern Evening Street, Tree Small 02 detailed tree and foliage, Cobblestone Floor 05, Fir Tree 01 branches and bark, and additional architectural texture maps are from [Poly Haven](https://polyhaven.com), licensed [CC0](https://creativecommons.org/publicdomain/zero/1.0/). Exact files and source URLs are recorded in `public/asset-manifest.json`. The broadleaf and fir branch cards are modified/cropped/composited from those photographs. Night reflections use **Modern Buildings Night** by **Greg Zaal** (CC0), as a generic lighting environment rather than visible Vancouver scenery. Reflection radiance is limited to prevent excessive panoramic lamp highlights; [source record](docs/sources/night-reflections.json).
 
 Photographed shop rooms use **Comfy Café** and **Decor Shop** by **Sergej Majboroda**, and **Phone Shop** by **Philip Modin**, from Poly Haven under CC0. They are resized WebP panoramas projected into virtual room boxes behind the windows. These are fictional interiors and do not depict the actual Vancouver business at an address. [Exact sources and modifications](public/textures/interiors/SOURCES.json); [reproduction script](scripts/fetch-shop-interiors.mjs).
 
 Nearby residential door and window geometry is extracted from **Modular Urban Apartments Facade**, **James Ray Cock**, [Poly Haven](https://polyhaven.com/a/modular_urban_apartments_facade), CC0. Selected parts are pivot normalized, scaled and instanced; textures are converted to WebP. [Source manifest](docs/sources/architectural-details.json) and [reproduction script](scripts/fetch-architectural-details.mjs). These details are generic architectural interpretation, not an address-specific survey.
+
+## Glass façade materials — ambientCG / CC0
+
+The curtain-wall color, normal, roughness and metalness maps are adapted from [Facade006](https://ambientcg.com/view?id=Facade006), **ambientCG**, [CC0](https://docs.ambientcg.com/license/). This is an artist-authored procedural PBR material, not Vancouver photography. A sparse night-light texture is derived from its glass mask; the material is calibrated to 1.6 m panes and 3.2 m floors and paired with modeled mullions. [Source manifest](public/textures/curtain-wall/SOURCES.json); [reproduction script](scripts/fetch-curtain-facade.mjs).
 
 ## Vancouver landmark models — Codriver / CC BY 4.0
 

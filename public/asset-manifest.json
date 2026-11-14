@@ -416,5 +416,53 @@
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "changes": "Extracted two doors and one window; normalized pivots, removed unused geometry/textures, converted textures to 1024 px WebP. Runtime bounded instancing, scaling and glass material adaptation."
+  },
+  {
+    "file": "textures/curtain-wall/color.webp",
+    "source": "https://ambientcg.com/view?id=Facade006",
+    "credit": "ambientCG",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://docs.ambientcg.com/license/",
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+  },
+  {
+    "file": "textures/curtain-wall/emission.webp",
+    "source": "https://ambientcg.com/view?id=Facade006",
+    "credit": "ambientCG",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://docs.ambientcg.com/license/",
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+  },
+  {
+    "file": "textures/curtain-wall/metalness.webp",
+    "source": "https://ambientcg.com/view?id=Facade006",
+    "credit": "ambientCG",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://docs.ambientcg.com/license/",
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+  },
+  {
+    "file": "textures/curtain-wall/normalgl.webp",
+    "source": "https://ambientcg.com/view?id=Facade006",
+    "credit": "ambientCG",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://docs.ambientcg.com/license/",
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+  },
+  {
+    "file": "textures/curtain-wall/roughness.webp",
+    "source": "https://ambientcg.com/view?id=Facade006",
+    "credit": "ambientCG",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://docs.ambientcg.com/license/",
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+  },
+  {
+    "file": "textures/night-reflections.hdr",
+    "source": "https://polyhaven.com/a/modern_buildings_night",
+    "credit": "Greg Zaal / Poly Haven",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Used as a generic night reflection and lighting environment, not visible Vancouver background scenery. Runtime highlight limiting preserves source colour."
   }
 ]

@@ -1,0 +1,11 @@
+{
+  "title": "Modern Buildings Night",
+  "authors": {
+    "Greg Zaal": "All"
+  },
+  "source": "https://polyhaven.com/a/modern_buildings_night",
+  "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/modern_buildings_night_2k.hdr",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "changes": "Used as a generic night reflection and lighting environment, not visible Vancouver background scenery."
+}

@@ -28,6 +28,7 @@ export class Materials {
   yellow = new T.MeshStandardMaterial({ color: 0xd9bf6a, roughness: 0.6 });
   facades: T.MeshStandardMaterial[] = [];
   photoFacades: T.MeshStandardMaterial[] = [];
+  curtainMaps?: Record<string, T.Texture>;
   roof = new T.MeshStandardMaterial({ color: 0x647276, roughness: 0.8 });
   constructor() {
     this.asphalt = this.pbr("asphalt_02", 0x92999b, 0.48);
@@ -35,7 +36,8 @@ export class Materials {
     this.asphalt.metalness = 0.12;
     this.concrete = this.pbr("concrete_pavement", 0xb4b0a7, 0.84);
     this.grass = this.pbr("aerial_grass_rock", 0x688052, 0.97);
-    for (let i = 0; i < 12; i++) this.facades.push(this.facade(i));
+    for (let i = 0; i < 12; i++)
+      this.facades.push(i < 3 ? this.curtainFacade(i) : this.facade(i));
     const photos: [string, number, number][] = [
       ["palms-arches", 10, 4.5],
       ["palms-sash", 10, 3.8],
@@ -207,8 +209,49 @@ export class Materials {
     }
     return material;
   }
+  curtainFacade(style: number) {
+    if (!this.curtainMaps) {
+      this.curtainMaps = {};
+      for (const key of [
+        "color",
+        "normalgl",
+        "roughness",
+        "metalness",
+        "emission",
+      ]) {
+        const texture = this.texture(
+          `curtain-wall/${key}.webp`,
+          key === "color" || key === "emission",
+        );
+        texture.repeat.set(24 / 22.4, 51.2 / 25.6);
+        this.curtainMaps[key] = texture;
+      }
+    }
+    const maps = this.curtainMaps;
+    return new T.MeshPhysicalMaterial({
+      name: "Detailed curtain wall",
+      color: [0xc1d6d7, 0xc2ccc1, 0xbccbd6][style],
+      map: maps.color,
+      normalMap: maps.normalgl,
+      normalScale: new T.Vector2(0.3, 0.3),
+      roughnessMap: maps.roughness,
+      metalnessMap: maps.metalness,
+      roughness: 0.62,
+      metalness: 0.85,
+      clearcoat: 0.45,
+      clearcoatRoughness: 0.2,
+      envMapIntensity: 1.0,
+      emissiveMap: maps.emission,
+      emissive: 0xfff1d8,
+      emissiveIntensity: 0.02,
+    });
+  }
   setNight(n: number) {
-    this.facades.forEach((m) => (m.emissiveIntensity = 0.12 + n * 0.8));
+    this.facades.forEach(
+      (m) =>
+        (m.emissiveIntensity =
+          (m.name === "Detailed curtain wall" ? 0.02 : 0.12) + n * 0.8),
+    );
   }
 }
 export function label(

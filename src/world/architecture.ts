@@ -79,6 +79,11 @@ export function architecture(
       roughness: 0.5,
     }),
     ledge = new T.MeshStandardMaterial({ color: 0xa9ada8, roughness: 0.79 });
+  const curtainFrame = new T.MeshStandardMaterial({
+    color: 0xabb6b7,
+    metalness: 0.65,
+    roughness: 0.38,
+  });
   m.facades.forEach((mat) => {
     mat.vertexColors = true;
     mat.side = T.DoubleSide;
@@ -148,7 +153,48 @@ export function architecture(
           x,
           z,
         );
-        if (h > 24 && style % 3 === 0) {
+        if (h > 35 && style < 3) {
+          const midX = (ax + bx) / 2,
+            midZ = (az + bz) / 2;
+          let nx = -(bz - az) / len,
+            nz = (bx - ax) / len;
+          if (nx * (midX - x) + nz * (midZ - z) < 0) {
+            nx = -nx;
+            nz = -nz;
+          }
+          for (let along = 0; along <= len; along += 1.6) {
+            const t = along / len;
+            detail.add(
+              sideBox(
+                ax + (bx - ax) * t + nx * 0.045,
+                (h + podium) / 2,
+                az + (bz - az) * t + nz * 0.045,
+                0.055,
+                h - podium,
+                0.09,
+                angle,
+              ),
+              curtainFrame,
+              x,
+              z,
+            );
+          }
+          for (let y = podium + 3.2; y < h; y += 3.2)
+            detail.add(
+              sideBox(
+                midX + nx * 0.045,
+                y,
+                midZ + nz * 0.045,
+                len,
+                0.095,
+                0.09,
+                angle,
+              ),
+              curtainFrame,
+              x,
+              z,
+            );
+        } else if (h > 24 && style % 3 === 0) {
           for (let y = podium + 3.2; y < h; y += 6.4)
             detail.add(
               sideBox((ax + bx) / 2, y, (az + bz) / 2, len, 0.16, 0.23, angle),

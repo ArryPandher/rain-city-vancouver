@@ -1,0 +1,10 @@
+{
+  "title": "Facade006",
+  "credit": "ambientCG",
+  "source": "https://ambientcg.com/view?id=Facade006",
+  "download": "https://ambientcg.com/get?file=Facade006_2K-JPG.zip",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://docs.ambientcg.com/license/",
+  "technique": "Artist-authored procedural PBR material; not photography",
+  "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 × 25.6 m tile calibration (14 panes / 8 floors)."
+}

@@ -1,5 +1,5 @@
 import * as T from "three";
-import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
   CityData,
@@ -37,6 +37,7 @@ export class World {
   rain!: T.Points;
   time = 0;
   skyTextures: Record<string, T.Texture> = {};
+  reflectionTextures: Record<string, T.Texture> = {};
   nightLights: T.MeshStandardMaterial[] = [];
   northShore?: T.MeshBasicMaterial;
   detailedTrees?: DetailedTrees;
@@ -102,14 +103,45 @@ export class World {
     this.mountains();
     this.createRain();
     try {
-      const loader = new RGBELoader();
-      const [sunset, overcast, env, daylight] = await Promise.all(
-        ["sunset", "overcast", "city-reflections", "sky"].map((name) =>
-          loader.loadAsync(`${BASE}textures/${name}.hdr`),
-        ),
+      const loader = new HDRLoader().setDataType(T.HalfFloatType);
+      const [sunset, overcast, env, daylight, nightEnv] = await Promise.all(
+        [
+          "sunset",
+          "overcast",
+          "city-reflections",
+          "sky",
+          "night-reflections",
+        ].map((name) => loader.loadAsync(`${BASE}textures/${name}.hdr`)),
       );
-      for (const t of [sunset, overcast, env, daylight])
+      for (const t of [sunset, overcast, env, daylight, nightEnv])
         t.mapping = T.EquirectangularReflectionMapping;
+      // Panoramic streetlamps should not turn into enormous distant light balls
+      // on every façade. Preserve their colour while limiting reflection radiance.
+      for (const [texture, limit] of [
+        [env, 8],
+        [nightEnv, 4],
+      ] as const) {
+        const pixels = texture.image.data as Uint16Array;
+        for (let i = 0; i < pixels.length; i += 4) {
+          const r = T.DataUtils.fromHalfFloat(pixels[i]),
+            g = T.DataUtils.fromHalfFloat(pixels[i + 1]),
+            b = T.DataUtils.fromHalfFloat(pixels[i + 2]),
+            luminance = r * 0.2126 + g * 0.7152 + b * 0.0722;
+          if (luminance > limit) {
+            const scale = limit / luminance;
+            pixels[i] = T.DataUtils.toHalfFloat(r * scale);
+            pixels[i + 1] = T.DataUtils.toHalfFloat(g * scale);
+            pixels[i + 2] = T.DataUtils.toHalfFloat(b * scale);
+          }
+        }
+        texture.needsUpdate = true;
+      }
+      this.reflectionTextures = {
+        day: env,
+        golden: env,
+        overcast: env,
+        night: nightEnv,
+      };
       this.skyTextures = {
         day: daylight,
         golden: sunset,
@@ -872,6 +904,8 @@ export class World {
       rain = w === "overcast",
       day = w === "day";
     if (this.skyTextures[w]) this.scene.background = this.skyTextures[w];
+    if (this.reflectionTextures[w])
+      this.scene.environment = this.reflectionTextures[w];
     this.sun.color.set(
       night ? 0xaec9f9 : rain ? 0xcbd9e2 : day ? 0xffefd9 : 0xffc28c,
     );
