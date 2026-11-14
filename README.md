@@ -2,6 +2,8 @@
 
 **[Play in your browser](https://arrypandher.github.io/rain-city-vancouver/)** · [Controls](#controls) · [Credits](THIRD_PARTY.md) · [Verification](docs/PLAYTEST.md)
 
+![Rain City waterfront with Canada Place and the North Shore](docs/screenshots/vancouver-waterfront.webp)
+
 An original open-world Vancouver playground by Arry Pandher. Drive a detailed concept car through downtown, get out and walk, take a bike around Stanley Park, or try three weapons in target practice.
 
 Real OpenStreetMap streets and footprints cover downtown, Stanley Park, East Vancouver and the Second Narrows crossing. Explore Canada Place, Robson Square, Granville Street, Gastown, English Bay, Science World, Cambie Bridge, the Ironworkers Memorial crossing and more.
@@ -46,6 +48,10 @@ npm run dev
 Open http://127.0.0.1:5178/. Build with `npm run build`, run simulation tests with `npm test`, and preview the built game with `npm run preview` at http://127.0.0.1:4178/. Append `?debug=1` to display performance counters. A developer API is available as `window.rainCity` for reproducible local checks.
 
 GitHub Actions builds and deploys `main` to GitHub Pages. No service keys or paid hosting required. Runtime assets are served with the game; geographic data is not fetched from Overpass during play.
+
+![Driving on West Cordova Street in the playable build](docs/screenshots/downtown-driving.webp)
+
+Actual game captures; scene assets and photography credited below.
 
 ## Technology and assets
 

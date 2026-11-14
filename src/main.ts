@@ -702,6 +702,18 @@ class Game {
     if (ui.mapOpen) ui.drawMap();
   }
   setCamera(immediate = false, dt = 0.016) {
+    // Aerial views need depth precision for water/road layers separated by centimetres.
+    const near = ui.introOpen
+      ? 8
+      : this.photo
+        ? Math.min(8, Math.max(0.35, this.photoPos.y * 0.025))
+        : this.cameraMode === 2
+          ? 0.08
+          : 0.35;
+    if (this.camera.near !== near) {
+      this.camera.near = near;
+      this.camera.updateProjectionMatrix();
+    }
     this.viewWeapons.forEach((w, i) => {
       w.visible =
         !ui.introOpen &&
