@@ -1,4 +1,5 @@
 import { Vector2 } from "three";
+import type { PublicTreeLayer } from "./tree-profile";
 export type Point = [number, number];
 export interface Road {
   id?: string;
@@ -53,6 +54,7 @@ export interface CityData {
   areas: Area[];
   buildings: Building[];
   trees: number[];
+  publicTrees?: PublicTreeLayer;
   ocean: number[][];
   pois: { name: string; kind: string; x: number; y: number }[];
 }
@@ -202,6 +204,22 @@ export async function loadCity(): Promise<CityData> {
     }
   } catch (e) {
     console.warn("Building metadata unavailable; using the base map", e);
+  }
+  try {
+    const response = await fetch(
+      `${import.meta.env.BASE_URL}data/vancouver-public-trees.json`,
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const layer = await response.json();
+    if (
+      !Array.isArray(layer.trees) ||
+      !Array.isArray(layer.species) ||
+      !Array.isArray(layer.plantingSites)
+    )
+      throw new Error("Invalid public-tree layer");
+    d.publicTrees = layer;
+  } catch (e) {
+    console.warn("City tree inventory unavailable; using mapped trees", e);
   }
   return d;
 }

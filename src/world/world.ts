@@ -32,6 +32,7 @@ import {
   sidewalkSides,
 } from "./road-profile";
 import { ROBSON_PLANTERS, gridXZ } from "./robson-site";
+import { reconcileTrees, treeProfile, type TreeProfile } from "./tree-profile";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -414,14 +415,11 @@ export class World {
   vegetation() {
     const rand = seeded(7503),
       m = this.materials,
-      trees: number[][] = [];
-    for (let i = 0; i < this.data.trees.length; i += 2) {
-      const x = this.data.trees[i],
-        z = this.data.trees[i + 1];
-      if (this.collision.water(x, z) || this.collision.blocked(x, z, 1))
-        continue;
-      trees.push([x, z, 5 + rand() * 9, rand()]);
-    }
+      trees = reconcileTrees(this.data.trees, this.data.publicTrees).filter(
+        (t) =>
+          !this.collision.water(t.x, t.z) &&
+          !this.collision.blocked(t.x, t.z, 0.35),
+      );
     // Densify the forest interior while keeping mapped roads and trails open.
     if (this.collision.robsonGarden)
       for (const bed of ROBSON_PLANTERS) {
@@ -429,7 +427,10 @@ export class World {
           base = this.collision.height(cx, cz) + 0.84;
         for (const offset of [-3.7, 0, 3.7]) {
           const [x, z] = gridXZ(bed.u + offset, bed.v);
-          trees.push([x, z, 5.5 + rand() * 2.5, rand(), base]);
+          trees.push({
+            ...treeProfile(x, z, 5.5 + rand() * 2.5),
+            ground: base,
+          });
         }
       }
     const stanley = this.data.areas.filter((a) =>
@@ -463,11 +464,19 @@ export class World {
           if (Math.hypot(x - ax - vx * t, z - az - vz * t) < 5) path = true;
         }
       }
-      if (!path) trees.push([x, z, 15 + rand() * 17, rand()]);
+      if (!path)
+        trees.push(
+          treeProfile(x, z, 15 + rand() * 17, null, {
+            name: "Douglas fir",
+            genus: "PSEUDOTSUGA",
+            species: "MENZIESII",
+            cultivar: "",
+          }),
+        );
     }
-    const chunkTrees = new Map<string, number[][]>();
+    const chunkTrees = new Map<string, TreeProfile[]>();
     for (const t of trees) {
-      const k = Math.floor(t[0] / 350) + "," + Math.floor(t[1] / 350);
+      const k = Math.floor(t.x / 350) + "," + Math.floor(t.z / 350);
       let a = chunkTrees.get(k);
       if (!a) chunkTrees.set(k, (a = []));
       a.push(t);
@@ -516,6 +525,18 @@ export class World {
       leafParts.push(g);
     }
     const crownGeo = mergeGeometries(leafParts)!;
+    crownGeo.computeBoundingBox();
+    const crownBounds = crownGeo.boundingBox!.clone();
+    crownGeo.translate(
+      -(crownBounds.min.x + crownBounds.max.x) / 2,
+      -crownBounds.min.y,
+      -(crownBounds.min.z + crownBounds.max.z) / 2,
+    );
+    crownGeo.scale(
+      1 / (crownBounds.max.x - crownBounds.min.x),
+      1 / (crownBounds.max.y - crownBounds.min.y),
+      1 / (crownBounds.max.z - crownBounds.min.z),
+    );
     const pineParts: T.BufferGeometry[] = [];
     for (let layer = 0; layer < 12; layer++) {
       const y = layer * 0.21,
@@ -530,6 +551,18 @@ export class World {
       }
     }
     const pineGeo = mergeGeometries(pineParts)!;
+    pineGeo.computeBoundingBox();
+    const pineBounds = pineGeo.boundingBox!.clone();
+    pineGeo.translate(
+      -(pineBounds.min.x + pineBounds.max.x) / 2,
+      -pineBounds.min.y,
+      -(pineBounds.min.z + pineBounds.max.z) / 2,
+    );
+    pineGeo.scale(
+      1 / (pineBounds.max.x - pineBounds.min.x),
+      1 / (pineBounds.max.y - pineBounds.min.y),
+      1 / (pineBounds.max.z - pineBounds.min.z),
+    );
     const bark = new T.MeshStandardMaterial({
       map: m.texture("fir_tree_01-bark_diff.png", true),
       color: 0xaaa494,
@@ -539,7 +572,7 @@ export class World {
       color = new T.Color();
     for (const [key, list] of chunkTrees) {
       const trunk = new T.InstancedMesh(
-          new T.CylinderGeometry(0.6, 0.9, 1, 8),
+          new T.CylinderGeometry(0.35, 0.55, 1, 10),
           bark,
           list.length,
         ),
@@ -548,25 +581,28 @@ export class World {
       let li = 0,
         pi = 0;
       for (let i = 0; i < list.length; i++) {
-        const [x, z, h, t] = list[i];
-        const ground = list[i][4] ?? this.collision.height(x, z);
-        dummy.position.set(x, ground + h * 0.35, z);
-        dummy.rotation.set(0, t * 6.28, 0);
-        dummy.scale.set(h * 0.023, h * 0.7, h * 0.023);
+        const profile = list[i],
+          { x, z, height: h, width, diameter, crownBase, rotation } = profile;
+        const t = rotation / (Math.PI * 2);
+        const ground = profile.ground ?? this.collision.height(x, z);
+        const trunkHeight = h * (crownBase + 0.2);
+        dummy.position.set(x, ground + trunkHeight / 2, z);
+        dummy.rotation.set(0, rotation, 0);
+        dummy.scale.set(diameter, trunkHeight, diameter);
         dummy.updateMatrix();
         trunk.setMatrixAt(i, dummy.matrix);
         const trunkMatrix = dummy.matrix.clone();
-        const pine = h > 14 && t > 0.2;
+        const pine = profile.form === "conifer";
         if (pine) {
-          dummy.position.set(x, ground + h * 0.4, z);
-          dummy.scale.set(h * 0.21, h * 0.22, h * 0.21);
+          dummy.position.set(x, ground + h * crownBase, z);
+          dummy.scale.set(width, h * (1 - crownBase), width);
           dummy.updateMatrix();
           pines.setMatrixAt(pi, dummy.matrix);
           color.setHSL(0.18 + t * 0.03, 0.07, 0.65 + t * 0.23);
           pines.setColorAt(pi++, color);
         } else {
-          dummy.position.set(x, ground + h * 0.73, z);
-          dummy.scale.set(h * 0.32, h * 0.44, h * 0.31);
+          dummy.position.set(x, ground + h * crownBase, z);
+          dummy.scale.set(width, h * (1 - crownBase), width);
           dummy.updateMatrix();
           leaves.setMatrixAt(li, dummy.matrix);
           color.setHSL(0.16 + t * 0.09, 0.08 + t * 0.08, 0.65 + t * 0.2);
@@ -575,7 +611,11 @@ export class World {
             y: ground,
             z,
             height: h,
-            rotation: t * 6.28,
+            width,
+            diameter,
+            sourceId: profile.sourceId,
+            form: profile.form,
+            rotation,
             crown: leaves,
             crownIndex: li,
             crownMatrix: dummy.matrix.clone(),

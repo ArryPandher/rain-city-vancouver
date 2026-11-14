@@ -668,5 +668,14 @@
     "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
     "credit": "Ben Aston",
     "changes": "Cropped photographed lettering and mounts; resized; an emission mask suppresses dark surroundings."
+  },
+  {
+    "file": "data/vancouver-public-trees.json",
+    "source": "https://opendata.vancouver.ca/explore/dataset/public-trees/",
+    "license": "Open Government Licence – Vancouver",
+    "licenseUrl": "https://opendata.vancouver.ca/pages/licence/",
+    "credit": "City of Vancouver",
+    "attribution": "Contains information licensed under the Open Government Licence – Vancouver.",
+    "modifications": "Bounded spatial extract, local metre projection, species dictionary, duplicate/invalid/planting-site filtering. See docs/sources/vancouver-public-trees.md."
   }
 ]
