@@ -1,0 +1,20 @@
+[
+  {
+    "file": "textures/coastal/leaf-cover-color.webp",
+    "source": "https://polyhaven.com/a/shrub_04",
+    "authors": {
+      "Rico Cilliers": "Leaf photography"
+    },
+    "license": "CC0-1.0",
+    "changes": "Individual licensed leaf crops layered into a seamless 1K groundcover tile; diffuse color moderated and a shallow normal estimated from image gradients. Runtime triplanar projection and an interpreted geographic planting mask. Not a Vancouver scan."
+  },
+  {
+    "file": "textures/coastal/leaf-cover-normal.webp",
+    "source": "https://polyhaven.com/a/shrub_04",
+    "authors": {
+      "Rico Cilliers": "Leaf photography"
+    },
+    "license": "CC0-1.0",
+    "changes": "Individual licensed leaf crops layered into a seamless 1K groundcover tile; diffuse color moderated and a shallow normal estimated from image gradients. Runtime triplanar projection and an interpreted geographic planting mask. Not a Vancouver scan."
+  }
+]

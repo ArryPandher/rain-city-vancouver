@@ -38,6 +38,10 @@ import { ForestDetail, forestGround } from "./forest";
 import { terrainMeshes, type TerrainArea } from "./terrain-mesh";
 import { cliffMaterials } from "./cliff-material";
 import { buildSeawall, seawallPavers } from "./seawall";
+import { buildProspectBank } from "./prospect-bank";
+import { CoastalVegetation } from "./coastal-vegetation";
+import { coastalCoverMaterials } from "./coastal-cover";
+import { PROSPECT_FORECOURT } from "./prospect-site";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -57,6 +61,7 @@ export class World {
   detailedTrees?: DetailedTrees;
   forestHabitat!: ForestHabitat;
   forestDetail?: ForestDetail;
+  coastalVegetation?: CoastalVegetation;
   coniferSamples: TreeInstance[] = [];
   detailedArchitecture?: DetailedArchitecture;
   architecturalDetails: ArchitecturalDetail[] = [];
@@ -92,6 +97,12 @@ export class World {
     this.roads();
     this.chunks.push(
       ...buildSeawall(this.root, this.data, this.materials, this.collision),
+      ...buildProspectBank(
+        this.root,
+        this.data,
+        this.materials,
+        this.collision,
+      ),
     );
     await new Promise((r) => setTimeout(r, 20));
     report("Raising the downtown skyline", 0.3);
@@ -124,6 +135,15 @@ export class World {
       console.warn("Forest detail unavailable; retaining distant trees", error);
     }
     await new Promise((r) => setTimeout(r, 20));
+    try {
+      this.coastalVegetation = await CoastalVegetation.load(
+        this.root,
+        this.data,
+        this.collision,
+      );
+    } catch (error) {
+      console.warn("Coastal planting unavailable", error);
+    }
     report("Building the waterfront", 0.68);
     const landmarkRoot = new T.Group();
     this.root.add(landmarkRoot);
@@ -305,16 +325,20 @@ export class World {
       } catch {}
     }
     if (elevationGrid) {
-      const cliff = cliffMaterials(m);
+      const cliff = cliffMaterials(m),
+        cover = coastalCoverMaterials(m, this.data, this.collision);
       const ground = terrainMeshes(
         elevationGrid,
         terrainAreas.map((item) => ({
           ...item,
           material:
-            item.material === m.concrete ? item.material : cliff(item.material),
+            item.material === m.concrete
+              ? item.material
+              : cover(cliff(item.material)),
         })),
-        cliff(m.grass),
+        cover(cliff(m.grass)),
         this.data.ocean,
+        [PROSPECT_FORECOURT],
       );
       this.root.add(...ground);
       this.chunks.push(...ground);
@@ -1054,6 +1078,7 @@ export class World {
         : 0.02;
       beacon.light.intensity = lit && this.weather === "night" ? 8 : 0;
     }
+    this.coastalVegetation?.update(this.time, x, z);
     this.detailedTrees?.update(x, z);
     this.forestDetail?.update(x, z);
     this.detailedArchitecture?.update(x, z);

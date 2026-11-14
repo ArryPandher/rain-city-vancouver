@@ -859,5 +859,32 @@
     "license": "CC0-1.0",
     "credit": "Poly Haven — Charlotte Baglioni (All)",
     "changes": "Converted to 2K WebP. World-aligned at a 2 m scale on tagged seawall paving; generic herringbone blocks, not a Vancouver scan."
+  },
+  {
+    "file": "textures/coastal/leaf-cover-color.webp",
+    "source": "https://polyhaven.com/a/shrub_04",
+    "authors": {
+      "Rico Cilliers": "Leaf photography"
+    },
+    "license": "CC0-1.0",
+    "changes": "Individual licensed leaf crops layered into a seamless 1K groundcover tile; diffuse color moderated and a shallow normal estimated from image gradients. Runtime triplanar projection and an interpreted geographic planting mask. Not a Vancouver scan.",
+    "credit": "Poly Haven — Rico Cilliers (leaf photography); Rain City (tile assembly)."
+  },
+  {
+    "file": "textures/coastal/leaf-cover-normal.webp",
+    "source": "https://polyhaven.com/a/shrub_04",
+    "authors": {
+      "Rico Cilliers": "Leaf photography"
+    },
+    "license": "CC0-1.0",
+    "changes": "Individual licensed leaf crops layered into a seamless 1K groundcover tile; diffuse color moderated and a shallow normal estimated from image gradients. Runtime triplanar projection and an interpreted geographic planting mask. Not a Vancouver scan.",
+    "credit": "Poly Haven — Rico Cilliers (leaf photography); Rain City (tile assembly)."
+  },
+  {
+    "file": "models/forest/coastal-broadleaf.glb",
+    "source": "https://polyhaven.com/a/shrub_04",
+    "license": "MIT AND CC0-1.0",
+    "credit": "Leaf photography/material maps: Poly Haven — Rico Cilliers (CC0). Original thicket geometry: Rain City (MIT).",
+    "changes": "Original 240-leaf, folded-surface thicket with eighteen stems, using seven leaf regions from the existing licensed Shrub 04 color/alpha/normal/material atlas. Original alpha and 1K material maps retained. Geometry, clustering and slope orientation are a coastal planting interpretation, not a species survey."
   }
 ]

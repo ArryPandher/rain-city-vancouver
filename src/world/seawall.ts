@@ -298,9 +298,9 @@ diffuseColor.rgb*=.89+.11*sin(vSeawallPosition.x*.32+sin(vSeawallPosition.z*.27)
         g.setAttribute(
           "position",
           new T.Float32BufferAttribute(
-            pts.flatMap(([x, z]) => [
+            pts.flatMap(([x, z], j) => [
               x,
-              collision.groundHeight(x, z) + 0.066,
+              (j === 0 || j === 3 ? pa.height : pb.height) + 0.066,
               z,
             ]),
             3,

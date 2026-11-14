@@ -4,6 +4,7 @@ import {
   robsonHeight,
   robsonObstacle,
 } from "./robson-site";
+import { prospectForecourtHeight } from "./prospect-site";
 import {
   CityData,
   Building,
@@ -229,6 +230,8 @@ export class CollisionWorld {
     }
   }
   groundHeight(x: number, z: number) {
+    const forecourt = this.data.terrain && prospectForecourtHeight(x, z);
+    if (forecourt !== undefined) return forecourt;
     return this.robsonGarden
       ? (robsonHeight(x, z, this.robsonGarden.pts) ??
           this.data.terrain?.height(x, z) ??

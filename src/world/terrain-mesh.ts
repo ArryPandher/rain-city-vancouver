@@ -15,10 +15,11 @@ export function terrainMeshes(
   areas: TerrainArea[],
   fallback: T.Material,
   oceans: number[][] = [],
+  pavedCutouts: number[][] = [],
 ) {
   const index = new SpatialHash<TerrainArea>(64),
     m = terrain.meta;
-  const shore = new ShorelineClip(oceans, {
+  const shore = new ShorelineClip([...oceans, ...pavedCutouts], {
     minX: m.minX,
     minZ: m.minZ,
     maxX: terrain.maxX,

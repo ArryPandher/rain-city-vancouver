@@ -8,6 +8,7 @@ import {
   pointInPoly,
   segmentPoint,
   KX,
+  roadWidth,
   ORIGIN,
   type CityData,
   type Building,
@@ -21,6 +22,13 @@ import {
 } from "../src/world/prospect-lighthouse";
 import { Batcher, subdividePath } from "../src/world/geometry";
 import type { Materials } from "../src/world/materials";
+import { coastalCoverMask } from "../src/world/coastal-cover";
+import { PROSPECT_FORECOURT } from "../src/world/prospect-site";
+import {
+  buildProspectBank,
+  coastalPlantSites,
+  PROSPECT_PLANTING,
+} from "../src/world/prospect-bank";
 function materials() {
   return {
     texture: () => new T.Texture(),
@@ -208,4 +216,170 @@ test("Prospect lighthouse follows its footprint and has the mapped red beacon fo
       assert.ok(distance < 0.32, "ground decorations must not occupy the path");
     }
   }
+});
+
+test("Prospect bank and planting preserve mapped route clearance and follow steep ground", () => {
+  const d = data(),
+    c = new CollisionWorld(d),
+    root = new T.Group(),
+    m = materials();
+  const path = d.roads
+    .filter((r) => /^Stanley Park Seawall/.test(r.name ?? ""))
+    .flatMap((r) => {
+      const p = subdividePath(r.pts, 1);
+      return p.flatMap((x, i) => (i % 2 ? [] : [[x, p[i + 1]]]));
+    })
+    .filter(
+      ([x, z]) =>
+        Math.hypot(x + 1554.7, z + 3427.5) < 140 &&
+        !c.blocked(x, z, 0.45, c.groundHeight(x, z)) &&
+        !c.water(x, z, c.groundHeight(x, z)),
+    );
+  buildSeawall(root, d, m, c);
+  buildProspectBank(root, d, m, c);
+  assert.deepEqual(
+    path.filter(([x, z]) => c.blocked(x, z, 0.45, c.groundHeight(x, z))),
+    [],
+    "retaining edges must leave bike/walk centres clear",
+  );
+  const sites = coastalPlantSites(d, c);
+  assert.ok(
+    sites.length > 500 && sites.length < 12000,
+    `plant sites: ${sites.length}`,
+  );
+  assert.ok(
+    sites.some((s) => s.normal[1] < 0.75),
+    "vegetation must include sloping cliff ground",
+  );
+  for (const s of sites) {
+    assert.ok(
+      [s.x, s.y, s.z, s.height, s.angle, ...s.normal].every(Number.isFinite),
+    );
+    assert.ok(pointInPoly(s.x, s.z, PROSPECT_PLANTING));
+    assert.ok(Math.abs(s.y + 0.06 - c.groundHeight(s.x, s.z)) < 1e-5);
+    assert.equal(c.water(s.x, s.z, s.y), false);
+    for (const r of c.roads.query(s.x, s.z, 26))
+      for (let j = 0; j < r.pts.length - 2; j += 2)
+        assert.ok(
+          segmentPoint(
+            s.x,
+            s.z,
+            r.pts[j],
+            r.pts[j + 1],
+            r.pts[j + 2],
+            r.pts[j + 3],
+          ).d >=
+            roadWidth(r) / 2 + s.height * 1.3 + 0.1 - 1e-5,
+          "complete plant envelope must stay outside route width",
+        );
+  }
+});
+
+test("coastal leaf cover excludes water, buildings and the entire mapped route width", () => {
+  const d = data(),
+    c = new CollisionWorld(d),
+    mask = coastalCoverMask(d, c);
+  const pixels = mask.texture.image.data;
+  assert.ok(pixels);
+  let covered = 0,
+    steep = 0;
+  for (let iz = 0; iz < mask.height; iz++)
+    for (let ix = 0; ix < mask.width; ix++) {
+      if (!pixels[(iz * mask.width + ix) * 4]) continue;
+      const x = mask.minX + ix + 0.5,
+        z = mask.minZ + iz + 0.5,
+        y = c.groundHeight(x, z);
+      covered++;
+      if (
+        Math.abs(c.groundHeight(x + 0.5, z) - c.groundHeight(x - 0.5, z)) > 0.7
+      )
+        steep++;
+      assert.ok(pointInPoly(x, z, PROSPECT_PLANTING));
+      assert.equal(c.water(x, z, y), false);
+      assert.equal(c.blocked(x, z, 0.2, y), false);
+      for (const road of c.roads.query(x, z, 26))
+        for (let j = 0; j < road.pts.length - 2; j += 2)
+          assert.ok(
+            segmentPoint(
+              x,
+              z,
+              ...(road.pts.slice(j, j + 4) as [number, number, number, number]),
+            ).d >
+              roadWidth(road) / 2 + 0.75,
+          );
+    }
+  assert.ok(
+    covered > 5000 && covered < (mask.width * mask.height) / 2,
+    `covered square metres: ${covered}`,
+  );
+  assert.ok(steep > 500, `steep square metres: ${steep}`);
+  mask.texture.dispose();
+});
+
+test("Prospect forecourt has level paving above the shared walking elevation", () => {
+  const d = data(),
+    c = new CollisionWorld(d),
+    root = new T.Group(),
+    m = materials();
+  const meshes = buildProspectBank(root, d, m, c);
+  root.updateMatrixWorld(true);
+  let checked = 0;
+  for (let x = -1581; x < -1541; x += 0.75)
+    for (let z = -3435; z < -3415; z += 0.75) {
+      if (!pointInPoly(x, z, PROSPECT_FORECOURT) || c.blocked(x, z, 0.4, 2))
+        continue;
+      assert.equal(c.groundHeight(x, z), 2);
+      const hit = new T.Raycaster(
+        new T.Vector3(x, 2.2, z),
+        new T.Vector3(0, -1, 0),
+        0,
+        0.3,
+      ).intersectObjects(meshes)[0];
+      assert.ok(hit, `missing forecourt surface at ${x},${z}`);
+      assert.ok(
+        Math.abs(hit.point.y - 2.085) < 0.001,
+        `uneven paving at ${x},${z}: ${hit.point.y}`,
+      );
+      checked++;
+    }
+  assert.ok(checked > 200);
+});
+
+test("coastal cluster geometry fits its slope-independent route clearance envelope", async () => {
+  const { NodeIO } = await import("@gltf-transform/core"),
+    { ALL_EXTENSIONS } = await import("@gltf-transform/extensions"),
+    { getBounds } = await import("@gltf-transform/functions");
+  const doc = await new NodeIO()
+      .registerExtensions(ALL_EXTENSIONS)
+      .read("public/models/forest/coastal-broadleaf.glb"),
+    root = doc.getRoot(),
+    bounds = getBounds(root.listScenes()[0]),
+    height = bounds.max[1] - bounds.min[1],
+    centreX = (bounds.max[0] + bounds.min[0]) / 2,
+    centreZ = (bounds.max[2] + bounds.min[2]) / 2;
+  let maxRadius = 0;
+  for (const mesh of root.listMeshes())
+    for (const primitive of mesh.listPrimitives()) {
+      const p = primitive.getAttribute("POSITION")!,
+        point: number[] = [];
+      assert.ok(
+        primitive.getMaterial()?.getBaseColorTexture(),
+        "licensed leaf atlas must remain attached",
+      );
+      for (let i = 0; i < p.getCount(); i++) {
+        p.getElement(i, point);
+        maxRadius = Math.max(
+          maxRadius,
+          Math.hypot(
+            point[0] - centreX,
+            point[1] - bounds.min[1],
+            point[2] - centreZ,
+          ) / height,
+        );
+      }
+    }
+  assert.ok(
+    maxRadius > 1 && maxRadius + 0.018 < 1.3,
+    `radius including wind: ${maxRadius + 0.018}`,
+  );
 });
