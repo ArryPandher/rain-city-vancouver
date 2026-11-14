@@ -101,3 +101,7 @@ The coastal broadleaf model uses **Shrub 04** leaf photography/material maps, **
 ## Convention Centre West
 
 Building geometry, roof planting layout, foyer scenery, glazing and waterfront deck/rails are original Rain City interpretations (MIT), guided by LMN/DA Architects photography and the City’s 2006 development drawings. Photographs and drawings are reference only and are not distributed. Existing OpenStreetMap footprint/path data retains ODbL; reused Poly Haven cast-concrete, aerial-grass-rock and painted-wood maps retain the CC0 notices above. The wood maps approximate timber grain and are not scans of this building. [Architectural sources, mapped routes and limitations](docs/sources/convention-centre.md).
+
+## Jack Poole Plaza and Olympic cauldron
+
+The plaza, café, planted roof, mapped stair/ramp construction and cauldron are original game geometry informed by owner, landscape architect and structural-engineer references. **Digital Orca (2009), Douglas Coupland**, is represented by an original simplified voxel interpretation; the sculpture design is credited to its artist. Reference photography and third-party sculpture meshes are not distributed. The fresh OSM map extract remains © OpenStreetMap contributors, ODbL 1.0. Existing Poly Haven CC0 materials are reused. Delaunator 5.1.0 is distributed under the [ISC notice](public/licenses/delaunator-ISC.txt); robust-predicates retains the [Unlicense notice](public/licenses/robust-predicates-Unlicense.txt). [Sources, elevation interpretation and limits](docs/sources/jack-poole-plaza.md).

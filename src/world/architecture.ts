@@ -1,3 +1,4 @@
+import { CACTUS_ID } from "./jack-poole-site";
 import * as T from "three";
 import { CityData, centroid, hash, seeded, Road, segmentPoint } from "./data";
 import { Materials, label } from "./materials";
@@ -132,7 +133,7 @@ export function architecture(
   for (const b of data.buildings) {
     const ground = collision.groundHeight(...centroid(b.pts));
     shell.offsetY = detail.offsetY = interiors.offsetY = ground;
-    if (specialBuilding(b)) continue;
+    if (specialBuilding(b) || b.id === CACTUS_ID) continue;
     if (
       lawCourts(b, shell, m) ||
       robsonSquare(b, shell, m) ||

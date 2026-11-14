@@ -1,3 +1,10 @@
+import { conventionApproachHeight } from "./convention-site";
+import { buildJackPoole } from "./jack-poole";
+import {
+  JACK_CUSTOM_ROADS,
+  jackIntersects,
+  jackSurface,
+} from "./jack-poole-site";
 import coniferShapes from "./conifer-shapes.json";
 import { CONIFER_ASSET_REVISION } from "./conifer-foliage";
 import * as T from "three";
@@ -106,6 +113,13 @@ export class World {
     this.terrain();
     this.roads();
     this.chunks.push(
+      ...buildJackPoole(
+        this.root,
+        this.data,
+        this.materials,
+        this.collision,
+        this.reflections,
+      ),
       ...buildSeawall(this.root, this.data, this.materials, this.collision),
       ...buildProspectLookout(
         this.root,
@@ -439,6 +453,10 @@ export class World {
     });
     const junctions = roadJunctionGaps(this.data.roads);
     for (const r of this.data.roads) {
+      if (r.id && JACK_CUSTOM_ROADS.has(r.id)) {
+        this.stats.roads++;
+        continue;
+      }
       if (this.data.terrain && r.id && LOOKOUT_ROADS.has(r.id)) {
         this.stats.roads++;
         continue;
@@ -455,7 +473,18 @@ export class World {
           /^(Water Street|Alexander Street)$/.test(r.name ?? "") &&
           x > 450 &&
           x < 1800;
-      const onTerrain = this.data.terrain?.intersects(r.pts) ?? false;
+      const onTerrain =
+        (this.data.terrain?.intersects(r.pts) ?? false) ||
+        jackIntersects(r.pts) ||
+        r.pts.some(
+          (x, i) =>
+            i % 2 === 0 &&
+            conventionApproachHeight(
+              this.collision.convention,
+              x,
+              r.pts[i + 1],
+            ) !== undefined,
+        );
       const seawall = /^Stanley Park Seawall/.test(r.name ?? "");
       const bridgeRoute = /Lions Gate Bridge/.test(r.name ?? "");
       const height = (x: number, z: number) =>
@@ -574,7 +603,7 @@ export class World {
     this.chunks.push(...result.chunks);
     this.stats.buildings = result.count;
     this.architecturalDetails = result.architecturalDetails;
-    this.reflections = result.reflections;
+    this.reflections.push(...result.reflections);
   }
 
   vegetation() {
@@ -582,6 +611,7 @@ export class World {
       m = this.materials,
       trees = reconcileTrees(this.data.trees, this.data.publicTrees).filter(
         (t) =>
+          !jackSurface(t.x, t.z) &&
           !this.collision.water(t.x, t.z) &&
           !this.collision.blocked(t.x, t.z, 0.35),
       );

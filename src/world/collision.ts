@@ -1,3 +1,4 @@
+import { jackGroundHeight, jackRoofAccess, CACTUS_ID } from "./jack-poole-site";
 import {
   ROBSON_GARDEN_ID,
   robsonWalkableBuilding,
@@ -10,6 +11,7 @@ import {
   CONVENTION_ID,
   conventionSite,
   conventionDeckHeight,
+  conventionApproachHeight,
   type ConventionSite,
 } from "./convention-site";
 import {
@@ -223,7 +225,7 @@ export class CollisionWorld {
             ...this.convention.world(...a),
             ...this.convention.world(...c),
             0.06,
-            1.2,
+            7.2,
           );
       }
       if (b.id === ROBSON_GARDEN_ID) this.robsonGarden = b;
@@ -250,8 +252,12 @@ export class CollisionWorld {
     }
   }
   groundHeight(x: number, z: number) {
+    const plaza = this.convention && jackGroundHeight(x, z);
+    if (plaza !== undefined) return plaza;
     const convention = conventionDeckHeight(this.convention, x, z);
     if (convention !== undefined) return convention;
+    const approach = conventionApproachHeight(this.convention, x, z);
+    if (approach !== undefined) return approach;
     const lookout = this.data.terrain && prospectLookoutHeight(x, z);
     if (lookout !== undefined) return lookout;
     const forecourt = this.data.terrain && prospectForecourtHeight(x, z);
@@ -287,6 +293,7 @@ export class CollisionWorld {
     return b ? this.bridgeHeight(b.bridge, b.t) : this.groundHeight(x, z);
   }
   water(x: number, z: number, referenceY = Infinity) {
+    if (this.convention && jackGroundHeight(x, z) !== undefined) return false;
     if (conventionDeckHeight(this.convention, x, z) !== undefined) return false;
     if (this.bridgeAt(x, z, referenceY)) return false;
     if (x < bounds.minX || z < -8500) return true;
@@ -315,6 +322,7 @@ export class CollisionWorld {
       )
         return true;
     for (const b of this.buildings.query(x, z, r)) {
+      if (b.id === CACTUS_ID && jackRoofAccess(x, z, referenceY)) continue;
       if (pointInPoly(x, z, b.pts)) return true;
       for (let i = 0; i < b.pts.length; i += 2) {
         const j = (i + 2) % b.pts.length;

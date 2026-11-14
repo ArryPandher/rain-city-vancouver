@@ -117,7 +117,7 @@ export function conventionSite(b: Building) {
     flatWorld,
     footprint: flatWorld(body),
     platformWorld: flatWorld(platform),
-    deckHeight: 0.04,
+    deckHeight: 6.04,
   };
 }
 export type ConventionSite = ReturnType<typeof conventionSite>;
@@ -129,4 +129,18 @@ export function conventionDeckHeight(
   return site && pointInPoly(x, z, site.platformWorld)
     ? site.deckHeight
     : undefined;
+}
+
+/** Authored southern approach blends the raised promenade into the baseline
+ * city. The lateral shoulders avoid a vertical seam beside the mapped cycleway. */
+export function conventionApproachHeight(
+  site: ConventionSite | undefined,
+  x: number,
+  z: number,
+) {
+  if (!site) return;
+  const [e, n] = site.local(x, z);
+  if (e < 150 || e > 214 || n < -78 || n > -27) return;
+  const shoulder = Math.max(0, Math.min(1, (e - 150) / 13, (214 - e) / 17));
+  return site.deckHeight * Math.max(0, Math.min(1, (n + 78) / 49)) * shoulder;
 }

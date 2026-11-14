@@ -1,3 +1,4 @@
+import { jackGroundHeight } from "../src/world/jack-poole-site";
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -64,7 +65,7 @@ test("convention roof planes cover the mapped site with distinct heights and a b
       highest = Math.max(highest, a[1]);
     }
   }
-  assert.ok(highest > 31 && highest < 34);
+  assert.ok(highest > 37 && highest < 40);
   assert.ok(triangles < 300000, `bounded authored detail: ${triangles}`);
   assert.equal(reflections.length, 3);
   assert.ok(
@@ -100,19 +101,22 @@ test("promenade is continuous, dry and outside glass collision, while the shore 
         a[1] + ((b[1] - a[1]) * d) / length,
       );
       assert.equal(
-        collision.blocked(...p, 0.4, 0.04),
+        collision.blocked(...p, 0.4, jackGroundHeight(...p) ?? 6.04),
         false,
         `route blocked at ${p}`,
       );
-      assert.equal(collision.water(...p, 0.04), false);
-      assert.equal(collision.groundHeight(...p), 0.04);
+      assert.equal(collision.water(...p, 6.04), false);
+      assert.equal(
+        collision.groundHeight(...p),
+        jackGroundHeight(...p) ?? 6.04,
+      );
     }
   }
   assert.equal(collision.blocked(...site.world(110, 60)), true);
   const rail = site.shoreSegments[2][0].map(
     (v, i) => (v + site.shoreSegments[2][1][i]) / 2,
   ) as [number, number];
-  assert.equal(collision.blocked(...site.world(...rail), 0.4, 0.04), true);
+  assert.equal(collision.blocked(...site.world(...rail), 0.4, 6.04), true);
   assert.equal(collision.water(...site.world(120, 150)), true);
 });
 test("visible paving and roof covers agree with collision and interior floors do not protrude through the roof", () => {
@@ -123,10 +127,10 @@ test("visible paving and roof covers agree with collision and interior floors do
   );
   for (const e of [65, 100, 150, 190]) {
     const p = site.world(e, 117);
-    ray.set(new T.Vector3(p[0], 2, p[1]), new T.Vector3(0, -1, 0));
+    ray.set(new T.Vector3(p[0], 8, p[1]), new T.Vector3(0, -1, 0));
     const hits = ray.intersectObjects(paving);
     assert.ok(hits.length);
-    assert.ok(Math.abs(hits[0].point.y - 0.04) < 0.001);
+    assert.ok(Math.abs(hits[0].point.y - 6.04) < 0.001);
   }
   const roofs = meshes.filter(
     (m) =>
@@ -179,13 +183,13 @@ test("mapped seaward walking and cycling centrelines remain clear of the new sho
           [e, n] = site.local(x, z);
         if (e < 55 || e > 212 || n < 116 || n > 132) continue;
         assert.equal(
-          collision.blocked(x, z, 0.7, 0.04),
+          collision.blocked(x, z, 0.7, 6.04),
           false,
           `${road.id} obstruction at ${e},${n}`,
         );
         assert.equal(
           collision.groundHeight(x, z),
-          0.04,
+          6.04,
           `${road.id} outside paved deck at ${e},${n}`,
         );
         checked++;
@@ -193,4 +197,45 @@ test("mapped seaward walking and cycling centrelines remain clear of the new sho
     }
   }
   assert.ok(checked > 350);
+});
+
+test("raised promenade has a continuous dry southern cycleway approach and grounded piles", () => {
+  const { b, site, meshes } = fixture(),
+    data = {
+      buildings: [b],
+      roads: [],
+      areas: [],
+      ocean: [],
+    } as unknown as CityData,
+    collision = new CollisionWorld(data),
+    ray = new T.Raycaster();
+  let previous = 0;
+  for (let n = -80; n <= -25; n += 0.25) {
+    const [x, z] = site.world(180, n),
+      y = collision.groundHeight(x, z);
+    assert.ok(
+      Math.abs(y - previous) < 0.04,
+      `approach jump at ${n}: ${previous} to ${y}`,
+    );
+    assert.equal(collision.blocked(x, z, 0.4, y), false);
+    assert.equal(collision.water(x, z, y), false);
+    if (n >= -77 && n <= -30) {
+      ray.set(new T.Vector3(x, 8, z), new T.Vector3(0, -1, 0));
+      assert.ok(
+        ray
+          .intersectObjects(meshes)
+          .some((h) => Math.abs(h.point.y - y) < 0.02),
+        `approach paving ${n}`,
+      );
+    }
+    previous = y;
+  }
+  assert.ok(
+    meshes.some((m) => {
+      const p = m.geometry.getAttribute("position");
+      for (let i = 0; i < p.count; i++) if (p.getY(i) < -3) return true;
+      return false;
+    }),
+    "pier piles extend below water",
+  );
 });

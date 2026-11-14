@@ -6,6 +6,7 @@ import { Materials, label } from "./materials";
 import {
   CONVENTION_ID,
   conventionSite,
+  conventionApproachHeight,
   offsetOutline,
 } from "./convention-site";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
@@ -156,8 +157,10 @@ diffuseColor.rgb*=mix(vec3(.79,.88,.73),vec3(1.11,1.03,.77),meadow);`,
     const [x, z] = site.world(e, n);
     return [x, y, z];
   };
-  const add = (g: T.BufferGeometry, mat: T.Material) =>
+  const add = (g: T.BufferGeometry, mat: T.Material) => {
+    g.translate(0, 6, 0);
     batch.add(g, mat, cx, cz);
+  };
   function quad(mat: T.Material, a: V3, b: V3, c: V3, d: V3, scale = 2) {
     let q = groups.get(mat);
     if (!q) groups.set(mat, (q = { p: [], uv: [], ix: [] }));
@@ -522,7 +525,7 @@ diffuseColor.rgb*=mix(vec3(.79,.88,.73),vec3(1.11,1.03,.77),meadow);`,
   }
   // Perimeter paving and north shore rail. Deck height is shared with collision.
   add(
-    flatPolygon(site.platformWorld, [site.footprint], site.deckHeight, 2),
+    flatPolygon(site.platformWorld, [site.footprint], site.deckHeight - 6, 2),
     concrete,
   );
   for (const [northA, northB] of site.shoreSegments) {
@@ -539,9 +542,31 @@ diffuseColor.rgb*=mix(vec3(.79,.88,.73),vec3(1.11,1.03,.77),meadow);`,
       const t = d / length,
         e = northA[0] + (northB[0] - northA[0]) * t,
         n = northA[1] + (northB[1] - northA[1]) * t;
-      beam([e, -3.2, n], [e, -0.16, n], 0.55, concrete, 10);
+      beam([e, -9.2, n], [e, -0.16, n], 0.55, concrete, 10);
     }
   }
+  // Ground approach to the mapped southeast cycleway: original grade blend,
+  // not a claim of surveyed downtown elevation. Jack Poole's higher mesh covers
+  // the small western overlap with its interpreted upper levels.
+  for (let e = 150; e < 214; e += 2)
+    for (let n = -78; n < -27; n += 2) {
+      const ee = Math.min(214, e + 2),
+        nn = Math.min(-27, n + 2);
+      const p = [
+        [e, n],
+        [e, nn],
+        [ee, nn],
+        [ee, n],
+      ].map(([a, b]) => {
+        const [x, z] = site.world(a, b);
+        return [
+          a,
+          (conventionApproachHeight(site, x, z) ?? 0) - 6 - 0.012,
+          b,
+        ] as V3;
+      });
+      quad(concrete, p[0], p[1], p[2], p[3], 2);
+    }
   // Roof identification is geometry and original text, not a photographed logo.
   const sign = new T.MeshStandardMaterial({
     name: "Convention Centre — entrance name",
@@ -585,7 +610,7 @@ diffuseColor.rgb*=mix(vec3(.79,.88,.73),vec3(1.11,1.03,.77),meadow);`,
     const [x, z] = site.world(...(p as Point));
     reflections.push({
       name: `Convention Centre ${["harbour", "east", "west"][i]} glazing`,
-      position: [x, 10, z],
+      position: [x, 16, z],
       materials: [glazing[i]],
     });
   }
