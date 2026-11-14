@@ -2,6 +2,11 @@ import * as T from "three";
 import { seeded } from "./data";
 export const BASE = import.meta.env?.BASE_URL ?? "/";
 export class Materials {
+  beacons: {
+    material: T.MeshStandardMaterial;
+    light: T.PointLight;
+    period: number;
+  }[] = [];
   loader = new T.TextureLoader();
   asphalt: T.MeshStandardMaterial;
   concrete: T.MeshStandardMaterial;

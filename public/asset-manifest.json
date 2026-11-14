@@ -817,5 +817,47 @@
     "license": "CC0-1.0",
     "credit": "Poly Haven — Dario Barresi (photography), Rico Cilliers (processing)",
     "changes": "Resized to 2K WebP. World-space triplanar projection, slope blending and broad color variation at runtime; generic rock photography, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/stone-color.webp",
+    "source": "https://polyhaven.com/a/japanese_stone_wall",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven — Rico Cilliers (Tiling), Charlotte Baglioni (Photography), Dario Barresi (Processing)",
+    "changes": "Converted to 2K WebP. Darkened with a damp tidal band at runtime; generic masonry, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/stone-normal.webp",
+    "source": "https://polyhaven.com/a/japanese_stone_wall",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven — Rico Cilliers (Tiling), Charlotte Baglioni (Photography), Dario Barresi (Processing)",
+    "changes": "Converted to 2K WebP. Darkened with a damp tidal band at runtime; generic masonry, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/stone-roughness.webp",
+    "source": "https://polyhaven.com/a/japanese_stone_wall",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven — Rico Cilliers (Tiling), Charlotte Baglioni (Photography), Dario Barresi (Processing)",
+    "changes": "Converted to 2K WebP. Darkened with a damp tidal band at runtime; generic masonry, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/pavers-color.webp",
+    "source": "https://polyhaven.com/a/herringbone_pavement",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven — Charlotte Baglioni (All)",
+    "changes": "Converted to 2K WebP. World-aligned at a 2 m scale on tagged seawall paving; generic herringbone blocks, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/pavers-normal.webp",
+    "source": "https://polyhaven.com/a/herringbone_pavement",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven — Charlotte Baglioni (All)",
+    "changes": "Converted to 2K WebP. World-aligned at a 2 m scale on tagged seawall paving; generic herringbone blocks, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/pavers-roughness.webp",
+    "source": "https://polyhaven.com/a/herringbone_pavement",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven — Charlotte Baglioni (All)",
+    "changes": "Converted to 2K WebP. World-aligned at a 2 m scale on tagged seawall paving; generic herringbone blocks, not a Vancouver scan."
   }
 ]

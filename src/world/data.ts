@@ -57,6 +57,10 @@ export interface CityData {
   trees: number[];
   publicTrees?: PublicTreeLayer;
   terrain?: Terrain;
+  seawall?: {
+    walls: { id: string; pts: number[] }[];
+    railings: { id: string; pts: number[] }[];
+  };
   ocean: number[][];
   pois: { name: string; kind: string; x: number; y: number }[];
 }
@@ -227,6 +231,21 @@ export async function loadCity(): Promise<CityData> {
     d.terrain = await loadTerrain(import.meta.env.BASE_URL);
   } catch (error) {
     console.warn("Park elevation unavailable; using the flat base map", error);
+  }
+  try {
+    const response = await fetch(
+      `${import.meta.env.BASE_URL}data/stanley-seawall.json`,
+    );
+    if (!response.ok) throw new Error(`Seawall HTTP ${response.status}`);
+    const layer = await response.json();
+    if (!Array.isArray(layer.walls) || !Array.isArray(layer.railings))
+      throw new Error("Invalid seawall layer");
+    d.seawall = layer;
+  } catch (error) {
+    console.warn(
+      "Seawall detail unavailable; retaining shoreline paths",
+      error,
+    );
   }
   return d;
 }

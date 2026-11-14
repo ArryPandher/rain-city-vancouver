@@ -1,0 +1,92 @@
+[
+  {
+    "file": "textures/seawall/stone-color.webp",
+    "source": "https://polyhaven.com/a/japanese_stone_wall",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/japanese_stone_wall/japanese_stone_wall_diff_2k.jpg",
+    "authors": {
+      "Rico Cilliers": "Tiling",
+      "Charlotte Baglioni": "Photography",
+      "Dario Barresi": "Processing"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      1.8999998569488525,
+      1.8999998569488525
+    ],
+    "changes": "Converted to 2K WebP. Darkened with a damp tidal band at runtime; generic masonry, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/stone-normal.webp",
+    "source": "https://polyhaven.com/a/japanese_stone_wall",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/japanese_stone_wall/japanese_stone_wall_nor_gl_2k.jpg",
+    "authors": {
+      "Rico Cilliers": "Tiling",
+      "Charlotte Baglioni": "Photography",
+      "Dario Barresi": "Processing"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      1.8999998569488525,
+      1.8999998569488525
+    ],
+    "changes": "Converted to 2K WebP. Darkened with a damp tidal band at runtime; generic masonry, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/stone-roughness.webp",
+    "source": "https://polyhaven.com/a/japanese_stone_wall",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/japanese_stone_wall/japanese_stone_wall_rough_2k.jpg",
+    "authors": {
+      "Rico Cilliers": "Tiling",
+      "Charlotte Baglioni": "Photography",
+      "Dario Barresi": "Processing"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      1.8999998569488525,
+      1.8999998569488525
+    ],
+    "changes": "Converted to 2K WebP. Darkened with a damp tidal band at runtime; generic masonry, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/pavers-color.webp",
+    "source": "https://polyhaven.com/a/herringbone_pavement",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/herringbone_pavement/herringbone_pavement_diff_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      1.9999996423721313,
+      1.9999996423721313
+    ],
+    "changes": "Converted to 2K WebP. World-aligned at a 2 m scale on tagged seawall paving; generic herringbone blocks, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/pavers-normal.webp",
+    "source": "https://polyhaven.com/a/herringbone_pavement",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/herringbone_pavement/herringbone_pavement_nor_gl_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      1.9999996423721313,
+      1.9999996423721313
+    ],
+    "changes": "Converted to 2K WebP. World-aligned at a 2 m scale on tagged seawall paving; generic herringbone blocks, not a Vancouver scan."
+  },
+  {
+    "file": "textures/seawall/pavers-roughness.webp",
+    "source": "https://polyhaven.com/a/herringbone_pavement",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/herringbone_pavement/herringbone_pavement_rough_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      1.9999996423721313,
+      1.9999996423721313
+    ],
+    "changes": "Converted to 2K WebP. World-aligned at a 2 m scale on tagged seawall paving; generic herringbone blocks, not a Vancouver scan."
+  }
+]

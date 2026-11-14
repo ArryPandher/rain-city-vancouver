@@ -37,6 +37,7 @@ import { ForestHabitat } from "./forest-habitat";
 import { ForestDetail, forestGround } from "./forest";
 import { terrainMeshes, type TerrainArea } from "./terrain-mesh";
 import { cliffMaterials } from "./cliff-material";
+import { buildSeawall, seawallPavers } from "./seawall";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -89,6 +90,9 @@ export class World {
     this.forestHabitat = new ForestHabitat(this.data, this.collision);
     this.terrain();
     this.roads();
+    this.chunks.push(
+      ...buildSeawall(this.root, this.data, this.materials, this.collision),
+    );
     await new Promise((r) => setTimeout(r, 20));
     report("Raising the downtown skyline", 0.3);
     const accurateLandmarks = new T.Group();
@@ -310,6 +314,7 @@ export class World {
             item.material === m.concrete ? item.material : cliff(item.material),
         })),
         cliff(m.grass),
+        this.data.ocean,
       );
       this.root.add(...ground);
       this.chunks.push(...ground);
@@ -391,6 +396,11 @@ export class World {
     });
     const junctions = roadJunctionGaps(this.data.roads);
     for (const r of this.data.roads) {
+      // The mapped Prospect shore steps have a solid descending profile.
+      if (r.id === "w731791394" && this.data.seawall) {
+        this.stats.roads++;
+        continue;
+      }
       const [x, z] = centroid(r.pts),
         width = roadWidth(r),
         street = isStreet(r),
@@ -399,6 +409,7 @@ export class World {
           x > 450 &&
           x < 1800;
       const onTerrain = this.data.terrain?.intersects(r.pts) ?? false;
+      const seawall = /^Stanley Park Seawall/.test(r.name ?? "");
       const bridgeRoute = /Lions Gate Bridge/.test(r.name ?? "");
       const height = (x: number, z: number) =>
         this.collision.roadHeight(r, x, z);
@@ -466,7 +477,13 @@ export class World {
           height,
           historic ? 1.6 : 5,
         ),
-        historic ? cobble : street ? m.asphalt : m.concrete,
+        seawall && r.surface === "paving_stones"
+          ? seawallPavers(m)
+          : historic
+            ? cobble
+            : street || (seawall && r.surface === "asphalt")
+              ? m.asphalt
+              : m.concrete,
         x,
         z,
         "road",
@@ -1028,6 +1045,15 @@ export class World {
 
   update(dt: number, x: number, z: number) {
     this.time += dt;
+    for (const beacon of this.materials.beacons) {
+      const lit = this.time % beacon.period < beacon.period / 2;
+      beacon.material.emissiveIntensity = lit
+        ? this.weather === "night"
+          ? 5
+          : 1.8
+        : 0.02;
+      beacon.light.intensity = lit && this.weather === "night" ? 8 : 0;
+    }
     this.detailedTrees?.update(x, z);
     this.forestDetail?.update(x, z);
     this.detailedArchitecture?.update(x, z);

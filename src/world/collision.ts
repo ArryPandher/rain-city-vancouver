@@ -164,6 +164,30 @@ export class SpatialHash<T> {
   }
 }
 export class CollisionWorld {
+  barriers = new SpatialHash<{
+    ax: number;
+    az: number;
+    bx: number;
+    bz: number;
+    radius: number;
+    top: number;
+  }>(32);
+  addBarrier(
+    ax: number,
+    az: number,
+    bx: number,
+    bz: number,
+    radius: number,
+    top: number,
+  ) {
+    this.barriers.add(
+      { ax, az, bx, bz, radius, top },
+      Math.min(ax, bx) - radius,
+      Math.min(az, bz) - radius,
+      Math.max(ax, bx) + radius,
+      Math.max(az, bz) + radius,
+    );
+  }
   robsonGarden?: Building;
   buildings = new SpatialHash<Building>();
   roads = new SpatialHash<Road>(100);
@@ -255,6 +279,13 @@ export class CollisionWorld {
       return false;
     for (const tree of this.forestObstacles.query(x, z, r))
       if (Math.hypot(x - tree.x, z - tree.z) < r + tree.radius) return true;
+    for (const wall of this.barriers.query(x, z, r))
+      if (
+        (!Number.isFinite(referenceY) || referenceY < wall.top + 0.2) &&
+        segmentPoint(x, z, wall.ax, wall.az, wall.bx, wall.bz).d <
+          r + wall.radius
+      )
+        return true;
     for (const b of this.buildings.query(x, z, r)) {
       if (pointInPoly(x, z, b.pts)) return true;
       for (let i = 0; i < b.pts.length; i += 2) {
