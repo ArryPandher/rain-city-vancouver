@@ -86,7 +86,7 @@
     "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_moss_set_01/rock_moss_set_01_1k.gltf",
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "triangles": 63127,
+    "triangles": 32058,
     "bounds": {
       "min": [
         -3.9140208959579468,
@@ -99,7 +99,7 @@
         3.1249431371688843
       ]
     },
-    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+    "changes": "Simplified solid scanned geometry toward a 16% target with bounded 0.002 error; retained original 1K WebP material maps. Runtime pivot normalization and instancing."
   },
   {
     "file": "models/forest/tree_stump_01.glb",
@@ -111,12 +111,12 @@
     "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/tree_stump_01/tree_stump_01_1k.gltf",
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "triangles": 41046,
+    "triangles": 12157,
     "bounds": {
       "min": [
-        -0.7844194173812866,
-        -0.1929784119129181,
-        -0.7604432702064514
+        -0.7843959331512451,
+        -0.19281011819839478,
+        -0.7602779269218445
       ],
       "max": [
         0.6411310434341431,
@@ -124,7 +124,7 @@
         0.8298710584640503
       ]
     },
-    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+    "changes": "Simplified solid scanned geometry toward a 16% target with bounded 0.002 error; retained original 1K WebP material maps. Runtime pivot normalization and instancing."
   },
   {
     "file": "models/forest/shrub_04.glb",

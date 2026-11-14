@@ -109,7 +109,10 @@ export class World {
     this.detailedTrees = await DetailedTrees.load(this.scene);
     this.detailedTrees.samples = this.treeSamples;
     try {
-      this.forestDetail = await ForestDetail.load(this.scene, this.forestHabitat);
+      this.forestDetail = await ForestDetail.load(
+        this.scene,
+        this.forestHabitat,
+      );
       this.forestDetail.samples = this.coniferSamples;
     } catch (error) {
       console.warn("Forest detail unavailable; retaining distant trees", error);
@@ -476,7 +479,7 @@ export class World {
       a.push(t);
     }
     const foliageMap = m.texture("broadleaf-branch.png", true),
-      pineMap = m.texture("forest/conifer-atlas.webp", true);
+      pineMap = m.texture("forest/conifer-atlas-pair.webp", true);
     foliageMap.wrapS =
       foliageMap.wrapT =
       pineMap.wrapS =
@@ -531,16 +534,19 @@ export class World {
       1 / (crownBounds.max.y - crownBounds.min.y),
       1 / (crownBounds.max.z - crownBounds.min.z),
     );
-    const pineParts: T.BufferGeometry[] = [];
-    for (let side = 0; side < 2; side++) {
-      const g = new T.PlaneGeometry(1, 1),
-        uv = g.getAttribute("uv");
-      for (let i = 0; i < uv.count; i++) uv.setX(i, (uv.getX(i) + side) / 2);
-      g.translate(0, 0.5, 0);
-      g.rotateY((side * Math.PI) / 2);
-      pineParts.push(g);
-    }
-    const pineGeo = mergeGeometries(pineParts)!;
+    const pineGeometries = [0, 1].map((variant) => {
+      const parts: T.BufferGeometry[] = [];
+      for (let side = 0; side < 2; side++) {
+        const g = new T.PlaneGeometry(1, 1),
+          uv = g.getAttribute("uv");
+        for (let i = 0; i < uv.count; i++)
+          uv.setX(i, (uv.getX(i) + side + variant * 2) / 4);
+        g.translate(0, 0.5, 0);
+        g.rotateY((side * Math.PI) / 2);
+        parts.push(g);
+      }
+      return mergeGeometries(parts)!;
+    });
     const bark = new T.MeshStandardMaterial({
       map: m.texture("fir_tree_01-bark_diff.png", true),
       color: 0xaaa494,
@@ -555,9 +561,11 @@ export class World {
           list.length,
         ),
         leaves = new T.InstancedMesh(crownGeo, leafMat, list.length),
-        pines = new T.InstancedMesh(pineGeo, pineMat, list.length);
+        pines = pineGeometries.map(
+          (g) => new T.InstancedMesh(g, pineMat, list.length),
+        );
       let li = 0,
-        pi = 0;
+        pi = [0, 0];
       for (let i = 0; i < list.length; i++) {
         const profile = list[i],
           { x, z, height: h, width, diameter, crownBase, rotation } = profile;
@@ -575,31 +583,35 @@ export class World {
           // The two crossed silhouettes include the trunk; the original cylinder is hidden.
           trunkMatrix.makeScale(0, 0, 0);
           trunk.setMatrixAt(i, trunkMatrix);
+          const variant = hash(`conifer:${x}:${z}`) % 3 === 0 ? 0 : 1;
+          const pineMesh = pines[variant];
           const rootDepth = Math.min(0.6, diameter * 0.5);
           dummy.position.set(x, ground - rootDepth, z);
-          dummy.scale.set(width * 1.1513, h + rootDepth, width * 1.1513);
+          const silhouetteWidth = width * (variant === 0 ? 1.1513 : 1.16746);
+          dummy.scale.set(silhouetteWidth, h + rootDepth, silhouetteWidth);
           dummy.updateMatrix();
-          pines.setMatrixAt(pi, dummy.matrix);
+          pineMesh.setMatrixAt(pi[variant], dummy.matrix);
           this.coniferSamples.push({
             x,
             y: ground,
             z,
             height: h,
             rootDepth,
+            coniferVariant: variant,
             width,
             diameter,
             sourceId: profile.sourceId,
             form: profile.form,
             rotation,
-            crown: pines,
-            crownIndex: pi,
+            crown: pineMesh,
+            crownIndex: pi[variant],
             crownMatrix: dummy.matrix.clone(),
             trunk,
             trunkIndex: i,
             trunkMatrix,
           });
           color.setHSL(0.18 + t * 0.03, 0.04, 0.8 + t * 0.15);
-          pines.setColorAt(pi++, color);
+          pineMesh.setColorAt(pi[variant]++, color);
         } else {
           dummy.position.set(x, ground + h * crownBase, z);
           dummy.scale.set(width, h * (1 - crownBase), width);
@@ -627,8 +639,8 @@ export class World {
         }
       }
       leaves.count = li;
-      pines.count = pi;
-      for (const obj of [trunk, leaves, pines]) {
+      pines.forEach((p, i) => (p.count = pi[i]));
+      for (const obj of [trunk, leaves, ...pines]) {
         obj.castShadow = obj.receiveShadow = true;
         obj.computeBoundingSphere();
         obj.userData.center = key.split(",").map((v) => Number(v) * 350 + 175);

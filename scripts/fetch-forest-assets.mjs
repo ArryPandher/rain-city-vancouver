@@ -169,10 +169,15 @@ for (const id of ids) {
     );
     for (const [mesh, p] of twigs) mesh.addPrimitive(p);
   }
-  if (["shrub_04", "nettle_plant"].includes(id))
+  const solidProp = ["rock_moss_set_01", "tree_stump_01"].includes(id);
+  if (["shrub_04", "nettle_plant"].includes(id) || solidProp)
     await doc.transform(
       weld(),
-      simplify({ simplifier: MeshoptSimplifier, ratio: 0.22, error: 0.005 }),
+      simplify({
+        simplifier: MeshoptSimplifier,
+        ratio: solidProp ? 0.16 : 0.22,
+        error: solidProp ? 0.002 : 0.005,
+      }),
     );
   await doc.transform(
     prune(),
@@ -204,7 +209,9 @@ for (const id of ids) {
     changes:
       id === "fir_tree_01"
         ? "Extracted variant C using a bounded byte range; added missing cylindrical trunk UVs, simplified solid wood, retained every twig and restored source alpha. WebP textures at 1K. Runtime scaling and instancing."
-        : "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing.",
+        : solidProp
+          ? "Simplified solid scanned geometry toward a 16% target with bounded 0.002 error; retained original 1K WebP material maps. Runtime pivot normalization and instancing."
+          : "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing.",
   });
   console.log(id, triangles, (await fs.stat(`public/${file}`)).size, bounds);
 }

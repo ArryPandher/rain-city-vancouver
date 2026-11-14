@@ -9,6 +9,7 @@ export interface TreeInstance {
   z: number;
   height: number;
   rootDepth?: number;
+  coniferVariant?: number;
   width: number;
   diameter: number;
   sourceId?: number;

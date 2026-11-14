@@ -1,0 +1,36 @@
+{
+  "source": "models/forest/fir_tree_01.glb",
+  "output": "models/forest/fir_tree_01-medium.glb",
+  "originalNeedles": 90541,
+  "retainedNeedles": 15021,
+  "needleStride": 6,
+  "needleWidthMultiplier": 3.3,
+  "flatNeedles": true,
+  "woodRatio": 0.18,
+  "triangles": 48048,
+  "referenceBounds": {
+    "min": [
+      -2.747030735015869,
+      -0.09382282942533493,
+      -2.9962728023529053
+    ],
+    "max": [
+      3.558908462524414,
+      14.426758766174316,
+      2.9699645042419434
+    ]
+  },
+  "bounds": {
+    "min": [
+      -2.7416751384735107,
+      -0.09382282942533493,
+      -2.9649739265441895
+    ],
+    "max": [
+      3.5575003623962402,
+      14.423236846923828,
+      2.9423129558563232
+    ]
+  },
+  "changes": "Deterministic needle component sampling; transverse-only coverage compensation; medium needles flattened from folded strips to two triangles with corrected winding; wood/branch simplification with 0.008 error and recomputed branch normals. Original UVs, alpha and textures retained. Runtime normalization uses near-detail reference dimensions."
+}

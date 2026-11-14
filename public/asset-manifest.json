@@ -672,10 +672,10 @@
   {
     "file": "data/vancouver-public-trees.json",
     "source": "https://opendata.vancouver.ca/explore/dataset/public-trees/",
-    "license": "Open Government Licence – Vancouver",
+    "license": "Open Government Licence \u2013 Vancouver",
     "licenseUrl": "https://opendata.vancouver.ca/pages/licence/",
     "credit": "City of Vancouver",
-    "attribution": "Contains information licensed under the Open Government Licence – Vancouver.",
+    "attribution": "Contains information licensed under the Open Government Licence \u2013 Vancouver.",
     "modifications": "Bounded spatial extract, local metre projection, species dictionary, duplicate/invalid/planting-site filtering. See docs/sources/vancouver-public-trees.md."
   },
   {
@@ -704,14 +704,14 @@
     "source": "https://polyhaven.com/a/rock_moss_set_01",
     "license": "CC0",
     "credit": "Kless Gyzen",
-    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+    "changes": "Simplified solid scanned geometry toward a 16% target with bounded 0.002 error; retained original 1K WebP material maps. Runtime pivot normalization and instancing."
   },
   {
     "file": "models/forest/tree_stump_01.glb",
     "source": "https://polyhaven.com/a/tree_stump_01",
     "license": "CC0",
     "credit": "Rob Tuytel",
-    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+    "changes": "Simplified solid scanned geometry toward a 16% target with bounded 0.002 error; retained original 1K WebP material maps. Runtime pivot normalization and instancing."
   },
   {
     "file": "models/forest/shrub_04.glb",
@@ -756,10 +756,31 @@
     "changes": "Resized to 2K WebP; blended at runtime with forest soil and leaf litter."
   },
   {
-    "file": "textures/forest/conifer-atlas.webp",
+    "file": "textures/forest/conifer-atlas-pair.webp",
     "source": "https://polyhaven.com/a/fir_tree_01",
     "license": "CC0",
     "credit": "Rob Tuytel, Rico Cilliers",
-    "changes": "Two unlit orthographic silhouettes baked from the modified variant C model, packed into a transparent WebP atlas."
+    "changes": "Four unlit orthographic views of Fir Tree 01 variants C and B, baked from the prepared near models and packed as a 4096 by 2048 alpha atlas. CC0 derivative."
+  },
+  {
+    "file": "models/forest/fir_tree_01-medium.glb",
+    "source": "https://polyhaven.com/a/fir_tree_01",
+    "license": "CC0",
+    "credit": "Rob Tuytel, Rico Cilliers",
+    "changes": "Deterministic needle component sampling; transverse-only coverage compensation; medium needles flattened from folded strips to two triangles with corrected winding; wood/branch simplification with 0.008 error and recomputed branch normals. Original UVs, alpha and textures retained. Runtime normalization uses near-detail reference dimensions."
+  },
+  {
+    "file": "models/forest/fir_tree_01-b.glb",
+    "source": "https://polyhaven.com/a/fir_tree_01",
+    "license": "CC0",
+    "credit": "Rob Tuytel, Rico Cilliers",
+    "changes": "Deterministic needle component sampling; transverse-only coverage compensation; wood/branch simplification with 0.008 error and recomputed branch normals. Original UVs, alpha and textures retained. Runtime normalization uses near-detail reference dimensions."
+  },
+  {
+    "file": "models/forest/fir_tree_01-b-medium.glb",
+    "source": "https://polyhaven.com/a/fir_tree_01",
+    "license": "CC0",
+    "credit": "Rob Tuytel, Rico Cilliers",
+    "changes": "Deterministic needle component sampling; transverse-only coverage compensation; medium needles flattened from folded strips to two triangles with corrected winding; wood/branch simplification with 0.008 error and recomputed branch normals. Original UVs, alpha and textures retained. Runtime normalization uses near-detail reference dimensions."
   }
 ]

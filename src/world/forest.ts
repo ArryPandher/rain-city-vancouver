@@ -7,6 +7,7 @@ import { SpatialHash } from "./collision";
 import { ForestHabitat, STANLEY_BOUNDS } from "./forest-habitat";
 import type { TreeInstance } from "./detailed-trees";
 import { calibrateStem } from "./tree-stem";
+import { selectForestLods } from "./forest-lod";
 
 export function forestGround(m: Materials) {
   const mat = new T.MeshStandardMaterial({
@@ -67,9 +68,11 @@ export class ForestDetail {
   budget = 8;
   samples: TreeInstance[] = [];
   private selected: TreeInstance[] = [];
-  private conifers: T.InstancedMesh[] = [];
-  private sourceWidth = 1;
-  private sourceStem = 0.08;
+  private mediumSelected: TreeInstance[] = [];
+  private conifers: T.InstancedMesh[][] = [[], []];
+  private mediumConifers: T.InstancedMesh[][] = [[], []];
+  private sourceWidth = [1, 1];
+  private sourceStem = [0.08, 0.08];
   private pools: Pool[] = [];
   private sites = new SpatialHash<Site>(40);
   private lastX = Infinity;
@@ -87,30 +90,46 @@ export class ForestDetail {
       "tree_stump_01",
       "shrub_04",
       "nettle_plant",
+      "fir_tree_01-medium",
+      "fir_tree_01-b",
+      "fir_tree_01-b-medium",
     ];
     const models = await Promise.all(
       ids.map((id) => loader.loadAsync(`${BASE}models/forest/${id}.glb`)),
     );
+    const sourceBounds: T.Box3[] = [];
     for (let mi = 0; mi < models.length; mi++) {
       const root = models[mi].scene;
       root.updateMatrixWorld(true);
       const bounds = new T.Box3().setFromObject(root),
         height = bounds.max.y - bounds.min.y;
-      if (mi === 0) {
-        result.sourceWidth =
-          Math.max(bounds.max.x - bounds.min.x, bounds.max.z - bounds.min.z) /
-          height;
-        result.sourceStem = 1.1 / height;
+      if (mi === 0 || mi >= 7) {
+        const variant = mi >= 8 ? 1 : 0;
+        const medium = mi === 7 || mi === 9;
+        const capacity = medium ? 128 : 24;
+        if (!medium) sourceBounds[variant] = bounds;
+        const reference = sourceBounds[variant];
+        const referenceHeight = reference.max.y - reference.min.y;
+        result.sourceWidth[variant] =
+          Math.max(
+            reference.max.x - reference.min.x,
+            reference.max.z - reference.min.z,
+          ) / referenceHeight;
+        result.sourceStem[variant] = 1.1 / referenceHeight;
         root.traverse((o) => {
           if (!(o instanceof T.Mesh)) return;
           const geometry = bakeGeometry(o.geometry, o.matrixWorld);
-          geometry.translate(0, -bounds.min.y, 0);
-          geometry.scale(1 / height, 1 / height, 1 / height);
+          geometry.translate(0, -reference.min.y, 0);
+          geometry.scale(
+            1 / referenceHeight,
+            1 / referenceHeight,
+            1 / referenceHeight,
+          );
           geometry.deleteAttribute("color");
           geometry.setAttribute(
             "treeStemScale",
             new T.InstancedBufferAttribute(
-              new Float32Array(24).fill(1),
+              new Float32Array(capacity).fill(1),
               1,
             ).setUsage(T.DynamicDrawUsage),
           );
@@ -125,7 +144,7 @@ export class ForestDetail {
           material.envMapIntensity = 0.5;
           material.normalScale.set(0.75, 0.75);
           calibrateStem(material);
-          const mesh = new T.InstancedMesh(geometry, material, 24);
+          const mesh = new T.InstancedMesh(geometry, material, capacity);
           const depth = new T.MeshDepthMaterial({
             depthPacking: T.RGBADepthPacking,
             map: material.map,
@@ -135,11 +154,13 @@ export class ForestDetail {
           calibrateStem(depth);
           mesh.customDepthMaterial = depth;
           mesh.count = 0;
-          mesh.name = "Detailed Stanley conifers";
+          mesh.name = `${medium ? "Medium" : "Detailed"} Stanley conifers ${variant}`;
           mesh.frustumCulled = false;
           mesh.castShadow = mesh.receiveShadow = true;
           scene.add(mesh);
-          result.conifers.push(mesh);
+          (medium ? result.mediumConifers : result.conifers)[variant].push(
+            mesh,
+          );
         });
       } else {
         const kind = (
@@ -230,56 +251,70 @@ export class ForestDetail {
     this.lastBudget = this.budget;
     const dirty = new Set<T.InstancedMesh>(),
       hidden = new T.Matrix4().makeScale(0, 0, 0);
-    for (const t of this.selected) {
+    for (const t of [...this.selected, ...this.mediumSelected]) {
       t.crown.setMatrixAt(t.crownIndex, t.crownMatrix);
       t.trunk.setMatrixAt(t.trunkIndex, t.trunkMatrix);
       dirty.add(t.crown);
       dirty.add(t.trunk);
     }
-    this.selected = this.samples
-      .filter((t) => Math.hypot(t.x - x, t.z - z) < 155)
-      .sort(
-        (a, b) =>
-          (a.x - x) ** 2 + (a.z - z) ** 2 - (b.x - x) ** 2 - (b.z - z) ** 2,
-      )
-      .slice(0, this.budget);
+    const selection = selectForestLods(
+      this.samples,
+      x,
+      z,
+      this.budget,
+      this.selected,
+      this.mediumSelected,
+    );
+    this.selected = selection.near;
+    this.mediumSelected = selection.medium;
     const dummy = new T.Object3D(),
       color = new T.Color();
-    this.selected.forEach((t, i) => {
-      t.crown.setMatrixAt(t.crownIndex, hidden);
-      t.trunk.setMatrixAt(t.trunkIndex, hidden);
-      dirty.add(t.crown);
-      dirty.add(t.trunk);
-      const width = t.width / this.sourceWidth;
-      dummy.position.set(t.x, (t.y ?? 0) - (t.rootDepth ?? 0), t.z);
-      dummy.rotation.set(0, t.rotation, 0);
-      dummy.scale.set(width, t.height + (t.rootDepth ?? 0), width);
-      dummy.updateMatrix();
-      color.setHSL(0.19, 0.03, 0.84 + (t.rotation % 1) * 0.1);
-      for (const mesh of this.conifers) {
-        mesh.setMatrixAt(i, dummy.matrix);
-        mesh.setColorAt(i, color);
-        (
-          mesh.geometry.getAttribute(
-            "treeStemScale",
-          ) as T.InstancedBufferAttribute
-        ).setX(
-          i,
-          Math.max(0.12, Math.min(3, t.diameter / (width * this.sourceStem))),
-        );
+    const fill = (meshes: T.InstancedMesh[][], samples: TreeInstance[]) => {
+      const counts = [0, 0];
+      for (const t of samples) {
+        const variant = t.coniferVariant ?? 0,
+          i = counts[variant]++;
+        t.crown.setMatrixAt(t.crownIndex, hidden);
+        t.trunk.setMatrixAt(t.trunkIndex, hidden);
+        dirty.add(t.crown);
+        dirty.add(t.trunk);
+        const width = t.width / this.sourceWidth[variant];
+        dummy.position.set(t.x, (t.y ?? 0) - (t.rootDepth ?? 0), t.z);
+        dummy.rotation.set(0, t.rotation, 0);
+        dummy.scale.set(width, t.height + (t.rootDepth ?? 0), width);
+        dummy.updateMatrix();
+        color.setHSL(0.19, 0.03, 0.84 + (t.rotation % 1) * 0.1);
+        for (const mesh of meshes[variant]) {
+          mesh.setMatrixAt(i, dummy.matrix);
+          mesh.setColorAt(i, color);
+          (
+            mesh.geometry.getAttribute(
+              "treeStemScale",
+            ) as T.InstancedBufferAttribute
+          ).setX(
+            i,
+            Math.max(
+              0.12,
+              Math.min(3, t.diameter / (width * this.sourceStem[variant])),
+            ),
+          );
+        }
       }
-    });
+      for (let variant = 0; variant < 2; variant++)
+        for (const mesh of meshes[variant]) {
+          mesh.count = counts[variant];
+          mesh.instanceMatrix.needsUpdate = true;
+          if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+          (
+            mesh.geometry.getAttribute(
+              "treeStemScale",
+            ) as T.InstancedBufferAttribute
+          ).needsUpdate = true;
+        }
+    };
+    fill(this.conifers, this.selected);
+    fill(this.mediumConifers, this.mediumSelected);
     for (const mesh of dirty) mesh.instanceMatrix.needsUpdate = true;
-    for (const mesh of this.conifers) {
-      mesh.count = this.selected.length;
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-      (
-        mesh.geometry.getAttribute(
-          "treeStemScale",
-        ) as T.InstancedBufferAttribute
-      ).needsUpdate = true;
-    }
     for (const p of this.pools) p.mesh.count = 0;
     const sites = this.sites
       .query(x, z, this.budget ? 95 : 45)
