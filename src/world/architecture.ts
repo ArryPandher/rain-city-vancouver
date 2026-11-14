@@ -16,6 +16,7 @@ import type { ArchitecturalDetail } from "./detailed-architecture";
 import { ericksonPlace } from "./erickson-place";
 import { lawCourts } from "./law-courts";
 import { robsonSquare } from "./robson-square";
+import { theatres } from "./theatres";
 import { buildingHeight } from "./building-profile";
 import { pitchedRoof } from "./pitched-roof";
 import { houseMaterial } from "./house-material";
@@ -127,7 +128,11 @@ export function architecture(
   });
   for (const b of data.buildings) {
     if (specialBuilding(b)) continue;
-    if (lawCourts(b, shell, m) || robsonSquare(b, shell, m)) {
+    if (
+      lawCourts(b, shell, m) ||
+      robsonSquare(b, shell, m) ||
+      theatres(b, shell, m)
+    ) {
       count++;
       continue;
     }

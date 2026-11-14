@@ -780,55 +780,6 @@ export class World {
       }
     }
     this.chunks.push(...b.finish());
-    // Blade signs mark the entertainment street and face approaching traffic.
-    const neonRoot = new T.Group();
-    this.root.add(neonRoot);
-    const names = ["ORPHEUM", "VOGUE", "GRANVILLE", "RAIN CITY", "COMMODORE"];
-    for (let i = 0; i < names.length; i++) {
-      const at = geo(49.2807 - i * 0.00055, -123.1217 - i * 0.0007),
-        near = this.collision.nearestRoad(...at, 85);
-      if (!near) continue;
-      const side = i % 2 ? 1 : -1,
-        offset = roadWidth(near.road) / 2 - 0.7,
-        g = new T.Group();
-      g.position.set(
-        near.x + Math.cos(near.heading) * offset * side,
-        0,
-        near.z - Math.sin(near.heading) * offset * side,
-      );
-      g.rotation.y = near.heading;
-      neonRoot.add(g);
-      const c = document.createElement("canvas");
-      c.width = 256;
-      c.height = 1024;
-      const ctx = c.getContext("2d")!;
-      ctx.fillStyle = "#0b151a";
-      ctx.fillRect(0, 0, 256, 1024);
-      ctx.strokeStyle = ["#efba79", "#ed8d8b", "#9fcddd"][i % 3];
-      ctx.lineWidth = 5;
-      ctx.strokeRect(12, 12, 232, 1000);
-      ctx.fillStyle = ctx.strokeStyle;
-      ctx.font = "bold 108px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      const letters = names[i].replaceAll(" ", "");
-      for (let j = 0; j < letters.length; j++)
-        ctx.fillText(letters[j], 128, 70 + (j * 880) / (letters.length - 1));
-      const tex = new T.CanvasTexture(c);
-      tex.colorSpace = T.SRGBColorSpace;
-      const mat = new T.MeshStandardMaterial({
-        map: tex,
-        emissiveMap: tex,
-        emissive: 0xffffff,
-        emissiveIntensity: 2,
-        roughness: 0.55,
-      });
-      box(g, mat, 0, 12.5, 0, 2.2, 9, 0.48);
-      box(g, m.dark, side * 1.35, 16.5, 0, 2.6, 0.13, 0.15);
-      box(g, m.dark, side * 1.35, 8.3, 0, 2.6, 0.13, 0.15);
-      this.nightLights.push(mat);
-    }
-    this.mergeStatic(neonRoot);
   }
   mergeStatic(root: T.Group) {
     root.updateWorldMatrix(true, true);

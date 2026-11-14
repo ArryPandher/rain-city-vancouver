@@ -1,6 +1,6 @@
 import * as T from "three";
 import { seeded } from "./data";
-export const BASE = import.meta.env.BASE_URL;
+export const BASE = import.meta.env?.BASE_URL ?? "/";
 export class Materials {
   loader = new T.TextureLoader();
   asphalt: T.MeshStandardMaterial;
@@ -28,6 +28,12 @@ export class Materials {
   yellow = new T.MeshStandardMaterial({ color: 0xd9bf6a, roughness: 0.6 });
   facades: T.MeshStandardMaterial[] = [];
   photoFacades: T.MeshStandardMaterial[] = [];
+  neonMaterials: {
+    material: T.MeshStandardMaterial;
+    day: number;
+    night: number;
+  }[] = [];
+  practicalLights: { light: T.PointLight; day: number; night: number }[] = [];
   curtainMaps?: Record<string, T.Texture>;
   roof = new T.MeshStandardMaterial({ color: 0x647276, roughness: 0.8 });
   constructor() {
@@ -252,6 +258,10 @@ export class Materials {
         (m.emissiveIntensity =
           (m.name === "Detailed curtain wall" ? 0.02 : 0.12) + n * 0.8),
     );
+    for (const light of this.practicalLights)
+      light.light.intensity = n > 0.5 ? light.night : light.day;
+    for (const neon of this.neonMaterials)
+      neon.material.emissiveIntensity = n > 0.5 ? neon.night : neon.day;
   }
 }
 export function label(

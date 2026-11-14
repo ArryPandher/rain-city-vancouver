@@ -1,0 +1,47 @@
+[
+  {
+    "file": "plaster-color.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/painted_plaster_wall/painted_plaster_wall_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/painted_plaster_wall",
+    "author": "Amal Kumar",
+    "license": "CC0",
+    "sourceMd5": "15ba8c1f63a5ab412b1eabe31728540a",
+    "changes": "Converted 1K texture to WebP"
+  },
+  {
+    "file": "plaster-normal.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/painted_plaster_wall/painted_plaster_wall_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/painted_plaster_wall",
+    "author": "Amal Kumar",
+    "license": "CC0",
+    "sourceMd5": "43fff290583dbdfc9bfa088a2750e840",
+    "changes": "Converted 1K texture to WebP"
+  },
+  {
+    "file": "plaster-roughness.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/painted_plaster_wall/painted_plaster_wall_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/painted_plaster_wall",
+    "author": "Amal Kumar",
+    "license": "CC0",
+    "sourceMd5": "e076a6360329a2bc18c7397dc50c074a",
+    "changes": "Converted 1K texture to WebP"
+  },
+  {
+    "file": "vogue-carving.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/51/Vogue_Theatre_2026.JPG",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vogue_Theatre_2026.JPG",
+    "author": "Canmenwalker",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "changes": "Cropped carving detail; grayscale, normalized and relit for daylight, resized to 384 x 448."
+  },
+  {
+    "file": "vogue-diana.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/51/Vogue_Theatre_2026.JPG",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vogue_Theatre_2026.JPG",
+    "author": "Canmenwalker",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "changes": "Cropped neon Diana figure; yellow-light mask removes the night sky; resized to 512 px high."
+  }
+]
