@@ -4,7 +4,7 @@
 
 ## Automated
 
-`npm test`: 118 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
+`npm test`: 133 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
 
 ## Interactive evidence
 
@@ -372,3 +372,10 @@ Final bundle **index-B-6sGFun.js** completed **116.38 m** of native-key stair/pl
 Individual 1440×900 M2 scene samples were **21 fps day / 15 High-night / 35 Performance**; these are not a benchmark. A separate same-view bounds diagnostic reduced submitted geometry from 37,273,943 to 31,345,807 triangles while sampled fps stayed 14. That diagnostic preceded the final distant-branch model; it is evidence of less submitted geometry, not a measured final frame-rate gain. Rendering/frame pacing and canopy view/LOD transitions still need improvement. AAA fidelity remains unfinished.
 
 A native failure-injection check blocked the broadleaf normal atlas. Startup completed with mapped fallback crowns and nearby detailed trees, and native walking covered **4.850 m** with no recorded runtime errors. The interrupted earlier test session was superseded by the fresh completed run. Public exact-asset and native validation are recorded in the release log.
+
+
+## Static shadow reuse — 2026-11-14
+
+Paused/photo frames reuse unchanged shadow maps; camera, world revision, weather and quality changes invalidate reuse. Active gameplay keeps full shadow updates. No geometry or shadow quality was reduced. All 133 tests/build pass. The fixed-view alternating comparison measured 19.64/19.60 fps without reuse and 22.70/22.91 with it; fresh screenshots were pixel-identical. These are local photo-view observations, not a gameplay performance claim. See [rendering notes](performance/static-shadows.md).
+
+Native local input covered 116.38 m of upstairs/plaza walking, with final errors 0.182/0.074 m after recorded corrections (initial timed error up to 3.65 m). Car 15.35 m / 56.10 km/h and bike 7.03 m / 24.57 km/h both stopped at full health. All three guns left 14/29/7 rounds. Animation, day/night reflection strengths and quality restoration passed. Instrumentation observed 1,125 active frames with zero skipped shadow refreshes, plus 240 paused reuses and 84 paused refreshes. Runtime errors empty; reflection error null. Fresh day/night images were inspected. Public deployment verification is recorded in the project log.

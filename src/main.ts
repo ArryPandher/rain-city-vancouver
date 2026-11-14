@@ -1,4 +1,5 @@
 import * as T from "three";
+import { StaticShadowCache } from "./rendering/static-shadow-cache";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
@@ -66,6 +67,7 @@ class Game {
   lastWorldUpdate = 0;
   lastMini = 0;
   frameCount = 0;
+  shadowCache = new StaticShadowCache();
   footstepDistance = 0;
   headlights: T.SpotLight[] = [];
   constructor() {
@@ -1287,7 +1289,13 @@ class Game {
       }
     }
     this.renderer.info.reset();
-    this.composer.render();
+    this.shadowCache.render(
+      this.renderer,
+      this.camera,
+      `${this.lastWorldUpdate}/${this.world.weather}/${this.quality}`,
+      this.running || ui.introOpen,
+      () => this.composer.render(),
+    );
   }
   debugState() {
     return {
