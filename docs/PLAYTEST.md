@@ -4,7 +4,7 @@
 
 ## Automated
 
-`npm test`: 20 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
+`npm test`: 25 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
 
 ## Interactive evidence
 
@@ -86,3 +86,10 @@ Local actual-input checks on West Georgia passed walking and driving to 53.7 km/
 The basin now uses a 128 px cubemap of static game geometry. The first capture happens during loading; entering the area did not trigger another capture. Changing weather nearby refreshed it automatically. Day/night views and the actual cubemap faces were inspected. Moving actors are excluded, the reflecting surface is hidden during capture, and tests cover restoration of visibility, shadow flags, sun position, XR and renderer target after success and a simulated failure. Performance graphics keeps the sky fallback.
 
 After a night refresh, actual W input moved the character and pistol fire consumed one round (15 to 14), with no recorded runtime errors. Local street samples remained in the low-to-high 30s at 1440×900 Balanced. The first preparation took about 1.2 seconds inside loading in one warm-cache sample; a later weather refresh submitted in about 135 ms. These are local CPU submission timings, not a cross-device or GPU benchmark. The reflection is cached and approximate; it does not include moving actors or provide an exact planar mirror.
+
+
+## Local population and walking routes — 2026-11-14
+
+Population sampling clips every mapped road segment to the nearby area, including long roads whose ends are far away. Pedestrians can use park paths and follow successive polyline segments; their offset paths meet at corners and their heading follows their movement. Spawn candidates avoid water, buildings and close overlap. Normal travel recycles distant actors; fast travel immediately populates the destination.
+
+Five regression checks cover clipped local sampling, later road segments, unusable geometry, route continuation/end turns and offset continuity. All 25 tests and the production build pass. Local actual-input walking changed position; a summoned car reached 22.15 m/s (79.7 km/h), braked to 0.10 m/s and retained 100% health. Stanley Park travel placed 8 walkers within 80 m, with 22 of 34 pedestrians on path/cycle/pedestrian ways in this sample. A five-second runtime probe observed four segment transitions; maximum sampled pedestrian speed was 1.56 m/s and ambient-car speed 10.78 m/s through curved offsets. No runtime errors were recorded. Scene samples were 29–35 fps at 1440×900 Balanced on the M2. Traffic remains basic route-following AI.

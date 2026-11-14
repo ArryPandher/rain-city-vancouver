@@ -652,7 +652,7 @@ class Game {
       });
       this.actors.sync(this.vehicle, 0);
     }
-    this.actors.recycle(this.player, this.vehicle);
+    this.actors.recycle(this.player, this.vehicle, true);
     this.setCamera(true);
     ui.mapOpen = false;
     ui.show("map-layer", false);
