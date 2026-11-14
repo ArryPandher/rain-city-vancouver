@@ -105,3 +105,8 @@ Building geometry, roof planting layout, foyer scenery, glazing and waterfront d
 ## Jack Poole Plaza and Olympic cauldron
 
 The plaza, café, planted roof, mapped stair/ramp construction and cauldron are original game geometry informed by owner, landscape architect and structural-engineer references. **Digital Orca (2009), Douglas Coupland**, is represented by an original simplified voxel interpretation; the sculpture design is credited to its artist. Reference photography and third-party sculpture meshes are not distributed. The fresh OSM map extract remains © OpenStreetMap contributors, ODbL 1.0. Existing Poly Haven CC0 materials are reused. Delaunator 5.1.0 is distributed under the [ISC notice](public/licenses/delaunator-ISC.txt); robust-predicates retains the [Unlicense notice](public/licenses/robust-predicates-Unlicense.txt). [Sources, elevation interpretation and limits](docs/sources/jack-poole-plaza.md).
+
+
+## Fairmont Pacific Rim
+
+Original tower/podium geometry, interior scenery, palms and generated branch-pattern texture are Rain City interpretations (MIT), guided by James K. M. Cheng Architects, DIALOG, RDH and Zahner references. The real forest metal façade derives from James Cheng’s photography; our generated drawing does not reproduce that photograph. The real text artwork is by Liam Gillick; the current game uses plain architectural bands and does not distribute an artwork texture. Reference photographs are not distributed. Eight mapped OSM outlines and heights retain © OpenStreetMap contributors / ODbL 1.0. Existing Poly Haven cast-concrete maps retain CC0. [Sources, reproduction and limits](docs/sources/fairmont-pacific-rim.md); [generated pattern provenance](public/textures/fairmont/SOURCES.json).

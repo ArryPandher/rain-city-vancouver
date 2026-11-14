@@ -4,6 +4,7 @@ export interface ReflectionProbeSpec {
   name: string;
   position: [number, number, number];
   materials: T.MeshStandardMaterial[];
+  intensity?: { day: number; night: number };
 }
 
 /** Small static scene captures, refreshed on weather changes when nearby. */
@@ -43,6 +44,15 @@ export class SceneReflections {
         material.envMap = null;
         material.needsUpdate = true;
       }
+    }
+  }
+  setNight(night: boolean) {
+    for (const { spec } of this.probes) {
+      if (!spec.intensity) continue;
+      for (const material of spec.materials)
+        material.envMapIntensity = night
+          ? spec.intensity.night
+          : spec.intensity.day;
     }
   }
   update(renderer: T.WebGLRenderer, viewer: T.Vector3) {

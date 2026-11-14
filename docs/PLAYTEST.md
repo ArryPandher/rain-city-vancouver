@@ -4,7 +4,7 @@
 
 ## Automated
 
-`npm test`: 35 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
+`npm test`: 109 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
 
 ## Interactive evidence
 
@@ -301,3 +301,14 @@ The final production-preview candidate additionally passed a **55.95 m** native 
 Initial production copying hit ENOSPC. User-authorized cleanup removed regenerable npm, pip and Claude CLI caches; the subsequent build passed, with 1.6 GiB free at the last check. The busy shared uv cache and installed runtimes were retained.
 
 Absolute elevations, café interiors, sculpture cladding, fine artwork geometry, planting and hardware remain approximate. Surrounding façades, coarse terrain transitions and rendering cost still limit realism. AAA fidelity remains unfinished. Public deployment and native smoke verification are recorded in the project log after publication.
+
+
+## Fairmont Pacific Rim — 2026-11-14
+
+Replaced its generic tower with eight mapped OSM footprints/heights, unioned exterior sections, a stepped 140 m skyline, physical balcony slabs and recessed rooms, blue spandrels and glazing, varied curtains, a stone/glass podium, a zinc suite cube, round columns, glass canopy, original forest-pattern metal and rooftop palms. Source-only photography remains outside distributed assets; architecture, rooms and fine dimensions are interpreted. Three local probes capture the neighbouring city. Authored night reflection intensity avoids carrying the bright daylight glass response into night and restores on returning to daylight.
+
+The local production preview passed 149.24 m of native-keyboard walking beneath the canopy, along the harbour side and around the east corner, maximum timed endpoint error 0.07 m. The car covered 16.18 m and reached 57.86 km/h; the bike covered 9.87 m and reached 28.34 km/h. Both braked to rest at 100% health. Native weapon selection/aim/fire consumed all three magazines to 14/29/7. Day/night and Performance/Balanced restoration were inspected; captured runtime/shader errors were empty and the reflection error was null. These movement checks precede the final reflection-intensity-only adjustment. Initial M2 1440×900 scene samples: day 31 fps, High/night 28 fps, Performance 53 fps.
+
+The automated suite now has 109 checks, including source-part/section agreement, finite geometry and roof height, an actual glass-to-room raycast, clear entrance pavement/solid columns and day/night reflection restoration. The existing reflection capture/failure cleanup checks remain in place. Public deployment and final lighting evidence are recorded in the project release log. The model remains approximate and below AAA production fidelity.
+
+Final local lighting verification confirmed all four Fairmont reflecting materials change to 0.2 at night and restore to 1.05 in daylight. Both views rendered with empty recorded errors and null reflection error, sampled at 27/30 fps respectively. The final build differs from this inspected build only by moving one import into the top import block; final public gameplay/lighting verification follows publication.

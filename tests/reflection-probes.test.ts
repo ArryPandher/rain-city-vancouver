@@ -3,6 +3,34 @@ import assert from "node:assert/strict";
 import * as T from "three";
 import { SceneReflections } from "../src/rendering/reflection-probes";
 
+test("authored reflection intensities follow night and restore daylight without changing other probes", () => {
+  const dayGlass = new T.MeshPhysicalMaterial({ envMapIntensity: 1.05 });
+  const unchanged = new T.MeshPhysicalMaterial({ envMapIntensity: 0.4 });
+  const reflections = new SceneReflections(
+    new T.Scene(),
+    new T.Group(),
+    [],
+    new T.DirectionalLight(),
+    [
+      {
+        name: "tower",
+        position: [0, 2, 0],
+        materials: [dayGlass],
+        intensity: { day: 1.05, night: 0.2 },
+      },
+      { name: "basin", position: [20, 2, 0], materials: [unchanged] },
+    ],
+  );
+  reflections.setNight(true);
+  assert.equal(dayGlass.envMapIntensity, 0.2);
+  assert.equal(unchanged.envMapIntensity, 0.4);
+  reflections.invalidate();
+  assert.equal(dayGlass.envMapIntensity, 0.2);
+  reflections.setNight(false);
+  assert.equal(dayGlass.envMapIntensity, 1.05);
+  reflections.dispose();
+});
+
 for (const fail of [false, true])
   test(`local reflections restore scene and renderer state after ${fail ? "a capture failure" : "capture"}`, () => {
     const scene = new T.Scene();

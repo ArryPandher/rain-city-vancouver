@@ -711,6 +711,7 @@ class Game {
   setWeather(w: Weather) {
     if (!this.world) return;
     this.world.setWeather(w);
+    this.reflections?.setNight(w === "night");
     this.reflections?.invalidate();
     this.bloom.threshold = w === "night" ? 1.15 : w === "golden" ? 1.7 : 2.2;
     this.bloom.strength = w === "night" ? 0.21 : 0.12;

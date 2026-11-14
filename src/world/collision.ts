@@ -1,3 +1,4 @@
+import { FAIRMONT_ID, fairmontFootprint } from "./fairmont-site";
 import { jackGroundHeight, jackRoofAccess, CACTUS_ID } from "./jack-poole-site";
 import {
   ROBSON_GARDEN_ID,
@@ -217,6 +218,7 @@ export class CollisionWorld {
   constructor(public data: CityData) {
     for (const source of data.buildings) {
       let b = source;
+      if (b.id === FAIRMONT_ID) b = { ...b, pts: fairmontFootprint };
       if (b.id === CONVENTION_ID) {
         this.convention = conventionSite(b);
         b = { ...b, pts: this.convention.footprint };
