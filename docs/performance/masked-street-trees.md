@@ -17,6 +17,8 @@ The fixed view retained two near and 22 medium trees; the walking view retained 
 
 ## Verification
 
-Geometry tests require correctly directed, nondegenerate faces, unit normals, finite UV/position attributes, 24–29 m² of sampled alpha-masked leaf area, and byte-identical woody vertices, indices and node transforms against the near model. Runtime tests verify that both visible and shadow materials retain the 0.18 mask cutoff, and that quality changes restore the distant tree instances. Existing camera-distance hysteresis and budgets are unchanged.
+Geometry tests require correctly directed, nondegenerate faces, unit normals, finite UV/position attributes, 24–29 m² of sampled alpha-masked leaf area, and byte-identical woody vertices, indices and node transforms against the near model. The live check found that Three.js overwrites the custom shadow cutoff with 0.5 when alpha-to-coverage is enabled. A per-mesh `onBeforeShadow` callback restores the visible material cutoff after that substitution. Tests simulate the overwrite, and live checks inspect the material after rendering. Runtime tests verify that both visible and shadow materials retain the 0.18 mask cutoff, and that quality changes restore the distant tree instances. Existing camera-distance hysteresis and budgets are unchanged.
 
 Local evidence is in `artifacts/local/masked-tree-comparison.json`, `masked-tree-comparison-summary.json`, `leaf-card-coverage.json`, and `276-tree-*.png`. The full test suite, production build, native controls, day/night and released asset checks are recorded in the project log. This change does not achieve AAA fidelity.
+
+The comparison above predates the shadow-cutoff callback; it establishes the geometry benefit, not the exact performance of the final shadow fix. The final build is checked separately for rendering and controls.

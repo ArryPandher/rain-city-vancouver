@@ -125,6 +125,18 @@ export class DetailedTrees {
           const mesh = new T.InstancedMesh(geometry, part.material, 1);
           mesh.setMatrixAt(0, new T.Matrix4());
           mesh.customDepthMaterial = part.depth;
+          // WebGLShadowMap substitutes 0.5 for alpha-to-coverage before this
+          // callback. Restore the source cutoff after that substitution.
+          mesh.onBeforeShadow = (
+            _renderer,
+            _scene,
+            _camera,
+            _shadowCamera,
+            _geometry,
+            depthMaterial,
+          ) => {
+            depthMaterial.alphaTest = (mesh.material as T.Material).alphaTest;
+          };
           mesh.frustumCulled = true;
           mesh.castShadow = mesh.receiveShadow = true;
           mesh.name = `Street tree ${level === 0 ? "near" : "medium"} ${part.material.name}`;

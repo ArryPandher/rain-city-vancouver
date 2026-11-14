@@ -199,6 +199,17 @@ test("street tree slots share vertex data, keep independent culling and restore 
     0.18,
   );
   assert.equal((a.material as T.MeshStandardMaterial).alphaTest, 0.45);
+  medium.customDepthMaterial!.alphaTest = 0.5;
+  (medium.onBeforeShadow as Function)(
+    null,
+    null,
+    null,
+    null,
+    medium.geometry,
+    medium.customDepthMaterial,
+    null,
+  );
+  assert.equal(medium.customDepthMaterial!.alphaTest, 0.18);
   d.budget = 0;
   d.update(0, 0, 0);
   assert.deepEqual(d.lodState, { near: 0, medium: 0 });
