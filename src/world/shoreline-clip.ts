@@ -1,7 +1,6 @@
-import polygonClipping, { type Polygon } from "polygon-clipping";
-import { ShapeUtils, Vector2 } from "three";
 import { SpatialHash } from "./collision";
 import { pointInPoly, type Point } from "./data";
+import { ringTriangles, subtractTriangle } from "./triangle-partition";
 
 interface Edge {
   minX: number;
@@ -14,7 +13,8 @@ interface Edge {
  */
 export class ShorelineClip {
   private edges = new SpatialHash<Edge>(32);
-  private water = new SpatialHash<{ pts: number[]; polygon: Polygon }>(160);
+  private water = new SpatialHash<{ pts: number[] }>(160);
+  private cuts = new SpatialHash<Point[]>(64);
   constructor(
     oceans: number[][],
     bounds: { minX: number; minZ: number; maxX: number; maxZ: number },
@@ -29,7 +29,17 @@ export class ShorelineClip {
       if (minX > maxX || minZ > maxZ) continue;
       const ring: Point[] = xs.map((x, i) => [x, zs[i]]);
       ring.push([...ring[0]]);
-      this.water.add({ pts, polygon: [ring] }, minX, minZ, maxX, maxZ);
+      this.water.add({ pts }, minX, minZ, maxX, maxZ);
+      // Triangulate each water/cutout polygon once. Re-running a polygon boolean
+      // with the entire coastline for every shore cell made startup very slow.
+      for (const triangle of ringTriangles(pts)) {
+        const loX = Math.max(minX, Math.min(...triangle.map((p) => p[0]))),
+          hiX = Math.min(maxX, Math.max(...triangle.map((p) => p[0]))),
+          loZ = Math.max(minZ, Math.min(...triangle.map((p) => p[1]))),
+          hiZ = Math.min(maxZ, Math.max(...triangle.map((p) => p[1])));
+        if (loX <= hiX && loZ <= hiZ)
+          this.cuts.add(triangle, loX, loZ, hiX, hiZ);
+      }
       for (let i = 0; i < ring.length - 1; i++) {
         const a = ring[i],
           b = ring[i + 1];
@@ -68,24 +78,12 @@ export class ShorelineClip {
     const x = points.reduce((n, p) => n + p[0], 0) / 3,
       z = points.reduce((n, p) => n + p[1], 0) / 3,
       radius = Math.max(...points.map((p) => Math.hypot(p[0] - x, p[1] - z)));
-    const polygons = this.water.query(x, z, radius).map((w) => w.polygon);
-    if (!polygons.length) return [points];
-    const result = polygonClipping.difference(
-      [[...points, points[0]]],
-      ...polygons,
+    let pieces = [points];
+    for (const cut of this.cuts.query(x, z, radius))
+      pieces = pieces.flatMap((p) => subtractTriangle(p, cut));
+    // Subtracting triangles preserves convex fragments, so a fan is sufficient.
+    return pieces.flatMap((p) =>
+      p.slice(2).map((_, i) => [p[0], p[i + 1], p[i + 2]]),
     );
-    const triangles: Point[][] = [];
-    for (const polygon of result) {
-      const rings = polygon.map((r) =>
-          r.slice(0, -1).map((p) => new Vector2(p[0], p[1])),
-        ),
-        flat = rings.flat();
-      for (const indices of ShapeUtils.triangulateShape(
-        rings[0],
-        rings.slice(1),
-      ))
-        triangles.push(indices.map((i) => [flat[i].x, flat[i].y]));
-    }
-    return triangles;
   }
 }

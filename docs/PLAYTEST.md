@@ -4,7 +4,7 @@
 
 ## Automated
 
-`npm test`: 109 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
+`npm test`: 118 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
 
 ## Interactive evidence
 
@@ -326,3 +326,15 @@ Native car input covered **16.84 m** and reached **58.31 km/h**; the bike covere
 Those gameplay samples precede a final visual-only pass to reduce window contrast, saturate the light strip and make drainage slots flush. Final production-preview images and public deployment/native smoke evidence are recorded in the release log. Exterior dimensions, planting, pool detail and downtown grades remain approximate; AAA fidelity remains unfinished.
 
 Final packaged preview `index-BBanYH80.js` was inspected in daylight, at night and at the pool. The corrected drain slots lie flush and the light is outside the façade. Recorded errors remained empty and reflection error null. [Actual preview capture](screenshots/rogers-tower.webp).
+
+## Harbour Green Park exterior — 2026-11-14
+
+Rebuilt the mapped park with graded lawns, photographed grass/granite materials, short grass instances, garden shrubs, joined paths, the Bute Street spray fountain, stone piers, an open middle stair landing, timber/iron benches, lanterns, a low shore edge and a green park sign. The fountain apron stays level; the surrounding lawns blend into the connected walking paths. The park joins Jack Poole Plaza and the western waterfront. No building-interior expansion. [Sources and limits](sources/harbour-green.md).
+
+All **118 automated checks** and the production build pass. New tests raycast the 27 central and six three-step shore flights, sample the ground for holes, check the solid piers and clear fountain/stair approaches, measure the park/plaza seam and compare the faster shoreline subtraction with independent polygon booleans. The older coastline clipping was traced during a long startup stall; it now triangulates each water polygon once and clips only against nearby triangles.
+
+Final production preview **index-DjXBfvDZ.js** passed **431.41 m** of native-key walking routes: down and up Bute Street stairs, through the fountain, along both side paths, along the seawall and into Jack Poole Plaza. Maximum final route endpoint error was **0.18 m**. Timed input under rendering load initially stopped as much as 1.28 m short; recorded additional native keypresses reached the endpoints. The fountain water is walkable; benches and stone piers remain solid.
+
+Native car input covered **16.83 m** and reached **58.79 km/h**; the bike covered **10.05 m**, reaching **28.07 km/h**. Both braked to rest at **100% health**. Native selection/aim/fire used all three guns, leaving **14/29/7** rounds. The fountain time uniform advanced **1.05 → 133.95**. Recorded runtime/shader errors stayed empty and reflection error was null. The fountain reflection changed to **0.22** at night and restored to **0.65** in daylight. High/night and Performance/Balanced restoration were inspected. Individual M2 1440×900 samples were **21 fps day, 19 High/night and 39 Performance**; these are scene samples, not a benchmark.
+
+The final daylight and night images were visually inspected after smoothing the lawn/path transitions. [Actual final preview capture](screenshots/harbour-green.webp). Public deployment, bundle matching and live native-input evidence are recorded in the project release log. Fine elevations and materials remain interpreted; memorial art, pergolas, restaurant frontage and surrounding generic tower façades need further work. AAA fidelity remains unfinished.

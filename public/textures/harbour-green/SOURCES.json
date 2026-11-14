@@ -1,0 +1,93 @@
+[
+  {
+    "file": "textures/harbour-green/grass_ground-color.webp",
+    "source": "https://polyhaven.com/a/grass_ground",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grass_ground/grass_ground_diff_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.509999990463257,
+      2.509999990463257
+    ],
+    "changes": "Converted to 2K WebP. Colour shifted toward green for maintained Vancouver park lawns. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/grass_ground-normal.webp",
+    "source": "https://polyhaven.com/a/grass_ground",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grass_ground/grass_ground_nor_gl_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.509999990463257,
+      2.509999990463257
+    ],
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/grass_ground-roughness.webp",
+    "source": "https://polyhaven.com/a/grass_ground",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grass_ground/grass_ground_rough_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.509999990463257,
+      2.509999990463257
+    ],
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/granite_tile-color.webp",
+    "source": "https://polyhaven.com/a/granite_tile",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/granite_tile/granite_tile_diff_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.299999952316284,
+      2.299999952316284
+    ],
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/granite_tile-normal.webp",
+    "source": "https://polyhaven.com/a/granite_tile",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/granite_tile/granite_tile_nor_gl_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.299999952316284,
+      2.299999952316284
+    ],
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/granite_tile-roughness.webp",
+    "source": "https://polyhaven.com/a/granite_tile",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/granite_tile/granite_tile_rough_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.299999952316284,
+      2.299999952316284
+    ],
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/park-sign.webp",
+    "source": "https://github.com/ArryPandher/rain-city-vancouver/blob/main/scripts/generate-harbour-sign.mjs",
+    "license": "MIT",
+    "credit": "Arry Pandher / Rain City Vancouver",
+    "changes": "Original green-and-white serif park sign, informed by reference photography. No photograph or official park logo is reproduced. Location and proportions are interpreted."
+  }
+]

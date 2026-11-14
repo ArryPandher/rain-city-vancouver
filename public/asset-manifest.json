@@ -1047,5 +1047,54 @@
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "changes": "Weathered painted-metal photograph neutralized for authored patina colour and resized to 1K. Surface variation is an approximation, not scanned copper.",
     "credit": "Rob Tuytel / Poly Haven"
+  },
+  {
+    "file": "textures/harbour-green/grass_ground-color.webp",
+    "source": "https://polyhaven.com/a/grass_ground",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "Converted to 2K WebP. Colour shifted toward green for maintained Vancouver park lawns. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/grass_ground-normal.webp",
+    "source": "https://polyhaven.com/a/grass_ground",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/grass_ground-roughness.webp",
+    "source": "https://polyhaven.com/a/grass_ground",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/granite_tile-color.webp",
+    "source": "https://polyhaven.com/a/granite_tile",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/granite_tile-normal.webp",
+    "source": "https://polyhaven.com/a/granite_tile",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/granite_tile-roughness.webp",
+    "source": "https://polyhaven.com/a/granite_tile",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "Converted to 2K WebP. Source photography is generic, not a park scan."
+  },
+  {
+    "file": "textures/harbour-green/park-sign.webp",
+    "source": "https://github.com/ArryPandher/rain-city-vancouver/blob/main/scripts/generate-harbour-sign.mjs",
+    "license": "MIT",
+    "credit": "Arry Pandher / Rain City Vancouver",
+    "changes": "Original green-and-white serif park sign, informed by reference photography. No photograph or official park logo is reproduced. Location and proportions are interpreted."
   }
 ]

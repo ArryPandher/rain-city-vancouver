@@ -1,3 +1,4 @@
+import { harbourGroundHeight } from "./harbour-green-site";
 import { FAIRMONT_ID, fairmontFootprint } from "./fairmont-site";
 import { ROGERS_ID, rogersFootprint } from "./rogers-site";
 import { jackGroundHeight, jackRoofAccess, CACTUS_ID } from "./jack-poole-site";
@@ -200,6 +201,7 @@ export class CollisionWorld {
       Math.max(az, bz) + radius,
     );
   }
+  harbour = false;
   robsonGarden?: Building;
   convention?: ConventionSite;
   buildings = new SpatialHash<Building>();
@@ -217,6 +219,7 @@ export class CollisionWorld {
     );
   }
   constructor(public data: CityData) {
+    this.harbour = data.areas.some((a) => a.name === "Harbour Green Park");
     for (const source of data.buildings) {
       let b = source;
       if (b.id === FAIRMONT_ID) b = { ...b, pts: fairmontFootprint };
@@ -256,6 +259,8 @@ export class CollisionWorld {
     }
   }
   groundHeight(x: number, z: number) {
+    const harbour = this.harbour ? harbourGroundHeight(x, z) : undefined;
+    if (harbour !== undefined) return harbour;
     const plaza = this.convention && jackGroundHeight(x, z);
     if (plaza !== undefined) return plaza;
     const convention = conventionDeckHeight(this.convention, x, z);
@@ -297,6 +302,7 @@ export class CollisionWorld {
     return b ? this.bridgeHeight(b.bridge, b.t) : this.groundHeight(x, z);
   }
   water(x: number, z: number, referenceY = Infinity) {
+    if (this.harbour && harbourGroundHeight(x, z) !== undefined) return false;
     if (this.convention && jackGroundHeight(x, z) !== undefined) return false;
     if (conventionDeckHeight(this.convention, x, z) !== undefined) return false;
     if (this.bridgeAt(x, z, referenceY)) return false;

@@ -1,3 +1,9 @@
+import { buildHarbourGreen } from "./harbour-green";
+import {
+  HARBOUR_CUSTOM_ROADS,
+  harbourIntersects,
+  harbourClearGround,
+} from "./harbour-green-site";
 import { conventionApproachHeight } from "./convention-site";
 import { buildJackPoole } from "./jack-poole";
 import {
@@ -113,6 +119,13 @@ export class World {
     this.terrain();
     this.roads();
     this.chunks.push(
+      ...buildHarbourGreen(
+        this.root,
+        this.data,
+        this.materials,
+        this.collision,
+        this.reflections,
+      ),
       ...buildJackPoole(
         this.root,
         this.data,
@@ -453,7 +466,11 @@ export class World {
     });
     const junctions = roadJunctionGaps(this.data.roads);
     for (const r of this.data.roads) {
-      if (r.id && JACK_CUSTOM_ROADS.has(r.id)) {
+      if (
+        r.id &&
+        (JACK_CUSTOM_ROADS.has(r.id) ||
+          (this.collision.harbour && HARBOUR_CUSTOM_ROADS.has(r.id)))
+      ) {
         this.stats.roads++;
         continue;
       }
@@ -476,6 +493,7 @@ export class World {
       const onTerrain =
         (this.data.terrain?.intersects(r.pts) ?? false) ||
         jackIntersects(r.pts) ||
+        (this.collision.harbour && harbourIntersects(r.pts)) ||
         r.pts.some(
           (x, i) =>
             i % 2 === 0 &&
@@ -612,6 +630,7 @@ export class World {
       trees = reconcileTrees(this.data.trees, this.data.publicTrees).filter(
         (t) =>
           !jackSurface(t.x, t.z) &&
+          !(this.collision.harbour && harbourClearGround(t.x, t.z)) &&
           !this.collision.water(t.x, t.z) &&
           !this.collision.blocked(t.x, t.z, 0.35),
       );

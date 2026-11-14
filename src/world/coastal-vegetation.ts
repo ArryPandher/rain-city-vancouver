@@ -1,3 +1,4 @@
+import { harbourPlantSites } from "./harbour-green";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { BASE } from "./materials";
@@ -18,7 +19,10 @@ export class CoastalVegetation {
     collision: CollisionWorld,
   ) {
     const result = new CoastalVegetation();
-    result.sites = coastalPlantSites(data, collision);
+    result.sites = [
+      ...coastalPlantSites(data, collision),
+      ...harbourPlantSites(collision),
+    ];
     const model = await new GLTFLoader().loadAsync(
       `${BASE}models/forest/coastal-broadleaf.glb`,
     );

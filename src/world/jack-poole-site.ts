@@ -20,7 +20,9 @@ for (let i = 20; i < 60; i += 2)
   coast.push([map.ways.w1216968927.pts[i], map.ways.w1216968927.pts[i + 1]]);
 coast.reverse();
 export const JACK_COAST = coast;
-export const JACK_BOUNDARY = [
+// Preserve the existing elevation controls while handing the western park
+// apron to the more detailed Harbour Green surface.
+const JACK_TERRAIN_BOUNDARY = [
   ...coast.flat(),
   268,
   -756,
@@ -36,6 +38,25 @@ export const JACK_BOUNDARY = [
   -575,
   -100,
   -690,
+];
+export const JACK_BOUNDARY = [
+  ...coast.slice(3).flat(),
+  268,
+  -756,
+  177,
+  -669,
+  280,
+  -595,
+  180,
+  -500,
+  30,
+  -500,
+  -20,
+  -575,
+  12,
+  -690,
+  35,
+  -748,
 ];
 export type PlazaSurface = {
   id: string;
@@ -235,9 +256,9 @@ const add = (x: number, z: number, y: number) => {
 };
 const coastHeight = (x: number) =>
   0.12 + (JACK_SEAWALL - 0.12) * Math.max(0, Math.min(1, (x - 75) / 100));
-for (let i = 0; i < JACK_BOUNDARY.length; i += 2) {
-  const x = JACK_BOUNDARY[i],
-    z = JACK_BOUNDARY[i + 1];
+for (let i = 0; i < JACK_TERRAIN_BOUNDARY.length; i += 2) {
+  const x = JACK_TERRAIN_BOUNDARY[i],
+    z = JACK_TERRAIN_BOUNDARY[i + 1];
   const isCoast = i < coast.length * 2;
   add(x, z, isCoast ? coastHeight(x) : 0);
 }
