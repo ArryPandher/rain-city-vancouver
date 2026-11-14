@@ -59,6 +59,8 @@ GitHub Actions builds and deploys `main` to GitHub Pages. No service keys or pai
 
 ![Corrected street-tree canopies beside Harbour Green in the playable build](docs/screenshots/street-trees.webp)
 
+![Layered broadleaf canopies and Harbour Green towers in the playable build](docs/screenshots/broadleaf-canopies.webp)
+
 ![Rogers Tower exterior and waterfront in the playable build](docs/screenshots/rogers-tower.webp)
 
 ![Fairmont Pacific Rim tower and podium in the playable build](docs/screenshots/fairmont-pacific-rim.webp)
