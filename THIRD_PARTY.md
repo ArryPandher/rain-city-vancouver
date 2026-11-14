@@ -119,3 +119,7 @@ Original tower, podium, balcony, window-depth and outdoor pool geometry are Rain
 ## Harbour Green Park
 
 Original park, fountain, stair, furniture, lawn and sign geometry/artwork are Rain City interpretations (MIT), informed by City of Vancouver, PWL Partnership, Vincent Helton and Darwin Construction references. Reference photographs are not distributed. The fresh OSM extract retains © OpenStreetMap contributors / ODbL 1.0. **Grass Ground** and **Granite Tile**, **Charlotte Baglioni / Poly Haven**, provide CC0-1.0 diffuse, normal and roughness maps converted to 2K WebP; lawn colour is adjusted toward green. Generic materials are not site scans. Reused CC0 paving, stone, concrete, timber and shrub assets retain their existing credits. [Sources, reproduction and limitations](docs/sources/harbour-green.md); [exact asset provenance](public/textures/harbour-green/SOURCES.json).
+
+## Harbour Green tower exterior geometry
+
+One, Two and Three Harbour Green use 19 OpenStreetMap podium/upper-part outlines (© OpenStreetMap contributors, ODbL 1.0) with original modeled facades. ASPAC exterior photography informed shapes and materials but is not redistributed or used as game textures. Overall heights follow ASPAC's published dimensions, with the conflicting source tags retained. Existing credited concrete maps are reused. [Sources, reproduction and interpretation limits](docs/sources/harbour-towers.md).

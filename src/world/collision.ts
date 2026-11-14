@@ -1,3 +1,4 @@
+import { harbourTower } from "./harbour-towers-site";
 import { harbourGroundHeight } from "./harbour-green-site";
 import { FAIRMONT_ID, fairmontFootprint } from "./fairmont-site";
 import { ROGERS_ID, rogersFootprint } from "./rogers-site";
@@ -222,6 +223,8 @@ export class CollisionWorld {
     this.harbour = data.areas.some((a) => a.name === "Harbour Green Park");
     for (const source of data.buildings) {
       let b = source;
+      const harbour = harbourTower(b.id);
+      if (harbour) b = { ...b, pts: harbour.parts[0].pts.flat() };
       if (b.id === FAIRMONT_ID) b = { ...b, pts: fairmontFootprint };
       if (b.id === ROGERS_ID) b = { ...b, pts: rogersFootprint };
       if (b.id === CONVENTION_ID) {

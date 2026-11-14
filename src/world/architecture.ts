@@ -18,6 +18,7 @@ import { ericksonPlace } from "./erickson-place";
 import { conventionCentre } from "./convention-centre";
 import { fairmontPacificRim } from "./fairmont-pacific-rim";
 import { rogersTower } from "./rogers-tower";
+import { harbourGreenTower } from "./harbour-towers";
 import { lawCourts } from "./law-courts";
 import { robsonSquare } from "./robson-square";
 import { theatres } from "./theatres";
@@ -150,6 +151,7 @@ export function architecture(
       ericksonPlace(b, shell, m, reflections) ||
       fairmontPacificRim(b, shell, m, collision, reflections) ||
       rogersTower(b, shell, m, collision, reflections) ||
+      harbourGreenTower(b, shell, m, collision, reflections) ||
       conventionCentre(b, shell, m, reflections)
     ) {
       count++;

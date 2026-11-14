@@ -340,3 +340,13 @@ Native car input covered **16.83 m** and reached **58.79 km/h**; the bike covere
 The final daylight and night images were visually inspected after smoothing the lawn/path transitions. [Actual final preview capture](screenshots/harbour-green.webp). Public deployment, bundle matching and live native-input evidence are recorded in the project release log. Fine elevations and materials remain interpreted; memorial art, pergolas, restaurant frontage and surrounding generic tower façades need further work. AAA fidelity remains unfinished.
 
 A final small visual refinement moves the park-sign supports behind the face so they do not cover its lettering. It does not change terrain or collision; final live native verification is recorded in the project log.
+
+## Harbour Green tower exteriors — 2026-11-14
+
+Replaced the three generic towers with original geometry using 19 mapped podium/upper outlines and developer-scaled overall heights of 80/105/116 m. Added stepped massing, the first tower's terracotta blade/faceted round crown, recessed glass and varied blinds, balcony slabs/guards, roof overhangs, terrace planting and grade-following podium foundations. Six local reflection probes use separate day/night strengths. No enterable interiors or new downloaded game textures. [Sources and conflicting-height interpretation](sources/harbour-towers.md).
+
+All **121 tests** and the production build pass. New checks cover source membership of height sections, podium/crown heights, finite geometry and triangle budget, real glass-to-backplane depth, solid footprints and clear perimeter routes. Actual day/night and ground-level facade captures were inspected.
+
+Local native input completed **431.41 m** of park routes: both central stair directions, western/eastern paths, seawall and plaza connection. Final route endpoint errors were at most **0.239 m**. Timed keypresses initially stopped up to **1.59 m** short under rendering load; recorded extra native keypresses corrected them. Car **17.14 m / 58.76 km/h**, bike **9.16 m / 27.13 km/h**; both braked to zero at full health. All three guns left **14/29/7** rounds. Animated fountain values advanced **38.10 → 171.00**. Tower reflection intensities changed **0.70/0.64 day → 0.30/0.28 night** and restored. Errors empty, reflection error null. Individual 1440×900 M2 samples: **21 fps day / 18 High-night / 34 Performance**, not a benchmark. Bundle `index-DZl8c1Bb.js`; native evidence is retained locally under `artifacts/local/harbour-towers-*`. Public release validation is recorded in the project log.
+
+This improves the outdoor skyline but remains below AAA fidelity. The nearby broadleaf canopies still look harsh and noisy against the sky and need a separate source/alpha/lighting pass.
