@@ -1,14 +1,73 @@
-<!doctype html><html><body style="margin:0;background:#555"><script type="module">
-import * as T from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-const renderer = new T.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});
-renderer.setSize(1024,2048);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.NoToneMapping;renderer.setClearColor(0x000000,0);document.body.append(renderer.domElement);
-const scene=new T.Scene();const params=new URLSearchParams(location.search);
-const suffix=(params.get('variant')==='b'?'-b':'')+(params.get('lod')==='medium'?'-medium':'');
-const model=(await new GLTFLoader().loadAsync('/models/forest/fir_tree_01'+suffix+'.glb')).scene;
-model.updateMatrixWorld(true);const box=new T.Box3().setFromObject(model),height=box.max.y-box.min.y;
-model.position.y=-box.min.y;model.traverse(o=>{if(o.isMesh){o.material=new T.MeshBasicMaterial({map:o.material.map,side:T.DoubleSide,alphaTest:o.material.alphaTest||.42});}});scene.add(model);
-const camera=new T.OrthographicCamera(-height*.25,height*.25,height*.5,-height*.5,.1,100);camera.position.set(0,height/2,35);camera.lookAt(0,height/2,0);
-window.forestBake={renderer,scene,model,camera,height,frame(angle){model.rotation.y=angle;renderer.render(scene,camera);return renderer.domElement.toDataURL('image/png');}};
-forestBake.frame(0);window.ready=true;
-</script></body></html>
+<!doctype html>
+<html>
+  <body style="margin: 0; background: #555">
+    <script type="module">
+      import * as T from "three";
+      import {
+        CONIFER_ALPHA_CUTOFF,
+        CONIFER_ASSET_REVISION,
+      } from "/src/world/conifer-foliage.ts";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      const renderer = new T.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+        preserveDrawingBuffer: true,
+      });
+      renderer.setSize(1024, 2048);
+      renderer.outputColorSpace = T.SRGBColorSpace;
+      renderer.toneMapping = T.NoToneMapping;
+      renderer.setClearColor(0x000000, 0);
+      document.body.append(renderer.domElement);
+      const scene = new T.Scene();
+      const params = new URLSearchParams(location.search);
+      const suffix =
+        (params.get("variant") === "b" ? "-b" : "") +
+        (params.get("lod") === "medium" ? "-medium" : "");
+      const model = (
+        await new GLTFLoader().loadAsync(
+          "/models/forest/fir_tree_01" +
+            suffix +
+            `.glb?v=${CONIFER_ASSET_REVISION}`,
+        )
+      ).scene;
+      model.updateMatrixWorld(true);
+      const box = new T.Box3().setFromObject(model),
+        height = box.max.y - box.min.y;
+      model.position.y = -box.min.y;
+      model.traverse((o) => {
+        if (o.isMesh) {
+          o.material = new T.MeshBasicMaterial({
+            map: o.material.map,
+            side: T.DoubleSide,
+            alphaTest: CONIFER_ALPHA_CUTOFF,
+          });
+        }
+      });
+      scene.add(model);
+      const camera = new T.OrthographicCamera(
+        -height * 0.25,
+        height * 0.25,
+        height * 0.5,
+        -height * 0.5,
+        0.1,
+        100,
+      );
+      camera.position.set(0, height / 2, 35);
+      camera.lookAt(0, height / 2, 0);
+      window.forestBake = {
+        renderer,
+        scene,
+        model,
+        camera,
+        height,
+        frame(angle) {
+          model.rotation.y = angle;
+          renderer.render(scene, camera);
+          return renderer.domElement.toDataURL("image/png");
+        },
+      };
+      forestBake.frame(0);
+      window.ready = true;
+    </script>
+  </body>
+</html>

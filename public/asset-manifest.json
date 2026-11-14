@@ -760,7 +760,7 @@
     "source": "https://polyhaven.com/a/fir_tree_01",
     "license": "CC0",
     "credit": "Rob Tuytel, Rico Cilliers",
-    "changes": "Four unlit orthographic views of Fir Tree 01 variants C and B, baked from the prepared near models and packed as a 4096 by 2048 alpha atlas. CC0 derivative."
+    "changes": "Four unlit orthographic views of committed near variants C and B with a 0.12 foliage cutoff, packed as a 4096 by 2048 alpha atlas. Silhouette dimensions and source hashes generated from those same GLBs. CC0 derivative."
   },
   {
     "file": "models/forest/fir_tree_01-medium.glb",
@@ -774,7 +774,7 @@
     "source": "https://polyhaven.com/a/fir_tree_01",
     "license": "CC0",
     "credit": "Rob Tuytel, Rico Cilliers",
-    "changes": "Deterministic needle component sampling; transverse-only coverage compensation; wood/branch simplification with 0.008 error and recomputed branch normals. Original UVs, alpha and textures retained. Runtime normalization uses near-detail reference dimensions."
+    "changes": "Retains 215,612 of 432,704 needles with transverse width compensation 1.6 and simplified wood, totaling 964,225 triangles. Positions quantized to 16 bits, normals to 10 bits and bounded UVs to 14 bits; tiling UVs remain floating point. Original textures/alpha retained; world-space bounds validated against the source. Generic fir, not a Vancouver scan."
   },
   {
     "file": "models/forest/fir_tree_01-b-medium.glb",
@@ -895,7 +895,7 @@
       "Rico Cilliers": "modeling"
     },
     "license": "CC0-1.0",
-    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model with a 0.12 foliage cutoff; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
     "credit": "Poly Haven — Rob Tuytel and Rico Cilliers"
   },
   {
@@ -906,7 +906,7 @@
       "Rico Cilliers": "modeling"
     },
     "license": "CC0-1.0",
-    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model; model-space vertex normals. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model with a 0.12 foliage cutoff; model-space normals including the source twig normal map and GLTFLoader tangent convention. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
     "credit": "Poly Haven — Rob Tuytel and Rico Cilliers"
   },
   {
@@ -917,7 +917,7 @@
       "Rico Cilliers": "modeling"
     },
     "license": "CC0-1.0",
-    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model with a 0.12 foliage cutoff; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
     "credit": "Poly Haven — Rob Tuytel and Rico Cilliers"
   },
   {
@@ -928,7 +928,7 @@
       "Rico Cilliers": "modeling"
     },
     "license": "CC0-1.0",
-    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model; model-space vertex normals. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model with a 0.12 foliage cutoff; model-space normals including the source twig normal map and GLTFLoader tangent convention. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
     "credit": "Poly Haven — Rob Tuytel and Rico Cilliers"
   }
 ]

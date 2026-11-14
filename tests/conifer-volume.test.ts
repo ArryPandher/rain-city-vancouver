@@ -1,4 +1,7 @@
 import test from "node:test";
+import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import shapes from "../src/world/conifer-shapes.json";
 import assert from "node:assert/strict";
 import * as T from "three";
 import { NodeIO } from "@gltf-transform/core";
@@ -16,7 +19,7 @@ test("a failed foliage image releases every completed partial texture load", asy
   const original = T.TextureLoader.prototype.loadAsync,
     disposed: string[] = [];
   T.TextureLoader.prototype.loadAsync = async function (url) {
-    if (url.endsWith("c-color.webp"))
+    if (url.includes("/c-color.webp"))
       throw new Error("deliberate foliage load failure");
     // Let the rejected request settle before the other downloads complete.
     await new Promise((resolve) => setTimeout(resolve, 5));
@@ -80,6 +83,15 @@ test("layered crowns retain source scale and project into the matching unmirrore
       uv = geometry.getAttribute("uv"),
       axes = geometry.getAttribute("sliceAxis"),
       height = bounds.max.y - bounds.min.y;
+    const shape = shapes[suffix ? 1 : 0];
+    assert.equal(
+      createHash("sha256")
+        .update(await readFile(`public/${shape.source}`))
+        .digest("hex"),
+      shape.sha256,
+    );
+    assert.ok(Math.abs(shape.height - height) < 1e-6);
+    assert.ok(Math.abs(shape.atlasWidth - height / (2 * shape.width)) < 1e-6);
     assert.ok(
       geometry.index!.count / 3 <= 512,
       "keep the middle crown inexpensive",

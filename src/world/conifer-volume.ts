@@ -1,3 +1,4 @@
+import { CONIFER_ASSET_REVISION } from "./conifer-foliage";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { BASE } from "./materials";
@@ -119,7 +120,7 @@ export async function loadConiferVolumeMaterials() {
       variants.flatMap((variant) =>
         ["color", "normal"].map((kind) =>
           loader.loadAsync(
-            `${BASE}textures/forest/volume/${variant}-${kind}.webp`,
+            `${BASE}textures/forest/volume/${variant}-${kind}.webp?v=${CONIFER_ASSET_REVISION}`,
           ),
         ),
       ),

@@ -1,11 +1,31 @@
 import fs from "node:fs/promises";
+import path from "node:path";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { prune, dedup, textureCompress } from "@gltf-transform/functions";
 import sharp from "sharp";
 
-// Run fetch-forest-assets.mjs first for the shared source metadata and 1K textures.
+// Restore only the shared metadata/textures needed for this variant after cache cleanup.
 const dir = "artifacts/local/forest-source/fir_tree_01";
+await fs.mkdir(dir, { recursive: true });
+const info = await (
+  await fetch("https://api.polyhaven.com/files/fir_tree_01")
+).json();
+const model = info.gltf["1k"].gltf;
+async function cache(url, file) {
+  if (await fs.stat(file).catch(() => null)) return;
+  const response = await fetch(url);
+  if (!response.ok) throw Error(`Source download failed: ${response.status}`);
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  await fs.writeFile(file, Buffer.from(await response.arrayBuffer()));
+}
+await cache(model.url, `${dir}/source.gltf`);
+for (const [file, asset] of Object.entries(model.include))
+  if (!file.endsWith(".bin")) await cache(asset.url, `${dir}/${file}`);
+await cache(
+  (info.twig_alpha["1k"].png ?? info.twig_alpha["1k"].jpg).url,
+  `${dir}/alpha-source`,
+);
 const g = JSON.parse(await fs.readFile(`${dir}/source.gltf`, "utf8"));
 const mesh = g.meshes[1];
 const accessors = [

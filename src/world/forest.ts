@@ -1,3 +1,7 @@
+import {
+  CONIFER_ALPHA_CUTOFF,
+  CONIFER_ASSET_REVISION,
+} from "./conifer-foliage";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { bakeGeometry } from "./geometry";
@@ -104,7 +108,11 @@ export class ForestDetail {
       "fir_tree_01-b-medium",
     ];
     const models = await Promise.all(
-      ids.map((id) => loader.loadAsync(`${BASE}models/forest/${id}.glb`)),
+      ids.map((id) =>
+        loader.loadAsync(
+          `${BASE}models/forest/${id}.glb${id === "fir_tree_01-b" ? `?v=${CONIFER_ASSET_REVISION}` : ""}`,
+        ),
+      ),
     );
     const volumes = await loadConiferVolumeMaterials().catch((error) => {
       console.warn(
@@ -159,12 +167,13 @@ export class ForestDetail {
           material.vertexColors = false;
           material.side = T.DoubleSide;
           material.transparent = false;
-          material.alphaTest = 0.42;
+          material.alphaTest = CONIFER_ALPHA_CUTOFF;
           material.alphaToCoverage = true;
           material.roughness = 0.96;
           material.metalness = 0;
           material.envMapIntensity = 0.5;
-          material.normalScale.set(0.75, 0.75);
+          // Preserve GLTFLoader's derivative-tangent Y convention.
+          material.normalScale.multiplyScalar(0.75);
           calibrateStem(material);
           const mesh = new T.InstancedMesh(geometry, material, capacity);
           const depth = new T.MeshDepthMaterial({

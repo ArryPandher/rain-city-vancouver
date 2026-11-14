@@ -3,6 +3,7 @@
   <body style="margin: 0">
     <script type="module">
       import * as T from "three";
+      import { CONIFER_ALPHA_CUTOFF } from "/src/world/conifer-foliage.ts";
       import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
       import {
         coniferVolumeGeometry,
@@ -23,12 +24,15 @@
           gl.getShaderInfoLog(v),
           gl.getShaderInfoLog(f),
         ]);
-      const variant =
-          new URLSearchParams(location.search).get("variant") === "b" ? 1 : 0,
+      const params = new URLSearchParams(location.search);
+      const variant = params.get("variant") === "b" ? 1 : 0,
         suffix = variant ? "-b" : "";
       const loader = new GLTFLoader(),
         [near, old, volumes] = await Promise.all([
-          loader.loadAsync("/models/forest/fir_tree_01" + suffix + ".glb"),
+          loader.loadAsync(
+            params.get("source") ||
+              "/models/forest/fir_tree_01" + suffix + ".glb",
+          ),
           loader.loadAsync(
             "/models/forest/fir_tree_01" + suffix + "-medium.glb",
           ),
@@ -57,7 +61,13 @@
             o.material = o.material.clone();
             o.material.side = T.DoubleSide;
             o.material.transparent = false;
-            o.material.alphaTest = 0.42;
+            o.material.alphaTest = Number(
+              params.get("alpha") ?? CONIFER_ALPHA_CUTOFF,
+            );
+            o.material.alphaToCoverage = true;
+            o.material.normalScale.multiplyScalar(0.75);
+            o.material.roughness = 0.96;
+            o.material.envMapIntensity = 0.5;
             if (key === "volume" && o.material.name.includes("twig"))
               o.visible = false;
           }

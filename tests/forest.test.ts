@@ -227,3 +227,67 @@ test("generated forest avoids steep exposed terrain while retaining gentle woodl
   );
   assert.equal(h.clear(x, z, 2.4), false);
 });
+
+test("fuller near conifer retains its packed metre scale and fitted canopy bounds", async () => {
+  const { getBounds } = await import("@gltf-transform/functions");
+  const T = await import("three");
+  const { bakeGeometry } = await import("../src/world/geometry");
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+  const doc = await io.read("public/models/forest/fir_tree_01-b.glb");
+  const meta = doc.getRoot().getExtras().rainCityLod as {
+    originalNeedles: number;
+    retainedNeedles: number;
+    referenceBounds: { min: number[]; max: number[] };
+  };
+  assert.ok(meta.retainedNeedles / meta.originalNeedles > 0.45);
+  const bounds = getBounds(doc.getRoot().listScenes()[0]),
+    bakedBounds = new T.Box3();
+  let packed = 0,
+    triangles = 0;
+  for (const node of doc.getRoot().listNodes())
+    for (const primitive of node.getMesh()?.listPrimitives() ?? []) {
+      const geometry = new T.BufferGeometry();
+      for (const [semantic, name] of [
+        ["POSITION", "position"],
+        ["NORMAL", "normal"],
+      ]) {
+        const accessor = primitive.getAttribute(semantic)!;
+        geometry.setAttribute(
+          name,
+          new T.BufferAttribute(
+            accessor.getArray()!,
+            3,
+            accessor.getNormalized(),
+          ),
+        );
+      }
+      if (primitive.getAttribute("POSITION")!.getNormalized()) packed++;
+      triangles += primitive.getIndices()!.getCount() / 3;
+      const baked = bakeGeometry(
+        geometry,
+        new T.Matrix4().fromArray(node.getWorldMatrix()),
+      );
+      baked.computeBoundingBox();
+      bakedBounds.union(baked.boundingBox!);
+      const normal = baked.getAttribute("normal");
+      for (let i = 0; i < normal.count; i += 137)
+        assert.ok(
+          Math.abs(
+            Math.hypot(normal.getX(i), normal.getY(i), normal.getZ(i)) - 1,
+          ) < 0.002,
+        );
+      geometry.dispose();
+      baked.dispose();
+    }
+  assert.ok(packed >= 3 && triangles > 900000 && triangles < 1100000);
+  for (let i = 0; i < 3; i++) {
+    assert.ok(
+      Math.abs(bakedBounds.min.getComponent(i) - bounds.min[i]) < 0.001,
+    );
+    assert.ok(
+      Math.abs(bakedBounds.max.getComponent(i) - bounds.max[i]) < 0.001,
+    );
+    assert.ok(Math.abs(bounds.min[i] - meta.referenceBounds.min[i]) < 0.03);
+    assert.ok(Math.abs(bounds.max[i] - meta.referenceBounds.max[i]) < 0.03);
+  }
+});

@@ -1,0 +1,16 @@
+[
+  {
+    "height": 14.520581595599651,
+    "width": 6.305939197540283,
+    "atlasWidth": 1.1513417066615232,
+    "source": "models/forest/fir_tree_01.glb",
+    "sha256": "4135d90347cef2c3bb37dcb95e674c3669f9dcdc8c56f6d576380d1dae3815d8"
+  },
+  {
+    "height": 14.055991381406784,
+    "width": 6.052737156030449,
+    "atlasWidth": 1.1611268603827074,
+    "source": "models/forest/fir_tree_01-b.glb",
+    "sha256": "6de7b3edbc230c9e01a03e787ad94207d1759d3727da97e9a9b3c70847eb1e10"
+  }
+]

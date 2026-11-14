@@ -3,7 +3,15 @@
   <body style="margin: 0; background: #555">
     <script type="module">
       import * as T from "three";
+      import {
+        CONIFER_ALPHA_CUTOFF,
+        CONIFER_ASSET_REVISION,
+      } from "/src/world/conifer-foliage.ts";
       import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      window.errors = [];
+      addEventListener("unhandledrejection", (e) =>
+        window.errors.push(String(e.reason?.stack || e.reason)),
+      );
       const renderer = new T.WebGLRenderer({
         alpha: true,
         antialias: true,
@@ -19,7 +27,9 @@
         new URLSearchParams(location.search).get("variant") === "b" ? "b" : "c";
       const model = (
         await new GLTFLoader().loadAsync(
-          "/models/forest/fir_tree_01" + (variant === "b" ? "-b" : "") + ".glb",
+          "/models/forest/fir_tree_01" +
+            (variant === "b" ? "-b" : "") +
+            `.glb?v=${CONIFER_ASSET_REVISION}`,
         )
       ).scene;
       model.updateMatrixWorld(true);
@@ -38,36 +48,27 @@
         const color = new T.MeshBasicMaterial({
           map,
           side: T.DoubleSide,
-          alphaTest: 0.42,
+          alphaTest: CONIFER_ALPHA_CUTOFF,
           clippingPlanes: planes,
         });
-        const normal = new T.MeshBasicMaterial({
+        // Run the source tangent-space normal map through Three's material
+        // shader before storing the resulting model-space direction. The
+        // GLTFLoader-provided scale carries its derivative-tangent Y sign.
+        const normal = new T.MeshStandardMaterial({
           map,
+          normalMap: o.material.normalMap,
+          normalScale: o.material.normalScale.clone().multiplyScalar(0.75),
           side: T.DoubleSide,
-          alphaTest: 0.42,
+          alphaTest: CONIFER_ALPHA_CUTOFF,
           clippingPlanes: planes,
         });
         normal.onBeforeCompile = (s) => {
-          s.vertexShader = s.vertexShader
-            .replace(
-              "#include <common>",
-              "#include <common>\nvarying vec3 vBakeNormal;",
-            )
-            .replace(
-              "#include <begin_vertex>",
-              "#include <begin_vertex>\nvBakeNormal=normalize(mat3(modelMatrix)*normal);",
-            );
-          s.fragmentShader = s.fragmentShader
-            .replace(
-              "#include <common>",
-              "#include <common>\nvarying vec3 vBakeNormal;",
-            )
-            .replace(
-              "#include <opaque_fragment>",
-              "gl_FragColor=vec4(normalize(vBakeNormal)*(gl_FrontFacing?1.0:-1.0)*.5+.5,1.0);",
-            );
+          s.fragmentShader = s.fragmentShader.replace(
+            "#include <opaque_fragment>",
+            "gl_FragColor=vec4(inverseTransformDirection(normal,viewMatrix)*.5+.5,1.0);",
+          );
         };
-        normal.customProgramCacheKey = () => "conifer-volume-normal-v1";
+        normal.customProgramCacheKey = () => "conifer-volume-normal-v2";
         meshes.push({ object: o, color, normal });
       });
       const camera = new T.OrthographicCamera(

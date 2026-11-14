@@ -96,7 +96,7 @@ for (const variant of ["c", "b"])
       source: "https://polyhaven.com/a/fir_tree_01",
       authors: { "Rob Tuytel": "photography", "Rico Cilliers": "modeling" },
       license: "CC0-1.0",
-      changes: `Eight depth slices in each of two perpendicular views, baked from the committed ${variant.toUpperCase()} near model; ${pass === "color" ? "unlit colour and alpha" : "model-space vertex normals"}. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.`,
+      changes: `Eight depth slices in each of two perpendicular views, baked from the committed ${variant.toUpperCase()} near model with a 0.12 foliage cutoff; ${pass === "color" ? "unlit colour and alpha" : "model-space normals including the source twig normal map and GLTFLoader tangent convention"}. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.`,
     });
   }
 await fs.writeFile(

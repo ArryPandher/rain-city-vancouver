@@ -7,7 +7,7 @@
       "Rico Cilliers": "modeling"
     },
     "license": "CC0-1.0",
-    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan."
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model with a 0.12 foliage cutoff; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan."
   },
   {
     "file": "textures/forest/volume/c-normal.webp",
@@ -17,7 +17,7 @@
       "Rico Cilliers": "modeling"
     },
     "license": "CC0-1.0",
-    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model; model-space vertex normals. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan."
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model with a 0.12 foliage cutoff; model-space normals including the source twig normal map and GLTFLoader tangent convention. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan."
   },
   {
     "file": "textures/forest/volume/b-color.webp",
@@ -27,7 +27,7 @@
       "Rico Cilliers": "modeling"
     },
     "license": "CC0-1.0",
-    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan."
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model with a 0.12 foliage cutoff; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan."
   },
   {
     "file": "textures/forest/volume/b-normal.webp",
@@ -37,6 +37,6 @@
       "Rico Cilliers": "modeling"
     },
     "license": "CC0-1.0",
-    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model; model-space vertex normals. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan."
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model with a 0.12 foliage cutoff; model-space normals including the source twig normal map and GLTFLoader tangent convention. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan."
   }
 ]

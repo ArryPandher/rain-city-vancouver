@@ -8,6 +8,7 @@ import {
   getBounds,
   joinPrimitives,
   prune,
+  quantize,
   simplify,
   weld,
 } from "@gltf-transform/functions";
@@ -22,6 +23,7 @@ const [
   strideArg = "6",
   widthArg = "3.3",
   woodArg = "0.18",
+  packing = "float",
 ] = process.argv.slice(2);
 const stride = Number(strideArg),
   needleWidth = Number(widthArg),
@@ -226,6 +228,14 @@ for (const { mesh, p, needles } of held) {
   mesh.removePrimitive(p).addPrimitive(joined);
 }
 await doc.transform(prune(), dedup());
+if (packing === "quantize")
+  await doc.transform(
+    quantize({
+      quantizePosition: 16,
+      quantizeNormal: 10,
+      quantizeTexcoord: 14,
+    }),
+  );
 const triangles = doc
   .getRoot()
   .listMeshes()
@@ -240,10 +250,11 @@ const metadata = {
   needleWidthMultiplier: needleWidth,
   flatNeedles,
   woodRatio,
+  packing,
   triangles,
   referenceBounds,
   bounds: getBounds(doc.getRoot().listScenes()[0]),
-  changes: `Deterministic needle component sampling; transverse-only coverage compensation; ${flatNeedles ? "medium needles flattened from folded strips to two triangles with corrected winding; " : ""}wood/branch simplification with 0.008 error and recomputed branch normals. Original UVs, alpha and textures retained. Runtime normalization uses near-detail reference dimensions.`,
+  changes: `Deterministic needle component sampling; transverse-only coverage compensation; ${flatNeedles ? "medium needles flattened from folded strips to two triangles with corrected winding; " : ""}wood/branch simplification with 0.008 error and recomputed branch normals. Original UVs, alpha and textures retained${packing === "quantize" ? "; 16-bit positions, 10-bit normals and 14-bit bounded UVs (tiling UVs remain floating-point)" : ""}. Runtime normalization uses near-detail reference dimensions.`,
 };
 doc.getRoot().setExtras({ rainCityLod: metadata });
 await io.write(output, doc);

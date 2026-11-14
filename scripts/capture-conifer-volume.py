@@ -17,6 +17,8 @@ for variant in ("c", "b"):
     wait_for_load()
     deadline = time.monotonic() + 120
     while js("window.ready === true") is not True:
+        errors = js("window.errors || []")
+        if errors: raise RuntimeError(f"Conifer {variant}: {errors}")
         if time.monotonic() > deadline:
             raise RuntimeError(f"Conifer {variant} did not finish loading")
         time.sleep(1)
@@ -27,4 +29,4 @@ for variant in ("c", "b"):
                 out.joinpath(f"{variant}-{axis}-{index}-{kind}.png").write_bytes(
                     base64.b64decode(data.split(",", 1)[1])
                 )
-    print(f"Captured {variant}: 16 color and 16 normal slices")
+    print(f"Captured {variant}: 16 color and 16 normal slices", flush=True)

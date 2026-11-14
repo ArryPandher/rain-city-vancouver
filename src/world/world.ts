@@ -1,3 +1,5 @@
+import coniferShapes from "./conifer-shapes.json";
+import { CONIFER_ASSET_REVISION } from "./conifer-foliage";
 import * as T from "three";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
@@ -606,7 +608,10 @@ export class World {
       a.push(t);
     }
     const foliageMap = m.texture("broadleaf-branch.png", true),
-      pineMap = m.texture("forest/conifer-atlas-pair.webp", true);
+      pineMap = m.texture(
+        `forest/conifer-atlas-pair.webp?v=${CONIFER_ASSET_REVISION}`,
+        true,
+      );
     foliageMap.wrapS =
       foliageMap.wrapT =
       pineMap.wrapS =
@@ -625,7 +630,7 @@ export class World {
     const pineMat = new T.MeshStandardMaterial({
       map: pineMap,
       color: 0xffffff,
-      alphaTest: 0.35,
+      alphaTest: 0.18,
       alphaToCoverage: true,
       side: T.DoubleSide,
       roughness: 1,
@@ -714,7 +719,7 @@ export class World {
           const pineMesh = pines[variant];
           const rootDepth = Math.min(0.6, diameter * 0.5);
           dummy.position.set(x, ground - rootDepth, z);
-          const silhouetteWidth = width * (variant === 0 ? 1.1513 : 1.16746);
+          const silhouetteWidth = width * coniferShapes[variant].atlasWidth;
           dummy.scale.set(silhouetteWidth, h + rootDepth, silhouetteWidth);
           dummy.updateMatrix();
           pineMesh.setMatrixAt(pi[variant], dummy.matrix);
