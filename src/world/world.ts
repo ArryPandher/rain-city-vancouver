@@ -115,11 +115,14 @@ export class World {
       );
       for (const t of [sunset, overcast, env, daylight, nightEnv])
         t.mapping = T.EquirectangularReflectionMapping;
-      // Panoramic streetlamps should not turn into enormous distant light balls
-      // on every façade. Preserve their colour while limiting reflection radiance.
+      // Keep very bright HDR emitters localized in reflections and bloom.
+      // Unbounded sun pixels can otherwise wash out half the view near the sun.
       for (const [texture, limit] of [
         [env, 8],
         [nightEnv, 4],
+        [daylight, 16],
+        [sunset, 16],
+        [overcast, 16],
       ] as const) {
         const pixels = texture.image.data as Uint16Array;
         for (let i = 0; i < pixels.length; i += 4) {

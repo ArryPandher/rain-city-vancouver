@@ -464,5 +464,26 @@
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "changes": "Used as a generic night reflection and lighting environment, not visible Vancouver background scenery. Runtime highlight limiting preserves source colour."
+  },
+  {
+    "file": "textures/cast-concrete/color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_diff_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "1K map; used on original reference-guided Arthur Erickson Place geometry."
+  },
+  {
+    "file": "textures/cast-concrete/normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_nor_gl_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "1K map; used on original reference-guided Arthur Erickson Place geometry."
+  },
+  {
+    "file": "textures/cast-concrete/roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_rough_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "1K map; used on original reference-guided Arthur Erickson Place geometry."
   }
 ]

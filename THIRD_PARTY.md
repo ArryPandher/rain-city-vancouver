@@ -14,6 +14,8 @@ Photographed shop rooms use **Comfy Café** and **Decor Shop** by **Sergej Majbo
 
 Nearby residential door and window geometry is extracted from **Modular Urban Apartments Facade**, **James Ray Cock**, [Poly Haven](https://polyhaven.com/a/modular_urban_apartments_facade), CC0. Selected parts are pivot normalized, scaled and instanced; textures are converted to WebP. [Source manifest](docs/sources/architectural-details.json) and [reproduction script](scripts/fetch-architectural-details.mjs). These details are generic architectural interpretation, not an address-specific survey.
 
+Arthur Erickson Place uses original geometry and **Concrete Wall 009** photography by **Charlotte Baglioni**, [Poly Haven](https://polyhaven.com/a/concrete_wall_009), CC0. Its reference photographs are not included in the game. [Architectural references and approximations](docs/sources/arthur-erickson-place.md); [texture sources](public/textures/cast-concrete/SOURCES.json).
+
 ## Glass façade materials — ambientCG / CC0
 
 The curtain-wall color, normal, roughness and metalness maps are adapted from [Facade006](https://ambientcg.com/view?id=Facade006), **ambientCG**, [CC0](https://docs.ambientcg.com/license/). This is an artist-authored procedural PBR material, not Vancouver photography. A sparse night-light texture is derived from its glass mask; the material is calibrated to 1.6 m panes and 3.2 m floors and paired with modeled mullions. [Source manifest](public/textures/curtain-wall/SOURCES.json); [reproduction script](scripts/fetch-curtain-facade.mjs).
