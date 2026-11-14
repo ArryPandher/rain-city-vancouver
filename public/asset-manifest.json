@@ -1,0 +1,62 @@
+[
+  {
+    "file": "textures/asphalt_02-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_diff_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/asphalt_02-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_nor_gl_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/asphalt_02-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_rough_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/concrete_pavement-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_pavement/concrete_pavement_diff_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/concrete_pavement-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_pavement/concrete_pavement_nor_gl_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/concrete_pavement-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_pavement/concrete_pavement_rough_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/aerial_grass_rock-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_grass_rock/aerial_grass_rock_diff_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/aerial_grass_rock-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_grass_rock/aerial_grass_rock_nor_gl_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/aerial_grass_rock-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_grass_rock/aerial_grass_rock_rough_1k.jpg",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  },
+  {
+    "file": "textures/sky.hdr",
+    "source": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+    "license": "CC0",
+    "credit": "Poly Haven"
+  }
+]
