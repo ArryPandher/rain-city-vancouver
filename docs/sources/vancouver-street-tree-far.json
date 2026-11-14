@@ -1,0 +1,15 @@
+{
+  "source": "public/models/vancouver-street-tree.glb",
+  "original": "https://polyhaven.com/a/tree_small_02",
+  "license": "CC0-1.0",
+  "output": "public/models/vancouver-street-tree-far.glb",
+  "changes": "Further per-component 3D simplification of the committed source-shaped near tree. Every leaf component retained with original UVs and normals; no leaf removal or UV-hull reconstruction. Intended for distance only.",
+  "leafStats": {
+    "leaves": 31557,
+    "triangles": 67582,
+    "maxError": 0.30089935660362244,
+    "flipped": 2581,
+    "degenerate": 0
+  },
+  "triangles": 68646
+}
