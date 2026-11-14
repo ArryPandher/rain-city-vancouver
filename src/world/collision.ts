@@ -7,6 +7,12 @@ import {
 import { prospectLookoutHeight } from "./prospect-lookout-site";
 import { prospectForecourtHeight } from "./prospect-site";
 import {
+  CONVENTION_ID,
+  conventionSite,
+  conventionDeckHeight,
+  type ConventionSite,
+} from "./convention-site";
+import {
   CityData,
   Building,
   bounds,
@@ -191,6 +197,7 @@ export class CollisionWorld {
     );
   }
   robsonGarden?: Building;
+  convention?: ConventionSite;
   buildings = new SpatialHash<Building>();
   roads = new SpatialHash<Road>(100);
   forestObstacles = new SpatialHash<{ x: number; z: number; radius: number }>(
@@ -206,7 +213,19 @@ export class CollisionWorld {
     );
   }
   constructor(public data: CityData) {
-    for (const b of data.buildings) {
+    for (const source of data.buildings) {
+      let b = source;
+      if (b.id === CONVENTION_ID) {
+        this.convention = conventionSite(b);
+        b = { ...b, pts: this.convention.footprint };
+        for (const [a, c] of this.convention.shoreSegments)
+          this.addBarrier(
+            ...this.convention.world(...a),
+            ...this.convention.world(...c),
+            0.06,
+            1.2,
+          );
+      }
       if (b.id === ROBSON_GARDEN_ID) this.robsonGarden = b;
       if (robsonWalkableBuilding(b.id)) continue;
       const xs = b.pts.filter((_, i) => !(i % 2)),
@@ -231,6 +250,8 @@ export class CollisionWorld {
     }
   }
   groundHeight(x: number, z: number) {
+    const convention = conventionDeckHeight(this.convention, x, z);
+    if (convention !== undefined) return convention;
     const lookout = this.data.terrain && prospectLookoutHeight(x, z);
     if (lookout !== undefined) return lookout;
     const forecourt = this.data.terrain && prospectForecourtHeight(x, z);
@@ -266,6 +287,7 @@ export class CollisionWorld {
     return b ? this.bridgeHeight(b.bridge, b.t) : this.groundHeight(x, z);
   }
   water(x: number, z: number, referenceY = Infinity) {
+    if (conventionDeckHeight(this.convention, x, z) !== undefined) return false;
     if (this.bridgeAt(x, z, referenceY)) return false;
     if (x < bounds.minX || z < -8500) return true;
     return (
