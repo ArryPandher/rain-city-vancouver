@@ -1,4 +1,10 @@
 import {
+  ROBSON_GARDEN_ID,
+  robsonWalkableBuilding,
+  robsonHeight,
+  robsonObstacle,
+} from "./robson-site";
+import {
   CityData,
   Building,
   bounds,
@@ -147,10 +153,13 @@ export class SpatialHash<T> {
   }
 }
 export class CollisionWorld {
+  robsonGarden?: Building;
   buildings = new SpatialHash<Building>();
   roads = new SpatialHash<Road>(100);
   constructor(public data: CityData) {
     for (const b of data.buildings) {
+      if (b.id === ROBSON_GARDEN_ID) this.robsonGarden = b;
+      if (robsonWalkableBuilding(b.id)) continue;
       const xs = b.pts.filter((_, i) => !(i % 2)),
         zs = b.pts.filter((_, i) => i % 2);
       this.buildings.add(
@@ -181,7 +190,11 @@ export class CollisionWorld {
   }
   height(x: number, z: number) {
     const b = this.bridgeAt(x, z);
-    return b ? bridgeY(b.bridge, b.t) : 0;
+    return b
+      ? bridgeY(b.bridge, b.t)
+      : this.robsonGarden
+        ? (robsonHeight(x, z, this.robsonGarden.pts) ?? 0)
+        : 0;
   }
   water(x: number, z: number) {
     if (this.bridgeAt(x, z)) return false;
@@ -194,7 +207,9 @@ export class CollisionWorld {
     );
   }
   blocked(x: number, z: number, r = 0.4) {
-    if (this.height(x, z) > 2) return false;
+    if (this.robsonGarden && robsonObstacle(x, z, r)) return true;
+    const bridge = this.bridgeAt(x, z);
+    if (bridge && bridgeY(bridge.bridge, bridge.t) > 2) return false;
     for (const b of this.buildings.query(x, z, r)) {
       if (pointInPoly(x, z, b.pts)) return true;
       for (let i = 0; i < b.pts.length; i += 2) {

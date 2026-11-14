@@ -31,6 +31,7 @@ import {
   roadJunctionGaps,
   sidewalkSides,
 } from "./road-profile";
+import { ROBSON_PLANTERS, gridXZ } from "./robson-site";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -422,6 +423,15 @@ export class World {
       trees.push([x, z, 5 + rand() * 9, rand()]);
     }
     // Densify the forest interior while keeping mapped roads and trails open.
+    if (this.collision.robsonGarden)
+      for (const bed of ROBSON_PLANTERS) {
+        const [cx, cz] = gridXZ(bed.u, bed.v),
+          base = this.collision.height(cx, cz) + 0.84;
+        for (const offset of [-3.7, 0, 3.7]) {
+          const [x, z] = gridXZ(bed.u + offset, bed.v);
+          trees.push([x, z, 5.5 + rand() * 2.5, rand(), base]);
+        }
+      }
     const stanley = this.data.areas.filter((a) =>
       ["forest", "park"].includes(a.kind),
     );
@@ -539,7 +549,8 @@ export class World {
         pi = 0;
       for (let i = 0; i < list.length; i++) {
         const [x, z, h, t] = list[i];
-        dummy.position.set(x, h * 0.35, z);
+        const ground = list[i][4] ?? this.collision.height(x, z);
+        dummy.position.set(x, ground + h * 0.35, z);
         dummy.rotation.set(0, t * 6.28, 0);
         dummy.scale.set(h * 0.023, h * 0.7, h * 0.023);
         dummy.updateMatrix();
@@ -547,20 +558,21 @@ export class World {
         const trunkMatrix = dummy.matrix.clone();
         const pine = h > 14 && t > 0.2;
         if (pine) {
-          dummy.position.set(x, h * 0.4, z);
+          dummy.position.set(x, ground + h * 0.4, z);
           dummy.scale.set(h * 0.21, h * 0.22, h * 0.21);
           dummy.updateMatrix();
           pines.setMatrixAt(pi, dummy.matrix);
           color.setHSL(0.18 + t * 0.03, 0.07, 0.65 + t * 0.23);
           pines.setColorAt(pi++, color);
         } else {
-          dummy.position.set(x, h * 0.73, z);
+          dummy.position.set(x, ground + h * 0.73, z);
           dummy.scale.set(h * 0.32, h * 0.44, h * 0.31);
           dummy.updateMatrix();
           leaves.setMatrixAt(li, dummy.matrix);
           color.setHSL(0.16 + t * 0.09, 0.08 + t * 0.08, 0.65 + t * 0.2);
           this.treeSamples.push({
             x,
+            y: ground,
             z,
             height: h,
             rotation: t * 6.28,

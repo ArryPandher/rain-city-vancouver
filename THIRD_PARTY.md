@@ -18,6 +18,8 @@ Arthur Erickson Place uses original geometry and **Concrete Wall 009** photograp
 
 Small houses use **White Planks Clean** and **Grey Roof 01** by **Rob Tuytel**, [Poly Haven](https://polyhaven.com/a/white_planks_clean), CC0. Color, OpenGL normal and roughness maps are converted to 1K WebP, with original window masks and geometry. These are generic painted-wood and grey roof-tile materials; they do not identify the real material of each address. [Source records](public/textures/houses/SOURCES.json); [reproduction script](scripts/fetch-house-materials.mjs).
 
+The Law Courts and Robson Square use original reference-guided geometry, the same CC0 cast-concrete material, and existing licensed foliage photography. Architectural reference images are not distributed. [References, map identifiers and approximation limits](docs/sources/law-courts-robson-square.md).
+
 ## Glass façade materials — ambientCG / CC0
 
 The curtain-wall color, normal, roughness and metalness maps are adapted from [Facade006](https://ambientcg.com/view?id=Facade006), **ambientCG**, [CC0](https://docs.ambientcg.com/license/). This is an artist-authored procedural PBR material, not Vancouver photography. A sparse night-light texture is derived from its glass mask; the material is calibrated to 1.6 m panes and 3.2 m floors and paired with modeled mullions. [Source manifest](public/textures/curtain-wall/SOURCES.json); [reproduction script](scripts/fetch-curtain-facade.mjs).

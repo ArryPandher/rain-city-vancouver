@@ -220,40 +220,6 @@ export function buildLandmarks(parent: T.Group, m: Materials) {
         porthole.rotation.y = (side * Math.PI) / 2;
       }
   }
-  // Robson Square's stepped planters and reflecting pools occupy the open plaza.
-  {
-    const g = place(49.28214, -123.1212, -0.7);
-    for (let j = 0; j < 4; j++) {
-      box(g, m.concrete, 16 + j * 3, 0.35 + j * 0.18, j * 13, 36, 1.2, 9);
-      box(g, m.grass, 16 + j * 3, 1.01 + j * 0.18, j * 13, 33, 0.1, 6);
-    }
-    const water = new T.MeshPhysicalMaterial({
-      color: 0x375b5f,
-      metalness: 0.45,
-      roughness: 0.12,
-      clearcoat: 1,
-    });
-    box(g, m.concrete, -10, 0.1, 8, 21, 0.3, 38);
-    box(g, water, -10, 0.3, 8, 19, 0.08, 36);
-    for (let i = 0; i < 7; i++)
-      box(g, m.concrete, -28, 0.1 + i * 0.12, -25 + i * 0.65, 20, 0.22, 0.68);
-    for (let j = 0; j < 5; j++) {
-      beam(
-        g,
-        m.chrome,
-        new T.Vector3(-35, 0, j * 7),
-        new T.Vector3(-35, 3.8, j * 7),
-        0.08,
-      );
-      beam(
-        g,
-        m.chrome,
-        new T.Vector3(-35, 3.8, j * 7),
-        new T.Vector3(-20, 3.8, j * 7),
-        0.08,
-      );
-    }
-  }
   // Small boats in Coal Harbour.
   for (let j = 0; j < 18; j++) {
     const g = place(

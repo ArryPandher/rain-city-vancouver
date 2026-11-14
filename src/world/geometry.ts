@@ -130,8 +130,8 @@ export class Batcher {
       if (!g) continue;
       g.computeBoundingSphere();
       const m = new T.Mesh(g, b.mat);
-      m.userData.allowShadow = shadow;
-      m.castShadow = shadow;
+      m.userData.allowShadow = shadow && b.mat.userData.castShadow !== false;
+      m.castShadow = m.userData.allowShadow;
       m.receiveShadow = true;
       m.userData.center = [b.x, b.z];
       this.parent.add(m);

@@ -4,6 +4,7 @@ import { bakeGeometry } from "./geometry";
 import { BASE } from "./materials";
 export interface TreeInstance {
   x: number;
+  y?: number;
   z: number;
   height: number;
   rotation: number;
@@ -92,7 +93,7 @@ export class DetailedTrees {
       tree.trunk.setMatrixAt(tree.trunkIndex, hidden);
       dirty.add(tree.crown);
       dirty.add(tree.trunk);
-      dummy.position.set(tree.x, 0, tree.z);
+      dummy.position.set(tree.x, tree.y ?? 0, tree.z);
       dummy.rotation.set(0, tree.rotation, 0);
       dummy.scale.setScalar(tree.height / this.height);
       dummy.updateMatrix();
