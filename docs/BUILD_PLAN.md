@@ -1,5 +1,7 @@
 # Build plan — 2026-11-14
 
+> Current direction (2026-11-14): **browser-only is essential**. The playable prototype is far below the requested visual goal. Prioritize high-fidelity Coal Harbour, Robson/Granville and a Stanley Park seawall region, using the [quality assessment and review brief](QUALITY-ASSESSMENT.md). GTA V is the nearer visual benchmark; GTA VI remains a reference. These are milestones within the full Vancouver objective. Use one Chrome tab maximum and avoid two simultaneous game instances.
+
 Build a substantial playable Vancouver vertical slice with real OpenStreetMap streets and building footprints, custom landmarks, on-foot exploration, cars, bikes, weapons, NPCs, missions, cinematic rendering and a shareable GitHub Pages release.
 
 Requested landmarks: Canada Place sails, Robson Square, Stanley Park and its seawall, Granville Street, Cambie Bridge, Ironworkers Memorial Bridge. Include English Bay, Gastown, Harbour Centre, Science World, BC Place and Lions Gate when feasible.
