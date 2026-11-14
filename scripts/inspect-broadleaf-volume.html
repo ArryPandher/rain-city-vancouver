@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+  <body style="margin: 0">
+    <script type="module">
+      import * as T from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      import {
+        broadleafVolumeGeometry,
+        loadBroadleafVolumeMaterials,
+      } from "/src/world/broadleaf-volume.ts";
+      const renderer = new T.WebGLRenderer({
+        antialias: true,
+        preserveDrawingBuffer: true,
+      });
+      renderer.setSize(768, 768);
+      renderer.setClearColor(0xbcc9d1);
+      renderer.toneMapping = T.ACESFilmicToneMapping;
+      document.body.append(renderer.domElement);
+      window.errors = [];
+      addEventListener("unhandledrejection", (e) =>
+        errors.push(String(e.reason?.stack || e.reason)),
+      );
+      renderer.debug.onShaderError = (gl, p, v, f) =>
+        errors.push([
+          gl.getProgramInfoLog(p),
+          gl.getShaderInfoLog(v),
+          gl.getShaderInfoLog(f),
+        ]);
+      const [gltf, materials] = await Promise.all([
+        new GLTFLoader().loadAsync("/models/vancouver-street-tree.glb"),
+        loadBroadleafVolumeMaterials(),
+      ]);
+      const source = gltf.scene;
+      source.updateMatrixWorld(true);
+      const bounds = new T.Box3().setFromObject(source),
+        height = bounds.max.y - bounds.min.y;
+      source.scale.setScalar(1 / height);
+      source.position.y = -bounds.min.y / height;
+      source.traverse((o) => {
+        if (!o.isMesh) return;
+        o.material = o.material.clone();
+        Object.assign(o.material, {
+          side: T.DoubleSide,
+          transparent: false,
+          alphaTest: 0.45,
+          alphaToCoverage: true,
+          roughness: 0.96,
+          envMapIntensity: 0.35,
+        });
+        if (o.material.name.includes("leaves")) {
+          o.material.roughnessMap = null;
+          o.material.normalScale.set(0.35, 0.35);
+        }
+      });
+      const geometry = broadleafVolumeGeometry();
+      geometry.setAttribute(
+        "treeStemScale",
+        new T.InstancedBufferAttribute(new Float32Array([1]), 1),
+      );
+      const leaves = new T.InstancedMesh(geometry, materials.material, 1);
+      leaves.setMatrixAt(0, new T.Matrix4());
+      leaves.customDepthMaterial = materials.depth;
+      materials.branches.geometry.setAttribute(
+        "treeStemScale",
+        new T.InstancedBufferAttribute(new Float32Array([1]), 1),
+      );
+      const branches = new T.InstancedMesh(
+        materials.branches.geometry,
+        materials.branches.materials,
+        1,
+      );
+      branches.setMatrixAt(0, new T.Matrix4());
+      branches.customDepthMaterial = materials.branches.depth;
+      const volume = new T.Group();
+      volume.add(leaves, branches);
+      const scene = new T.Scene();
+      scene.add(source, volume, new T.HemisphereLight(0xd6e8f2, 0x333820, 2));
+      const sun = new T.DirectionalLight(0xfff5df, 3);
+      sun.position.set(3, 4, 6);
+      scene.add(sun);
+      const centre = bounds.getCenter(new T.Vector3()).divideScalar(height);
+      centre.y = 0.5;
+      const camera = new T.OrthographicCamera(-0.7, 0.7, 0.7, -0.7, 0.01, 20);
+      window.farInspect = {
+        renderer,
+        scene,
+        camera,
+        source,
+        volume,
+        sun,
+        frame(key, angle = 0, elevation = 0) {
+          source.visible = key === "source";
+          volume.visible = key === "volume";
+          camera.position
+            .copy(centre)
+            .add(
+              new T.Vector3(
+                Math.sin(angle) * 3,
+                Math.tan(elevation) * 3,
+                Math.cos(angle) * 3,
+              ),
+            );
+          camera.lookAt(centre);
+          renderer.render(scene, camera);
+          return renderer.domElement.toDataURL("image/png");
+        },
+      };
+      farInspect.frame("volume");
+      window.ready = true;
+    </script>
+  </body>
+</html>

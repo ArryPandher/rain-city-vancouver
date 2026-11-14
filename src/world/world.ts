@@ -36,6 +36,11 @@ import { buildLandmarks } from "./landmarks";
 import { loadVancouverLandmarks } from "./vancouver-landmarks";
 import { DetailedTrees, TreeInstance } from "./detailed-trees";
 import {
+  installBroadleafVolumes,
+  loadBroadleafVolumeMaterials,
+  updateBroadleafDistance,
+} from "./broadleaf-volume";
+import {
   DetailedArchitecture,
   ArchitecturalDetail,
 } from "./detailed-architecture";
@@ -81,6 +86,7 @@ export class World {
   nightLights: T.MeshStandardMaterial[] = [];
   northShore?: T.MeshBasicMaterial;
   detailedTrees?: DetailedTrees;
+  broadleafVolume?: ReturnType<typeof installBroadleafVolumes>;
   forestHabitat!: ForestHabitat;
   forestDetail?: ForestDetail;
   coastalVegetation?: CoastalVegetation;
@@ -166,6 +172,17 @@ export class World {
     await new Promise((r) => setTimeout(r, 20));
     report("Planting Stanley Park", 0.49);
     this.vegetation();
+    try {
+      this.broadleafVolume = installBroadleafVolumes(
+        this.treeSamples,
+        await loadBroadleafVolumeMaterials(),
+      );
+    } catch (error) {
+      console.warn(
+        "Layered broadleaf canopy unavailable; retaining mapped crowns",
+        error,
+      );
+    }
     try {
       this.detailedTrees = await DetailedTrees.load(this.scene);
       this.detailedTrees.samples = this.treeSamples;
@@ -1196,6 +1213,7 @@ export class World {
       const p = c.userData.center;
       if (!p) continue;
       const dist = Math.hypot(p[0] - x, p[1] - z);
+      updateBroadleafDistance(c, dist);
       c.visible =
         dist <
         (c.userData.detail ? 350 : c instanceof T.InstancedMesh ? 1400 : 2900);

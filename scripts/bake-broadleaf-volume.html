@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <body style="margin: 0; background: #555">
+    <script type="module">
+      import * as T from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      window.errors = [];
+      addEventListener("unhandledrejection", (e) =>
+        errors.push(String(e.reason?.stack || e.reason)),
+      );
+      const renderer = new T.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+        premultipliedAlpha: false,
+        preserveDrawingBuffer: true,
+      });
+      renderer.setSize(512, 512);
+      renderer.setClearColor(0, 0);
+      renderer.localClippingEnabled = true;
+      renderer.toneMapping = T.NoToneMapping;
+      document.body.append(renderer.domElement);
+      const model = (
+        await new GLTFLoader().loadAsync(
+          "/models/vancouver-street-tree.glb?v=source-leaves-20261114",
+        )
+      ).scene;
+      model.updateMatrixWorld(true);
+      let bounds = new T.Box3().setFromObject(model);
+      model.position.y = -bounds.min.y;
+      model.updateMatrixWorld(true);
+      bounds = new T.Box3().setFromObject(model);
+      const height = bounds.max.y - bounds.min.y,
+        span = height * 1.05,
+        centre = bounds.getCenter(new T.Vector3()),
+        scene = new T.Scene();
+      scene.add(model);
+      const planes = [new T.Plane(), new T.Plane()],
+        meshes = [];
+      model.traverse((o) => {
+        if (!o.isMesh) return;
+        const source = o.material;
+        o.visible = source.name.includes("leaves");
+        if (!o.visible) return;
+        const color = new T.MeshBasicMaterial({
+          map: source.map,
+          side: T.DoubleSide,
+          alphaTest: 0.45,
+          clippingPlanes: planes,
+        });
+        const normal = new T.MeshStandardMaterial({
+          map: source.map,
+          normalMap: source.normalMap,
+          normalScale: source.normalScale
+            .clone()
+            .multiplyScalar(source.name.includes("leaves") ? 0.35 : 1),
+          side: T.DoubleSide,
+          alphaTest: 0.45,
+          clippingPlanes: planes,
+        });
+        normal.onBeforeCompile = (s) => {
+          s.fragmentShader = s.fragmentShader.replace(
+            "#include <opaque_fragment>",
+            "gl_FragColor=vec4(inverseTransformDirection(normal,viewMatrix)*.5+.5,1.0);",
+          );
+        };
+        normal.customProgramCacheKey = () => "broadleaf-baked-normal-v1";
+        meshes.push({ object: o, color, normal });
+      });
+      const camera = new T.OrthographicCamera(
+        -span / 2,
+        span / 2,
+        span / 2,
+        -span / 2,
+        0.1,
+        100,
+      );
+      window.broadleafBake = {
+        renderer,
+        scene,
+        model,
+        camera,
+        height,
+        span,
+        rootOffset: model.position.y,
+        bounds: { min: bounds.min.toArray(), max: bounds.max.toArray() },
+        centre: centre.toArray(),
+        capture(axis, index, pass) {
+          const low = bounds.min[axis],
+            step = (bounds.max[axis] - low) / 8,
+            n = new T.Vector3(
+              axis === "x" ? 1 : 0,
+              axis === "y" ? 1 : 0,
+              axis === "z" ? 1 : 0,
+            );
+          planes[0].set(n.clone(), -(low + step * index));
+          planes[1].set(n.clone().negate(), low + step * (index + 1));
+          camera.position.copy(centre).addScaledVector(n, 35);
+          camera.up.set(0, axis === "y" ? 0 : 1, axis === "y" ? -1 : 0);
+          camera.lookAt(centre);
+          renderer.outputColorSpace =
+            pass === "normal" ? T.LinearSRGBColorSpace : T.SRGBColorSpace;
+          for (const m of meshes) m.object.material = m[pass];
+          renderer.render(scene, camera);
+          return renderer.domElement.toDataURL("image/png");
+        },
+      };
+      window.ready = true;
+    </script>
+  </body>
+</html>

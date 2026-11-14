@@ -1107,5 +1107,41 @@
     "changes": "All 30,250 leaf components retained with 3D per-leaf simplification, positive face/normal agreement, 206,013 total triangles, WebP textures and independently culled tree slots.",
     "bytes": 12049320,
     "sha256": "8984221b9443b10d0c50bcf887b87bc100eb255575c680341befb34e503d17ae"
+  },
+  {
+    "file": "textures/broadleaf/color.webp",
+    "source": "https://polyhaven.com/a/tree_small_02",
+    "credit": "Poly Haven — Tree Small 02",
+    "license": "CC0-1.0",
+    "bytes": 587802,
+    "sha256": "44160140333c7939d155a7f11382f9e537682e367edee84b76d35c53932a39fa",
+    "changes": "Leaf-only: eight depth slices in each of three perpendicular views, including the top; unlit colour/alpha. Source: committed near tree 67a348ff. Corrected and padded multisample edges. Generic broadleaf, not a Vancouver species scan."
+  },
+  {
+    "file": "textures/broadleaf/normal.webp",
+    "source": "https://polyhaven.com/a/tree_small_02",
+    "credit": "Poly Haven — Tree Small 02",
+    "license": "CC0-1.0",
+    "bytes": 798170,
+    "sha256": "bcb4513d76b8f3c17251b0344515da36063b485452f6ba7a288923afb221b57f",
+    "changes": "Leaf-only: eight depth slices in each of three perpendicular views, including the top; model-space normals. Source: committed near tree 67a348ff. Corrected and padded multisample edges. Generic broadleaf, not a Vancouver species scan."
+  },
+  {
+    "file": "models/vancouver-street-tree-branches.glb",
+    "credit": "Poly Haven — Tree Small 02",
+    "source": "https://polyhaven.com/a/tree_small_02",
+    "license": "CC0-1.0",
+    "bytes": 858412,
+    "sha256": "05cff41edb71346b8b6b380e5a77771ffeb584862b38f399eb6add1226c48528",
+    "changes": "Woody geometry derived from committed near model with meshoptimizer reduction to 1234 triangles, retained normals/UVs and a small vertical correction to preserve the original root anchor. Used with layered leaf geometry."
+  },
+  {
+    "file": "models/vancouver-street-tree-branches-distant.glb",
+    "credit": "Poly Haven — Tree Small 02",
+    "source": "https://polyhaven.com/a/tree_small_02",
+    "license": "CC0-1.0",
+    "bytes": 814532,
+    "sha256": "30a43f0451b7514a53cd1d69e998b74d46a40eb03ff80b6e183386b74acba9ea",
+    "changes": "Woody geometry reduced further to 312 triangles for tree groups beyond 600 m; original root anchor restored after simplification, with shared materials and stem calibration."
   }
 ]
