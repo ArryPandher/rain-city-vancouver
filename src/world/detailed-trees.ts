@@ -8,6 +8,7 @@ export interface TreeInstance {
   y?: number;
   z: number;
   height: number;
+  rootDepth?: number;
   width: number;
   diameter: number;
   sourceId?: number;

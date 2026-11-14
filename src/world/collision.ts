@@ -156,6 +156,18 @@ export class CollisionWorld {
   robsonGarden?: Building;
   buildings = new SpatialHash<Building>();
   roads = new SpatialHash<Road>(100);
+  forestObstacles = new SpatialHash<{ x: number; z: number; radius: number }>(
+    24,
+  );
+  addForestTrunk(x: number, z: number, radius: number) {
+    this.forestObstacles.add(
+      { x, z, radius },
+      x - radius,
+      z - radius,
+      x + radius,
+      z + radius,
+    );
+  }
   constructor(public data: CityData) {
     for (const b of data.buildings) {
       if (b.id === ROBSON_GARDEN_ID) this.robsonGarden = b;
@@ -210,6 +222,8 @@ export class CollisionWorld {
     if (this.robsonGarden && robsonObstacle(x, z, r)) return true;
     const bridge = this.bridgeAt(x, z);
     if (bridge && bridgeY(bridge.bridge, bridge.t) > 2) return false;
+    for (const tree of this.forestObstacles.query(x, z, r))
+      if (Math.hypot(x - tree.x, z - tree.z) < r + tree.radius) return true;
     for (const b of this.buildings.query(x, z, r)) {
       if (pointInPoly(x, z, b.pts)) return true;
       for (let i = 0; i < b.pts.length; i += 2) {

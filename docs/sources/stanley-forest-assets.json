@@ -1,0 +1,180 @@
+[
+  {
+    "file": "models/forest/fir_tree_01.glb",
+    "title": "Fir Tree 01",
+    "authors": {
+      "Rob Tuytel": "photography",
+      "Rico Cilliers": "modeling"
+    },
+    "source": "https://polyhaven.com/a/fir_tree_01",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/fir_tree_01/fir_tree_01_1k.gltf",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "triangles": 463490,
+    "bounds": {
+      "min": [
+        -2.747030735015869,
+        -0.09382282942533493,
+        -2.9962728023529053
+      ],
+      "max": [
+        3.558908462524414,
+        14.426758766174316,
+        2.9699645042419434
+      ]
+    },
+    "changes": "Extracted variant C using a bounded byte range; added missing cylindrical trunk UVs, simplified solid wood, retained every twig and restored source alpha. WebP textures at 1K. Runtime scaling and instancing."
+  },
+  {
+    "file": "models/forest/fern_02.glb",
+    "title": "Fern 02",
+    "authors": {
+      "Rob Tuytel": "scanning",
+      "Rico Cilliers": "modeling"
+    },
+    "source": "https://polyhaven.com/a/fern_02",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/fern_02/fern_02_1k.gltf",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "triangles": 6232,
+    "bounds": {
+      "min": [
+        -0.5281425714492798,
+        -0.030510280281305313,
+        -0.421874463558197
+      ],
+      "max": [
+        1.4443871974945068,
+        0.39718443155288696,
+        1.3021531403064728
+      ]
+    },
+    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+  },
+  {
+    "file": "models/forest/moss_01.glb",
+    "title": "Moss 01",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "source": "https://polyhaven.com/a/moss_01",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/moss_01/moss_01_1k.gltf",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "triangles": 204,
+    "bounds": {
+      "min": [
+        -0.00889910603291355,
+        -0.0035440043138805777,
+        -0.010091456584632397
+      ],
+      "max": [
+        0.20636089146137238,
+        0.036823973059654236,
+        0.019329404225572944
+      ]
+    },
+    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+  },
+  {
+    "file": "models/forest/rock_moss_set_01.glb",
+    "title": "Rock Moss Set 01",
+    "authors": {
+      "Kless Gyzen": "All"
+    },
+    "source": "https://polyhaven.com/a/rock_moss_set_01",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_moss_set_01/rock_moss_set_01_1k.gltf",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "triangles": 63127,
+    "bounds": {
+      "min": [
+        -3.9140208959579468,
+        -0.6609705686569214,
+        -3.823821544647217
+      ],
+      "max": [
+        4.090582966804504,
+        1.1073492765426636,
+        3.1249431371688843
+      ]
+    },
+    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+  },
+  {
+    "file": "models/forest/tree_stump_01.glb",
+    "title": "Tree Stump 01",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "source": "https://polyhaven.com/a/tree_stump_01",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/tree_stump_01/tree_stump_01_1k.gltf",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "triangles": 41046,
+    "bounds": {
+      "min": [
+        -0.7844194173812866,
+        -0.1929784119129181,
+        -0.7604432702064514
+      ],
+      "max": [
+        0.6411310434341431,
+        0.37968912720680237,
+        0.8298710584640503
+      ]
+    },
+    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+  },
+  {
+    "file": "models/forest/shrub_04.glb",
+    "title": "Shrub 04",
+    "authors": {
+      "Rico Cilliers": "All"
+    },
+    "source": "https://polyhaven.com/a/shrub_04",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/shrub_04/shrub_04_1k.gltf",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "triangles": 5860,
+    "bounds": {
+      "min": [
+        -0.02444666624069214,
+        -0.005937241483479738,
+        -0.07500956952571869
+      ],
+      "max": [
+        0.5592435225844383,
+        0.2132624387741089,
+        0.07108771800994873
+      ]
+    },
+    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+  },
+  {
+    "file": "models/forest/nettle_plant.glb",
+    "title": "Nettle Plant",
+    "authors": {
+      "Rob Tuytel": "Photography",
+      "Rico Cilliers": "modeling"
+    },
+    "source": "https://polyhaven.com/a/nettle_plant",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/nettle_plant/nettle_plant_1k.gltf",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "triangles": 6897,
+    "bounds": {
+      "min": [
+        -0.05262836813926697,
+        -0.0054503437131643295,
+        -0.04856731742620468
+      ],
+      "max": [
+        1.0301607269793749,
+        0.21283993124961853,
+        0.04611610248684883
+      ]
+    },
+    "changes": "Restored source alpha for vegetation; shrubs/nettles simplified with a bounded 0.005 error; packed with 1K WebP textures. Runtime scaling, pivot normalization and instancing."
+  }
+]

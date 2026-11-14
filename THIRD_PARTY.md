@@ -26,6 +26,8 @@ Small houses use **White Planks Clean** and **Grey Roof 01** by **Rob Tuytel**, 
 
 The Law Courts and Robson Square use original reference-guided geometry, the same CC0 cast-concrete material, and existing licensed foliage photography. Architectural reference images are not distributed. [References, map identifiers and approximation limits](docs/sources/law-courts-robson-square.md).
 
+Stanley Park woodland uses **Fir Tree 01** and **Fern 02** by **Rob Tuytel / Rico Cilliers**, **Moss 01** and **Tree Stump 01** by **Rob Tuytel**, **Rock Moss Set 01** by **Kless Gyzen**, **Shrub 04** by **Rico Cilliers**, **Nettle Plant** by **Rob Tuytel / Rico Cilliers**, **Forest Ground 06** by **Charlotte Baglioni**, and **Leaves Forest Ground** by **Dimitrios Savva / Dario Barresi**, all Poly Haven CC0. Modified with selective geometry extraction, wood simplification, missing-UV repair, source-alpha restoration, WebP conversion and conifer silhouette baking. Placement, canopy dimensions and density are interpretations. [Detailed source and reproduction notes](docs/sources/stanley-forest.md).
+
 ## Glass façade materials — ambientCG / CC0
 
 The curtain-wall color, normal, roughness and metalness maps are adapted from [Facade006](https://ambientcg.com/view?id=Facade006), **ambientCG**, [CC0](https://docs.ambientcg.com/license/). This is an artist-authored procedural PBR material, not Vancouver photography. A sparse night-light texture is derived from its glass mask; the material is calibrated to 1.6 m panes and 3.2 m floors and paired with modeled mullions. [Source manifest](public/textures/curtain-wall/SOURCES.json); [reproduction script](scripts/fetch-curtain-facade.mjs).

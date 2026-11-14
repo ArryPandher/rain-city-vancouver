@@ -1,0 +1,59 @@
+[
+  {
+    "file": "textures/forest/forest_ground_06-color.webp",
+    "source": "https://polyhaven.com/a/forest_ground_06",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_ground_06/forest_ground_06_diff_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.109999895095825,
+      2.109999895095825
+    ],
+    "changes": "Resized to 2K WebP; blended at runtime with forest soil and leaf litter."
+  },
+  {
+    "file": "textures/forest/forest_ground_06-normal.webp",
+    "source": "https://polyhaven.com/a/forest_ground_06",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_ground_06/forest_ground_06_nor_gl_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.109999895095825,
+      2.109999895095825
+    ],
+    "changes": "Resized to 2K WebP; blended at runtime with forest soil and leaf litter."
+  },
+  {
+    "file": "textures/forest/forest_ground_06-roughness.webp",
+    "source": "https://polyhaven.com/a/forest_ground_06",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_ground_06/forest_ground_06_rough_2k.jpg",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      2.109999895095825,
+      2.109999895095825
+    ],
+    "changes": "Resized to 2K WebP; blended at runtime with forest soil and leaf litter."
+  },
+  {
+    "file": "textures/forest/leaves_forest_ground-color.webp",
+    "source": "https://polyhaven.com/a/leaves_forest_ground",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/leaves_forest_ground/leaves_forest_ground_diff_2k.jpg",
+    "authors": {
+      "Dario Barresi": "Processing",
+      "Dimitrios Savva": "Photography"
+    },
+    "license": "CC0-1.0",
+    "dimensionsMetres": [
+      1.2599999904632568,
+      1.2600001096725464
+    ],
+    "changes": "Resized to 2K WebP; blended at runtime with forest soil and leaf litter."
+  }
+]

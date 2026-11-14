@@ -700,6 +700,8 @@ class Game {
     if (this.world?.detailedTrees)
       this.world.detailedTrees.budget =
         q === "high" ? 48 : q === "low" ? 0 : 24;
+    if (this.world?.forestDetail)
+      this.world.forestDetail.budget = q === "high" ? 24 : q === "low" ? 0 : 8;
     if (this.world?.detailedArchitecture)
       this.world.detailedArchitecture.budget =
         q === "high" ? 384 : q === "low" ? 64 : 192;

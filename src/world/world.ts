@@ -33,6 +33,8 @@ import {
 } from "./road-profile";
 import { ROBSON_PLANTERS, gridXZ } from "./robson-site";
 import { reconcileTrees, treeProfile, type TreeProfile } from "./tree-profile";
+import { ForestHabitat } from "./forest-habitat";
+import { ForestDetail, forestGround } from "./forest";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -50,6 +52,9 @@ export class World {
   nightLights: T.MeshStandardMaterial[] = [];
   northShore?: T.MeshBasicMaterial;
   detailedTrees?: DetailedTrees;
+  forestHabitat!: ForestHabitat;
+  forestDetail?: ForestDetail;
+  coniferSamples: TreeInstance[] = [];
   detailedArchitecture?: DetailedArchitecture;
   architecturalDetails: ArchitecturalDetail[] = [];
   reflections: ReflectionProbeSpec[] = [];
@@ -79,6 +84,7 @@ export class World {
   async build(report: (text: string, n: number) => void) {
     report("Loading Vancouver’s streets", 0.12);
     this.collision = new CollisionWorld(this.data);
+    this.forestHabitat = new ForestHabitat(this.data, this.collision);
     this.terrain();
     this.roads();
     await new Promise((r) => setTimeout(r, 20));
@@ -102,6 +108,12 @@ export class World {
     this.vegetation();
     this.detailedTrees = await DetailedTrees.load(this.scene);
     this.detailedTrees.samples = this.treeSamples;
+    try {
+      this.forestDetail = await ForestDetail.load(this.scene, this.forestHabitat);
+      this.forestDetail.samples = this.coniferSamples;
+    } catch (error) {
+      console.warn("Forest detail unavailable; retaining distant trees", error);
+    }
     await new Promise((r) => setTimeout(r, 20));
     report("Building the waterfront", 0.68);
     const landmarkRoot = new T.Group();
@@ -225,10 +237,13 @@ export class World {
       .getAttribute("uv")
       .array.forEach((_, i, a) => (a[i] *= 2800));
     floor.castShadow = false;
-    const b = new Batcher(this.root, 600);
+    const b = new Batcher(this.root, 600),
+      woodlandMaterial = forestGround(m);
     for (const a of this.data.areas) {
       if (a.kind === "water") continue;
-      let mat = m.grass;
+      let mat = this.forestHabitat.woodland.includes(a)
+        ? woodlandMaterial
+        : m.grass;
       if (["parking", "plaza", "campus", "construction"].includes(a.kind))
         mat = m.concrete;
       if (a.kind === "beach")
@@ -236,8 +251,26 @@ export class World {
       const [x, z] = centroid(a.pts);
       try {
         const elevation =
-          mat === m.concrete ? 0.02 : a.kind === "beach" ? -0.005 : -0.02;
-        b.add(flatPolygon(a.pts, a.holes, elevation, 5), mat, x, z);
+          mat === m.concrete
+            ? 0.02
+            : a.kind === "beach"
+              ? -0.005
+              : mat === woodlandMaterial
+                ? -0.012
+                : a.kind === "grass"
+                  ? -0.008
+                  : -0.02;
+        b.add(
+          flatPolygon(
+            a.pts,
+            a.holes,
+            elevation,
+            mat === woodlandMaterial ? 2.11 : 5,
+          ),
+          mat,
+          x,
+          z,
+        );
       } catch {}
     }
     const cityBase = mesh(
@@ -433,47 +466,8 @@ export class World {
           });
         }
       }
-    const stanley = this.data.areas.filter((a) =>
-      ["forest", "park"].includes(a.kind),
-    );
-    for (let i = 0; i < 4400; i++) {
-      const [x, z] = geo(49.295 + rand() * 0.017, -123.159 + rand() * 0.03);
-      if (
-        !stanley.some((a) => pointInPoly(x, z, a.pts)) ||
-        this.collision.water(x, z)
-      )
-        continue;
-      const road = this.collision.nearestRoad(x, z, 10);
-      if (road && road.d < 7) continue;
-      let path = false;
-      for (const r of this.collision.roads.query(x, z, 8)) {
-        for (let j = 0; j < r.pts.length - 2; j += 2) {
-          const ax = r.pts[j],
-            az = r.pts[j + 1],
-            bx = r.pts[j + 2],
-            bz = r.pts[j + 3],
-            vx = bx - ax,
-            vz = bz - az,
-            t = Math.max(
-              0,
-              Math.min(
-                1,
-                ((x - ax) * vx + (z - az) * vz) / (vx * vx + vz * vz),
-              ),
-            );
-          if (Math.hypot(x - ax - vx * t, z - az - vz * t) < 5) path = true;
-        }
-      }
-      if (!path)
-        trees.push(
-          treeProfile(x, z, 15 + rand() * 17, null, {
-            name: "Douglas fir",
-            genus: "PSEUDOTSUGA",
-            species: "MENZIESII",
-            cultivar: "",
-          }),
-        );
-    }
+    const forestTrees = this.forestHabitat.trees(trees);
+    trees.push(...forestTrees);
     const chunkTrees = new Map<string, TreeProfile[]>();
     for (const t of trees) {
       const k = Math.floor(t.x / 350) + "," + Math.floor(t.z / 350);
@@ -482,7 +476,7 @@ export class World {
       a.push(t);
     }
     const foliageMap = m.texture("broadleaf-branch.png", true),
-      pineMap = m.texture("fir-branch.png", true);
+      pineMap = m.texture("forest/conifer-atlas.webp", true);
     foliageMap.wrapS =
       foliageMap.wrapT =
       pineMap.wrapS =
@@ -500,7 +494,7 @@ export class World {
     });
     const pineMat = new T.MeshStandardMaterial({
       map: pineMap,
-      color: 0xb0bbaa,
+      color: 0xffffff,
       alphaTest: 0.35,
       alphaToCoverage: true,
       side: T.DoubleSide,
@@ -538,31 +532,15 @@ export class World {
       1 / (crownBounds.max.z - crownBounds.min.z),
     );
     const pineParts: T.BufferGeometry[] = [];
-    for (let layer = 0; layer < 12; layer++) {
-      const y = layer * 0.21,
-        r = 1 - layer * 0.065;
-      for (let j = 0; j < 7; j++) {
-        const a = (j * Math.PI * 2) / 7 + layer * 0.7,
-          g = new T.PlaneGeometry(r * 0.95, r * 1.35);
-        g.rotateX(-0.75);
-        g.rotateY(a);
-        g.translate(Math.sin(a) * r * 0.47, y, Math.cos(a) * r * 0.47);
-        pineParts.push(g);
-      }
+    for (let side = 0; side < 2; side++) {
+      const g = new T.PlaneGeometry(1, 1),
+        uv = g.getAttribute("uv");
+      for (let i = 0; i < uv.count; i++) uv.setX(i, (uv.getX(i) + side) / 2);
+      g.translate(0, 0.5, 0);
+      g.rotateY((side * Math.PI) / 2);
+      pineParts.push(g);
     }
     const pineGeo = mergeGeometries(pineParts)!;
-    pineGeo.computeBoundingBox();
-    const pineBounds = pineGeo.boundingBox!.clone();
-    pineGeo.translate(
-      -(pineBounds.min.x + pineBounds.max.x) / 2,
-      -pineBounds.min.y,
-      -(pineBounds.min.z + pineBounds.max.z) / 2,
-    );
-    pineGeo.scale(
-      1 / (pineBounds.max.x - pineBounds.min.x),
-      1 / (pineBounds.max.y - pineBounds.min.y),
-      1 / (pineBounds.max.z - pineBounds.min.z),
-    );
     const bark = new T.MeshStandardMaterial({
       map: m.texture("fir_tree_01-bark_diff.png", true),
       color: 0xaaa494,
@@ -594,11 +572,33 @@ export class World {
         const trunkMatrix = dummy.matrix.clone();
         const pine = profile.form === "conifer";
         if (pine) {
-          dummy.position.set(x, ground + h * crownBase, z);
-          dummy.scale.set(width, h * (1 - crownBase), width);
+          // The two crossed silhouettes include the trunk; the original cylinder is hidden.
+          trunkMatrix.makeScale(0, 0, 0);
+          trunk.setMatrixAt(i, trunkMatrix);
+          const rootDepth = Math.min(0.6, diameter * 0.5);
+          dummy.position.set(x, ground - rootDepth, z);
+          dummy.scale.set(width * 1.1513, h + rootDepth, width * 1.1513);
           dummy.updateMatrix();
           pines.setMatrixAt(pi, dummy.matrix);
-          color.setHSL(0.18 + t * 0.03, 0.07, 0.65 + t * 0.23);
+          this.coniferSamples.push({
+            x,
+            y: ground,
+            z,
+            height: h,
+            rootDepth,
+            width,
+            diameter,
+            sourceId: profile.sourceId,
+            form: profile.form,
+            rotation,
+            crown: pines,
+            crownIndex: pi,
+            crownMatrix: dummy.matrix.clone(),
+            trunk,
+            trunkIndex: i,
+            trunkMatrix,
+          });
+          color.setHSL(0.18 + t * 0.03, 0.04, 0.8 + t * 0.15);
           pines.setColorAt(pi++, color);
         } else {
           dummy.position.set(x, ground + h * crownBase, z);
@@ -637,6 +637,8 @@ export class World {
       }
     }
     this.stats.trees = trees.length;
+    for (const t of forestTrees)
+      this.collision.addForestTrunk(t.x, t.z, t.diameter / 2);
   }
   streetDetails() {
     const b = new Batcher(this.root, 240),
@@ -948,6 +950,7 @@ export class World {
   update(dt: number, x: number, z: number) {
     this.time += dt;
     this.detailedTrees?.update(x, z);
+    this.forestDetail?.update(x, z);
     this.detailedArchitecture?.update(x, z);
     this.water.uniforms.time.value = this.time;
     const sx = Math.round(x / 2) * 2,
