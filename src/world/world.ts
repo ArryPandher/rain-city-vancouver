@@ -20,6 +20,10 @@ import { architecture } from "./architecture";
 import { buildLandmarks } from "./landmarks";
 import { loadVancouverLandmarks } from "./vancouver-landmarks";
 import { DetailedTrees, TreeInstance } from "./detailed-trees";
+import {
+  DetailedArchitecture,
+  ArchitecturalDetail,
+} from "./detailed-architecture";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -36,6 +40,8 @@ export class World {
   nightLights: T.MeshStandardMaterial[] = [];
   northShore?: T.MeshBasicMaterial;
   detailedTrees?: DetailedTrees;
+  detailedArchitecture?: DetailedArchitecture;
+  architecturalDetails: ArchitecturalDetail[] = [];
   treeSamples: TreeInstance[] = [];
   stats = { buildings: 0, trees: 0, roads: 0 };
   constructor(
@@ -70,6 +76,15 @@ export class World {
     await loadVancouverLandmarks(accurateLandmarks, this.materials);
     this.mergeStatic(accurateLandmarks);
     this.buildings();
+    try {
+      this.detailedArchitecture = await DetailedArchitecture.load(this.scene);
+      this.detailedArchitecture.samples = this.architecturalDetails;
+    } catch (error) {
+      console.warn(
+        "Detailed architecture unavailable; retaining base façades",
+        error,
+      );
+    }
     await new Promise((r) => setTimeout(r, 20));
     report("Planting Stanley Park", 0.49);
     this.vegetation();
@@ -357,6 +372,7 @@ export class World {
     );
     this.chunks.push(...result.chunks);
     this.stats.buildings = result.count;
+    this.architecturalDetails = result.architecturalDetails;
   }
 
   vegetation() {
@@ -893,6 +909,7 @@ export class World {
   update(dt: number, x: number, z: number) {
     this.time += dt;
     this.detailedTrees?.update(x, z);
+    this.detailedArchitecture?.update(x, z);
     this.water.uniforms.time.value = this.time;
     const sx = Math.round(x / 2) * 2,
       sz = Math.round(z / 2) * 2;

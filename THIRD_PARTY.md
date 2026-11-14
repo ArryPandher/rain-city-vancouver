@@ -12,6 +12,8 @@ Asphalt 02, Concrete Pavement, Aerial Grass Rock, Belfast Sunset PureSky, Kloofe
 
 Photographed shop rooms use **Comfy Café** and **Decor Shop** by **Sergej Majboroda**, and **Phone Shop** by **Philip Modin**, from Poly Haven under CC0. They are resized WebP panoramas projected into virtual room boxes behind the windows. These are fictional interiors and do not depict the actual Vancouver business at an address. [Exact sources and modifications](public/textures/interiors/SOURCES.json); [reproduction script](scripts/fetch-shop-interiors.mjs).
 
+Nearby residential door and window geometry is extracted from **Modular Urban Apartments Facade**, **James Ray Cock**, [Poly Haven](https://polyhaven.com/a/modular_urban_apartments_facade), CC0. Selected parts are pivot normalized, scaled and instanced; textures are converted to WebP. [Source manifest](docs/sources/architectural-details.json) and [reproduction script](scripts/fetch-architectural-details.mjs). These details are generic architectural interpretation, not an address-specific survey.
+
 ## Vancouver landmark models — Codriver / CC BY 4.0
 
 Canada Place, Harbour Centre, Science World, BC Place, Rogers Arena, Vancouver House, Fairmont Hotel Vancouver, Marine Building, Vancouver Public Library, Vancouver Art Gallery, Waterfront Station and Gastown Steam Clock are from [Codriver's 3D asset library](https://3d-assets.codriver.io/). © 2026 Codriver; geographic placement © OpenStreetMap contributors. Models are licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Source models remain unchanged; runtime adaptations add material response, photographic surface textures and geographic placement. Geographic estimates and simplifications are recorded in each source manifest.

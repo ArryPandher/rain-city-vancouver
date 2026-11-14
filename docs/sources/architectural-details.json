@@ -1,0 +1,14 @@
+{
+  "title": "Modular Urban Apartments Facade",
+  "author": "James Ray Cock",
+  "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+  "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/modular_urban_apartments_facade/modular_urban_apartments_facade_1k.gltf",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "selectedParts": [
+    "window_centered_small_01",
+    "door_centered_small_01",
+    "door_centered_small_02"
+  ],
+  "changes": "Extracted two doors and one window; normalized pivots, removed unused geometry/textures, converted textures to 1024 px WebP. Runtime bounded instancing, scaling and glass material adaptation."
+}

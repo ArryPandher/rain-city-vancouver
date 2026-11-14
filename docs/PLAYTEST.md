@@ -67,3 +67,10 @@ All 34 pedestrians now use clothed rigged models (23 male-template and 11 female
 Street-facing shopfronts use three licensed photographed interior panoramas with box-projected parallax. Individual shops share one room across their panes, with separate mullions, transoms, handles, fabric canopies and signs matched to their shop type. Front and oblique close-up views and nighttime lighting were inspected in Chrome at 1440 × 900. Scene samples were 41–42 fps; this is a local observation, not a hardware-independent benchmark. The rooms remain visual interiors behind building collision shells.
 
 The debug state now records window errors, unhandled promise rejections and shader compilation failures instead of returning a constant empty array. The new pass completed local rendering with an empty recorded error list; all 15 existing tests and the production build pass. Three new CC0 panoramas add about 2.6 MB of compressed assets. Public deployment verification follows the commit.
+
+
+## Residential façades — 2026-11-14
+
+Mapped houses, garages and civic/industrial buildings no longer receive generated shops. Apartments retain mixed-use retail on named commercial streets; residential streets retain their residential treatment. Two behavioral tests cover this distinction (17 tests total). Modeled paneled doors and sash window frames are extracted from James Ray Cock’s CC0 architectural kit, with normalized pivots and 1024 px WebP maps in a ~0.4 MB GLB. At most 192 nearby details render on Balanced, 384 on High and 64 on Low. A West End close-up showed independent frame/ledge depth, doors and stone surrounds without recorded runtime/shader errors; the sample rendered about 39 fps. These remain generic details rather than a surveyed reconstruction of individual buildings. If the optional detail asset cannot load, the base city remains playable.
+
+Public smoke on the prior storefront checkpoint `176330f` passed walking, driving at 63.8 km/h, cycling at 21.7 km/h, all three weapons and a completed shotgun reload, at 100% vehicle health with an empty recorded runtime error list.

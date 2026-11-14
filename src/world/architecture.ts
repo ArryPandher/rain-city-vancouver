@@ -5,6 +5,8 @@ import { Batcher, walls, flatPolygon } from "./geometry";
 import { specialBuilding } from "./vancouver-landmarks";
 import { CollisionWorld } from "./collision";
 import { shopInteriorMaterials, shopWindow } from "./shop-interiors";
+import { hasStorefront, isResidential } from "./building-use";
+import type { ArchitecturalDetail } from "./detailed-architecture";
 function tint(g: T.BufferGeometry, c: T.Color) {
   const a = new Float32Array(g.getAttribute("position").count * 3);
   for (let i = 0; i < a.length; i += 3) {
@@ -40,6 +42,7 @@ export function architecture(
     interiors = new Batcher(parent, 170),
     roomMaterials = shopInteriorMaterials();
   let count = 0;
+  const architecturalDetails: ArchitecturalDetail[] = [];
   const shopNames = [
     ["PACIFIC COFFEE", "THE CORNER CAFÉ", "WEST COAST COFFEE"],
     ["WATER STREET LIVING", "HARBOUR HOME", "COASTAL INTERIORS"],
@@ -298,6 +301,58 @@ export function architecture(
         const angle = Math.atan2(nx, nz),
           stores = Math.max(1, Math.round(len / 12)),
           storeWidth = len / stores;
+        const retail = hasStorefront(b.kind, near.road.name);
+        if (!retail && isResidential(b.kind)) {
+          const doorColumn = Math.floor(len / 6),
+            doorT = Math.min(0.8, (doorColumn * 3 + 1.5) / len);
+          // A stone surround covers the generated window underneath the entrance.
+          // It also keeps the far-view façade coherent when detailed doors are culled.
+          detail.add(
+            sideBox(
+              ax + (bx - ax) * doorT + nx * 0.01,
+              1.65,
+              az + (bz - az) * doorT + nz * 0.01,
+              2.18,
+              3.1,
+              0.02,
+              angle,
+            ),
+            m.stone,
+            x,
+            z,
+          );
+          architecturalDetails.push({
+            kind: "door",
+            variant: hash(b.id) % 2,
+            x: ax + (bx - ax) * doorT + nx * 0.02,
+            y: 0.15,
+            z: az + (bz - az) * doorT + nz * 0.02,
+            angle,
+            width: 1.4,
+            height: 2.8,
+          });
+          // The generated residential texture repeats every 3 m horizontally and
+          // 3.2 m vertically. Align modeled frames to those existing openings.
+          if (!heritage && !tower && h >= 6 && h < 35) {
+            for (let along = 1.5; along < len - 1.0; along += 3) {
+              for (let base = 0.4; base + 2.55 < h; base += 3.2) {
+                if (base < 1 && Math.abs(along - doorT * len) < 1.7) continue;
+                const t = along / len;
+                architecturalDetails.push({
+                  kind: "window",
+                  variant: 0,
+                  x: ax + (bx - ax) * t + nx * 0.025,
+                  y: base,
+                  z: az + (bz - az) * t + nz * 0.025,
+                  angle,
+                  width: 1.9,
+                  height: 2.55,
+                });
+              }
+            }
+          }
+        }
+        if (!retail) continue;
         for (let s = 0; s < stores; s++) {
           const t = (s + 0.5) / stores,
             xx = ax + (bx - ax) * t,
@@ -395,5 +450,5 @@ export function architecture(
   const chunks = shell.finish(),
     details = [...detail.finish(), ...interiors.finish(false)];
   details.forEach((c) => (c.userData.detail = true));
-  return { chunks: [...chunks, ...details], count };
+  return { chunks: [...chunks, ...details], count, architecturalDetails };
 }

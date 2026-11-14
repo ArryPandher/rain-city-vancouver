@@ -391,7 +391,7 @@
     "credit": "Sergej Majboroda",
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
+    "changes": "Resized to 4096 \u00d7 2048 WebP; box-projected behind fictional shop windows."
   },
   {
     "file": "textures/interiors/decor_shop.webp",
@@ -399,7 +399,7 @@
     "credit": "Sergej Majboroda",
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
+    "changes": "Resized to 4096 \u00d7 2048 WebP; box-projected behind fictional shop windows."
   },
   {
     "file": "textures/interiors/phone_shop.webp",
@@ -407,6 +407,14 @@
     "credit": "Philip Modin",
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
+    "changes": "Resized to 4096 \u00d7 2048 WebP; box-projected behind fictional shop windows."
+  },
+  {
+    "file": "models/architectural-details.glb",
+    "source": "https://polyhaven.com/a/modular_urban_apartments_facade",
+    "credit": "James Ray Cock",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Extracted two doors and one window; normalized pivots, removed unused geometry/textures, converted textures to 1024 px WebP. Runtime bounded instancing, scaling and glass material adaptation."
   }
 ]

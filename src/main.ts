@@ -670,6 +670,9 @@ class Game {
     if (this.world?.detailedTrees)
       this.world.detailedTrees.budget =
         q === "high" ? 48 : q === "low" ? 0 : 24;
+    if (this.world?.detailedArchitecture)
+      this.world.detailedArchitecture.budget =
+        q === "high" ? 384 : q === "low" ? 64 : 192;
     const ratio =
       q === "high"
         ? Math.min(2, devicePixelRatio)
