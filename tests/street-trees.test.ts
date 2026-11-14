@@ -8,6 +8,7 @@ import {
 } from "../src/world/street-tree-lod";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
+import sharp from "sharp";
 
 for (const suffix of ["", "-medium"])
   test(`street leaves${suffix} have valid winding, normals, UVs and nondegenerate source surfaces`, async () => {
@@ -25,8 +26,18 @@ for (const suffix of ["", "-medium"])
       ix = leaf.getIndices()!.getArray()!;
     assert.equal(n.length, p.length);
     assert.equal(uv.getCount(), p.length / 3);
-    assert.ok(ix.length / 3 < (suffix ? 240000 : 780000));
-    assert.ok(ix.length / 3 > (suffix ? 150000 : 600000));
+    assert.ok(ix.length / 3 < (suffix ? 100000 : 780000));
+    assert.ok(ix.length / 3 > (suffix ? 50000 : 600000));
+    const material = leaf.getMaterial()!;
+    const mask = suffix
+      ? await sharp(material.getBaseColorTexture()!.getImage()!)
+          .ensureAlpha()
+          .raw()
+          .toBuffer({ resolveWithObject: true })
+      : null;
+    const tex = uv.getArray()!;
+    assert.ok(tex.every(Number.isFinite));
+    let visibleArea = 0;
     let opposed = 0,
       degenerate = 0,
       area = 0;
@@ -52,10 +63,52 @@ for (const suffix of ["", "-medium"])
       if (len < 1e-12) degenerate++;
       if (cross.dot(normal) < -1e-12) opposed++;
       area += len / 2;
+      if (mask) {
+        let covered = 0;
+        // Equal-area deterministic samples include the transparent part of each
+        // card. Raw rectangular area would incorrectly count it as foliage.
+        for (let sample = 0; sample < 64; sample++) {
+          const root = Math.sqrt((sample + 0.5) / 64),
+            v = (sample * 0.61803398875) % 1;
+          const weights = [1 - root, root * (1 - v), root * v];
+          const u = weights.reduce(
+            (sum, w, k) => sum + w * tex[ix[i + k] * 2],
+            0,
+          );
+          const t = weights.reduce(
+            (sum, w, k) => sum + w * tex[ix[i + k] * 2 + 1],
+            0,
+          );
+          const x = Math.max(
+            0,
+            Math.min(mask.info.width - 1, Math.floor(u * mask.info.width)),
+          );
+          const y = Math.max(
+            0,
+            Math.min(mask.info.height - 1, Math.floor(t * mask.info.height)),
+          );
+          if (
+            mask.data[(y * mask.info.width + x) * 4 + 3] / 255 >=
+            material.getAlphaCutoff()
+          )
+            covered++;
+        }
+        visibleArea += ((len / 2) * covered) / 64;
+      }
     }
     assert.equal(opposed, 0);
     assert.equal(degenerate, 0);
-    assert.ok(area > (suffix ? 16 : 24) && area < 29, `surface area ${area}`);
+    if (suffix) {
+      assert.equal(material.getAlphaMode(), "MASK");
+      assert.equal(material.getAlphaCutoff(), 0.18);
+      assert.equal(mask!.info.channels, 4);
+      assert.ok(
+        visibleArea > 24 && visibleArea < 29,
+        `masked surface area ${visibleArea}; raw ${area}`,
+      );
+      const alpha = mask!.data.filter((_, i) => i % 4 === 3);
+      assert.ok(alpha.some((a) => a === 0) && alpha.some((a) => a === 255));
+    } else assert.ok(area > 24 && area < 29, `surface area ${area}`);
     for (let i = 0; i < p.length; i += 3) {
       assert.ok([p[i], p[i + 1], p[i + 2]].every(Number.isFinite));
       assert.ok(Math.abs(Math.hypot(n[i], n[i + 1], n[i + 2]) - 1) < 0.002);
@@ -110,16 +163,16 @@ test("street tree detail respects budgets, canopy elevation and hysteresis", () 
   assert.equal(selectStreetTrees(s, 0, 0, 0, 0, new Set()).length, 0);
 });
 test("street tree slots share vertex data, keep independent culling and restore distant trees", () => {
-  const model = () => {
+  const model = (alphaTest: number) => {
     const root = new T.Group();
     const g = new T.BoxGeometry(1, 4, 1);
     g.translate(0, 2, 0);
-    const m = new T.MeshStandardMaterial({ name: "test leaves" });
+    const m = new T.MeshStandardMaterial({ name: "test leaves", alphaTest });
     root.add(new T.Mesh(g, m));
     return root;
   };
   const scene = new T.Scene(),
-    d = DetailedTrees.fromModels(scene, [model(), model()]),
+    d = DetailedTrees.fromModels(scene, [model(0), model(0.18)]),
     s = samples();
   d.samples = s;
   d.update(0, 0, 0);
@@ -139,6 +192,13 @@ test("street tree slots share vertex data, keep independent culling and restore 
   assert.equal(a.frustumCulled, true);
   assert.ok(a.boundingSphere);
   assert.ok(a.customDepthMaterial);
+  const medium = slots[0].levels[1][0] as T.InstancedMesh;
+  assert.equal((medium.material as T.MeshStandardMaterial).alphaTest, 0.18);
+  assert.equal(
+    (medium.customDepthMaterial as T.MeshDepthMaterial).alphaTest,
+    0.18,
+  );
+  assert.equal((a.material as T.MeshStandardMaterial).alphaTest, 0.45);
   d.budget = 0;
   d.update(0, 0, 0);
   assert.deepEqual(d.lodState, { near: 0, medium: 0 });
@@ -178,4 +238,44 @@ test("visible street canopies take priority over nearer trees behind the camera"
     ),
   );
   assert.equal(selectStreetTrees(s, 0, 0, 10, 1, new Set(), f)[0].tree, s[0]);
+});
+
+test("masked medium tree retains the complete near trunk and branches", async () => {
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+  const docs = await Promise.all(
+    ["", "-medium"].map((s) =>
+      io.read(`public/models/vancouver-street-tree${s}.glb`),
+    ),
+  );
+  const woody = docs.map((d) =>
+    d
+      .getRoot()
+      .listMeshes()
+      .flatMap((m) => m.listPrimitives())
+      .filter((p) => !p.getMaterial()!.getName().includes("leaves")),
+  );
+  assert.ok(woody[0].length > 0);
+  assert.equal(woody[0].length, woody[1].length);
+  for (const near of woody[0]) {
+    const medium = woody[1].find(
+      (p) => p.getMaterial()!.getName() === near.getMaterial()!.getName(),
+    )!;
+    assert.ok(medium);
+    assert.deepEqual(
+      medium.getIndices()!.getArray(),
+      near.getIndices()!.getArray(),
+    );
+    for (const name of near.listSemantics())
+      assert.deepEqual(
+        medium.getAttribute(name)!.getArray(),
+        near.getAttribute(name)!.getArray(),
+      );
+  }
+  const transforms = docs.map((d) =>
+    d
+      .getRoot()
+      .listNodes()
+      .map((n) => ({ name: n.getName(), matrix: n.getMatrix() })),
+  );
+  assert.deepEqual(transforms[0], transforms[1]);
 });

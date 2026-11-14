@@ -1104,9 +1104,9 @@
     "source": "https://polyhaven.com/a/tree_small_02",
     "license": "CC0",
     "credit": "Poly Haven",
-    "changes": "All 30,250 leaf components retained with 3D per-leaf simplification, positive face/normal agreement, 206,013 total triangles, WebP textures and independently culled tree slots.",
-    "bytes": 12049320,
-    "sha256": "8984221b9443b10d0c50bcf887b87bc100eb255575c680341befb34e503d17ae"
+    "changes": "All connected leaf patches retained: 27,813 fitted alpha-masked cards plus 3,744 original patches. Leaf-mask UV triangles baked from the committed near model, area-compensated fits and source normals; unchanged near-model trunk/branches. 95,375 total triangles. Generic broadleaf, not a Vancouver species scan.",
+    "bytes": 7080728,
+    "sha256": "a5a90f5a0c2f04f73e48be64684e1c81b12dd555839a853ad2f39a616b992261"
   },
   {
     "file": "textures/broadleaf/color.webp",

@@ -79,7 +79,8 @@ export class DetailedTrees {
         material.side = T.DoubleSide;
         material.transparent = false;
         material.depthWrite = true;
-        material.alphaTest = 0.45;
+        // Retain the baked leaf-mask cutoff, including its distant mip coverage.
+        material.alphaTest = material.alphaTest || 0.45;
         material.alphaToCoverage = true;
         material.roughness = 0.88;
         if (material.name.includes("leaves")) {

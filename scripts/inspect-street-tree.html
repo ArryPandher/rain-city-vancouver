@@ -34,6 +34,7 @@
         source: "/artifacts/local/tree-source/tree.gltf",
         candidate: "/models/vancouver-street-tree.glb",
         medium: "/models/vancouver-street-tree-medium.glb",
+        previousMedium: "/artifacts/local/street-tree-medium-before-cards.glb",
       };
       window.treeInspect = {
         renderer,
@@ -52,7 +53,8 @@
                 o.material.side = T.DoubleSide;
                 o.material.transparent = false;
                 o.material.depthWrite = true;
-                o.material.alphaTest = 0.45;
+                o.material.alphaTest = o.material.alphaTest || 0.45;
+                o.material.alphaToCoverage = true;
                 o.material.roughness = 0.88;
                 if (o.material.name.includes("leaves")) {
                   o.material.roughnessMap = null;

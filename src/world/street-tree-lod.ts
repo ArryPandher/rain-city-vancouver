@@ -1,6 +1,6 @@
 import * as T from "three";
 import type { TreeInstance } from "./detailed-trees";
-export const STREET_TREE_REVISION = "source-leaves-20261114";
+export const STREET_TREE_REVISION = "masked-leaves-20261114";
 /** Distance to the vertical canopy extent, including elevated photo cameras. */
 export function streetTreeDistance(
   t: TreeInstance,

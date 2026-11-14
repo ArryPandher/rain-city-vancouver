@@ -12,6 +12,11 @@ import {
 import { MeshoptSimplifier } from "meshoptimizer";
 import sharp from "sharp";
 import { simplifyLeaves } from "./lib/street-leaves.mjs";
+// The medium level is built locally from the committed near mesh and its UV mask.
+if (process.argv.includes("--medium")) {
+  await import("./build-leaf-cards.mjs");
+  process.exit(0);
+}
 const id = "tree_small_02";
 const info = await (
   await fetch(`https://api.polyhaven.com/files/${id}`)
@@ -31,8 +36,7 @@ for (const [file, asset] of [
   await fs.writeFile(dest, Buffer.from(await r.arrayBuffer()));
 }
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
-const medium = process.argv.includes("--medium");
-const output = `public/models/vancouver-street-tree${medium ? "-medium" : ""}.glb`;
+const output = "public/models/vancouver-street-tree.glb";
 const doc = await io.read(dir + "/tree.gltf");
 const tri = () =>
   doc
@@ -55,11 +59,7 @@ let leafStats;
 for (const mesh of doc.getRoot().listMeshes())
   for (const primitive of [...mesh.listPrimitives()]) {
     if (!primitive.getMaterial()?.getName().includes("leaves")) continue;
-    const result = await simplifyLeaves(
-      primitive,
-      medium ? 6 : 12,
-      medium ? 0.16 : 0.025,
-    );
+    const result = await simplifyLeaves(primitive, 12, 0.025);
     leafStats = result.stats;
     const buffer = doc.getRoot().listBuffers()[0];
     const acc = (type, data) =>
@@ -79,8 +79,8 @@ await doc.transform(
   weld(),
   simplify({
     simplifier: MeshoptSimplifier,
-    ratio: medium ? 0.06 : 0.12,
-    error: medium ? 0.025 : 0.012,
+    ratio: 0.12,
+    error: 0.012,
   }),
 );
 for (const [mesh, primitive] of leafParts) mesh.addPrimitive(primitive);
@@ -96,7 +96,7 @@ await doc.transform(
 await io.write(output, doc);
 console.log("Optimized triangles", tri());
 await fs.writeFile(
-  `docs/sources/vancouver-street-tree${medium ? "-medium" : ""}.json`,
+  "docs/sources/vancouver-street-tree.json",
   JSON.stringify(
     {
       title: "Tree Small 02",

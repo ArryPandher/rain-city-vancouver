@@ -2,15 +2,26 @@
   "title": "Tree Small 02",
   "author": "Poly Haven",
   "source": "https://polyhaven.com/a/tree_small_02",
-  "download": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/tree_small_02/tree_small_02_1k.gltf",
   "license": "CC0-1.0",
   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-  "changes": "All 30,250 source leaves retained; per-leaf 3D surface simplification with original normals/UVs, corrected face winding, bounded branch simplification and WebP texture conversion. No UV hull reconstruction.",
+  "input": {
+    "file": "public/models/vancouver-street-tree.glb",
+    "sha256": "67a348ffd8b871d422a4102c0bbc818cd851cc6d7269923eae4f1b805c1bb093"
+  },
+  "changes": "All connected leaf patches retained: 27,813 fitted alpha-masked cards plus 3,744 original patches. Leaf-mask UV triangles baked from the committed near model, area-compensated fits and source normals; unchanged near-model trunk/branches. 95,375 total triangles. Generic broadleaf, not a Vancouver species scan.",
   "leafStats": {
-    "leaves": 30250,
-    "triangles": 199129,
-    "maxError": 0.15999993681907654,
-    "flipped": 2651,
-    "degenerate": 0
-  }
+    "components": 31557,
+    "cards": 27813,
+    "preserved": 3744,
+    "sourceTriangles": 727601,
+    "maxRelativeFitError": 0.16523592886114435,
+    "maxAreaScale": 1.2169104671909108,
+    "areaScaleSum": 29404.328250797524,
+    "triangles": 81602
+  },
+  "totalTriangles": 95375,
+  "maskTriangles": 417,
+  "alphaCutoff": 0.18,
+  "bytes": 7080728,
+  "sha256": "a5a90f5a0c2f04f73e48be64684e1c81b12dd555839a853ad2f39a616b992261"
 }
