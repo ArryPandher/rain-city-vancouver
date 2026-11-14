@@ -4,6 +4,7 @@ import {
   robsonHeight,
   robsonObstacle,
 } from "./robson-site";
+import { prospectLookoutHeight } from "./prospect-lookout-site";
 import { prospectForecourtHeight } from "./prospect-site";
 import {
   CityData,
@@ -230,6 +231,8 @@ export class CollisionWorld {
     }
   }
   groundHeight(x: number, z: number) {
+    const lookout = this.data.terrain && prospectLookoutHeight(x, z);
+    if (lookout !== undefined) return lookout;
     const forecourt = this.data.terrain && prospectForecourtHeight(x, z);
     if (forecourt !== undefined) return forecourt;
     return this.robsonGarden

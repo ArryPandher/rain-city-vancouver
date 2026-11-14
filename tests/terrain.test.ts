@@ -1,3 +1,5 @@
+import { LOOKOUT_CUTOUTS } from "../src/world/prospect-lookout-site";
+import { PROSPECT_FORECOURT } from "../src/world/prospect-site";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -93,7 +95,13 @@ test("subdivided walking and driving surfaces follow the same hills as collision
   const c = new CollisionWorld(data),
     x = -2470,
     z = -2450;
-  const chunks = terrainMeshes(terrain, [], new T.MeshStandardMaterial());
+  const chunks = terrainMeshes(
+    terrain,
+    [],
+    new T.MeshStandardMaterial(),
+    [],
+    [PROSPECT_FORECOURT, ...LOOKOUT_CUTOUTS],
+  );
   let checked = 0;
   for (const mesh of chunks) {
     const p = mesh.geometry.getAttribute("position"),

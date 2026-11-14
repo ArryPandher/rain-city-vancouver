@@ -42,6 +42,8 @@ import {
 } from "./terrain-mesh";
 import { cliffMaterials } from "./cliff-material";
 import { buildSeawall, seawallPavers } from "./seawall";
+import { buildProspectLookout } from "./prospect-lookout";
+import { LOOKOUT_ROADS, LOOKOUT_CUTOUTS } from "./prospect-lookout-site";
 import { buildProspectBank } from "./prospect-bank";
 import { addProspectGeology } from "./prospect-geology";
 import { CoastalVegetation } from "./coastal-vegetation";
@@ -103,6 +105,12 @@ export class World {
     this.roads();
     this.chunks.push(
       ...buildSeawall(this.root, this.data, this.materials, this.collision),
+      ...buildProspectLookout(
+        this.root,
+        this.data,
+        this.materials,
+        this.collision,
+      ),
       ...buildProspectBank(
         this.root,
         this.data,
@@ -344,7 +352,7 @@ export class World {
         })),
         cover(cliff(m.grass)),
         this.data.ocean,
-        [PROSPECT_FORECOURT],
+        [PROSPECT_FORECOURT, ...LOOKOUT_CUTOUTS],
       );
       ground.push(
         terrainCutWall(elevationGrid, PROSPECT_FORECOURT, 2.06, cliff(m.stone)),
@@ -429,6 +437,10 @@ export class World {
     });
     const junctions = roadJunctionGaps(this.data.roads);
     for (const r of this.data.roads) {
+      if (this.data.terrain && r.id && LOOKOUT_ROADS.has(r.id)) {
+        this.stats.roads++;
+        continue;
+      }
       // The mapped Prospect shore steps have a solid descending profile.
       if (r.id === "w731791394" && this.data.seawall) {
         this.stats.roads++;

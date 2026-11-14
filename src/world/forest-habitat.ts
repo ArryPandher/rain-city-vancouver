@@ -1,3 +1,4 @@
+import { prospectLookoutHeight } from "./prospect-lookout-site";
 import {
   pointInPoly,
   roadWidth,
@@ -91,6 +92,7 @@ export class ForestHabitat {
   clear(x: number, z: number, margin = 1) {
     if (
       !this.contains(x, z) ||
+      prospectLookoutHeight(x, z) !== undefined ||
       this.collision.water(x, z) ||
       this.collision.blocked(x, z, margin)
     )

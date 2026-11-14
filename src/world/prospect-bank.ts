@@ -1,3 +1,4 @@
+import { prospectLookoutHeight } from "./prospect-lookout-site";
 import * as T from "three";
 import {
   type CityData,
@@ -75,6 +76,7 @@ export function coastalPlantSites(data: CityData, collision: CollisionWorld) {
           if (
             !pointInPoly(p.x, p.z, PROSPECT_PLANTING) ||
             prospectForecourtHeight(p.x, p.z) !== undefined ||
+            prospectLookoutHeight(p.x, p.z) !== undefined ||
             p.y < 1.9 ||
             collision.water(p.x, p.z, p.y)
           )
