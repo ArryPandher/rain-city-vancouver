@@ -176,7 +176,7 @@ export function makeDetailedCharacter(): Character | undefined {
       for (const side of ["l", "r"]) {
         const sign = side === "l" ? 1 : -1;
         const hand = bike
-          ? world(sign * 0.28, 1.24, 0.49)
+          ? world(sign * 0.28, 1.255, 0.405)
           : side === "r"
             ? world(-0.16, 1.36, 0.32)
             : world(-0.1, 1.32, 0.5);
@@ -259,7 +259,7 @@ export function makeDetailedCharacter(): Character | undefined {
             .normalize();
           const inward = new T.Vector3(
             side === "r" && !bike ? 1 : 0,
-            side === "r" && !bike ? 0 : 1,
+            side === "r" && !bike ? 0 : bike ? -1 : 1,
             0,
           ).applyQuaternion(group.getWorldQuaternion(new T.Quaternion()));
           const curlAxis = direction.cross(inward).normalize();
