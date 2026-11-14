@@ -1,15 +1,144 @@
 export class GameAudio {
- ctx:AudioContext|null=null;master:GainNode|null=null;engine:OscillatorNode|null=null;engine2:OscillatorNode|null=null;engineGain:GainNode|null=null;wind:GainNode|null=null;muted=false;volume=.3;
- init(){if(this.ctx){void this.ctx.resume();return}const c=this.ctx=new AudioContext(),master=this.master=c.createGain();master.gain.value=this.volume;master.connect(c.destination);const filter=c.createBiquadFilter();filter.type='lowpass';filter.frequency.value=420;this.engineGain=c.createGain();this.engineGain.gain.value=0;this.engineGain.connect(filter);filter.connect(master);for(let i=0;i<2;i++){const o=c.createOscillator();o.type=i?'triangle':'sawtooth';o.frequency.value=35;o.connect(this.engineGain);o.start();if(i)this.engine2=o;else this.engine=o}
- const buf=c.createBuffer(1,c.sampleRate*3,c.sampleRate),d=buf.getChannelData(0);let last=0;for(let i=0;i<d.length;i++){last=(last+.02*(Math.random()*2-1))/1.02;d[i]=last*3.5}const noise=c.createBufferSource();noise.buffer=buf;noise.loop=true;this.wind=c.createGain();this.wind.gain.value=.018;const windFilter=c.createBiquadFilter();windFilter.type='lowpass';windFilter.frequency.value=750;noise.connect(windFilter);windFilter.connect(this.wind);this.wind.connect(master);noise.start();}
- update(speed:number,driving:boolean,bike:boolean,throttle:number){if(!this.ctx||!this.engine||!this.engine2||!this.engineGain)return;const t=this.ctx.currentTime;const gear=Math.min(5,Math.floor(Math.abs(speed)/11)),rpm=32+(Math.abs(speed)-gear*10)*3.8+Math.abs(throttle)*8;this.engine.frequency.setTargetAtTime(rpm,t,.12);this.engine2.frequency.setTargetAtTime(rpm*.503,t,.12);this.engineGain.gain.setTargetAtTime(driving&&!bike?.045+Math.abs(throttle)*.09:0,t,.15);this.wind?.gain.setTargetAtTime(.018+Math.abs(speed)*.0017,t,.3)}
- tone(freq:number,duration:number,volume:number,type:OscillatorType='sine',end?:number){if(!this.ctx||!this.master||this.muted)return;const c=this.ctx,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(freq,c.currentTime);if(end)o.frequency.exponentialRampToValueAtTime(end,c.currentTime+duration);g.gain.setValueAtTime(volume,c.currentTime);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+duration);o.connect(g);g.connect(this.master);o.start();o.stop(c.currentTime+duration)}
- shot(type:number){if(!this.ctx||!this.master)return;const c=this.ctx,length=type===2?.38:.17,buffer=c.createBuffer(1,c.sampleRate*length,c.sampleRate),d=buffer.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(c.sampleRate*(type===2?.055:.023)));const s=c.createBufferSource();s.buffer=buffer;const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=type===2?1800:3200;const g=c.createGain();g.gain.value=type===2?.75:.46;s.connect(f);f.connect(g);g.connect(this.master);s.start();this.tone(type===2?105:170,.19,.34,'triangle',40)}
- horn(){this.tone(311,.32,.12,'sawtooth');this.tone(392,.32,.1,'sawtooth')}
- hit(){this.tone(73,.15,.18,'triangle',30)}
- notify(){this.tone(523,.24,.10);setTimeout(()=>this.tone(784,.3,.075),95)}
- reload(){this.tone(430,.06,.045,'square',170);setTimeout(()=>this.tone(720,.04,.055,'square',310),260)}
- setVolume(v:number){this.volume=v;if(this.master)this.master.gain.value=this.muted?0:v}
- toggleMute(){this.muted=!this.muted;if(this.master)this.master.gain.value=this.muted?0:this.volume}
- suspend(){if(this.ctx)this.ctx.suspend()}
+  ctx: AudioContext | null = null;
+  master: GainNode | null = null;
+  engine: OscillatorNode | null = null;
+  engine2: OscillatorNode | null = null;
+  engineGain: GainNode | null = null;
+  wind: GainNode | null = null;
+  muted = false;
+  volume = 0.3;
+  init() {
+    if (this.ctx) {
+      void this.ctx.resume();
+      return;
+    }
+    const c = (this.ctx = new AudioContext()),
+      master = (this.master = c.createGain());
+    master.gain.value = this.volume;
+    master.connect(c.destination);
+    const filter = c.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 420;
+    this.engineGain = c.createGain();
+    this.engineGain.gain.value = 0;
+    this.engineGain.connect(filter);
+    filter.connect(master);
+    for (let i = 0; i < 2; i++) {
+      const o = c.createOscillator();
+      o.type = i ? "triangle" : "sawtooth";
+      o.frequency.value = 35;
+      o.connect(this.engineGain);
+      o.start();
+      if (i) this.engine2 = o;
+      else this.engine = o;
+    }
+    const buf = c.createBuffer(1, c.sampleRate * 3, c.sampleRate),
+      d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < d.length; i++) {
+      last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+      d[i] = last * 3.5;
+    }
+    const noise = c.createBufferSource();
+    noise.buffer = buf;
+    noise.loop = true;
+    this.wind = c.createGain();
+    this.wind.gain.value = 0.018;
+    const windFilter = c.createBiquadFilter();
+    windFilter.type = "lowpass";
+    windFilter.frequency.value = 750;
+    noise.connect(windFilter);
+    windFilter.connect(this.wind);
+    this.wind.connect(master);
+    noise.start();
+  }
+  update(speed: number, driving: boolean, bike: boolean, throttle: number) {
+    if (!this.ctx || !this.engine || !this.engine2 || !this.engineGain) return;
+    const t = this.ctx.currentTime;
+    const gear = Math.min(5, Math.floor(Math.abs(speed) / 11)),
+      rpm = 32 + (Math.abs(speed) - gear * 10) * 3.8 + Math.abs(throttle) * 8;
+    this.engine.frequency.setTargetAtTime(rpm, t, 0.12);
+    this.engine2.frequency.setTargetAtTime(rpm * 0.503, t, 0.12);
+    this.engineGain.gain.setTargetAtTime(
+      driving && !bike ? 0.045 + Math.abs(throttle) * 0.09 : 0,
+      t,
+      0.15,
+    );
+    this.wind?.gain.setTargetAtTime(0.018 + Math.abs(speed) * 0.0017, t, 0.3);
+  }
+  tone(
+    freq: number,
+    duration: number,
+    volume: number,
+    type: OscillatorType = "sine",
+    end?: number,
+  ) {
+    if (!this.ctx || !this.master || this.muted) return;
+    const c = this.ctx,
+      o = c.createOscillator(),
+      g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, c.currentTime);
+    if (end)
+      o.frequency.exponentialRampToValueAtTime(end, c.currentTime + duration);
+    g.gain.setValueAtTime(volume, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + duration);
+    o.connect(g);
+    g.connect(this.master);
+    o.start();
+    o.stop(c.currentTime + duration);
+  }
+  shot(type: number) {
+    if (!this.ctx || !this.master) return;
+    const c = this.ctx,
+      length = type === 2 ? 0.38 : 0.17,
+      buffer = c.createBuffer(1, c.sampleRate * length, c.sampleRate),
+      d = buffer.getChannelData(0);
+    for (let i = 0; i < d.length; i++)
+      d[i] =
+        (Math.random() * 2 - 1) *
+        Math.exp(-i / (c.sampleRate * (type === 2 ? 0.055 : 0.023)));
+    const s = c.createBufferSource();
+    s.buffer = buffer;
+    const f = c.createBiquadFilter();
+    f.type = "lowpass";
+    f.frequency.value = type === 2 ? 1800 : 3200;
+    const g = c.createGain();
+    g.gain.value = type === 2 ? 0.75 : 0.46;
+    s.connect(f);
+    f.connect(g);
+    g.connect(this.master);
+    s.start();
+    this.tone(type === 2 ? 105 : 170, 0.19, 0.34, "triangle", 40);
+  }
+  step() {
+    this.tone(82 + Math.random() * 12, 0.065, 0.045, "triangle", 40);
+    this.tone(450 + Math.random() * 150, 0.022, 0.012, "sawtooth", 130);
+  }
+  horn() {
+    this.tone(311, 0.32, 0.12, "sawtooth");
+    this.tone(392, 0.32, 0.1, "sawtooth");
+  }
+  hit() {
+    this.tone(73, 0.15, 0.18, "triangle", 30);
+  }
+  notify() {
+    this.tone(523, 0.24, 0.1);
+    setTimeout(() => this.tone(784, 0.3, 0.075), 95);
+  }
+  reload() {
+    this.tone(430, 0.06, 0.045, "square", 170);
+    setTimeout(() => this.tone(720, 0.04, 0.055, "square", 310), 260);
+  }
+  setVolume(v: number) {
+    this.volume = v;
+    if (this.master) this.master.gain.value = this.muted ? 0 : v;
+  }
+  toggleMute() {
+    this.muted = !this.muted;
+    if (this.master) this.master.gain.value = this.muted ? 0 : this.volume;
+  }
+  suspend() {
+    if (this.ctx) this.ctx.suspend();
+  }
 }

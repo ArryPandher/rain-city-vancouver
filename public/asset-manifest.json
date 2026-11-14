@@ -154,5 +154,12 @@
     "source": "https://dl.polyhaven.org/file/ph-assets/Models/png/1k/fir_tree_01/fir_tree_01_bark_diff_1k.png",
     "license": "CC0",
     "credit": "Poly Haven"
+  },
+  {
+    "file": "models/car-traffic.glb",
+    "source": "Derived from models/car-concept.glb with scripts/optimize-car.mjs",
+    "license": "CC-BY-4.0",
+    "credit": "Eric Chadwick / Darmstadt Graphics Group GmbH; source model by Unity Fan",
+    "modifications": "Mesh simplification for ambient traffic"
   }
 ]

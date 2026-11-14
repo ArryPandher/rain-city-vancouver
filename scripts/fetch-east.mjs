@@ -1,13 +1,155 @@
-import fs from 'node:fs/promises';
-const box='49.265,-123.098,49.334,-123.010';
-const query=`[out:json][timeout:150];(way["highway"](${box});way["building"](${box});way["landuse"~"forest|grass|recreation_ground"](${box});way["leisure"~"park|pitch|playground"](${box});way["natural"~"wood|water|coastline|beach"](${box}););out geom;`;
-const rawPath='artifacts/local/east-osm.json';let data;try{data=JSON.parse(await fs.readFile(rawPath,'utf8'))}catch{for(const host of ['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter']){try{console.log('Fetching eastern Vancouver',host);const r=await fetch(host,{method:'POST',body:'data='+encodeURIComponent(query),headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':'RainCityVancouver/0.1 (personal open-source game)'},signal:AbortSignal.timeout(180000)});if(!r.ok)throw new Error('HTTP '+r.status);data=await r.json();if(!data.elements?.length)throw new Error('Empty map result');await fs.writeFile(rawPath,JSON.stringify(data));break}catch(e){console.log(String(e))}}}
-if(!data)throw new Error('No map data returned');
-const kx=Math.cos(49.2935*Math.PI/180)*111320;const project=p=>[(p.lon+123.12)*kx,(49.283-p.lat)*110540].map(n=>Math.round(n*10)/10);
-const result={meta:{source:'OpenStreetMap via Overpass',fetched:new Date().toISOString().slice(0,10),attribution:'© OpenStreetMap contributors, ODbL',bbox:[49.265,-123.098,49.334,-123.010],coordinates:'Metres east/south from 49.283, -123.12'},roads:[],buildings:[],areas:[],coastlines:[],ocean:[]};
-for(const w of data.elements){if(!w.geometry||w.geometry.length<2)continue;const t=w.tags||{},p=w.geometry.flatMap(project);if(t.highway){const kind=/motorway|trunk|primary/.test(t.highway)?'primary':/secondary/.test(t.highway)?'secondary':t.highway;result.roads.push({id:'w'+w.id,name:t.name,kind,pts:p})}if(t.building&&w.geometry.length>3){let levels=parseFloat(t['building:levels'])||parseFloat(t.height)/3.2||undefined;result.buildings.push({id:'w'+w.id,name:t.name,kind:t.building,levels,pts:p.slice(0,-2)})}if(t.natural==='coastline'){result.coastlines.push(p);continue}const kind=t.natural==='water'?'water':t.natural==='beach'?'beach':t.natural==='wood'||t.landuse==='forest'?'forest':t.leisure==='park'?'park':t.leisure==='pitch'?'pitch':t.leisure==='playground'?'playground':t.landuse==='grass'?'grass':null;if(kind&&w.geometry.length>3)result.areas.push({kind,name:t.name,pts:p.slice(0,-2)})}
+import fs from "node:fs/promises";
+const box = "49.265,-123.098,49.334,-123.010";
+const query = `[out:json][timeout:150];(way["highway"](${box});way["building"](${box});way["landuse"~"forest|grass|recreation_ground"](${box});way["leisure"~"park|pitch|playground"](${box});way["natural"~"wood|water|coastline|beach"](${box}););out geom;`;
+const rawPath = "artifacts/local/east-osm.json";
+await fs.mkdir("artifacts/local", { recursive: true });
+let data;
+try {
+  data = JSON.parse(await fs.readFile(rawPath, "utf8"));
+} catch {
+  for (const host of [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
+  ]) {
+    try {
+      console.log("Fetching eastern Vancouver", host);
+      const r = await fetch(host, {
+        method: "POST",
+        body: "data=" + encodeURIComponent(query),
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": "RainCityVancouver/0.1 (personal open-source game)",
+        },
+        signal: AbortSignal.timeout(180000),
+      });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      data = await r.json();
+      if (!data.elements?.length) throw new Error("Empty map result");
+      await fs.writeFile(rawPath, JSON.stringify(data));
+      break;
+    } catch (e) {
+      console.log(String(e));
+    }
+  }
+}
+if (!data) throw new Error("No map data returned");
+const kx = Math.cos((49.2935 * Math.PI) / 180) * 111320;
+const project = (p) =>
+  [(p.lon + 123.12) * kx, (49.283 - p.lat) * 110540].map(
+    (n) => Math.round(n * 10) / 10,
+  );
+const result = {
+  meta: {
+    source: "OpenStreetMap via Overpass",
+    fetched: new Date().toISOString().slice(0, 10),
+    attribution: "© OpenStreetMap contributors, ODbL",
+    bbox: [49.265, -123.098, 49.334, -123.01],
+    coordinates: "Metres east/south from 49.283, -123.12",
+  },
+  roads: [],
+  buildings: [],
+  areas: [],
+  coastlines: [],
+  ocean: [],
+};
+for (const w of data.elements) {
+  if (!w.geometry || w.geometry.length < 2) continue;
+  const t = w.tags || {},
+    p = w.geometry.flatMap(project);
+  if (t.highway) {
+    const kind = /motorway|trunk|primary/.test(t.highway)
+      ? "primary"
+      : /secondary/.test(t.highway)
+        ? "secondary"
+        : t.highway;
+    result.roads.push({ id: "w" + w.id, name: t.name, kind, pts: p });
+  }
+  if (t.building && w.geometry.length > 3) {
+    let levels =
+      parseFloat(t["building:levels"]) ||
+      parseFloat(t.height) / 3.2 ||
+      undefined;
+    result.buildings.push({
+      id: "w" + w.id,
+      name: t.name,
+      kind: t.building,
+      levels,
+      pts: p.slice(0, -2),
+    });
+  }
+  if (t.natural === "coastline") {
+    result.coastlines.push(p);
+    continue;
+  }
+  const kind =
+    t.natural === "water"
+      ? "water"
+      : t.natural === "beach"
+        ? "beach"
+        : t.natural === "wood" || t.landuse === "forest"
+          ? "forest"
+          : t.leisure === "park"
+            ? "park"
+            : t.leisure === "pitch"
+              ? "pitch"
+              : t.leisure === "playground"
+                ? "playground"
+                : t.landuse === "grass"
+                  ? "grass"
+                  : null;
+  if (kind && w.geometry.length > 3)
+    result.areas.push({ kind, name: t.name, pts: p.slice(0, -2) });
+}
 // Coastline ways are stitched at exact shared OSM node coordinates. The final inlet polygon is generated after inspecting endpoint topology.
-let chains=result.coastlines.map(p=>[...p]),changed=true;const same=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<.5;
-while(changed){changed=false;outer:for(let i=0;i<chains.length;i++)for(let j=i+1;j<chains.length;j++){const a=chains[i],b=chains[j];if(same(a.slice(-2),b.slice(0,2))){chains[i]=[...a,...b.slice(2)];chains.splice(j,1);changed=true;break outer}if(same(b.slice(-2),a.slice(0,2))){chains[i]=[...b,...a.slice(2)];chains.splice(j,1);changed=true;break outer}}}
-result.coastlines=chains;console.log('Counts',Object.fromEntries(['roads','buildings','areas','coastlines'].map(k=>[k,result[k].length])));console.log('Coast topology',chains.map(p=>({n:p.length/2,start:p.slice(0,2),end:p.slice(-2)})));
-await fs.writeFile('public/data/vancouver-east.json',JSON.stringify(result));
+let chains = result.coastlines.map((p) => [...p]),
+  changed = true;
+const same = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.5;
+while (changed) {
+  changed = false;
+  outer: for (let i = 0; i < chains.length; i++)
+    for (let j = i + 1; j < chains.length; j++) {
+      const a = chains[i],
+        b = chains[j];
+      if (same(a.slice(-2), b.slice(0, 2))) {
+        chains[i] = [...a, ...b.slice(2)];
+        chains.splice(j, 1);
+        changed = true;
+        break outer;
+      }
+      if (same(b.slice(-2), a.slice(0, 2))) {
+        chains[i] = [...b, ...a.slice(2)];
+        chains.splice(j, 1);
+        changed = true;
+        break outer;
+      }
+    }
+}
+if (chains.length !== 2)
+  throw new Error(
+    "Inspect changed coastline topology before generating the inlet",
+  );
+result.ocean = [
+  [
+    ...chains.find((p) => p[0] < p[p.length - 2]),
+    ...chains.find((p) => p[0] > p[p.length - 2]),
+  ],
+];
+result.coastlines = chains;
+console.log(
+  "Counts",
+  Object.fromEntries(
+    ["roads", "buildings", "areas", "coastlines"].map((k) => [
+      k,
+      result[k].length,
+    ]),
+  ),
+);
+console.log(
+  "Coast topology",
+  chains.map((p) => ({
+    n: p.length / 2,
+    start: p.slice(0, 2),
+    end: p.slice(-2),
+  })),
+);
+await fs.writeFile("public/data/vancouver-east.json", JSON.stringify(result));
