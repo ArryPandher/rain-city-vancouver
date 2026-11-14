@@ -4,6 +4,11 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { BASE, Materials } from "./materials";
 import { Building, centroid, geo, pointInPoly } from "./data";
 import { bakeGeometry } from "./geometry";
+import {
+  LandmarkSurfaces,
+  landmarkSurfaceProfile,
+  landmarkSurfaceUV,
+} from "./landmark-surfaces";
 
 interface LandmarkAsset {
   id: string;
@@ -57,7 +62,7 @@ export async function loadVancouverLandmarks(
   const assets: LandmarkAsset[] = await response.json();
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   footprints.length = 0;
-  const brick = materials.texture("brick_wall_001-color.jpg", true);
+  const surfaces = new LandmarkSurfaces(materials);
   const models = await Promise.all(
     assets.map((asset) => loader.loadAsync(`${BASE}${asset.file}`)),
   );
@@ -73,50 +78,18 @@ export async function loadVancouverLandmarks(
     gltf.scene.traverse((object) => {
       if (!(object instanceof T.Mesh)) return;
       const geometry = bakeGeometry(object.geometry, object.matrixWorld);
-      const positions = geometry.getAttribute("position"),
-        normals = geometry.getAttribute("normal");
-      const uv = new Float32Array(positions.count * 2);
+      const positions = geometry.getAttribute("position");
       for (let i = 0; i < positions.count; i++) {
-        const px = positions.getX(i),
-          py = positions.getY(i),
-          pz = positions.getZ(i);
-        if (py < 15 && py > -2) points.push([px + x, pz + z]);
-        const nx = Math.abs(normals.getX(i)),
-          ny = Math.abs(normals.getY(i)),
-          nz = Math.abs(normals.getZ(i));
-        uv[i * 2] = (ny > nx && ny > nz ? px : nx > nz ? pz : px) / 4;
-        uv[i * 2 + 1] = (ny > nx && ny > nz ? pz : py) / 4;
+        const py = positions.getY(i);
+        if (py < 15 && py > -2)
+          points.push([positions.getX(i) + x, positions.getZ(i) + z]);
       }
-      geometry.setAttribute("uv", new T.BufferAttribute(uv, 2));
       const original = object.material as T.MeshStandardMaterial;
+      const profile = landmarkSurfaceProfile(asset.id, original.name);
+      landmarkSurfaceUV(geometry, profile?.metres ?? [4, 4]);
       let mat = cache.get(original);
       if (!mat) {
-        mat = original.clone();
-        const name = mat.name.toLowerCase();
-        if (/glass/.test(name)) {
-          mat.metalness = 0.58;
-          mat.roughness = 0.18;
-          mat.envMapIntensity = 1.25;
-        } else if (/steel|bronze|copper|green|metal/.test(name)) {
-          mat.metalness = 0.55;
-          mat.roughness = 0.36;
-        } else if (/brick/.test(name)) {
-          mat.map = brick;
-          mat.color.setHex(0xbdb2a8);
-          mat.roughness = 0.9;
-        } else if (/stone|concrete|foundation|trim/.test(name)) {
-          mat.map = materials.concrete.map;
-          mat.normalMap = materials.concrete.normalMap;
-          mat.normalScale.set(0.2, 0.2);
-          mat.roughness = 0.85;
-        } else if (/fabric/.test(name)) {
-          mat.roughness = 0.78;
-          mat.side = T.DoubleSide;
-        }
-        if (/glow/.test(name)) {
-          mat.emissive.copy(mat.color);
-          mat.emissiveIntensity = 0.18;
-        }
+        mat = surfaces.material(original, asset.id);
         cache.set(original, mat);
       }
       const mesh = new T.Mesh(geometry, mat);

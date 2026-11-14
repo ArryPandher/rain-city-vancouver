@@ -930,5 +930,122 @@
     "license": "CC0-1.0",
     "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model with a 0.12 foliage cutoff; model-space normals including the source twig normal map and GLTFLoader tangent convention. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
     "credit": "Poly Haven — Rob Tuytel and Rico Cilliers"
+  },
+  {
+    "file": "textures/landmarks/brick-color.webp",
+    "source": "https://polyhaven.com/a/red_brick",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/red_brick/red_brick_diff_2k.jpg",
+    "sourceMd5": "d38aaa7b2c8533c033919bc566c62c37",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "2K diffuse/OpenGL-normal/roughness maps converted to WebP. Generic red brick, not a scan of Waterfront Station.",
+    "credit": "Rob Tuytel / Poly Haven"
+  },
+  {
+    "file": "textures/landmarks/brick-normal.webp",
+    "source": "https://polyhaven.com/a/red_brick",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/red_brick/red_brick_nor_gl_2k.jpg",
+    "sourceMd5": "f10a21aa51b3a0950d1ca0f1fbb8e707",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "2K diffuse/OpenGL-normal/roughness maps converted to WebP. Generic red brick, not a scan of Waterfront Station.",
+    "credit": "Rob Tuytel / Poly Haven"
+  },
+  {
+    "file": "textures/landmarks/brick-roughness.webp",
+    "source": "https://polyhaven.com/a/red_brick",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/red_brick/red_brick_rough_2k.jpg",
+    "sourceMd5": "30d1018e087a2ee81328b331edefb2d5",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "2K diffuse/OpenGL-normal/roughness maps converted to WebP. Generic red brick, not a scan of Waterfront Station.",
+    "credit": "Rob Tuytel / Poly Haven"
+  },
+  {
+    "file": "textures/landmarks/mineral-color.webp",
+    "source": "https://polyhaven.com/a/granite_tile",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/granite_tile/granite_tile_diff_2k.jpg",
+    "sourceMd5": "79a1eaac48a3d6720a88c216997dbd67",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Cropped one granite tile face away from floor joints; mirrored seamlessly with normal R/G signs corrected, neutralized colour and resized to 1K. Generic fine mineral detail, not Haddington Island stone or a Vancouver scan.",
+    "credit": "Charlotte Baglioni / Poly Haven"
+  },
+  {
+    "file": "textures/landmarks/mineral-normal.webp",
+    "source": "https://polyhaven.com/a/granite_tile",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/granite_tile/granite_tile_nor_gl_2k.jpg",
+    "sourceMd5": "da6b09b4f8bff2e4d28cd29294b1b10f",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Cropped one granite tile face away from floor joints; mirrored seamlessly with normal R/G signs corrected, neutralized colour and resized to 1K. Generic fine mineral detail, not Haddington Island stone or a Vancouver scan.",
+    "credit": "Charlotte Baglioni / Poly Haven"
+  },
+  {
+    "file": "textures/landmarks/mineral-roughness.webp",
+    "source": "https://polyhaven.com/a/granite_tile",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/granite_tile/granite_tile_rough_2k.jpg",
+    "sourceMd5": "d772d400dd0f25ef2231fb000360d3d5",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Cropped one granite tile face away from floor joints; mirrored seamlessly with normal R/G signs corrected, neutralized colour and resized to 1K. Generic fine mineral detail, not Haddington Island stone or a Vancouver scan.",
+    "credit": "Charlotte Baglioni / Poly Haven"
+  },
+  {
+    "file": "textures/landmarks/patina-color.webp",
+    "source": "https://polyhaven.com/a/green_metal_rust",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/green_metal_rust/green_metal_rust_diff_2k.jpg",
+    "sourceMd5": "fed1afb0e3b6f5a5710cee229fd54897",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Weathered painted-metal photograph neutralized for authored patina colour and resized to 1K. Surface variation is an approximation, not scanned copper.",
+    "credit": "Rob Tuytel / Poly Haven"
+  },
+  {
+    "file": "textures/landmarks/patina-normal.webp",
+    "source": "https://polyhaven.com/a/green_metal_rust",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/green_metal_rust/green_metal_rust_nor_gl_2k.jpg",
+    "sourceMd5": "379dfb43f495a44569674717e974b920",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Weathered painted-metal photograph neutralized for authored patina colour and resized to 1K. Surface variation is an approximation, not scanned copper.",
+    "credit": "Rob Tuytel / Poly Haven"
+  },
+  {
+    "file": "textures/landmarks/patina-roughness.webp",
+    "source": "https://polyhaven.com/a/green_metal_rust",
+    "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/green_metal_rust/green_metal_rust_rough_2k.jpg",
+    "sourceMd5": "eb6e02797c6edc1d99683ccc145e3521",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Weathered painted-metal photograph neutralized for authored patina colour and resized to 1K. Surface variation is an approximation, not scanned copper.",
+    "credit": "Rob Tuytel / Poly Haven"
   }
 ]
