@@ -384,5 +384,29 @@
     "changes": "Configured baked female body, ponytail, hoodie, jeans and boots; 53-joint rig, 12 fitted clips at 30 fps and 1024 px textures. In-game clothing/skin/height/build variants with independent animation phases.",
     "licenseEvidence": "docs/sources/CHARACTER-ASSET-LICENSE.md",
     "settings": "docs/sources/rain-city-pedestrian-settings.json"
+  },
+  {
+    "file": "textures/interiors/comfy_cafe.webp",
+    "source": "https://polyhaven.com/a/comfy_cafe",
+    "credit": "Sergej Majboroda",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
+  },
+  {
+    "file": "textures/interiors/decor_shop.webp",
+    "source": "https://polyhaven.com/a/decor_shop",
+    "credit": "Sergej Majboroda",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
+  },
+  {
+    "file": "textures/interiors/phone_shop.webp",
+    "source": "https://polyhaven.com/a/phone_shop",
+    "credit": "Philip Modin",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
   }
 ]

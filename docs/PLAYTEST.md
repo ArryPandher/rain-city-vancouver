@@ -60,3 +60,10 @@ The aerial camera now uses an 8 m near plane to retain depth precision between d
 ## Pedestrian cast — 2026-11-14
 
 All 34 pedestrians now use clothed rigged models (23 male-template and 11 female-template variants), with distinct clothing/skin palettes, height/build variation and independent locomotion phases. The second CC0 export has a hoodie, jeans, boots and ponytail; its licensing and settings are preserved. Both rigs and their fitted clips pass asset checks (15 total tests). In-browser inspection confirmed all pedestrians use the detailed models, and a close pedestrian's position and leg quaternion both changed during normal simulation. Local close-up scene samples were approximately 38–44 fps with no captured runtime errors. Daytime bloom was reduced so crosswalk paint no longer glows; night retains stronger light bloom.
+
+
+## Storefront depth — 2026-11-14
+
+Street-facing shopfronts use three licensed photographed interior panoramas with box-projected parallax. Individual shops share one room across their panes, with separate mullions, transoms, handles, fabric canopies and signs matched to their shop type. Front and oblique close-up views and nighttime lighting were inspected in Chrome at 1440 × 900. Scene samples were 41–42 fps; this is a local observation, not a hardware-independent benchmark. The rooms remain visual interiors behind building collision shells.
+
+The debug state now records window errors, unhandled promise rejections and shader compilation failures instead of returning a constant empty array. The new pass completed local rendering with an empty recorded error list; all 15 existing tests and the production build pass. Three new CC0 panoramas add about 2.6 MB of compressed assets. Public deployment verification follows the commit.

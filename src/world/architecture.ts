@@ -4,6 +4,7 @@ import { Materials, label } from "./materials";
 import { Batcher, walls, flatPolygon } from "./geometry";
 import { specialBuilding } from "./vancouver-landmarks";
 import { CollisionWorld } from "./collision";
+import { shopInteriorMaterials, shopWindow } from "./shop-interiors";
 function tint(g: T.BufferGeometry, c: T.Color) {
   const a = new Float32Array(g.getAttribute("position").count * 3);
   for (let i = 0; i < a.length; i += 3) {
@@ -35,31 +36,33 @@ export function architecture(
   collision: CollisionWorld,
 ) {
   const shell = new Batcher(parent, 270),
-    detail = new Batcher(parent, 170);
+    detail = new Batcher(parent, 170),
+    interiors = new Batcher(parent, 170),
+    roomMaterials = shopInteriorMaterials();
   let count = 0;
   const shopNames = [
-    "PACIFIC COFFEE",
-    "HARBOUR MARKET",
-    "WEST END BOOKS",
-    "NORTH SHORE OUTFITTERS",
-    "WATER STREET",
-    "COASTAL LIVING",
-    "THE CORNER",
-    "VANCOUVER",
+    ["PACIFIC COFFEE", "THE CORNER CAFÉ", "WEST COAST COFFEE"],
+    ["WATER STREET LIVING", "HARBOUR HOME", "COASTAL INTERIORS"],
+    ["CORDOVA MOBILE", "COASTAL ELECTRONICS", "PACIFIC MOBILE"],
   ];
-  const signMaterials = shopNames.map(
-    (s, i) =>
-      new T.MeshStandardMaterial({
-        map: label(
-          s,
-          1024,
-          128,
-          ["#e1d9c4", "#cad9d8", "#e2dacd"][i % 3],
-          ["#263a39", "#302c2a", "#2b353b"][i % 3],
-          59,
-        ),
-        roughness: 0.76,
-      }),
+  const signMaterials = shopNames.map((names, type) =>
+    names.map(
+      (name) =>
+        new T.MeshStandardMaterial({
+          map: label(
+            name,
+            1024,
+            128,
+            "#e1d9c4",
+            ["#263a39", "#302c2a", "#24353c"][type],
+            51,
+          ),
+          roughness: 0.85,
+        }),
+    ),
+  );
+  const canopyMaterials = [0x28443e, 0x403e38, 0x493339].map(
+    (color) => new T.MeshStandardMaterial({ color, roughness: 0.98 }),
   );
   const shopGlass = new T.MeshPhysicalMaterial({
     color: 0x233a40,
@@ -293,151 +296,104 @@ export function architecture(
           nz = -nz;
         }
         const angle = Math.atan2(nx, nz),
-          segments = Math.max(1, Math.floor(len / 6)),
-          bay = len / segments;
-        for (let s = 0; s < segments; s++) {
-          const t = (s + 0.5) / segments,
+          stores = Math.max(1, Math.round(len / 12)),
+          storeWidth = len / stores;
+        for (let s = 0; s < stores; s++) {
+          const t = (s + 0.5) / stores,
             xx = ax + (bx - ax) * t,
-            zz = az + (bz - az) * t;
-          detail.add(
-            sideBox(
-              xx + nx * 0.1,
-              1.95,
-              zz + nz * 0.1,
-              bay - 0.4,
-              3.25,
-              0.1,
-              angle,
-            ),
-            shopGlass,
-            x,
-            z,
-          );
-          for (const off of [-bay / 2 + 0.15, bay / 2 - 0.15]) {
-            const px = xx + Math.cos(angle) * off,
-              pz = zz - Math.sin(angle) * off;
+            zz = az + (bz - az) * t,
+            type = Math.floor(rand() * roomMaterials.length),
+            roomMaterial = roomMaterials[type];
+          const part = (
+            offset: number,
+            y: number,
+            width: number,
+            height: number,
+            depth: number,
+            projection: number,
+            material: T.Material,
+          ) => {
             detail.add(
               sideBox(
-                px + nx * 0.19,
-                1.95,
-                pz + nz * 0.19,
-                0.24,
-                3.8,
-                0.32,
+                xx + Math.cos(angle) * offset + nx * projection,
+                y,
+                zz - Math.sin(angle) * offset + nz * projection,
+                width,
+                height,
+                depth,
                 angle,
               ),
-              ledge,
+              material,
               x,
               z,
             );
-          }
-          detail.add(
-            sideBox(
-              xx + nx * 0.18,
-              3.66,
-              zz + nz * 0.18,
-              bay,
-              0.15,
-              0.3,
+          };
+          // A continuous photographed room spans the whole shop. Mullions subdivide
+          // the glass without duplicating a new room behind each individual pane.
+          interiors.add(
+            shopWindow(
+              xx + nx * 0.13,
+              1.95,
+              zz + nz * 0.13,
+              storeWidth - 0.4,
+              3.25,
               angle,
+              7,
             ),
-            frames,
+            roomMaterial,
             x,
             z,
           );
-          detail.add(
-            sideBox(xx + nx * 0.18, 0.3, zz + nz * 0.18, bay, 0.2, 0.3, angle),
-            frames,
-            x,
-            z,
-          );
-        }
-        const signWidth = Math.min(len - 1, 18),
-          signMat = signMaterials[Math.floor(rand() * signMaterials.length)];
-        detail.add(
-          sideBox(
-            cx + nx * 0.35,
-            4.18,
-            cz + nz * 0.35,
+          for (const off of [-storeWidth / 2 + 0.15, storeWidth / 2 - 0.15])
+            part(off, 1.95, 0.24, 3.8, 0.32, 0.19, ledge);
+          for (const off of [-storeWidth / 6, storeWidth / 6])
+            part(off, 1.95, 0.065, 3.25, 0.14, 0.22, frames);
+          part(0, 2.95, storeWidth - 0.4, 0.07, 0.14, 0.22, frames);
+          part(0, 3.66, storeWidth, 0.15, 0.3, 0.18, frames);
+          part(0, 0.3, storeWidth, 0.2, 0.3, 0.18, frames);
+
+          const signWidth = Math.min(storeWidth - 0.7, 10);
+          part(
+            0,
+            4.35,
             signWidth,
-            0.64,
-            0.2,
-            angle,
-          ),
-          signMat,
-          x,
-          z,
-        );
-        if (rand() > 0.55) {
-          detail.add(
-            sideBox(
-              cx + nx * 1.0,
-              3.56,
-              cz + nz * 1.0,
-              Math.min(10, len * 0.6),
-              0.15,
-              2.3,
-              angle,
-            ),
-            frames,
-            x,
-            z,
+            signWidth / 8,
+            0.15,
+            0.26,
+            signMaterials[type][
+              Math.floor(rand() * signMaterials[type].length)
+            ],
           );
-          for (const s of [-1, 1]) {
-            const xx =
-                cx + Math.cos(angle) * Math.min(4, len * 0.22) * s + nx * 1.8,
-              zz =
-                cz - Math.sin(angle) * Math.min(4, len * 0.22) * s + nz * 1.8;
-            detail.add(
-              sideBox(xx, 1.75, zz, 0.065, 3.5, 0.065, 0),
-              frames,
-              x,
-              z,
-            );
+          if (rand() > 0.65) {
+            const width = storeWidth - 0.35,
+              canopy = new T.BoxGeometry(width, 0.075, 1.55);
+            canopy.rotateX(0.13);
+            canopy.rotateY(angle);
+            canopy.translate(xx + nx * 0.8, 3.55, zz + nz * 0.8);
+            detail.add(canopy, canopyMaterials[type], x, z);
+            part(0, 3.33, width, 0.25, 0.055, 1.56, canopyMaterials[type]);
+            for (const off of [-width * 0.4, width * 0.4])
+              part(off, 3.38, 0.045, 0.045, 1.45, 0.8, frames);
           }
+
+          // Door frames share the room behind the display window; no pasted-on
+          // second interior or solid panel obscures the shop at the entrance.
+          const door = storeWidth * 0.3;
+          for (const off of [-0.62, 0.62])
+            part(door + off, 1.46, 0.065, 2.6, 0.1, 0.28, frames);
+          part(door, 2.76, 1.3, 0.065, 0.1, 0.28, frames);
+          part(door, 0.18, 1.3, 0.09, 0.3, 0.25, ledge);
+          part(door - 0.44, 1.4, 0.035, 0.4, 0.035, 0.38, m.chrome);
+          for (const y of [1.22, 1.58])
+            part(door - 0.44, y, 0.035, 0.035, 0.12, 0.33, m.chrome);
         }
-        // Entrance door, handle and a warm interior light strip.
-        detail.add(
-          sideBox(cx + nx * 0.24, 1.45, cz + nz * 0.24, 1.3, 2.65, 0.12, angle),
-          frames,
-          x,
-          z,
-        );
-        detail.add(
-          sideBox(
-            cx + nx * 0.33,
-            1.49,
-            cz + nz * 0.33,
-            1.05,
-            2.34,
-            0.03,
-            angle,
-          ),
-          shopGlass,
-          x,
-          z,
-        );
-        detail.add(
-          sideBox(
-            cx + nx * 0.39 + Math.cos(angle) * 0.38,
-            1.43,
-            cz + nz * 0.39 - Math.sin(angle) * 0.38,
-            0.035,
-            0.42,
-            0.035,
-            angle,
-          ),
-          m.chrome,
-          x,
-          z,
-        );
       }
     } catch (e) {
       console.warn("Building geometry skipped", b.id, e);
     }
   }
   const chunks = shell.finish(),
-    details = detail.finish();
+    details = [...detail.finish(), ...interiors.finish(false)];
   details.forEach((c) => (c.userData.detail = true));
   return { chunks: [...chunks, ...details], count };
 }

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "comfy_cafe",
+    "title": "Comfy Café",
+    "authors": {
+      "Sergej Majboroda": "All"
+    },
+    "source": "https://polyhaven.com/a/comfy_cafe",
+    "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/comfy_cafe.jpg",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
+  },
+  {
+    "id": "decor_shop",
+    "title": "Decor Shop",
+    "authors": {
+      "Sergej Majboroda": "All"
+    },
+    "source": "https://polyhaven.com/a/decor_shop",
+    "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/decor_shop.jpg",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
+  },
+  {
+    "id": "phone_shop",
+    "title": "Phone Shop",
+    "authors": {
+      "Philip Modin": "All"
+    },
+    "source": "https://polyhaven.com/a/phone_shop",
+    "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/phone_shop.jpg",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
+  }
+]

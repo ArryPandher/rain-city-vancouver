@@ -54,6 +54,7 @@ class Game {
   fps = 60;
   damage = 0;
   health = 100;
+  runtimeErrors: string[] = [];
   footSpeed = 0;
   autoCameraTimer = 0;
   lastSafe = new T.Vector3();
@@ -72,6 +73,26 @@ class Game {
       powerPreference: "high-performance",
       preserveDrawingBuffer: true,
     });
+    const recordError = (message: string) => {
+      if (!this.runtimeErrors.includes(message))
+        this.runtimeErrors.push(message.slice(0, 2000));
+      if (this.runtimeErrors.length > 20) this.runtimeErrors.shift();
+    };
+    window.addEventListener("error", (event) => recordError(event.message));
+    window.addEventListener("unhandledrejection", (event) =>
+      recordError(String(event.reason)),
+    );
+    this.renderer.debug.onShaderError = (gl, program, vertex, fragment) => {
+      const message = [
+        gl.getProgramInfoLog(program),
+        gl.getShaderInfoLog(vertex),
+        gl.getShaderInfoLog(fragment),
+      ]
+        .filter(Boolean)
+        .join("\n");
+      recordError(`Shader compilation: ${message}`);
+      console.error(message);
+    };
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.setPixelRatio(Math.min(1.5, devicePixelRatio));
     this.renderer.toneMapping = T.ACESFilmicToneMapping;
@@ -1209,7 +1230,7 @@ class Game {
       fps: Math.round(this.fps),
       render: this.renderer.info.render,
       stats: this.world.stats,
-      errors: [],
+      errors: [...this.runtimeErrors],
     };
   }
 }
