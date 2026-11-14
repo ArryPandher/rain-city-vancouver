@@ -1130,6 +1130,8 @@ export class World {
     y = this.collision.groundHeight(x, z),
   ) {
     this.time += dt;
+    for (const uniform of this.materials.animatedUniforms)
+      uniform.value = this.time;
     for (const beacon of this.materials.beacons) {
       const lit = this.time % beacon.period < beacon.period / 2;
       beacon.material.emissiveIntensity = lit

@@ -1,4 +1,5 @@
 import { FAIRMONT_ID, fairmontFootprint } from "./fairmont-site";
+import { ROGERS_ID, rogersFootprint } from "./rogers-site";
 import { jackGroundHeight, jackRoofAccess, CACTUS_ID } from "./jack-poole-site";
 import {
   ROBSON_GARDEN_ID,
@@ -219,6 +220,7 @@ export class CollisionWorld {
     for (const source of data.buildings) {
       let b = source;
       if (b.id === FAIRMONT_ID) b = { ...b, pts: fairmontFootprint };
+      if (b.id === ROGERS_ID) b = { ...b, pts: rogersFootprint };
       if (b.id === CONVENTION_ID) {
         this.convention = conventionSite(b);
         b = { ...b, pts: this.convention.footprint };

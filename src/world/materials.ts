@@ -2,6 +2,7 @@ import * as T from "three";
 import { seeded } from "./data";
 export const BASE = import.meta.env?.BASE_URL ?? "/";
 export class Materials {
+  animatedUniforms: { value: number }[] = [];
   beacons: {
     material: T.MeshStandardMaterial;
     light: T.PointLight;

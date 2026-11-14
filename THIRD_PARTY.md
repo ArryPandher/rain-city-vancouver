@@ -110,3 +110,8 @@ The plaza, café, planted roof, mapped stair/ramp construction and cauldron are 
 ## Fairmont Pacific Rim
 
 Original tower/podium geometry, interior scenery, palms and generated branch-pattern texture are Rain City interpretations (MIT), guided by James K. M. Cheng Architects, DIALOG, RDH and Zahner references. The real forest metal façade derives from James Cheng’s photography; our generated drawing does not reproduce that photograph. The real text artwork is by Liam Gillick; the current game uses plain architectural bands and does not distribute an artwork texture. Reference photographs are not distributed. Eight mapped OSM outlines and heights retain © OpenStreetMap contributors / ODbL 1.0. Existing Poly Haven cast-concrete maps retain CC0. [Sources, reproduction and limits](docs/sources/fairmont-pacific-rim.md); [generated pattern provenance](public/textures/fairmont/SOURCES.json).
+
+
+## Rogers Tower and Light Art
+
+Original tower, podium, balcony, window-depth and outdoor pool geometry are Rain City interpretations (MIT), guided by Westbank and Vincent Helton photography. Architecture: **James K. M. Cheng Architects**, landscape: **PFS Studio**. **Diana Thater, Light Art (2005)** is represented by simplified original geometry and green-to-blue light, coloured fins, reflecting water and mist. No artist media, reference photographs or third-party tower meshes are distributed. Michael / sagamiono's CC BY 2.0 photograph was viewed as reference only. The seven OSM outlines retain © OpenStreetMap contributors / ODbL 1.0; reused Poly Haven materials retain CC0. [Sources, reproduction and limits](docs/sources/rogers-tower.md).
