@@ -1067,7 +1067,12 @@ export class World {
     this.nightLights.forEach((m) => (m.emissiveIntensity = night ? 2.0 : 0.25));
   }
 
-  update(dt: number, x: number, z: number) {
+  update(
+    dt: number,
+    x: number,
+    z: number,
+    y = this.collision.groundHeight(x, z),
+  ) {
     this.time += dt;
     for (const beacon of this.materials.beacons) {
       const lit = this.time % beacon.period < beacon.period / 2;
@@ -1080,7 +1085,7 @@ export class World {
     }
     this.coastalVegetation?.update(this.time, x, z);
     this.detailedTrees?.update(x, z);
-    this.forestDetail?.update(x, z);
+    this.forestDetail?.update(x, z, y);
     this.detailedArchitecture?.update(x, z);
     this.water.uniforms.time.value = this.time;
     const sx = Math.round(x / 2) * 2,

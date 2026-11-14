@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+  <body style="margin: 0">
+    <script type="module">
+      import * as T from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      import {
+        coniferVolumeGeometry,
+        loadConiferVolumeMaterials,
+      } from "/src/world/conifer-volume.ts";
+      const renderer = new T.WebGLRenderer({
+        antialias: true,
+        preserveDrawingBuffer: true,
+      });
+      renderer.setSize(512, 1024);
+      renderer.setClearColor(0xbcc9d1);
+      renderer.toneMapping = T.ACESFilmicToneMapping;
+      document.body.append(renderer.domElement);
+      window.errors = [];
+      renderer.debug.onShaderError = (gl, p, v, f) =>
+        window.errors.push([
+          gl.getProgramInfoLog(p),
+          gl.getShaderInfoLog(v),
+          gl.getShaderInfoLog(f),
+        ]);
+      const variant =
+          new URLSearchParams(location.search).get("variant") === "b" ? 1 : 0,
+        suffix = variant ? "-b" : "";
+      const loader = new GLTFLoader(),
+        [near, old, volumes] = await Promise.all([
+          loader.loadAsync("/models/forest/fir_tree_01" + suffix + ".glb"),
+          loader.loadAsync(
+            "/models/forest/fir_tree_01" + suffix + "-medium.glb",
+          ),
+          loadConiferVolumeMaterials(),
+        ]);
+      near.scene.updateMatrixWorld(true);
+      const bounds = new T.Box3().setFromObject(near.scene),
+        height = bounds.max.y - bounds.min.y;
+      const scene = new T.Scene(),
+        groups = {
+          near: new T.Group(),
+          old: new T.Group(),
+          volume: new T.Group(),
+        };
+      scene.add(new T.HemisphereLight(0xd6e8f2, 0x333820, 2));
+      const sun = new T.DirectionalLight(0xfff5df, 3);
+      sun.position.set(3, 4, 6);
+      scene.add(sun);
+      for (const [key, model] of [
+        ["near", near.scene],
+        ["old", old.scene],
+        ["volume", old.scene.clone(true)],
+      ]) {
+        model.traverse((o) => {
+          if (o.isMesh) {
+            o.material = o.material.clone();
+            o.material.side = T.DoubleSide;
+            o.material.transparent = false;
+            o.material.alphaTest = 0.42;
+            if (key === "volume" && o.material.name.includes("twig"))
+              o.visible = false;
+          }
+        });
+        model.scale.setScalar(1 / height);
+        model.position.y = -bounds.min.y / height;
+        groups[key].add(model);
+        scene.add(groups[key]);
+      }
+      const clouds = new T.InstancedMesh(
+        coniferVolumeGeometry(bounds, variant),
+        volumes[variant].material,
+        1,
+      );
+      clouds.setMatrixAt(0, new T.Matrix4());
+      groups.volume.add(clouds);
+      const camera = new T.OrthographicCamera(-0.3, 0.3, 0.6, -0.6, 0.01, 20);
+      camera.position.set(0, 0.5, 3);
+      camera.lookAt(0, 0.5, 0);
+      window.volumeInspect = {
+        renderer,
+        scene,
+        camera,
+        groups,
+        frame(key, angle) {
+          for (const [name, g] of Object.entries(groups)) {
+            g.visible = name === key;
+            g.rotation.y = angle;
+          }
+          renderer.render(scene, camera);
+          return renderer.domElement.toDataURL("image/png");
+        },
+      };
+      volumeInspect.frame("volume", 0);
+      window.ready = true;
+    </script>
+  </body>
+</html>

@@ -886,5 +886,49 @@
     "license": "MIT AND CC0-1.0",
     "credit": "Leaf photography/material maps: Poly Haven — Rico Cilliers (CC0). Original thicket geometry: Rain City (MIT).",
     "changes": "Original 240-leaf, folded-surface thicket with eighteen stems, using seven leaf regions from the existing licensed Shrub 04 color/alpha/normal/material atlas. Original alpha and 1K material maps retained. Geometry, clustering and slope orientation are a coastal planting interpretation, not a species survey."
+  },
+  {
+    "file": "textures/forest/volume/c-color.webp",
+    "source": "https://polyhaven.com/a/fir_tree_01",
+    "authors": {
+      "Rob Tuytel": "photography",
+      "Rico Cilliers": "modeling"
+    },
+    "license": "CC0-1.0",
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
+    "credit": "Poly Haven — Rob Tuytel and Rico Cilliers"
+  },
+  {
+    "file": "textures/forest/volume/c-normal.webp",
+    "source": "https://polyhaven.com/a/fir_tree_01",
+    "authors": {
+      "Rob Tuytel": "photography",
+      "Rico Cilliers": "modeling"
+    },
+    "license": "CC0-1.0",
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed C near model; model-space vertex normals. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
+    "credit": "Poly Haven — Rob Tuytel and Rico Cilliers"
+  },
+  {
+    "file": "textures/forest/volume/b-color.webp",
+    "source": "https://polyhaven.com/a/fir_tree_01",
+    "authors": {
+      "Rob Tuytel": "photography",
+      "Rico Cilliers": "modeling"
+    },
+    "license": "CC0-1.0",
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model; unlit colour and alpha. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
+    "credit": "Poly Haven — Rob Tuytel and Rico Cilliers"
+  },
+  {
+    "file": "textures/forest/volume/b-normal.webp",
+    "source": "https://polyhaven.com/a/fir_tree_01",
+    "authors": {
+      "Rob Tuytel": "photography",
+      "Rico Cilliers": "modeling"
+    },
+    "license": "CC0-1.0",
+    "changes": "Eight depth slices in each of two perpendicular views, baked from the committed B near model; model-space vertex normals. Premultiplied edges corrected and padded for filtering. Original runtime slice geometry/shader is MIT. Generic conifer, not a Vancouver scan.",
+    "credit": "Poly Haven — Rob Tuytel and Rico Cilliers"
   }
 ]

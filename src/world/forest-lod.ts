@@ -1,6 +1,8 @@
 interface TreePosition {
   x: number;
+  y?: number;
   z: number;
+  height?: number;
 }
 
 /** Keep a small hysteresis band so neighbouring trees do not swap detail every step. */
@@ -11,10 +13,15 @@ export function selectForestLods<T extends TreePosition>(
   nearBudget: number,
   previousNear: T[] = [],
   previousMedium: T[] = [],
+  viewY = 0,
 ) {
   if (nearBudget <= 0) return { near: [] as T[], medium: [] as T[] };
   const high = nearBudget > 8;
-  const distance = (t: T) => Math.hypot(t.x - x, t.z - z);
+  const distance = (t: T) => {
+    const base = t.y ?? viewY,
+      top = base + (t.height ?? 0);
+    return Math.hypot(t.x - x, t.z - z, Math.max(0, base - viewY, viewY - top));
+  };
   const nearby = trees.filter((t) => distance(t) < (high ? 175 : 150));
   const rank = (previous: T[]) => {
     const preferred = new Set(previous);

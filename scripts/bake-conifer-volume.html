@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+  <body style="margin: 0; background: #555">
+    <script type="module">
+      import * as T from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      const renderer = new T.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+        premultipliedAlpha: false,
+        preserveDrawingBuffer: true,
+      });
+      renderer.setSize(512, 1024);
+      renderer.setClearColor(0, 0);
+      renderer.localClippingEnabled = true;
+      renderer.toneMapping = T.NoToneMapping;
+      document.body.append(renderer.domElement);
+      const variant =
+        new URLSearchParams(location.search).get("variant") === "b" ? "b" : "c";
+      const model = (
+        await new GLTFLoader().loadAsync(
+          "/models/forest/fir_tree_01" + (variant === "b" ? "-b" : "") + ".glb",
+        )
+      ).scene;
+      model.updateMatrixWorld(true);
+      const bounds = new T.Box3().setFromObject(model),
+        height = bounds.max.y - bounds.min.y;
+      model.position.y = -bounds.min.y;
+      const scene = new T.Scene();
+      scene.add(model);
+      const planes = [new T.Plane(), new T.Plane()],
+        meshes = [];
+      model.traverse((o) => {
+        if (!o.isMesh) return;
+        o.visible = o.material.name.includes("twig");
+        if (!o.visible) return;
+        const map = o.material.map;
+        const color = new T.MeshBasicMaterial({
+          map,
+          side: T.DoubleSide,
+          alphaTest: 0.42,
+          clippingPlanes: planes,
+        });
+        const normal = new T.MeshBasicMaterial({
+          map,
+          side: T.DoubleSide,
+          alphaTest: 0.42,
+          clippingPlanes: planes,
+        });
+        normal.onBeforeCompile = (s) => {
+          s.vertexShader = s.vertexShader
+            .replace(
+              "#include <common>",
+              "#include <common>\nvarying vec3 vBakeNormal;",
+            )
+            .replace(
+              "#include <begin_vertex>",
+              "#include <begin_vertex>\nvBakeNormal=normalize(mat3(modelMatrix)*normal);",
+            );
+          s.fragmentShader = s.fragmentShader
+            .replace(
+              "#include <common>",
+              "#include <common>\nvarying vec3 vBakeNormal;",
+            )
+            .replace(
+              "#include <opaque_fragment>",
+              "gl_FragColor=vec4(normalize(vBakeNormal)*(gl_FrontFacing?1.0:-1.0)*.5+.5,1.0);",
+            );
+        };
+        normal.customProgramCacheKey = () => "conifer-volume-normal-v1";
+        meshes.push({ object: o, color, normal });
+      });
+      const camera = new T.OrthographicCamera(
+        -height * 0.25,
+        height * 0.25,
+        height * 0.5,
+        -height * 0.5,
+        0.1,
+        100,
+      );
+      window.coniferVolumeBake = {
+        variant,
+        height,
+        bounds: bounds.toArray?.() ?? {
+          min: bounds.min.toArray(),
+          max: bounds.max.toArray(),
+        },
+        capture(axis, index, pass) {
+          const low = bounds.min[axis],
+            high = bounds.max[axis],
+            step = (high - low) / 8;
+          const n = new T.Vector3(
+            axis === "x" ? 1 : 0,
+            0,
+            axis === "z" ? 1 : 0,
+          );
+          planes[0].set(n.clone(), -(low + step * index));
+          planes[1].set(n.clone().negate(), low + step * (index + 1));
+          camera.position.set(
+            axis === "x" ? 35 : 0,
+            height / 2,
+            axis === "z" ? 35 : 0,
+          );
+          camera.lookAt(0, height / 2, 0);
+          renderer.outputColorSpace =
+            pass === "normal" ? T.LinearSRGBColorSpace : T.SRGBColorSpace;
+          for (const m of meshes) m.object.material = m[pass];
+          renderer.render(scene, camera);
+          return renderer.domElement.toDataURL("image/png");
+        },
+      };
+      window.ready = true;
+    </script>
+  </body>
+</html>

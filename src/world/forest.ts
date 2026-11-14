@@ -9,6 +9,10 @@ import type { TreeInstance } from "./detailed-trees";
 import { calibrateStem } from "./tree-stem";
 import { selectForestLods } from "./forest-lod";
 import { SpatialInstances } from "./spatial-instances";
+import {
+  coniferVolumeGeometry,
+  loadConiferVolumeMaterials,
+} from "./conifer-volume";
 
 export function forestGround(m: Materials) {
   const mat = new T.MeshStandardMaterial({
@@ -80,6 +84,7 @@ export class ForestDetail {
   private sites = new SpatialHash<Site>(40);
   private lastX = Infinity;
   private lastZ = Infinity;
+  private lastY = Infinity;
   private lastBudget = -1;
   siteCount = 0;
   static async load(scene: T.Scene, habitat: ForestHabitat) {
@@ -101,6 +106,13 @@ export class ForestDetail {
     const models = await Promise.all(
       ids.map((id) => loader.loadAsync(`${BASE}models/forest/${id}.glb`)),
     );
+    const volumes = await loadConiferVolumeMaterials().catch((error) => {
+      console.warn(
+        "Layered boughs unavailable; retaining geometric conifers",
+        error,
+      );
+      return undefined;
+    });
     const sourceBounds: T.Box3[] = [];
     for (let mi = 0; mi < models.length; mi++) {
       const root = models[mi].scene;
@@ -122,6 +134,12 @@ export class ForestDetail {
         result.sourceStem[variant] = 1.1 / referenceHeight;
         root.traverse((o) => {
           if (!(o instanceof T.Mesh)) return;
+          if (
+            medium &&
+            volumes &&
+            (o.material as T.Material).name.includes("twig")
+          )
+            return;
           const geometry = bakeGeometry(o.geometry, o.matrixWorld);
           geometry.translate(0, -reference.min.y, 0);
           geometry.scale(
@@ -169,6 +187,31 @@ export class ForestDetail {
             mesh,
           );
         });
+        if (medium && volumes) {
+          const geometry = coniferVolumeGeometry(reference, variant);
+          geometry.setAttribute(
+            "treeStemScale",
+            new T.InstancedBufferAttribute(
+              new Float32Array(capacity).fill(1),
+              1,
+            ).setUsage(T.DynamicDrawUsage),
+          );
+          const mesh = new T.InstancedMesh(
+            geometry,
+            volumes[variant].material,
+            capacity,
+          );
+          mesh.name = `Layered Stanley conifer ${variant}`;
+          mesh.customDepthMaterial = volumes[variant].depth;
+          mesh.count = 0;
+          mesh.frustumCulled = false;
+          mesh.castShadow = mesh.receiveShadow = true;
+          scene.add(mesh);
+          result.batches.push(
+            new SpatialInstances(mesh, scene, 32, ["treeStemScale"]),
+          );
+          result.mediumConifers[variant].push(mesh);
+        }
       } else {
         const kind = (
           ["", "fern", "moss", "rock", "stump", "shrub", "nettle"] as const
@@ -248,14 +291,15 @@ export class ForestDetail {
       }
     return result;
   }
-  update(x: number, z: number) {
+  update(x: number, z: number, y = this.ground(x, z)) {
     if (
-      Math.hypot(x - this.lastX, z - this.lastZ) < 12 &&
+      Math.hypot(x - this.lastX, z - this.lastZ, y - this.lastY) < 12 &&
       this.lastBudget === this.budget
     )
       return;
     this.lastX = x;
     this.lastZ = z;
+    this.lastY = y;
     this.lastBudget = this.budget;
     const dirty = new Set<T.InstancedMesh>(),
       hidden = new T.Matrix4().makeScale(0, 0, 0);
@@ -272,6 +316,7 @@ export class ForestDetail {
       this.budget,
       this.selected,
       this.mediumSelected,
+      y,
     );
     this.selected = selection.near;
     this.mediumSelected = selection.medium;

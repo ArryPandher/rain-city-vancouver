@@ -1235,10 +1235,12 @@ class Game {
       }
     }
     if (this.time - this.lastWorldUpdate > 0.15) {
+      const viewPosition = this.photo ? this.photoPos : this.player;
       this.world.update(
         this.running || ui.introOpen ? 0.15 : 0,
-        this.player.x,
-        this.player.z,
+        viewPosition.x,
+        viewPosition.z,
+        viewPosition.y,
       );
       this.lastWorldUpdate = this.time;
     }
