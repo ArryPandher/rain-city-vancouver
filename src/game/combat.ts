@@ -1,4 +1,5 @@
 import * as T from "three";
+import { visibleHitSurface } from "../rendering/vehicle-instances";
 import { World } from "../world/world";
 import { Actors } from "./actors";
 import { GameAudio } from "./audio";
@@ -161,7 +162,7 @@ export class Combat {
           [...this.targets, ...pedMeshes, ...cars, ...solids],
           true,
         )
-        .filter((h) => h.object.visible);
+        .filter((h) => visibleHitSurface(h.object));
       const hit = hits[0],
         end = hit ? hit.point : this.ray.ray.at(180, new T.Vector3());
       const line = new T.Line(

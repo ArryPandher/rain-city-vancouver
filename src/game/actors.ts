@@ -7,6 +7,7 @@ import { carState, CarState, angleDelta } from "./physics";
 import { Road, isStreet, seeded, roadWidth } from "../world/data";
 import { normalizeGeometry } from "../world/geometry";
 import { World } from "../world/world";
+import { VehicleInstances } from "../rendering/vehicle-instances";
 import { drivingOffset, reverseRoad } from "../world/road-profile";
 import {
   nearbyRoadSpans,
@@ -80,7 +81,10 @@ export class Actors {
   peds: Pedestrian[] = [];
   random = seeded(518);
   timer = 0;
-  constructor(public world: World) {}
+  readonly instances: VehicleInstances;
+  constructor(public world: World) {
+    this.instances = new VehicleInstances(world.scene);
+  }
   addVehicle(
     kind: "car" | "bike",
     x: number,
@@ -116,6 +120,7 @@ export class Actors {
       health: 100,
     };
     this.vehicles.push(v);
+    this.instances.register(model);
     return v;
   }
   populate(x: number, z: number) {

@@ -301,6 +301,7 @@ class Game {
     }
     ui.loading("Warming up the renderer", 0.97);
     this.setCamera(true);
+    this.actors.instances.update(this.vehicle?.model);
     // The scene renders into the composer's HDR target before OutputPass applies
     // tone mapping. Warm the same shader variants used during gameplay.
     const previousTarget = this.renderer.getRenderTarget();
@@ -1259,6 +1260,7 @@ class Game {
     this.frameCount++;
   }
   render() {
+    this.actors?.instances.update(this.vehicle?.model);
     if (!ui.introOpen && this.quality !== "low")
       this.reflections?.update(
         this.renderer,

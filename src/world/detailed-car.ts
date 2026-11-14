@@ -165,8 +165,10 @@ export function detailedCar(
       const old = o.material;
       let mat = cache.get(old);
       if (!mat) {
-        mat = old.clone();
-        cache.set(old, mat!);
+        const clone: T.Material = old.clone();
+        clone.userData.vehicleBatchKey = old.uuid;
+        cache.set(old, clone);
+        mat = clone;
       }
       o.material = mat;
       if (mat instanceof T.MeshStandardMaterial) {
