@@ -8,6 +8,7 @@ import {
   geo,
   Road,
   roadWidth,
+  isStreet,
 } from "./data";
 export interface Bridge {
   id: string;
@@ -204,6 +205,25 @@ export class CollisionWorld {
         )
           return true;
       }
+    }
+    return false;
+  }
+  onStreet(x: number, z: number, clearance = 0.3) {
+    for (const road of this.roads.query(x, z, 24 + clearance)) {
+      if (!isStreet(road)) continue;
+      for (let i = 0; i < road.pts.length - 2; i += 2)
+        if (
+          segmentPoint(
+            x,
+            z,
+            road.pts[i],
+            road.pts[i + 1],
+            road.pts[i + 2],
+            road.pts[i + 3],
+          ).d <
+          roadWidth(road) / 2 + clearance
+        )
+          return true;
     }
     return false;
   }

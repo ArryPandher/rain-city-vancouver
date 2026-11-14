@@ -4,7 +4,7 @@
 
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), available under the [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/).
 
-`public/data/vancouver.json` is a derived database extracted for Arry Pandher's Penguin Party on 2026-10-11. It contains public map geometry and public feature labels, not Penguin Party's private characters, personal notes, game content or server code. The data was converted to metres at runtime. Additional eastern Vancouver map data, when present, was obtained from the public Overpass API; the fetch script and source date are included. All derived geographic database files remain under ODbL. Building façades, procedural decoration and interpretation are not surveys.
+`public/data/vancouver.json` is a derived database extracted for Arry Pandher's Penguin Party on 2026-10-11. It contains public map geometry and public feature labels, not Penguin Party's private characters, personal notes, game content or server code. The data was converted to metres at runtime. Additional eastern Vancouver map data, when present, was obtained from the public Overpass API; the fetch script and source date are included. `public/data/vancouver-roads.json` replaces the rendered road layer with a consistent 2026-11-14 Overpass extract, retaining one-way, lane, width and sidewalk tags. Reproduce it with `node scripts/fetch-roads.mjs`; exact source timestamp and exclusions are embedded in the file. All derived geographic database files remain under ODbL. Building façades, procedural decoration and interpretation are not surveys.
 
 ## Photography — Poly Haven / CC0
 

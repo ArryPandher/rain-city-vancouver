@@ -7,6 +7,7 @@ import { carState, CarState, angleDelta } from "./physics";
 import { Road, isStreet, seeded, roadWidth } from "../world/data";
 import { normalizeGeometry } from "../world/geometry";
 import { World } from "../world/world";
+import { drivingOffset, reverseRoad } from "../world/road-profile";
 import {
   nearbyRoadSpans,
   sampleRoadSpan,
@@ -37,10 +38,15 @@ export interface Pedestrian {
   side: number;
 }
 const pedestrianRoute = (road: Road) =>
-  isStreet(road) ||
-  ["pedestrian", "footway", "path", "cycleway"].includes(road.kind);
+  road.foot !== false &&
+  ((isStreet(road) && road.sidewalk !== "none") ||
+    ["pedestrian", "footway", "path", "cycleway"].includes(road.kind));
 const sidewalkOffset = (road: Road, side: number) =>
-  side *
+  (isStreet(road) && road.sidewalk === "left"
+    ? -1
+    : isStreet(road) && road.sidewalk === "right"
+      ? 1
+      : side) *
   (isStreet(road)
     ? roadWidth(road) / 2 + 1.1
     : Math.max(0.4, roadWidth(road) / 2 - 0.8));
@@ -185,8 +191,8 @@ export class Actors {
       const offset = options.pedestrian
         ? sidewalkOffset(sample.road, options.side ?? 1)
         : options.parked
-          ? Math.max(2.8, roadWidth(sample.road) / 2 - 1.2)
-          : 3;
+          ? Math.max(0, roadWidth(sample.road) / 2 - 1.2)
+          : drivingOffset(sample.road);
       const point = this.roadPoint(
         sample.road,
         sample.segment,
@@ -357,41 +363,35 @@ export class Actors {
                   isStreet(o) &&
                   o !== r &&
                   (Math.hypot(o.pts[0] - ex, o.pts[1] - ez) < 4 ||
-                    Math.hypot(o.pts.at(-2)! - ex, o.pts.at(-1)! - ez) < 4),
+                    (!o.oneway &&
+                      Math.hypot(o.pts.at(-2)! - ex, o.pts.at(-1)! - ez) < 4)),
               );
             if (options.length) {
               r = options[Math.floor(this.random() * options.length)];
-              if (Math.hypot(r.pts.at(-2)! - ex, r.pts.at(-1)! - ez) < 4)
-                r = {
-                  ...r,
-                  pts: r.pts
-                    .reduce<number[][]>((a, v, i) => {
-                      if (i % 2 === 0) a.push([v, r.pts[i + 1]]);
-                      return a;
-                    }, [])
-                    .reverse()
-                    .flat(),
-                };
+              if (
+                !r.oneway &&
+                Math.hypot(r.pts.at(-2)! - ex, r.pts.at(-1)! - ez) < 4
+              )
+                r = reverseRoad(r);
               v.road = r;
               v.segment = 0;
+            } else if (Math.hypot(r.pts[0] - ex, r.pts[1] - ez) < 1) {
+              v.segment = 0;
+            } else if (r.oneway) {
+              v.segment = r.pts.length - 4;
+              v.progress = 1;
+              s.speed = 0;
+              this.sync(v, dt);
+              continue;
             } else {
-              v.road = {
-                ...r,
-                pts: r.pts
-                  .reduce<number[][]>((a, v, i) => {
-                    if (i % 2 === 0) a.push([v, r.pts[i + 1]]);
-                    return a;
-                  }, [])
-                  .reverse()
-                  .flat(),
-              };
+              v.road = reverseRoad(r);
               r = v.road;
               v.segment = 0;
             }
           }
           progress = 0;
         }
-        const p = this.roadPoint(r, v.segment, progress, 3);
+        const p = this.roadPoint(r, v.segment, progress, drivingOffset(r));
         v.progress = progress;
         s.x = p.x;
         s.z = p.z;

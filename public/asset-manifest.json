@@ -485,5 +485,14 @@
     "license": "CC0-1.0",
     "credit": "Charlotte Baglioni / Poly Haven",
     "changes": "1K map; used on original reference-guided Arthur Erickson Place geometry."
+  },
+  {
+    "file": "data/vancouver-roads.json",
+    "source": "https://www.openstreetmap.org/copyright",
+    "license": "ODbL 1.0",
+    "credit": "\u00a9 OpenStreetMap contributors",
+    "sourceTimestamp": "2026-11-14T10:48:21Z",
+    "reproduce": "node scripts/fetch-roads.mjs",
+    "modifications": "Projected to game metres; excludes indoor/underground/construction/proposed ways; retains lane count, one-way direction, width and sidewalk tags."
   }
 ]

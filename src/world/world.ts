@@ -25,6 +25,7 @@ import {
   ArchitecturalDetail,
 } from "./detailed-architecture";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
+import { crosswalkMarkings, roadMarkings, sidewalkSides } from "./road-profile";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -46,6 +47,7 @@ export class World {
   architecturalDetails: ArchitecturalDetail[] = [];
   reflections: ReflectionProbeSpec[] = [];
   treeSamples: TreeInstance[] = [];
+  streetFurniture: { kind: "lamp" | "sign"; x: number; z: number }[] = [];
   stats = { buildings: 0, trees: 0, roads: 0 };
   constructor(
     public scene: T.Scene,
@@ -307,14 +309,6 @@ export class World {
           x < 1800;
       const height = (x: number, z: number) => this.collision.height(x, z);
       if (street)
-        b.add(
-          ribbon(r.pts, width + 5, 0.045, height, 5),
-          m.concrete,
-          x,
-          z,
-          "curb",
-        );
-      if (street)
         for (let i = 0; i < r.pts.length - 2; i += 2) {
           const ax = r.pts[i],
             az = r.pts[i + 1],
@@ -324,7 +318,7 @@ export class World {
           if (len < 20) continue;
           const dx = (bx - ax) / len,
             dz = (bz - az) / len;
-          for (const side of [-1, 1]) {
+          for (const side of sidewalkSides(r)) {
             const offset = side * (width / 2 + 1.25),
               points = [
                 ax + dx * 7 + dz * offset,
@@ -356,38 +350,35 @@ export class World {
           }
         }
       b.add(
-        ribbon(r.pts, width, street ? 0.092 : 0.07, height, historic ? 1.6 : 5),
+        ribbon(
+          r.pts,
+          width,
+          street ? 0.092 : r.walkway ? 0.15 : 0.07,
+          height,
+          historic ? 1.6 : 5,
+        ),
         historic ? cobble : street ? m.asphalt : m.concrete,
         x,
         z,
         "road",
       );
-      if (street && !historic && r.kind !== "residential") {
-        for (let i = 0; i < r.pts.length - 2; i += 2) {
-          const ax = r.pts[i],
-            az = r.pts[i + 1],
-            bx = r.pts[i + 2],
-            bz = r.pts[i + 3],
-            len = Math.hypot(bx - ax, bz - az),
-            dx = (bx - ax) / len,
-            dz = (bz - az) / len;
-          for (let t = 3; t < len - 3; t += 11) {
-            const end = Math.min(t + 4.5, len);
-            b.add(
-              ribbon(
-                [ax + dx * t, az + dz * t, ax + dx * end, az + dz * end],
-                0.16,
-                0.102,
-                height,
-              ),
-              m.yellow,
-              ax + dx * t,
-              az + dz * t,
-              "stripe",
-            );
-          }
-        }
-      }
+      if (street && !historic && r.kind !== "residential")
+        for (const line of roadMarkings(r))
+          b.add(
+            ribbon(line.pts, 0.1, 0.102, height),
+            line.yellow ? m.yellow : stripes,
+            line.pts[0],
+            line.pts[1],
+            "stripe",
+          );
+      for (const line of crosswalkMarkings(r))
+        b.add(
+          ribbon(line.pts, line.width, 0.111, height),
+          stripes,
+          line.pts[0],
+          line.pts[1],
+          "crossing",
+        );
       this.stats.roads++;
     }
     for (const group of b.groups.values())
@@ -617,8 +608,13 @@ export class World {
           const side = count++ % 2 ? 1 : -1,
             x = ax + dx * d + dz * offset * side,
             z = az + dz * d - dx * offset * side;
-          if (this.collision.water(x, z) || this.collision.blocked(x, z, 0.5))
+          if (
+            this.collision.water(x, z) ||
+            this.collision.blocked(x, z, 0.5) ||
+            this.collision.onStreet(x, z, 0.4)
+          )
             continue;
+          this.streetFurniture.push({ kind: "lamp", x, z });
           const h = this.collision.height(x, z);
           if (
             /^(Water Street|Alexander Street|Carrall Street)$/.test(
@@ -683,7 +679,7 @@ export class World {
           geo = new T.BoxGeometry(0.85, 0.04, 0.22);
           geo.translate(x - dz * 0.5 * side, h + 7.92, z + dx * 0.5 * side);
           b.add(geo, lampMat, x, z);
-          if (count % 6 === 0) {
+          if (count % 6 === 0 && !this.collision.onStreet(x + 1, z, 0.3)) {
             geo = new T.CylinderGeometry(0.23, 0.23, 0.85, 10);
             geo.translate(x + 1, h + 0.43, z);
             b.add(geo, m.dark, x, z);
@@ -734,7 +730,12 @@ export class World {
         if (r.name && i === 0 && len > 38) {
           const x = ax + dx * 10 + dz * offset,
             z = az + dz * 10 - dx * offset;
-          if (this.collision.blocked(x, z, 1)) continue;
+          if (
+            this.collision.blocked(x, z, 1) ||
+            this.collision.onStreet(x, z, 0.4)
+          )
+            continue;
+          this.streetFurniture.push({ kind: "sign", x, z });
           let mat = signCache.get(r.name);
           if (!mat) {
             mat = new T.MeshStandardMaterial({
@@ -757,17 +758,6 @@ export class World {
           const pole = new T.CylinderGeometry(0.045, 0.045, 3.4, 6);
           pole.translate(x, 1.7, z);
           b.add(pole, m.chrome, x, z);
-          // Zebra crossing near the end of this named street segment.
-          for (
-            let q = -roadWidth(r) * 0.5 + 1;
-            q < roadWidth(r) * 0.5;
-            q += 1.2
-          ) {
-            const stripe = new T.BoxGeometry(0.55, 0.018, 2.8);
-            stripe.rotateY(Math.atan2(dx, dz));
-            stripe.translate(ax + dx * 5 + dz * q, 0.114, az + dz * 5 - dx * q);
-            b.add(stripe, m.white, x, z);
-          }
         }
       }
     }

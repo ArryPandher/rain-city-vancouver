@@ -1,9 +1,23 @@
 import { Vector2 } from "three";
 export type Point = [number, number];
 export interface Road {
+  id?: string;
   name?: string;
   kind: string;
   pts: number[];
+  sourceKind?: string;
+  oneway?: boolean;
+  lanes?: number;
+  lanesForward?: number;
+  lanesBackward?: number;
+  lanesBothWays?: number;
+  width?: number;
+  sidewalk?: "both" | "left" | "right" | "none";
+  foot?: boolean;
+  walkway?: boolean;
+  crossing?: boolean;
+  crossingMarkings?: string;
+  surface?: string;
 }
 export interface Area {
   name?: string;
@@ -154,23 +168,47 @@ export async function loadCity(): Promise<CityData> {
   } catch (e) {
     console.warn("Eastern map unavailable; downtown remains playable", e);
   }
+  try {
+    const response = await fetch(
+      `${import.meta.env.BASE_URL}data/vancouver-roads.json`,
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const roads = await response.json();
+    if (!Array.isArray(roads.roads) || !roads.roads.length)
+      throw new Error("Empty road layer");
+    d.roads = roads.roads;
+  } catch (e) {
+    console.warn("Detailed road layer unavailable; using the base map", e);
+  }
   return d;
 }
-export const roadWidth = (r: Road) =>
-  ({
-    primary: 18,
-    secondary: 15,
-    tertiary: 13,
-    residential: 10,
-    unclassified: 10,
-    service: 6,
-    pedestrian: 8,
-    cycleway: 5,
-    footway: 4,
-    path: 3,
-    track: 4,
-    steps: 3,
-  })[r.kind] ?? 8;
+export const roadWidth = (r: Road) => {
+  if (r.width && Number.isFinite(r.width))
+    return Math.max(isStreet(r) ? 2.8 : 0.6, Math.min(40, r.width));
+  if (r.lanes && Number.isFinite(r.lanes) && isStreet(r))
+    return (
+      Math.max(1, Math.min(10, r.lanes)) *
+        (r.sourceKind?.startsWith("motorway") ? 3.6 : 3.2) +
+      0.6
+    );
+  if (r.oneway && isStreet(r)) return 6.8;
+  return (
+    {
+      primary: 14,
+      secondary: 13.4,
+      tertiary: 8,
+      residential: 9,
+      unclassified: 7,
+      service: 4.4,
+      pedestrian: 6,
+      cycleway: 3,
+      footway: 1.8,
+      path: 2.5,
+      track: 4,
+      steps: 2,
+    }[r.kind] ?? 5
+  );
+};
 export const isStreet = (r: Road) =>
   ["primary", "secondary", "tertiary", "residential", "unclassified"].includes(
     r.kind,
@@ -288,7 +326,7 @@ export const LANDMARKS: Landmark[] = [
     "Ironworkers Memorial Bridge",
     "Burrard Inlet",
     [49.2975, -123.0265],
-    [49.29155, -123.0263],
+    [49.29159327, -123.02612961],
     -3.1188,
     "A steel truss crossing. Reach it along the eastern waterfront.",
   ),

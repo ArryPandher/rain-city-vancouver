@@ -4,7 +4,7 @@
 
 ## Automated
 
-`npm test`: 25 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
+`npm test`: 33 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
 
 ## Interactive evidence
 
@@ -93,3 +93,12 @@ After a night refresh, actual W input moved the character and pistol fire consum
 Population sampling clips every mapped road segment to the nearby area, including long roads whose ends are far away. Pedestrians can use park paths and follow successive polyline segments; their offset paths meet at corners and their heading follows their movement. Spawn candidates avoid water, buildings and close overlap. Normal travel recycles distant actors; fast travel immediately populates the destination.
 
 Five regression checks cover clipped local sampling, later road segments, unusable geometry, route continuation/end turns and offset continuity. All 25 tests and the production build pass. Local actual-input walking changed position; a summoned car reached 22.15 m/s (79.7 km/h), braked to 0.10 m/s and retained 100% health. Stanley Park travel placed 8 walkers within 80 m, with 22 of 34 pedestrians on path/cycle/pedestrian ways in this sample. A five-second runtime probe observed four segment transitions; maximum sampled pedestrian speed was 1.56 m/s and ambient-car speed 10.78 m/s through curved offsets. No runtime errors were recorded. Scene samples were 29–35 fps at 1440×900 Balanced on the M2. Traffic remains basic route-following AI.
+
+
+## Mapped road profiles and crossings — 2026-11-14
+
+The road layer now retains OSM lane counts, one-way directions, widths, foot access, sidewalk sides and marked/unmarked crossings. Separate carriageways receive their own widths and white lane dividers; opposing lanes use yellow boundaries, including asymmetric lane counts. Dashes continue across short curved map segments. Separately mapped sidewalks replace duplicate generated slabs, park paths are narrower, and arbitrary sign-adjacent crosswalks have been replaced with mapped crossing markings. Traffic lane offsets use the road width and do not reverse onto one-way ways.
+
+All 33 tests and the production build pass. New checks cover lane geometry, road-direction reversal, neighbouring-carriageway furniture clearance, committed map metadata, dash continuity, crossing styles and the northbound Ironworkers arrival. In-browser inspection counted 30,063 road/path ways and 5,876 generated lamps/signs with no positions inside a street surface. Pedestrians used accessible paths. All ten travel points remained dry and clear; the corrected Ironworkers approach was also exercised in a car.
+
+Actual input verified walking, a 29.0 km/h Stanley Park bicycle ride and car acceleration to 129.1 km/h followed by braking to rest, at 100% health. A separate northbound run moved 431 m onto the Ironworkers deck to 32.8 m elevation before encountering ambient traffic, at 100% health. Recorded runtime errors stayed empty. Stanley Park road/marking views and the elevated bridge were inspected; local samples were about 33–53 fps at 1440×900 Balanced. The map retains an ODbL source timestamp and a reproduction script. Missing road widths remain estimates; traffic and bridge architecture remain approximations.
