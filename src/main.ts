@@ -1242,6 +1242,7 @@ class Game {
         viewPosition.x,
         viewPosition.z,
         viewPosition.y,
+        this.camera,
       );
       this.lastWorldUpdate = this.time;
     }

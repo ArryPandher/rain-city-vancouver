@@ -123,3 +123,7 @@ Original park, fountain, stair, furniture, lawn and sign geometry/artwork are Ra
 ## Harbour Green tower exterior geometry
 
 One, Two and Three Harbour Green use 19 OpenStreetMap podium/upper-part outlines (© OpenStreetMap contributors, ODbL 1.0) with original modeled facades. ASPAC exterior photography informed shapes and materials but is not redistributed or used as game textures. Overall heights follow ASPAC's published dimensions, with the conflicting source tags retained. Existing credited concrete maps are reused. [Sources, reproduction and interpretation limits](docs/sources/harbour-towers.md).
+
+## Corrected broadleaf tree surfaces
+
+The near and medium street/park trees derive from [Poly Haven Tree Small 02](https://polyhaven.com/a/tree_small_02), CC0. Both retain all 30,250 connected leaf components, use per-leaf 3D simplification with original UVs/normals and corrected winding, and reuse WebP-converted source maps. The near model has 741,374 triangles; the medium model has 206,013. [Sources, geometry audit, reproduction and limits](docs/sources/street-trees.md). Exact file hashes are in the asset manifest.

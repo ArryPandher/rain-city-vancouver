@@ -365,7 +365,9 @@
     "source": "https://polyhaven.com/a/tree_small_02",
     "license": "CC0",
     "credit": "Poly Haven",
-    "changes": "Leaf-preserving simplification to 126,013 triangles, WebP textures, bounded near-field instance pool (24 Balanced / 48 High)."
+    "changes": "All 30,250 leaf components retained with 3D per-leaf simplification, positive face/normal agreement, 741,374 total triangles, WebP textures and independently culled tree slots.",
+    "bytes": 34724676,
+    "sha256": "67a348ffd8b871d422a4102c0bbc818cd851cc6d7269923eae4f1b805c1bb093"
   },
   {
     "file": "models/rain-city-protagonist.glb",
@@ -1096,5 +1098,14 @@
     "license": "MIT",
     "credit": "Arry Pandher / Rain City Vancouver",
     "changes": "Original green-and-white serif park sign, informed by reference photography. No photograph or official park logo is reproduced. Location and proportions are interpreted."
+  },
+  {
+    "file": "models/vancouver-street-tree-medium.glb",
+    "source": "https://polyhaven.com/a/tree_small_02",
+    "license": "CC0",
+    "credit": "Poly Haven",
+    "changes": "All 30,250 leaf components retained with 3D per-leaf simplification, positive face/normal agreement, 206,013 total triangles, WebP textures and independently culled tree slots.",
+    "bytes": 12049320,
+    "sha256": "8984221b9443b10d0c50bcf887b87bc100eb255575c680341befb34e503d17ae"
   }
 ]

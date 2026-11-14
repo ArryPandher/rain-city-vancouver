@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+  <body style="margin: 0; background: #cadbe3">
+    <script type="module">
+      import * as T from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
+      const renderer = new T.WebGLRenderer({
+        antialias: true,
+        preserveDrawingBuffer: true,
+      });
+      renderer.setSize(1440, 900);
+      renderer.outputColorSpace = T.SRGBColorSpace;
+      renderer.toneMapping = T.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+      document.body.append(renderer.domElement);
+      const scene = new T.Scene();
+      scene.background = new T.Color(0xaec7d3);
+      const light = new T.DirectionalLight(0xfff3da, 2.3);
+      light.position.set(-5, 8, 4);
+      scene.add(light, new T.HemisphereLight(0xd3e9fa, 0x61734d, 1.1));
+      const env = await new HDRLoader().loadAsync(
+        "/textures/city-reflections.hdr",
+      );
+      env.mapping = T.EquirectangularReflectionMapping;
+      scene.environment = env;
+      scene.environmentIntensity = 0.3;
+      const camera = new T.PerspectiveCamera(38, 1440 / 900, 0.05, 100);
+      camera.position.set(8, 3, 10);
+      camera.lookAt(0, 2.2, 0);
+      const models = {};
+      const files = {
+        before: "/artifacts/local/street-tree-before.glb",
+        source: "/artifacts/local/tree-source/tree.gltf",
+        candidate: "/models/vancouver-street-tree.glb",
+        medium: "/models/vancouver-street-tree-medium.glb",
+      };
+      window.treeInspect = {
+        renderer,
+        scene,
+        camera,
+        models,
+        async show(name, angle = 0) {
+          if (!models[name]) {
+            const model = (
+              await new GLTFLoader().loadAsync(files[name] + "?v=2")
+            ).scene;
+            model.updateMatrixWorld(true);
+            model.traverse((o) => {
+              if (o.isMesh) {
+                o.material = o.material.clone();
+                o.material.side = T.DoubleSide;
+                o.material.transparent = false;
+                o.material.depthWrite = true;
+                o.material.alphaTest = 0.45;
+                o.material.roughness = 0.88;
+                if (o.material.name.includes("leaves")) {
+                  o.material.roughnessMap = null;
+                  o.material.roughness = 0.96;
+                  o.material.metalness = 0;
+                  o.material.envMapIntensity = 0.35;
+                  o.material.normalScale.set(0.35, 0.35);
+                }
+              }
+            });
+            scene.add(model);
+            models[name] = model;
+          }
+          for (const [k, m] of Object.entries(models)) m.visible = k === name;
+          models[name].rotation.y = angle;
+          renderer.render(scene, camera);
+          return { name, triangles: renderer.info.render.triangles };
+        },
+        frame() {
+          renderer.render(scene, camera);
+          return renderer.domElement.toDataURL("image/png");
+        },
+      };
+      await treeInspect.show("candidate");
+      window.ready = true;
+    </script>
+  </body>
+</html>

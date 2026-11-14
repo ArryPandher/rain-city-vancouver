@@ -166,8 +166,15 @@ export class World {
     await new Promise((r) => setTimeout(r, 20));
     report("Planting Stanley Park", 0.49);
     this.vegetation();
-    this.detailedTrees = await DetailedTrees.load(this.scene);
-    this.detailedTrees.samples = this.treeSamples;
+    try {
+      this.detailedTrees = await DetailedTrees.load(this.scene);
+      this.detailedTrees.samples = this.treeSamples;
+    } catch (error) {
+      console.warn(
+        "Street tree detail unavailable; retaining mapped crowns",
+        error,
+      );
+    }
     try {
       this.forestDetail = await ForestDetail.load(
         this.scene,
@@ -1147,6 +1154,7 @@ export class World {
     x: number,
     z: number,
     y = this.collision.groundHeight(x, z),
+    camera?: T.Camera,
   ) {
     this.time += dt;
     for (const uniform of this.materials.animatedUniforms)
@@ -1161,7 +1169,7 @@ export class World {
       beacon.light.intensity = lit && this.weather === "night" ? 8 : 0;
     }
     this.coastalVegetation?.update(this.time, x, z);
-    this.detailedTrees?.update(x, z);
+    this.detailedTrees?.update(x, z, y, camera);
     this.forestDetail?.update(x, z, y);
     this.detailedArchitecture?.update(x, z);
     this.water.uniforms.time.value = this.time;
