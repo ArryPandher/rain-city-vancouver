@@ -17,6 +17,7 @@ import { ericksonPlace } from "./erickson-place";
 import { lawCourts } from "./law-courts";
 import { robsonSquare } from "./robson-square";
 import { theatres } from "./theatres";
+import { commodore } from "./commodore";
 import { buildingHeight } from "./building-profile";
 import { pitchedRoof } from "./pitched-roof";
 import { houseMaterial } from "./house-material";
@@ -131,7 +132,8 @@ export function architecture(
     if (
       lawCourts(b, shell, m) ||
       robsonSquare(b, shell, m) ||
-      theatres(b, shell, m)
+      theatres(b, shell, m) ||
+      commodore(b, shell, m, interiors, roomMaterials)
     ) {
       count++;
       continue;

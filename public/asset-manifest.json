@@ -578,5 +578,95 @@
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
     "credit": "Canmenwalker",
     "changes": "Cropped neon Diana figure; yellow-light mask removes the night sky; resized to 512 px high."
+  },
+  {
+    "file": "textures/commodore/brick-color.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/59/Vancouver_-_Commodore_Building_pano_01.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vancouver_-_Commodore_Building_pano_01.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Joe Mabel",
+    "changes": "Cropped masonry at preview rectangle 817, 147, 69, 30; mirrored into a seamless repeat; resized. Normal and roughness are estimated from image contrast, not measured surface data."
+  },
+  {
+    "file": "textures/commodore/brick-normal.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/59/Vancouver_-_Commodore_Building_pano_01.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vancouver_-_Commodore_Building_pano_01.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Joe Mabel",
+    "changes": "Cropped masonry at preview rectangle 817, 147, 69, 30; mirrored into a seamless repeat; resized. Normal and roughness are estimated from image contrast, not measured surface data."
+  },
+  {
+    "file": "textures/commodore/brick-roughness.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/59/Vancouver_-_Commodore_Building_pano_01.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vancouver_-_Commodore_Building_pano_01.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Joe Mabel",
+    "changes": "Cropped masonry at preview rectangle 817, 147, 69, 30; mirrored into a seamless repeat; resized. Normal and roughness are estimated from image contrast, not measured surface data."
+  },
+  {
+    "file": "textures/commodore/woven-brick-color.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/59/Vancouver_-_Commodore_Building_pano_01.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vancouver_-_Commodore_Building_pano_01.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Joe Mabel",
+    "changes": "Cropped masonry at preview rectangle 961, 301, 72, 25; mirrored into a seamless repeat; resized. Normal and roughness are estimated from image contrast, not measured surface data."
+  },
+  {
+    "file": "textures/commodore/woven-brick-normal.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/59/Vancouver_-_Commodore_Building_pano_01.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vancouver_-_Commodore_Building_pano_01.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Joe Mabel",
+    "changes": "Cropped masonry at preview rectangle 961, 301, 72, 25; mirrored into a seamless repeat; resized. Normal and roughness are estimated from image contrast, not measured surface data."
+  },
+  {
+    "file": "textures/commodore/woven-brick-roughness.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/59/Vancouver_-_Commodore_Building_pano_01.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vancouver_-_Commodore_Building_pano_01.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Joe Mabel",
+    "changes": "Cropped masonry at preview rectangle 961, 301, 72, 25; mirrored into a seamless repeat; resized. Normal and roughness are estimated from image contrast, not measured surface data."
+  },
+  {
+    "file": "textures/commodore/tile-frieze.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/59/Vancouver_-_Commodore_Building_pano_01.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vancouver_-_Commodore_Building_pano_01.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Joe Mabel",
+    "changes": "Cropped ornamental detail, resized and converted to WebP."
+  },
+  {
+    "file": "textures/commodore/rosette.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/59/Vancouver_-_Commodore_Building_pano_01.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Vancouver_-_Commodore_Building_pano_01.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "credit": "Joe Mabel",
+    "changes": "Cropped ornamental detail, resized and converted to WebP."
+  },
+  {
+    "file": "textures/commodore/neon-color.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/3/3d/The_fabulous_commodore_ballroom_neon_%283683353819%29.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:The_fabulous_commodore_ballroom_neon_(3683353819).jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "credit": "Ben Aston",
+    "changes": "Cropped photographed lettering and mounts; resized; an emission mask suppresses dark surroundings."
+  },
+  {
+    "file": "textures/commodore/neon-emission.webp",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/3/3d/The_fabulous_commodore_ballroom_neon_%283683353819%29.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:The_fabulous_commodore_ballroom_neon_(3683353819).jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "credit": "Ben Aston",
+    "changes": "Cropped photographed lettering and mounts; resized; an emission mask suppresses dark surroundings."
   }
 ]
