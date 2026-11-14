@@ -15,28 +15,29 @@ export class Materials {
  constructor(){
   this.asphalt=this.pbr('asphalt_02',0x92999b,.48);this.asphalt.normalScale.set(.42,.42);this.asphalt.metalness=.12;
   this.concrete=this.pbr('concrete_pavement',0xb4b0a7,.84);this.grass=this.pbr('aerial_grass_rock',0x688052,.97);
-  for(let i=0;i<6;i++)this.facades.push(this.facade(i));
+  for(let i=0;i<12;i++)this.facades.push(this.facade(i));
  }
  texture(name:string,color=false){const t=this.loader.load(`${BASE}textures/${name}`);t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=8;if(color)t.colorSpace=T.SRGBColorSpace;return t}
  pbr(id:string,color:number,roughness:number){return new T.MeshStandardMaterial({color,map:this.texture(`${id}-color.jpg`,true),normalMap:this.texture(`${id}-normal.jpg`),roughnessMap:this.texture(`${id}-roughness.jpg`),roughness,normalScale:new T.Vector2(.5,.5)})}
  facade(style:number){
   const c=document.createElement('canvas');c.width=512;c.height=1024;const ctx=c.getContext('2d')!;
   const e=document.createElement('canvas');e.width=512;e.height=1024;const ec=e.getContext('2d')!;ec.fillStyle='#000';ec.fillRect(0,0,512,1024);
-  const rand=seeded(110+style),brick=style>=4;
-  const bases=['#73949d','#637c84','#8a989b','#b2b0a7','#6b4c3f','#aaa19a'];ctx.fillStyle=bases[style];ctx.fillRect(0,0,512,1024);
-  if(brick){for(let row=0;row<128;row++){for(let col=0;col<20;col++){ctx.fillStyle=`rgba(0,0,0,${.06+rand()*.1})`;ctx.fillRect(col*28-(row%2)*14,row*8,27,1)}}}
+  const r=document.createElement('canvas');r.width=512;r.height=1024;const rc=r.getContext('2d')!;rc.fillStyle='#dedede';rc.fillRect(0,0,512,1024);
+  const rand=seeded(110+style),brick=style>=8,curtain=style<3;const bases=['#435c61','#748484','#46565b','#9caaa9','#899088','#a3a09a','#737f83','#bbb7ad','#755b4d','#9b9183','#8e7564','#aca595'];
+  ctx.fillStyle=bases[style];ctx.fillRect(0,0,512,1024);
+  if(brick){for(let row=0;row<128;row++)for(let col=0;col<20;col++){ctx.fillStyle=`rgba(0,0,0,${.05+rand()*.15})`;ctx.fillRect(col*28-(row%2)*14,row*8,27,1);ctx.fillStyle='rgba(218,207,188,.07)';ctx.fillRect(col*28-(row%2)*14,row*8+1,1,7)}}
   for(let row=0;row<16;row++)for(let col=0;col<8;col++){
-   const x=col*64,y=row*64;const lit=rand()>.74;const margin=brick?13:3;
-   ctx.fillStyle=brick?'#302d2a':'#253e49';ctx.fillRect(x+margin,y+5,64-margin*2,50);
-   const grad=ctx.createLinearGradient(x,y,x+60,y+55);grad.addColorStop(0,lit?'#948c72':'#8fa8b0');grad.addColorStop(.48,lit?'#beb294':'#526e7a');grad.addColorStop(1,lit?'#646354':'#344b56');ctx.fillStyle=grad;ctx.fillRect(x+margin+2,y+7,60-margin*2,46);
-   ctx.fillStyle='rgba(13,27,33,.33)';ctx.fillRect(x+31,y+7,2,46);ctx.fillStyle='rgba(210,223,225,.18)';ctx.fillRect(x+margin,y+5,64-margin*2,2);
-   if(rand()>.4){ctx.fillStyle='rgba(26,36,43,.27)';ctx.fillRect(x+margin+2,y+7,60-margin*2,rand()*35)}
-   ctx.fillStyle=brick?'#aca495':'#a0aeb1';ctx.fillRect(x,y+59,64,brick?5:3);
+   const x=col*64,y=row*64,lit=rand()>.90;const margin=brick?12:curtain?1:style===5?20:7;
+   ctx.fillStyle='#171f22';ctx.fillRect(x+margin,y+5,64-margin*2,51);
+   const grad=ctx.createLinearGradient(x,y,x+50,y+58);grad.addColorStop(0,lit?'#968d71':curtain?'#5e7b82':'#536771');grad.addColorStop(.5,lit?'#887c62':curtain?'#3e555e':'#34464e');grad.addColorStop(1,lit?'#4c4a3c':'#1e2e36');ctx.fillStyle=grad;ctx.fillRect(x+margin+2,y+7,60-margin*2,46);
+   if(rand()>.45){ctx.fillStyle='rgba(12,23,27,.25)';ctx.fillRect(x+margin+2,y+7,60-margin*2,rand()*32)}
+   ctx.fillStyle=curtain?'#788a8c':'#a9aaa0';ctx.fillRect(x,y+59,64,curtain?2:5);ctx.fillStyle='#161f25';ctx.fillRect(x+31,y+7,1,46);ctx.fillStyle='rgba(206,223,223,.25)';ctx.fillRect(x+margin+2,y+7,1,46);
+   rc.fillStyle=curtain?'#404040':'#606060';rc.fillRect(x+margin+2,y+7,60-margin*2,46);
    if(lit){ec.fillStyle=['#c4b085','#8c927d','#c9a476'][Math.floor(rand()*3)];ec.fillRect(x+margin+2,y+7,60-margin*2,46)}
   }
-  const image=ctx.getImageData(0,0,512,1024);for(let i=0;i<image.data.length;i+=4){let d=(rand()-.5)*9;image.data[i]+=d;image.data[i+1]+=d;image.data[i+2]+=d}ctx.putImageData(image,0,0);
-  const map=new T.CanvasTexture(c),em=new T.CanvasTexture(e);map.colorSpace=em.colorSpace=T.SRGBColorSpace;map.wrapS=map.wrapT=em.wrapS=em.wrapT=T.RepeatWrapping;map.anisotropy=8;
-  return new T.MeshStandardMaterial({map,emissiveMap:em,emissive:0xffeac5,emissiveIntensity:.18,metalness:brick?.1:.42,roughness:brick?.88:.3});
+  const image=ctx.getImageData(0,0,512,1024);for(let i=0;i<image.data.length;i+=4){let d=(rand()-.5)*7;image.data[i]+=d;image.data[i+1]+=d;image.data[i+2]+=d}ctx.putImageData(image,0,0);
+  const map=new T.CanvasTexture(c),em=new T.CanvasTexture(e),rough=new T.CanvasTexture(r);map.colorSpace=em.colorSpace=T.SRGBColorSpace;for(const t of [map,em,rough]){t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=8}
+  return new T.MeshStandardMaterial({map,roughnessMap:rough,bumpMap:rough,bumpScale:.035,emissiveMap:em,emissive:0xffeac5,emissiveIntensity:.12,metalness:brick?.05:curtain?.65:.24,roughness:brick?.95:.75});
  }
  setNight(n:number){this.facades.forEach(m=>m.emissiveIntensity=.12+n*.8)}
 }

@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {vecs} from './data';
+export function normalizeGeometry(g:T.BufferGeometry){for(const k of Object.keys(g.attributes))if(!['position','normal','uv'].includes(k))g.deleteAttribute(k);const n=g.getAttribute('position').count;if(!g.getIndex())g.setIndex(Array.from({length:n},(_,i)=>i));if(!g.getAttribute('normal'))g.computeVertexNormals();if(!g.getAttribute('uv'))g.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(n*2),2));return g}
 export function flatPolygon(p:number[],holes:number[][]=[],y=0,scale=5){const s=new T.Shape(vecs(p));for(const h of holes)s.holes.push(new T.Path(vecs(h)));const g=new T.ShapeGeometry(s);g.rotateX(-Math.PI/2);g.translate(0,y,0);const pos=g.getAttribute('position'),uv=g.getAttribute('uv');for(let i=0;i<pos.count;i++)uv.setXY(i,pos.getX(i)/scale,pos.getZ(i)/scale);return g}
 export function ribbon(points:number[],width:number,y=0,height?:(x:number,z:number)=>number,texScale=5):T.BufferGeometry {
  const pos:number[]=[],uv:number[]=[],idx:number[]=[];let traveled=0;let prev=[0,0];
@@ -11,6 +12,6 @@ export function walls(p:number[],height:number){const pos:number[]=[],uv:number[
 export class Batcher{
  groups=new Map<string,{geo:T.BufferGeometry[];mat:T.Material;x:number;z:number}>();
  constructor(public parent:T.Object3D,public size=420){}
- add(g:T.BufferGeometry,mat:T.Material,x:number,z:number,key=''){const cx=Math.floor(x/this.size),cz=Math.floor(z/this.size),k=`${cx},${cz},${mat.uuid},${key}`;let b=this.groups.get(k);if(!b)this.groups.set(k,b={geo:[],mat,x:cx*this.size+this.size/2,z:cz*this.size+this.size/2});b.geo.push(g)}
- finish(shadow=true){const chunks:T.Mesh[]=[];for(const b of this.groups.values()){const g=mergeGeometries(b.geo,false);if(!g)continue;g.computeBoundingSphere();const m=new T.Mesh(g,b.mat);m.castShadow=shadow;m.receiveShadow=true;m.userData.center=[b.x,b.z];this.parent.add(m);chunks.push(m);b.geo.forEach(g=>g.dispose())}this.groups.clear();return chunks}
+ add(g:T.BufferGeometry,mat:T.Material,x:number,z:number,key=''){if(!g.getIndex())g.setIndex(Array.from({length:g.getAttribute('position').count},(_,i)=>i));const cx=Math.floor(x/this.size),cz=Math.floor(z/this.size),k=`${cx},${cz},${mat.uuid},${key}`;let b=this.groups.get(k);if(!b)this.groups.set(k,b={geo:[],mat,x:cx*this.size+this.size/2,z:cz*this.size+this.size/2});b.geo.push(g)}
+ finish(shadow=true){const chunks:T.Mesh[]=[];for(const b of this.groups.values()){const g=mergeGeometries(b.geo,false);if(!g)continue;g.computeBoundingSphere();const m=new T.Mesh(g,b.mat);m.userData.allowShadow=shadow;m.castShadow=shadow;m.receiveShadow=true;m.userData.center=[b.x,b.z];this.parent.add(m);chunks.push(m);b.geo.forEach(g=>g.dispose())}this.groups.clear();return chunks}
 }
