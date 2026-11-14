@@ -14,7 +14,7 @@ import {
   Road,
 } from "./data";
 import { Materials, mesh, box, label, BASE } from "./materials";
-import { Batcher, flatPolygon, ribbon, walls } from "./geometry";
+import { Batcher, flatPolygon, ribbon, walls, subdividePath } from "./geometry";
 import { CollisionWorld, BRIDGES } from "./collision";
 import { architecture } from "./architecture";
 import { buildLandmarks } from "./landmarks";
@@ -35,6 +35,7 @@ import { ROBSON_PLANTERS, gridXZ } from "./robson-site";
 import { reconcileTrees, treeProfile, type TreeProfile } from "./tree-profile";
 import { ForestHabitat } from "./forest-habitat";
 import { ForestDetail, forestGround } from "./forest";
+import { terrainMeshes, type TerrainArea } from "./terrain-mesh";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -121,7 +122,7 @@ export class World {
     report("Building the waterfront", 0.68);
     const landmarkRoot = new T.Group();
     this.root.add(landmarkRoot);
-    buildLandmarks(landmarkRoot, this.materials);
+    buildLandmarks(landmarkRoot, this.materials, this.collision);
     this.mergeStatic(landmarkRoot);
     this.streetDetails();
     await new Promise((r) => setTimeout(r, 20));
@@ -240,8 +241,10 @@ export class World {
       .getAttribute("uv")
       .array.forEach((_, i, a) => (a[i] *= 2800));
     floor.castShadow = false;
+    const elevationGrid = this.data.terrain;
     const b = new Batcher(this.root, 600),
       woodlandMaterial = forestGround(m);
+    const terrainAreas: TerrainArea[] = [];
     for (const a of this.data.areas) {
       if (a.kind === "water") continue;
       let mat = this.forestHabitat.woodland.includes(a)
@@ -252,6 +255,26 @@ export class World {
       if (a.kind === "beach")
         mat = new T.MeshStandardMaterial({ color: 0xb2a894, roughness: 1 });
       const [x, z] = centroid(a.pts);
+      if (elevationGrid?.intersects(a.pts)) {
+        terrainAreas.push({
+          area: a,
+          material: mat,
+          priority:
+            mat === m.concrete || a.kind === "beach"
+              ? 30
+              : a.kind === "grass"
+                ? 20
+                : mat === woodlandMaterial
+                  ? 10
+                  : 0,
+        });
+        if (
+          a.pts.every(
+            (v, i) => i % 2 === 1 || elevationGrid.contains(v, a.pts[i + 1]),
+          )
+        )
+          continue;
+      }
       try {
         const elevation =
           mat === m.concrete
@@ -275,6 +298,11 @@ export class World {
           z,
         );
       } catch {}
+    }
+    if (elevationGrid) {
+      const ground = terrainMeshes(elevationGrid, terrainAreas, m.grass);
+      this.root.add(...ground);
+      this.chunks.push(...ground);
     }
     const cityBase = mesh(
       flatPolygon(
@@ -313,8 +341,17 @@ export class World {
       mesh(flatPolygon(o, [], 0.065, 1), this.water, this.root).castShadow =
         false;
     for (const a of this.data.areas.filter((a) => a.kind === "water"))
-      mesh(flatPolygon(a.pts, [], 0.065, 1), this.water, this.root).castShadow =
-        false;
+      mesh(
+        flatPolygon(
+          a.pts,
+          [],
+          (this.data.terrain?.meta.lakes.find((l) => l.name === a.name)
+            ?.height ?? 0) + 0.065,
+          1,
+        ),
+        this.water,
+        this.root,
+      ).castShadow = false;
     // Ocean outside the core extract, with land on either side of the inlet.
     const oceanRect = (
       minX: number,
@@ -351,7 +388,25 @@ export class World {
           /^(Water Street|Alexander Street)$/.test(r.name ?? "") &&
           x > 450 &&
           x < 1800;
-      const height = (x: number, z: number) => this.collision.height(x, z);
+      const onTerrain = this.data.terrain?.intersects(r.pts) ?? false;
+      const bridgeRoute = /Lions Gate Bridge/.test(r.name ?? "");
+      const height = (x: number, z: number) =>
+        this.collision.roadHeight(r, x, z);
+      const roadRibbon = (
+        points: number[],
+        width: number,
+        y = 0,
+        _height = height,
+        scale = 5,
+      ) =>
+        ribbon(
+          onTerrain ? subdividePath(points) : points,
+          width,
+          y,
+          height,
+          scale,
+          onTerrain && !bridgeRoute,
+        );
       if (street)
         for (let i = 0; i < r.pts.length - 2; i += 2) {
           const ax = r.pts[i],
@@ -371,7 +426,7 @@ export class World {
                 bz - dz * 7 - dx * offset,
               ];
             b.add(
-              ribbon(points, 2.5, 0.15, height, 4),
+              roadRibbon(points, 2.5, 0.15, height, 4),
               m.concrete,
               x,
               z,
@@ -385,7 +440,7 @@ export class World {
                 bz - dz * 7 - dx * curbOffset,
               ];
             b.add(
-              ribbon(curb, 0.17, 0.17, height, 4),
+              roadRibbon(curb, 0.17, 0.17, height, 4),
               m.stone,
               x,
               z,
@@ -394,7 +449,7 @@ export class World {
           }
         }
       b.add(
-        ribbon(
+        roadRibbon(
           r.pts,
           width,
           street ? 0.092 : r.walkway ? 0.15 : 0.07,
@@ -409,7 +464,7 @@ export class World {
       if (street && !historic && r.kind !== "residential")
         for (const line of roadMarkings(r, junctions.get(r)))
           b.add(
-            ribbon(line.pts, 0.1, 0.102, height),
+            roadRibbon(line.pts, 0.1, 0.102, height),
             line.yellow ? m.yellow : stripes,
             line.pts[0],
             line.pts[1],
@@ -417,7 +472,7 @@ export class World {
           );
       for (const line of crosswalkMarkings(r))
         b.add(
-          ribbon(line.pts, line.width, 0.111, height),
+          roadRibbon(line.pts, line.width, 0.111, height),
           stripes,
           line.pts[0],
           line.pts[1],
@@ -570,7 +625,7 @@ export class World {
         const profile = list[i],
           { x, z, height: h, width, diameter, crownBase, rotation } = profile;
         const t = rotation / (Math.PI * 2);
-        const ground = profile.ground ?? this.collision.height(x, z);
+        const ground = profile.ground ?? this.collision.groundHeight(x, z);
         const trunkHeight = h * (crownBase + 0.2);
         dummy.position.set(x, ground + trunkHeight / 2, z);
         dummy.rotation.set(0, rotation, 0);
@@ -667,6 +722,7 @@ export class World {
     for (const r of this.data.roads) {
       if (!isStreet(r) || r.kind === "residential") continue;
       for (let i = 0; i < r.pts.length - 2; i += 2) {
+        b.offsetY = 0;
         const ax = r.pts[i],
           az = r.pts[i + 1],
           bx = r.pts[i + 2],
@@ -687,7 +743,7 @@ export class World {
           )
             continue;
           this.streetFurniture.push({ kind: "lamp", x, z });
-          const h = this.collision.height(x, z);
+          const h = this.collision.groundHeight(x, z);
           if (
             /^(Water Street|Alexander Street|Carrall Street)$/.test(
               r.name ?? "",
@@ -808,6 +864,7 @@ export class World {
           )
             continue;
           this.streetFurniture.push({ kind: "sign", x, z });
+          b.offsetY = this.collision.groundHeight(x, z);
           let mat = signCache.get(r.name);
           if (!mat) {
             mat = new T.MeshStandardMaterial({

@@ -37,6 +37,7 @@ export function ribbon(
   y = 0,
   height?: (x: number, z: number) => number,
   texScale = 5,
+  followEdges = false,
 ): T.BufferGeometry {
   const pos: number[] = [],
     uv: number[] = [],
@@ -56,11 +57,26 @@ export function ribbon(
     if (i) traveled += Math.hypot(x - prev[0], z - prev[1]);
     prev = [x, z];
     const h = (height?.(x, z) ?? 0) + y;
-    pos.push(x + nx, h, z + nz, x - nx, h, z - nz);
-    uv.push(0, traveled / texScale, width / texScale, traveled / texScale);
-    if (i) {
-      const a = i - 2;
-      idx.push(a, a + 1, a + 2, a + 2, a + 1, a + 3);
+    const across = followEdges ? Math.max(1, Math.ceil(width / 2)) : 1;
+    const row = (i / 2) * (across + 1);
+    for (let k = 0; k <= across; k++) {
+      const t = k / across,
+        xx = x + nx * (1 - 2 * t),
+        zz = z + nz * (1 - 2 * t);
+      pos.push(xx, followEdges ? (height?.(xx, zz) ?? 0) + y : h, zz);
+      uv.push((t * width) / texScale, traveled / texScale);
+      if (i && k < across) {
+        const previous = row - (across + 1) + k,
+          current = row + k;
+        idx.push(
+          previous,
+          previous + 1,
+          current,
+          current,
+          previous + 1,
+          current + 1,
+        );
+      }
     }
   }
   const g = new T.BufferGeometry();
@@ -94,6 +110,7 @@ export function walls(p: number[], height: number) {
   return g;
 }
 export class Batcher {
+  offsetY = 0;
   groups = new Map<
     string,
     { geo: T.BufferGeometry[]; mat: T.Material; x: number; z: number }
@@ -103,6 +120,7 @@ export class Batcher {
     public size = 420,
   ) {}
   add(g: T.BufferGeometry, mat: T.Material, x: number, z: number, key = "") {
+    if (this.offsetY) g.translate(0, this.offsetY, 0);
     if (!g.getIndex())
       g.setIndex(
         Array.from({ length: g.getAttribute("position").count }, (_, i) => i),
@@ -158,4 +176,24 @@ export function bakeGeometry(source: T.BufferGeometry, matrix: T.Matrix4) {
     geometry.setAttribute(name, new T.BufferAttribute(values, 3));
   }
   return geometry.applyMatrix4(matrix);
+}
+
+export function subdividePath(points: number[], step = 2) {
+  const out: number[] = [];
+  for (let i = 0; i < points.length - 2; i += 2) {
+    const n = Math.max(
+      1,
+      Math.ceil(
+        Math.hypot(points[i + 2] - points[i], points[i + 3] - points[i + 1]) /
+          step,
+      ),
+    );
+    for (let j = 0; j < n; j++)
+      out.push(
+        points[i] + ((points[i + 2] - points[i]) * j) / n,
+        points[i + 1] + ((points[i + 3] - points[i + 1]) * j) / n,
+      );
+  }
+  out.push(...points.slice(-2));
+  return out;
 }

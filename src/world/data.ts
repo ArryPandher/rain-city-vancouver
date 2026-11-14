@@ -1,4 +1,5 @@
 import { Vector2 } from "three";
+import { loadTerrain, type Terrain } from "./terrain";
 import type { PublicTreeLayer } from "./tree-profile";
 export type Point = [number, number];
 export interface Road {
@@ -55,6 +56,7 @@ export interface CityData {
   buildings: Building[];
   trees: number[];
   publicTrees?: PublicTreeLayer;
+  terrain?: Terrain;
   ocean: number[][];
   pois: { name: string; kind: string; x: number; y: number }[];
 }
@@ -220,6 +222,11 @@ export async function loadCity(): Promise<CityData> {
     d.publicTrees = layer;
   } catch (e) {
     console.warn("City tree inventory unavailable; using mapped trees", e);
+  }
+  try {
+    d.terrain = await loadTerrain(import.meta.env.BASE_URL);
+  } catch (error) {
+    console.warn("Park elevation unavailable; using the flat base map", error);
   }
   return d;
 }

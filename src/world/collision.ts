@@ -67,7 +67,7 @@ export const BRIDGES: Bridge[] = [
     a: [-1590, -3185],
     b: [-520, -4958],
     width: 22,
-    height: 42,
+    height: 61,
     style: "suspension",
   },
   {
@@ -114,8 +114,19 @@ export function bridgeSample(b: Bridge, x: number, z: number) {
   }
   return best;
 }
-export const bridgeY = (b: Bridge, t: number) =>
-  Math.pow(Math.sin(Math.PI * t), 1.1) * b.height;
+export const bridgeY = (
+  b: Bridge,
+  t: number,
+  ends: [number, number] = [0, 0],
+) => {
+  t = Math.max(0, Math.min(1, t));
+  const baseline = ends[0] * (1 - t) + ends[1] * t;
+  const peak = Math.max(b.height, ends[0] + 3, ends[1] + 3);
+  return (
+    baseline +
+    Math.pow(Math.sin(Math.PI * t), 1.1) * (peak - (ends[0] + ends[1]) / 2)
+  );
+};
 export class SpatialHash<T> {
   cells = new Map<string, T[]>();
   constructor(public size = 64) {}
@@ -193,23 +204,39 @@ export class CollisionWorld {
         );
     }
   }
-  bridgeAt(x: number, z: number) {
+  groundHeight(x: number, z: number) {
+    return this.robsonGarden
+      ? (robsonHeight(x, z, this.robsonGarden.pts) ??
+          this.data.terrain?.height(x, z) ??
+          0)
+      : (this.data.terrain?.height(x, z) ?? 0);
+  }
+  roadHeight(road: Road, x: number, z: number) {
+    return this.data.terrain?.contains(x, z) &&
+      !/Lions Gate Bridge/.test(road.name ?? "")
+      ? this.groundHeight(x, z)
+      : this.height(x, z);
+  }
+  bridgeHeight(b: Bridge, t: number) {
+    return bridgeY(b, t, [
+      this.groundHeight(...b.a),
+      this.groundHeight(...b.b),
+    ]);
+  }
+  bridgeAt(x: number, z: number, referenceY = Infinity) {
     for (const b of BRIDGES) {
       const s = bridgeSample(b, x, z);
-      if (s.d < b.width * 0.52) return { bridge: b, ...s };
+      if (s.d < b.width * 0.52 && this.bridgeHeight(b, s.t) <= referenceY + 3)
+        return { bridge: b, ...s };
     }
     return null;
   }
-  height(x: number, z: number) {
-    const b = this.bridgeAt(x, z);
-    return b
-      ? bridgeY(b.bridge, b.t)
-      : this.robsonGarden
-        ? (robsonHeight(x, z, this.robsonGarden.pts) ?? 0)
-        : 0;
+  height(x: number, z: number, referenceY = Infinity) {
+    const b = this.bridgeAt(x, z, referenceY);
+    return b ? this.bridgeHeight(b.bridge, b.t) : this.groundHeight(x, z);
   }
-  water(x: number, z: number) {
-    if (this.bridgeAt(x, z)) return false;
+  water(x: number, z: number, referenceY = Infinity) {
+    if (this.bridgeAt(x, z, referenceY)) return false;
     if (x < bounds.minX || z < -8500) return true;
     return (
       this.data.ocean.some((p) => pointInPoly(x, z, p)) ||
@@ -218,10 +245,14 @@ export class CollisionWorld {
       )
     );
   }
-  blocked(x: number, z: number, r = 0.4) {
+  blocked(x: number, z: number, r = 0.4, referenceY = Infinity) {
     if (this.robsonGarden && robsonObstacle(x, z, r)) return true;
-    const bridge = this.bridgeAt(x, z);
-    if (bridge && bridgeY(bridge.bridge, bridge.t) > 2) return false;
+    const bridge = this.bridgeAt(x, z, referenceY);
+    if (
+      bridge &&
+      this.bridgeHeight(bridge.bridge, bridge.t) > this.groundHeight(x, z) + 2
+    )
+      return false;
     for (const tree of this.forestObstacles.query(x, z, r))
       if (Math.hypot(x - tree.x, z - tree.z) < r + tree.radius) return true;
     for (const b of this.buildings.query(x, z, r)) {
@@ -314,7 +345,14 @@ export class CollisionWorld {
       }
     return [x, z] as [number, number];
   }
-  move(x: number, z: number, dx: number, dz: number, r: number) {
+  move(
+    x: number,
+    z: number,
+    dx: number,
+    dz: number,
+    r: number,
+    referenceY = Infinity,
+  ) {
     const steps = Math.max(
       1,
       Math.ceil(Math.hypot(dx, dz) / Math.max(0.2, r * 0.6)),
@@ -323,13 +361,13 @@ export class CollisionWorld {
     for (let i = 0; i < steps; i++) {
       const nx = x + dx / steps,
         nz = z + dz / steps;
-      if (!this.blocked(nx, nz, r)) {
+      if (!this.blocked(nx, nz, r, referenceY)) {
         x = nx;
         z = nz;
       } else {
         hit = true;
-        if (!this.blocked(nx, z, r)) x = nx;
-        if (!this.blocked(x, nz, r)) z = nz;
+        if (!this.blocked(nx, z, r, referenceY)) x = nx;
+        if (!this.blocked(x, nz, r, referenceY)) z = nz;
       }
     }
     return { x, z, hit };

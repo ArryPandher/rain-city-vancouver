@@ -2,14 +2,24 @@ import * as T from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { Materials, box, mesh, beam, label } from "./materials";
 import { geo, centroid, Building } from "./data";
-import { BRIDGES, bridgeY, bridgePoint, bridgeSample } from "./collision";
+import {
+  BRIDGES,
+  bridgeY,
+  bridgePoint,
+  bridgeSample,
+  CollisionWorld,
+} from "./collision";
 import { ribbon } from "./geometry";
-export function buildLandmarks(parent: T.Group, m: Materials) {
+export function buildLandmarks(
+  parent: T.Group,
+  m: Materials,
+  collision?: CollisionWorld,
+) {
   const landmarkGroups: T.Group[] = [];
   function place(lat: number, lon: number, angle = 0) {
     const g = new T.Group();
     const [x, z] = geo(lat, lon);
-    g.position.set(x, 0, z);
+    g.position.set(x, collision?.groundHeight(x, z) ?? 0, z);
     g.rotation.y = angle;
     parent.add(g);
     landmarkGroups.push(g);
@@ -234,6 +244,7 @@ export function buildLandmarks(parent: T.Group, m: Materials) {
   }
   // Bridges have playable continuous elevation profiles matching their rendered deck.
   for (const b of BRIDGES) {
+    const deckY = (t: number) => collision?.bridgeHeight(b, t) ?? bridgeY(b, t);
     const g = new T.Group();
     parent.add(g);
     const length = Math.hypot(b.b[0] - b.a[0], b.b[1] - b.a[1]),
@@ -244,7 +255,7 @@ export function buildLandmarks(parent: T.Group, m: Materials) {
       points.push(...bridgePoint(b, t));
     }
     const height = (x: number, z: number) => {
-      return bridgeY(b, bridgeSample(b, x, z).t);
+      return deckY(bridgeSample(b, x, z).t);
     };
     mesh(ribbon(points, b.width, 0.0, height), m.asphalt, g);
     const dx = (b.b[0] - b.a[0]) / length,
@@ -265,8 +276,8 @@ export function buildLandmarks(parent: T.Group, m: Materials) {
         beam(
           g,
           m.concrete,
-          p(t, edge, bridgeY(b, t) + 0.5),
-          p(tt, edge, bridgeY(b, tt) + 0.5),
+          p(t, edge, deckY(t) + 0.5),
+          p(tt, edge, deckY(tt) + 0.5),
           0.4,
           6,
         );
@@ -274,16 +285,16 @@ export function buildLandmarks(parent: T.Group, m: Materials) {
           beam(
             g,
             m.chrome,
-            p(t, edge, bridgeY(b, t) + 0.5),
-            p(t, edge, bridgeY(b, t) + 2),
+            p(t, edge, deckY(t) + 0.5),
+            p(t, edge, deckY(t) + 2),
             0.06,
             5,
           );
         beam(
           g,
           m.chrome,
-          p(t, edge, bridgeY(b, t) + 2),
-          p(tt, edge, bridgeY(b, tt) + 2),
+          p(t, edge, deckY(t) + 2),
+          p(tt, edge, deckY(tt) + 2),
           0.05,
           5,
         );
@@ -299,7 +310,7 @@ export function buildLandmarks(parent: T.Group, m: Materials) {
       }
     }
     for (let t = 0.1; t < 1; t += 0.13) {
-      const y = bridgeY(b, t);
+      const y = deckY(t);
       for (const s of [-1, 1])
         beam(
           g,
@@ -331,7 +342,7 @@ export function buildLandmarks(parent: T.Group, m: Materials) {
             tt = (i + 1) / 70;
           const cable = (t: number) =>
             t < 0.28
-              ? 12 + (90 * t) / 0.28
+              ? deckY(0) + 12 + ((90 - deckY(0)) * t) / 0.28
               : t > 0.73
                 ? 102 - (90 * (t - 0.73)) / 0.27
                 : 53 + 49 * Math.pow((t - 0.505) / 0.225, 2);
@@ -347,7 +358,7 @@ export function buildLandmarks(parent: T.Group, m: Materials) {
             beam(
               g,
               m.chrome,
-              p(t, s * 12, bridgeY(b, t) + 1),
+              p(t, s * 12, deckY(t) + 1),
               p(t, s * 12, cable(t)),
               0.1,
               5,
@@ -363,8 +374,8 @@ export function buildLandmarks(parent: T.Group, m: Materials) {
       for (let i = 3; i < count - 3; i++) {
         const t = i / count,
           tt = (i + 1) / count,
-          y = bridgeY(b, t),
-          yy = bridgeY(b, tt);
+          y = deckY(t),
+          yy = deckY(tt);
         for (const s of [-1, 1]) {
           beam(
             g,

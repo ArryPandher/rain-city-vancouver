@@ -480,7 +480,12 @@ class Game {
       c === "Space" &&
       !this.vehicle &&
       this.player.y <=
-        this.world.collision.height(this.player.x, this.player.z) + 0.05
+        this.world.collision.height(
+          this.player.x,
+          this.player.z,
+          this.player.y,
+        ) +
+          0.05
     )
       this.velocityY = 5.0;
   }
@@ -497,7 +502,11 @@ class Game {
     this.combat.holster();
     this.player.set(
       near.state.x,
-      this.world.collision.height(near.state.x, near.state.z),
+      this.world.collision.height(
+        near.state.x,
+        near.state.z,
+        near.model.group.position.y,
+      ),
       near.state.z,
     );
     this.heading = near.state.heading;
@@ -528,7 +537,11 @@ class Game {
       v.state.z + side.z,
       0.4,
     );
-    this.player.set(p[0], this.world.collision.height(...p), p[1]);
+    this.player.set(
+      p[0],
+      this.world.collision.height(...p, this.player.y),
+      p[1],
+    );
     this.heading = v.state.heading;
     v.state.speed = v.state.vx = v.state.vz = 0;
     this.vehicle = null;
@@ -583,10 +596,21 @@ class Game {
     }
     p[0] = spot[0];
     p[1] = spot[1];
-    const v = this.actors.addVehicle(kind, ...p, heading);
+    const v = this.actors.addVehicle(
+      kind,
+      ...p,
+      heading,
+      false,
+      0x375f68,
+      this.player.y,
+    );
     this.vehicle = v;
     this.combat.holster();
-    this.player.set(p[0], this.world.collision.height(...p), p[1]);
+    this.player.set(
+      p[0],
+      this.world.collision.height(...p, this.player.y),
+      p[1],
+    );
     this.heading = heading;
     this.mouseYaw = heading;
     this.pitch = 0.18;
@@ -888,7 +912,7 @@ class Game {
         }
       }
       desired.y = Math.max(
-        this.world.collision.height(desired.x, desired.z) + 0.5,
+        this.world.collision.height(desired.x, desired.z, this.player.y) + 0.5,
         desired.y,
       );
       this.camera.position.lerp(
@@ -942,6 +966,7 @@ class Game {
         s.x - ox,
         s.z - oz,
         v.kind === "bike" ? 0.45 : 1.16,
+        this.player.y,
       );
       s.x = result.x;
       s.z = result.z;
@@ -952,6 +977,7 @@ class Game {
               s.x + Math.sin(s.heading) * 1.35 * sign,
               s.z + Math.cos(s.heading) * 1.35 * sign,
               0.9,
+              this.player.y,
             )
           ) {
             s.x = ox;
@@ -987,13 +1013,17 @@ class Game {
         }
       }
       this.heading = s.heading;
-      this.player.set(s.x, this.world.collision.height(s.x, s.z), s.z);
+      this.player.set(
+        s.x,
+        this.world.collision.height(s.x, s.z, this.player.y),
+        s.z,
+      );
       this.actors.sync(v, dt);
       v.model.brakes.emissiveIntensity =
         this.keys.has("Space") || throttle < 0 ? 4 : 0.65;
       if (v.kind === "bike") {
         this.character.group.position.copy(v.model.group.position);
-        this.character.group.rotation.y = s.heading;
+        this.character.group.rotation.copy(v.model.group.rotation);
         this.character.update(
           this.time,
           Math.abs(s.speed),
@@ -1025,10 +1055,15 @@ class Game {
         move.x,
         move.z,
         0.36,
+        this.player.y,
       );
       this.player.x = moved.x;
       this.player.z = moved.z;
-      const ground = this.world.collision.height(this.player.x, this.player.z);
+      const ground = this.world.collision.height(
+        this.player.x,
+        this.player.z,
+        this.player.y,
+      );
       this.velocityY -= 17 * dt;
       this.player.y = Math.max(ground, this.player.y + this.velocityY * dt);
       if (this.player.y <= ground) this.velocityY = 0;
@@ -1058,7 +1093,9 @@ class Game {
         }
       }
     }
-    if (this.world.collision.water(this.player.x, this.player.z)) {
+    if (
+      this.world.collision.water(this.player.x, this.player.z, this.player.y)
+    ) {
       this.damage = 0.65;
       this.recover();
       ui.toast("The harbour won that round. You’re back on dry land.");

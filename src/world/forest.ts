@@ -66,6 +66,7 @@ interface Pool {
 }
 export class ForestDetail {
   budget = 8;
+  private ground = (_x: number, _z: number) => 0;
   samples: TreeInstance[] = [];
   private selected: TreeInstance[] = [];
   private mediumSelected: TreeInstance[] = [];
@@ -81,6 +82,7 @@ export class ForestDetail {
   siteCount = 0;
   static async load(scene: T.Scene, habitat: ForestHabitat) {
     const result = new ForestDetail();
+    result.ground = (x, z) => habitat.collision.groundHeight(x, z);
     const loader = new GLTFLoader();
     const ids = [
       "fir_tree_01",
@@ -342,7 +344,11 @@ export class ForestDetail {
         kind === "nettle"
           ? pool.height
           : pool.width);
-      dummy.position.set(xx, kind === "rock" ? -0.12 : -0.02, zz);
+      dummy.position.set(
+        xx,
+        this.ground(xx, zz) + (kind === "rock" ? -0.12 : -0.02),
+        zz,
+      );
       dummy.rotation.set(0, angle, 0);
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();

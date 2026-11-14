@@ -128,6 +128,8 @@ export function architecture(
     mat.side = T.DoubleSide;
   });
   for (const b of data.buildings) {
+    const ground = collision.groundHeight(...centroid(b.pts));
+    shell.offsetY = detail.offsetY = interiors.offsetY = ground;
     if (specialBuilding(b)) continue;
     if (
       lawCourts(b, shell, m) ||
@@ -471,7 +473,7 @@ export function architecture(
             kind: "door",
             variant: hash(b.id) % 2,
             x: ax + (bx - ax) * doorT + nx * 0.02,
-            y: 0.15,
+            y: ground + 0.15,
             z: az + (bz - az) * doorT + nz * 0.02,
             angle,
             width: isHouse(b.kind) ? 1.1 : 1.4,
@@ -493,7 +495,7 @@ export function architecture(
                   kind: "window",
                   variant: 0,
                   x: ax + (bx - ax) * t + nx * 0.025,
-                  y: base,
+                  y: ground + base,
                   z: az + (bz - az) * t + nz * 0.025,
                   angle,
                   width: isHouse(b.kind) ? 1.45 : 1.9,

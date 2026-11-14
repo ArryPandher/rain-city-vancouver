@@ -88,6 +88,7 @@ export class Actors {
     heading: number,
     ai = false,
     color = 0x375f68,
+    referenceY = Infinity,
   ) {
     const model =
       kind === "bike"
@@ -95,7 +96,11 @@ export class Actors {
         : detailedCar(color, ai) || makeCar(this.world.materials, color);
     mergeGroup(model.body as T.Group);
     model.wheels.forEach(mergeGroup);
-    model.group.position.set(x, this.world.collision.height(x, z) + 0.12, z);
+    model.group.position.set(
+      x,
+      this.world.collision.height(x, z, referenceY) + 0.12,
+      z,
+    );
     model.group.rotation.y = heading;
     this.addShadow(model);
     this.world.scene.add(model.group);
@@ -137,6 +142,7 @@ export class Actors {
         p.heading,
         i < 16,
         colors[i % colors.length],
+        this.world.collision.roadHeight(p.road, p.x, p.z),
       );
       v.road = p.road;
       v.segment = p.segment;
@@ -159,7 +165,11 @@ export class Actors {
       p.arms.forEach(mergeGroup);
       p.legs.forEach(mergeGroup);
       this.world.scene.add(p.group);
-      p.group.position.set(at.x, this.world.collision.height(at.x, at.z), at.z);
+      p.group.position.set(
+        at.x,
+        this.world.collision.roadHeight(at.road, at.x, at.z),
+        at.z,
+      );
       const ped: Pedestrian = {
         character: p,
         road: at.road,
@@ -297,6 +307,8 @@ export class Actors {
       v.road = p.road;
       v.segment = p.segment;
       v.progress = p.t;
+      v.model.group.position.y =
+        this.world.collision.roadHeight(p.road, p.x, p.z) + 0.13;
       this.sync(v, 0);
     }
     for (const p of this.peds) {
@@ -315,7 +327,7 @@ export class Actors {
       p.direction = 1;
       p.character.group.position.set(
         at.x,
-        this.world.collision.height(at.x, at.z),
+        this.world.collision.roadHeight(at.road, at.x, at.z),
         at.z,
       );
       p.down = 0;
@@ -408,7 +420,11 @@ export class Actors {
         p.down -= dt;
         obj.rotation.z = Math.PI / 2;
         obj.position.y =
-          this.world.collision.height(obj.position.x, obj.position.z) + 0.18;
+          this.world.collision.height(
+            obj.position.x,
+            obj.position.z,
+            obj.position.y,
+          ) + 0.18;
         continue;
       }
       obj.rotation.z = 0;
@@ -435,7 +451,11 @@ export class Actors {
           obj.rotation.y +=
             angleDelta(obj.rotation.y, Math.atan2(dx, dz)) *
             (1 - Math.exp(-dt * 8));
-        obj.position.set(a.x, this.world.collision.height(a.x, a.z), a.z);
+        obj.position.set(
+          a.x,
+          this.world.collision.height(a.x, a.z, obj.position.y),
+          a.z,
+        );
       } else {
         p.direction *= -1;
       }
@@ -445,18 +465,38 @@ export class Actors {
   sync(v: Vehicle, dt: number) {
     const s = v.state,
       g = v.model.group;
-    g.position.set(s.x, this.world.collision.height(s.x, s.z) + 0.13, s.z);
+    g.position.set(
+      s.x,
+      this.world.collision.height(s.x, s.z, g.position.y) + 0.13,
+      s.z,
+    );
+    g.rotation.order = "YXZ";
     g.rotation.y = s.heading;
     const forward = new T.Vector3(Math.sin(s.heading), 0, Math.cos(s.heading));
     const y1 = this.world.collision.height(
         s.x + forward.x * 1.5,
         s.z + forward.z * 1.5,
+        g.position.y,
       ),
       y0 = this.world.collision.height(
         s.x - forward.x * 1.5,
         s.z - forward.z * 1.5,
+        g.position.y,
       );
     g.rotation.x = -Math.atan2(y1 - y0, 3);
+    const sideX = Math.cos(s.heading),
+      sideZ = -Math.sin(s.heading);
+    const left = this.world.collision.height(
+        s.x - sideX,
+        s.z - sideZ,
+        g.position.y,
+      ),
+      right = this.world.collision.height(
+        s.x + sideX,
+        s.z + sideZ,
+        g.position.y,
+      );
+    g.rotation.z = Math.atan2(right - left, 2);
     v.model.wheels.forEach((w) => (w.rotation.x += (s.speed * dt) / 0.34));
     v.model.front.forEach((w) => (w.rotation.y = s.steer));
     if (v.kind === "car") {
@@ -465,7 +505,7 @@ export class Actors {
       v.model.body.position.y =
         Math.sin(this.timer * 18) * Math.min(0.007, Math.abs(s.speed) * 0.0004);
     } else {
-      g.rotation.z = -s.steer * Math.min(0.38, Math.abs(s.speed) * 0.025);
+      g.rotation.z -= s.steer * Math.min(0.38, Math.abs(s.speed) * 0.025);
       const phase =
         (g.userData.pedalPhase ?? 0) +
         dt * Math.min(8, Math.abs(s.speed) * 0.9);

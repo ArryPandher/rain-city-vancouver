@@ -2,6 +2,7 @@ import * as T from "three";
 import { GLTFLoader, type GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
 import type { Character } from "./character";
+import { animationPose } from "./animation-pose";
 
 const templates: { male?: GLTF; female?: GLTF } = {};
 export async function loadDetailedCharacter() {
@@ -144,6 +145,7 @@ export function makeDetailedCharacter(variant = 0): Character | undefined {
   let current = actions.get("idle")!;
   current.play();
   let last = NaN;
+  const pose = animationPose(bones.values());
   const rightHand = new T.Group();
   group.add(rightHand);
   const bone = (name: string) => bones.get(name)!;
@@ -189,7 +191,9 @@ export function makeDetailedCharacter(variant = 0): Character | undefined {
         : name === "run"
           ? speed / 5.2
           : 1;
+    pose.restore();
     mixer.update(dt);
+    pose.capture();
     body.position.y = floor + (bike ? 0.07 : 0);
     body.position.z = bike ? -0.24 : 0;
     group.updateWorldMatrix(true, true);

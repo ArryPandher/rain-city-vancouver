@@ -28,3 +28,6 @@ Exact files, URLs, authors and modifications: [model source manifest](stanley-fo
 Exact LOD counts, sampling, bounds and modifications are recorded in [C medium](stanley-conifer-lod.json), [B near](fir_tree_01-b-lod.json) and [B medium](fir_tree_01-b-medium-lod.json). Source caches can be deleted after validation; the scripts reproduce them.
 
 No Rockstar assets or Vancouver reference photographs are distributed in this forest pass.
+
+
+The later terrain pass grounds these models on City contour-derived heights; see [Stanley terrain](stanley-terrain.md). Earlier flat-ground limitations above describe the preceding build.

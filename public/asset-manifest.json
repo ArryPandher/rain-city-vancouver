@@ -280,84 +280,84 @@
     "file": "models/vancouver/canada-place.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/canada-place-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/science-world-vancouver.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/science-world-vancouver-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/bc-place.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/bc-place-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/harbour-centre.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/harbour-centre-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/vancouver-house.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/vancouver-house-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/fairmont-hotel-vancouver.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/fairmont-hotel-vancouver-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/marine-building.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/marine-building-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/vancouver-public-library.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/vancouver-public-library-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/rogers-arena.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/rogers-arena-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/vancouver-art-gallery.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/vancouver-art-gallery-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/gastown-steam-clock.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/gastown-steam-clock-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
     "file": "models/vancouver/waterfront-station-vancouver.glb",
     "source": "https://3d-assets.codriver.io/models/buildings/waterfront-station-vancouver-near.glb",
     "license": "CC-BY-4.0",
-    "credit": "Codriver; geographic placement \u00a9 OpenStreetMap contributors",
+    "credit": "Codriver; geographic placement © OpenStreetMap contributors",
     "changes": "Metre-scale placement, material response, generated texture coordinates; source GLB preserved."
   },
   {
@@ -391,7 +391,7 @@
     "credit": "Sergej Majboroda",
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "changes": "Resized to 4096 \u00d7 2048 WebP; box-projected behind fictional shop windows."
+    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
   },
   {
     "file": "textures/interiors/decor_shop.webp",
@@ -399,7 +399,7 @@
     "credit": "Sergej Majboroda",
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "changes": "Resized to 4096 \u00d7 2048 WebP; box-projected behind fictional shop windows."
+    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
   },
   {
     "file": "textures/interiors/phone_shop.webp",
@@ -407,7 +407,7 @@
     "credit": "Philip Modin",
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "changes": "Resized to 4096 \u00d7 2048 WebP; box-projected behind fictional shop windows."
+    "changes": "Resized to 4096 × 2048 WebP; box-projected behind fictional shop windows."
   },
   {
     "file": "models/architectural-details.glb",
@@ -423,7 +423,7 @@
     "credit": "ambientCG",
     "license": "CC0-1.0",
     "licenseUrl": "https://docs.ambientcg.com/license/",
-    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 × 25.6 m tile calibration (14 panes / 8 floors)."
   },
   {
     "file": "textures/curtain-wall/emission.webp",
@@ -431,7 +431,7 @@
     "credit": "ambientCG",
     "license": "CC0-1.0",
     "licenseUrl": "https://docs.ambientcg.com/license/",
-    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 × 25.6 m tile calibration (14 panes / 8 floors)."
   },
   {
     "file": "textures/curtain-wall/metalness.webp",
@@ -439,7 +439,7 @@
     "credit": "ambientCG",
     "license": "CC0-1.0",
     "licenseUrl": "https://docs.ambientcg.com/license/",
-    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 × 25.6 m tile calibration (14 panes / 8 floors)."
   },
   {
     "file": "textures/curtain-wall/normalgl.webp",
@@ -447,7 +447,7 @@
     "credit": "ambientCG",
     "license": "CC0-1.0",
     "licenseUrl": "https://docs.ambientcg.com/license/",
-    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 × 25.6 m tile calibration (14 panes / 8 floors)."
   },
   {
     "file": "textures/curtain-wall/roughness.webp",
@@ -455,7 +455,7 @@
     "credit": "ambientCG",
     "license": "CC0-1.0",
     "licenseUrl": "https://docs.ambientcg.com/license/",
-    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 \u00d7 25.6 m tile calibration (14 panes / 8 floors)."
+    "changes": "2K WebP conversion; sparse night mask derived from glass metalness. Runtime blue/green tint, physical reflectance, normal strength and 22.4 × 25.6 m tile calibration (14 panes / 8 floors)."
   },
   {
     "file": "textures/night-reflections.hdr",
@@ -490,7 +490,7 @@
     "file": "data/vancouver-roads.json",
     "source": "https://www.openstreetmap.org/copyright",
     "license": "ODbL 1.0",
-    "credit": "\u00a9 OpenStreetMap contributors",
+    "credit": "© OpenStreetMap contributors",
     "sourceTimestamp": "2026-11-14T10:48:21Z",
     "reproduce": "node scripts/fetch-roads.mjs",
     "modifications": "Projected to game metres; excludes indoor/underground/construction/proposed ways; retains lane count, one-way direction, width and sidewalk tags."
@@ -672,10 +672,10 @@
   {
     "file": "data/vancouver-public-trees.json",
     "source": "https://opendata.vancouver.ca/explore/dataset/public-trees/",
-    "license": "Open Government Licence \u2013 Vancouver",
+    "license": "Open Government Licence – Vancouver",
     "licenseUrl": "https://opendata.vancouver.ca/pages/licence/",
     "credit": "City of Vancouver",
-    "attribution": "Contains information licensed under the Open Government Licence \u2013 Vancouver.",
+    "attribution": "Contains information licensed under the Open Government Licence – Vancouver.",
     "modifications": "Bounded spatial extract, local metre projection, species dictionary, duplicate/invalid/planting-site filtering. See docs/sources/vancouver-public-trees.md."
   },
   {
@@ -782,5 +782,19 @@
     "license": "CC0",
     "credit": "Rob Tuytel, Rico Cilliers",
     "changes": "Deterministic needle component sampling; transverse-only coverage compensation; medium needles flattened from folded strips to two triangles with corrected winding; wood/branch simplification with 0.008 error and recomputed branch normals. Original UVs, alpha and textures retained. Runtime normalization uses near-detail reference dimensions."
+  },
+  {
+    "file": "data/stanley-terrain.json",
+    "source": "https://opendata.vancouver.ca/explore/dataset/elevation-contour-lines-1-metre-contours/",
+    "license": "ODbL combined geographic derivative; City source Open Government Licence – Vancouver",
+    "credit": "City of Vancouver and © OpenStreetMap contributors",
+    "changes": "Approximate 2002 contours interpolated to a 4m grid, clipped/blended with the mapped OSM park boundary; interpreted road grades, seawall level and lake beds. See docs/sources/stanley-terrain.md."
+  },
+  {
+    "file": "data/stanley-height.u16",
+    "source": "https://opendata.vancouver.ca/explore/dataset/elevation-contour-lines-1-metre-contours/",
+    "license": "ODbL combined geographic derivative; City source Open Government Licence – Vancouver",
+    "credit": "City of Vancouver and © OpenStreetMap contributors",
+    "changes": "Approximate 2002 contours interpolated to a 4m grid, clipped/blended with the mapped OSM park boundary; interpreted road grades, seawall level and lake beds. See docs/sources/stanley-terrain.md."
   }
 ]
