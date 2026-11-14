@@ -189,16 +189,19 @@ class Game {
   async init() {
     const data = await loadCity();
     ui.data = data;
+    // Fetch actor assets while the independent city geometry and textures prepare.
+    const actorAssets = Promise.all([
+      loadDetailedCar().catch((e) =>
+        console.warn("Detailed car unavailable; using built-in model", e),
+      ),
+      loadDetailedCharacter().catch((e) =>
+        console.warn("Detailed character unavailable; using built-in model", e),
+      ),
+    ]);
     this.world = new World(this.scene, data);
     await this.world.build((s, n) => ui.loading(s, n * 0.82));
-    ui.loading("Preparing your ride", 0.86);
-    await loadDetailedCar().catch((e) =>
-      console.warn("Detailed car unavailable; using built-in model", e),
-    );
-    ui.loading("Preparing your character", 0.89);
-    await loadDetailedCharacter().catch((e) =>
-      console.warn("Detailed character unavailable; using built-in model", e),
-    );
+    ui.loading("Preparing your ride and character", 0.89);
+    await actorAssets;
     this.actors = new Actors(this.world);
     this.character = makeCharacter(this.world.materials);
     this.scene.add(this.character.group, this.camera);

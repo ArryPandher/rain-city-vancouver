@@ -58,8 +58,11 @@ export async function loadVancouverLandmarks(
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   footprints.length = 0;
   const brick = materials.texture("brick_wall_001-color.jpg", true);
-  for (const asset of assets) {
-    const gltf = await loader.loadAsync(`${BASE}${asset.file}`);
+  const models = await Promise.all(
+    assets.map((asset) => loader.loadAsync(`${BASE}${asset.file}`)),
+  );
+  for (const [index, asset] of assets.entries()) {
+    const gltf = models[index];
     const [x, z] = geo(asset.origin[1], asset.origin[0]);
     const group = new T.Group();
     group.name = asset.name;

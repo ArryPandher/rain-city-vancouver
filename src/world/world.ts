@@ -817,10 +817,10 @@ export class World {
       );
     };
     const horizon = new T.Mesh(
-      new T.PlaneGeometry(48000, 3954),
+      new T.PlaneGeometry(24000, 1977),
       this.northShore,
     );
-    horizon.position.set(800, 960, -14000);
+    horizon.position.set(400, 480, -7000);
     horizon.renderOrder = -1;
     horizon.name = "Photographic North Shore mountain horizon";
     this.root.add(horizon);
