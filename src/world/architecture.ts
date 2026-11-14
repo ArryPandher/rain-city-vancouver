@@ -8,6 +8,7 @@ import { shopInteriorMaterials, shopWindow } from "./shop-interiors";
 import { hasStorefront, isResidential } from "./building-use";
 import type { ArchitecturalDetail } from "./detailed-architecture";
 import { ericksonPlace } from "./erickson-place";
+import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 function tint(g: T.BufferGeometry, c: T.Color) {
   const a = new Float32Array(g.getAttribute("position").count * 3);
   for (let i = 0; i < a.length; i += 3) {
@@ -44,6 +45,7 @@ export function architecture(
     roomMaterials = shopInteriorMaterials();
   let count = 0;
   const architecturalDetails: ArchitecturalDetail[] = [];
+  const reflections: ReflectionProbeSpec[] = [];
   const shopNames = [
     ["PACIFIC COFFEE", "THE CORNER CAFÉ", "WEST COAST COFFEE"],
     ["WATER STREET LIVING", "HARBOUR HOME", "COASTAL INTERIORS"],
@@ -91,7 +93,7 @@ export function architecture(
   });
   for (const b of data.buildings) {
     if (specialBuilding(b)) continue;
-    if (ericksonPlace(b, shell, m)) {
+    if (ericksonPlace(b, shell, m, reflections)) {
       count++;
       continue;
     }
@@ -501,5 +503,10 @@ export function architecture(
   const chunks = shell.finish(),
     details = [...detail.finish(), ...interiors.finish(false)];
   details.forEach((c) => (c.userData.detail = true));
-  return { chunks: [...chunks, ...details], count, architecturalDetails };
+  return {
+    chunks: [...chunks, ...details],
+    count,
+    architecturalDetails,
+    reflections,
+  };
 }

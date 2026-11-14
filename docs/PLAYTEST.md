@@ -4,7 +4,7 @@
 
 ## Automated
 
-`npm test`: 15 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and the protagonist skeleton/locomotion clips. `npm run build` includes TypeScript checking and a production Vite build.
+`npm test`: 20 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
 
 ## Interactive evidence
 
@@ -74,3 +74,15 @@ The debug state now records window errors, unhandled promise rejections and shad
 Mapped houses, garages and civic/industrial buildings no longer receive generated shops. Apartments retain mixed-use retail on named commercial streets; residential streets retain their residential treatment. Two behavioral tests cover this distinction (17 tests total). Modeled paneled doors and sash window frames are extracted from James Ray Cock’s CC0 architectural kit, with normalized pivots and 1024 px WebP maps in a ~0.4 MB GLB. At most 192 nearby details render on Balanced, 384 on High and 64 on Low. A West End close-up showed independent frame/ledge depth, doors and stone surrounds without recorded runtime/shader errors; the sample rendered about 39 fps. These remain generic details rather than a surveyed reconstruction of individual buildings. If the optional detail asset cannot load, the base city remains playable.
 
 Public smoke on the prior storefront checkpoint `176330f` passed walking, driving at 63.8 km/h, cycling at 21.7 km/h, all three weapons and a completed shotgun reload, at 100% vehicle health with an empty recorded runtime error list.
+
+## Curtain walls and Arthur Erickson Place — 2026-11-14
+
+`e21dc36` deployed PBR curtain-wall maps and metal frames, with separate night reflection lighting. `d89c40d` deployed original reference-guided Arthur Erickson Place geometry and a sky radiance limit that prevents extreme sun bloom. The landmark includes two offset concrete masses, 27 floors, deep single-pane recesses, end-wall glazing slots, tapered walls and a reflecting basin. A geometry regression confirms that it remains within its mapped collision footprint. Reference photographs stay out of the distributed game; the cast-concrete material is separately licensed CC0 photography.
+
+Local actual-input checks on West Georgia passed walking and driving to 53.7 km/h at 100% vehicle health. The public `d89c40d` bundle loaded the landmark, and walking in its street scene changed the player position. Current recorded runtime/shader error lists were empty. For clarity, error-list assertions in checkpoints before `176330f` relied on the old placeholder array and do not establish absence of runtime errors.
+
+## Local scene reflections — 2026-11-14
+
+The basin now uses a 128 px cubemap of static game geometry. The first capture happens during loading; entering the area did not trigger another capture. Changing weather nearby refreshed it automatically. Day/night views and the actual cubemap faces were inspected. Moving actors are excluded, the reflecting surface is hidden during capture, and tests cover restoration of visibility, shadow flags, sun position, XR and renderer target after success and a simulated failure. Performance graphics keeps the sky fallback.
+
+After a night refresh, actual W input moved the character and pistol fire consumed one round (15 to 14), with no recorded runtime errors. Local street samples remained in the low-to-high 30s at 1440×900 Balanced. The first preparation took about 1.2 seconds inside loading in one warm-cache sample; a later weather refresh submitted in about 135 ms. These are local CPU submission timings, not a cross-device or GPU benchmark. The reflection is cached and approximate; it does not include moving actors or provide an exact planar mirror.

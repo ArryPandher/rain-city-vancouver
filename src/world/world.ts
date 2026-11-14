@@ -24,6 +24,7 @@ import {
   DetailedArchitecture,
   ArchitecturalDetail,
 } from "./detailed-architecture";
+import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -43,6 +44,7 @@ export class World {
   detailedTrees?: DetailedTrees;
   detailedArchitecture?: DetailedArchitecture;
   architecturalDetails: ArchitecturalDetail[] = [];
+  reflections: ReflectionProbeSpec[] = [];
   treeSamples: TreeInstance[] = [];
   stats = { buildings: 0, trees: 0, roads: 0 };
   constructor(
@@ -408,6 +410,7 @@ export class World {
     this.chunks.push(...result.chunks);
     this.stats.buildings = result.count;
     this.architecturalDetails = result.architecturalDetails;
+    this.reflections = result.reflections;
   }
 
   vegetation() {

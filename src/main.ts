@@ -7,6 +7,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { loadDetailedCharacter } from "./game/detailed-character";
 import { loadDetailedCar } from "./world/detailed-car";
 import { ContactOcclusion } from "./rendering/contact-occlusion";
+import { SceneReflections } from "./rendering/reflection-probes";
 import { loadCity, LANDMARKS, geo, ungeo } from "./world/data";
 import { World, Weather } from "./world/world";
 import { UI } from "./ui/ui";
@@ -25,6 +26,7 @@ class Game {
   composer: EffectComposer;
   bloom: UnrealBloomPass;
   contactOcclusion: ContactOcclusion;
+  reflections?: SceneReflections;
   world!: World;
   actors!: Actors;
   character!: Character;
@@ -221,6 +223,13 @@ class Game {
     ]);
     this.world = new World(this.scene, data);
     await this.world.build((s, n) => ui.loading(s, n * 0.82));
+    this.reflections = new SceneReflections(
+      this.scene,
+      this.world.root,
+      this.world.chunks,
+      this.world.sun,
+      this.world.reflections,
+    );
     ui.loading("Preparing your ride and character", 0.89);
     await actorAssets;
     this.actors = new Actors(this.world);
@@ -279,9 +288,28 @@ class Game {
     const w = localStorage.getItem("rain-city-weather");
     if (w && ["day", "golden", "overcast", "night"].includes(w))
       this.setWeather(w as Weather);
-    ui.loading("Warming up the renderer", 0.95);
+    if (this.quality !== "low" && this.reflections) {
+      ui.loading("Preparing local reflections", 0.94);
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve()),
+      );
+      for (const probe of this.world.reflections)
+        this.reflections.update(
+          this.renderer,
+          new T.Vector3(...probe.position),
+        );
+    }
+    ui.loading("Warming up the renderer", 0.97);
     this.setCamera(true);
-    await this.renderer.compileAsync(this.scene, this.camera);
+    // The scene renders into the composer's HDR target before OutputPass applies
+    // tone mapping. Warm the same shader variants used during gameplay.
+    const previousTarget = this.renderer.getRenderTarget();
+    this.renderer.setRenderTarget(this.composer.readBuffer);
+    try {
+      await this.renderer.compileAsync(this.scene, this.camera);
+    } finally {
+      this.renderer.setRenderTarget(previousTarget);
+    }
     this.ready = true;
     this.lastSafe.copy(this.player);
     this.last = performance.now();
@@ -659,6 +687,7 @@ class Game {
   setWeather(w: Weather) {
     if (!this.world) return;
     this.world.setWeather(w);
+    this.reflections?.invalidate();
     this.bloom.threshold = w === "night" ? 1.15 : w === "golden" ? 1.7 : 2.2;
     this.bloom.strength = w === "night" ? 0.21 : 0.12;
     try {
@@ -667,6 +696,7 @@ class Game {
   }
   setQuality(q: string) {
     this.quality = q;
+    if (q === "low") this.reflections?.invalidate();
     if (this.world?.detailedTrees)
       this.world.detailedTrees.budget =
         q === "high" ? 48 : q === "low" ? 0 : 24;
@@ -1184,6 +1214,11 @@ class Game {
     this.frameCount++;
   }
   render() {
+    if (!ui.introOpen && this.quality !== "low")
+      this.reflections?.update(
+        this.renderer,
+        this.photo ? this.photoPos : this.player,
+      );
     for (const light of this.headlights) {
       const v = this.vehicle,
         active =

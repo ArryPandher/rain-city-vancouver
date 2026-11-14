@@ -2,13 +2,19 @@ import * as T from "three";
 import { Building, centroid } from "./data";
 import { Batcher, flatPolygon, walls } from "./geometry";
 import type { Materials } from "./materials";
+import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 
 export const ERICKSON_PLACE_ID = "w143683975";
 
 type V3 = [number, number, number];
 
 /** Original, reference-guided model. Dimensions between mapped edges are estimated. */
-export function ericksonPlace(b: Building, batch: Batcher, m: Materials) {
+export function ericksonPlace(
+  b: Building,
+  batch: Batcher,
+  m: Materials,
+  reflections: ReflectionProbeSpec[] = [],
+) {
   if (b.id !== ERICKSON_PLACE_ID) return false;
   const [cx, cz] = centroid(b.pts);
   const concrete = new T.MeshStandardMaterial({
@@ -188,8 +194,14 @@ export function ericksonPlace(b: Building, batch: Batcher, m: Materials) {
     color: 0x254b4b,
     roughness: 0.12,
     metalness: 0.35,
-    clearcoat: 0.8,
-    envMapIntensity: 0.65,
+    clearcoat: 0.45,
+    clearcoatRoughness: 0.1,
+    envMapIntensity: 0.3,
+  });
+  reflections.push({
+    name: "Arthur Erickson Place reflecting basin",
+    position: world(94, 0.9, -333),
+    materials: [water],
   });
   box(94, 0.825, -326.5, 8.7, 0.025, 40, water);
   for (const u of [89.5, 98.5]) box(u, 0.98, -326.5, 0.3, 0.36, 40.6, concrete);
