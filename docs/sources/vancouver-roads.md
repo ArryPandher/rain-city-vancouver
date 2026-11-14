@@ -11,3 +11,5 @@ Mapped widths take priority; otherwise width is estimated from lane count (3.2 m
 These details improve the map interpretation; they do not provide surveyed curbs, traffic signals, lane restrictions or a full road simulation. Bridge elevations remain the existing authored approximations.
 
 Crossing markings follow tagged crossing ways: paired boundary lines for `lines`, transverse bars for `zebra`/`ladder`, and no paint for `no` or missing markings. The older arbitrary crosswalks at the first segment of named streets have been removed. The Ironworkers fast-travel point is on the northbound approach.
+
+Lane markings reserve gaps at shared junction nodes according to the crossing street width and angle, and at separately mapped marked pedestrian crossings. Collinear road-way joins retain their dash phase. These masks depend on shared map nodes; they are not a surveyed intersection model.

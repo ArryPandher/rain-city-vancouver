@@ -25,7 +25,12 @@ import {
   ArchitecturalDetail,
 } from "./detailed-architecture";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
-import { crosswalkMarkings, roadMarkings, sidewalkSides } from "./road-profile";
+import {
+  crosswalkMarkings,
+  roadMarkings,
+  roadJunctionGaps,
+  sidewalkSides,
+} from "./road-profile";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   root = new T.Group();
@@ -299,6 +304,7 @@ export class World {
       color: 0xdfd8c0,
       roughness: 0.6,
     });
+    const junctions = roadJunctionGaps(this.data.roads);
     for (const r of this.data.roads) {
       const [x, z] = centroid(r.pts),
         width = roadWidth(r),
@@ -363,7 +369,7 @@ export class World {
         "road",
       );
       if (street && !historic && r.kind !== "residential")
-        for (const line of roadMarkings(r))
+        for (const line of roadMarkings(r, junctions.get(r)))
           b.add(
             ribbon(line.pts, 0.1, 0.102, height),
             line.yellow ? m.yellow : stripes,

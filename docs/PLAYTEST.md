@@ -4,7 +4,7 @@
 
 ## Automated
 
-`npm test`: 33 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
+`npm test`: 35 checks passing, covering vehicle speed limits, frame-rate stability, braking/reverse, steering, bicycles, coordinate projection, polygon/segment queries, swept building collision, bridge height/water handling, curved ramp continuity and camera angle wrap. Asset regressions cover quantized landmark transforms, matching optimized tree attributes and both character skeletons/locomotion clips. Building-use rules, landmark/collision alignment and reflection capture state restoration are also covered. `npm run build` includes TypeScript checking and a production Vite build.
 
 ## Interactive evidence
 
@@ -102,3 +102,8 @@ The road layer now retains OSM lane counts, one-way directions, widths, foot acc
 All 33 tests and the production build pass. New checks cover lane geometry, road-direction reversal, neighbouring-carriageway furniture clearance, committed map metadata, dash continuity, crossing styles and the northbound Ironworkers arrival. In-browser inspection counted 30,063 road/path ways and 5,876 generated lamps/signs with no positions inside a street surface. Pedestrians used accessible paths. All ten travel points remained dry and clear; the corrected Ironworkers approach was also exercised in a car.
 
 Actual input verified walking, a 29.0 km/h Stanley Park bicycle ride and car acceleration to 129.1 km/h followed by braking to rest, at 100% health. A separate northbound run moved 431 m onto the Ironworkers deck to 32.8 m elevation before encountering ambient traffic, at 100% health. Recorded runtime errors stayed empty. Stanley Park road/marking views and the elevated bridge were inspected; local samples were about 33–53 fps at 1440×900 Balanced. The map retains an ODbL source timestamp and a reproduction script. Missing road widths remain estimates; traffic and bridge architecture remain approximations.
+
+
+### Junction marking follow-up
+
+Lane paint is trimmed at shared junction nodes and separately mapped marked pedestrian crossings; straight road-way joins retain dash continuity. Two regression checks cover crossing/collinear behavior and marked versus unmarked pedestrian crossings (35 tests total). Granville before/after views confirmed that lane dividers no longer cut through the inspected intersection and crosswalk. Local rendering remained around 30 fps with an empty recorded runtime error list.

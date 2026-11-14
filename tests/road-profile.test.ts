@@ -10,6 +10,7 @@ import {
 import {
   laneDividers,
   roadMarkings,
+  roadJunctionGaps,
   crosswalkMarkings,
   drivingOffset,
   reverseRoad,
@@ -181,4 +182,37 @@ test("Ironworkers arrival selects the northbound bridge approach", () => {
   assert.equal(road.road.oneway, true);
   assert.ok(Math.cos(road.heading) < -0.8);
   assert.ok(road.d < 3);
+});
+
+test("lane paint leaves cross streets clear but continues through collinear way joins", () => {
+  const main: Road = { kind: "primary", lanes: 4, pts: [0, 0, 50, 0, 100, 0] },
+    cross: Road = {
+      kind: "secondary",
+      lanes: 2,
+      pts: [50, -20, 50, 0, 50, 20],
+    };
+  const gaps = roadJunctionGaps([main, cross]);
+  assert.deepEqual(gaps.get(main), [[45, 55]]);
+  const lines = [...roadMarkings(main, gaps.get(main))];
+  assert.ok(lines.length > 0);
+  assert.ok(lines.every((l) => l.pts[2] <= 45 || l.pts[0] >= 55));
+  const straight: Road = { kind: "primary", lanes: 4, pts: [100, 0, 150, 0] };
+  assert.equal(roadJunctionGaps([main, straight]).size, 0);
+});
+
+test("lane markings also leave separately mapped pedestrian crossings clear", () => {
+  const road: Road = { kind: "primary", lanes: 4, pts: [0, 0, 50, 0, 100, 0] },
+    walk: Road = {
+      kind: "footway",
+      crossing: true,
+      crossingMarkings: "lines",
+      pts: [50, -10, 50, 0, 50, 10],
+    };
+  const gap = roadJunctionGaps([road, walk]).get(road)!;
+  assert.equal(gap.length, 1);
+  assert.ok(gap[0][0] < 48.6 && gap[0][1] > 51.4);
+  assert.equal(
+    roadJunctionGaps([road, { ...walk, crossingMarkings: "no" }]).size,
+    0,
+  );
 });

@@ -1,4 +1,4 @@
-import { roadWidth, type Road } from "./data";
+import { isStreet, roadWidth, type Road } from "./data";
 
 export function laneCount(road: Road) {
   return Math.max(
@@ -71,7 +71,7 @@ export function reverseRoad(road: Road): Road {
 }
 
 /** Keep dash phase through the many short nodes in real curved road geometry. */
-export function* roadMarkings(road: Road) {
+export function* roadMarkings(road: Road, gaps: [number, number][] = []) {
   const p = road.pts,
     lengths: number[] = [],
     normals: number[][] = [];
@@ -96,6 +96,18 @@ export function* roadMarkings(road: Road) {
       lo = Math.max(0, 3 - travelled),
       hi = Math.min(length, total - 3 - travelled);
     if (length > 0.01 && hi > lo) {
+      function* pieces(a: number, b: number) {
+        let head = a;
+        for (const [start, end] of gaps) {
+          const from = start - travelled,
+            to = end - travelled;
+          if (to <= head || from >= b) continue;
+          if (from > head) yield [head, Math.min(from, b)];
+          head = Math.max(head, to);
+          if (head >= b) return;
+        }
+        if (head < b) yield [head, b];
+      }
       const point = (at: number, offset: number) => {
         const t = at / length;
         return [
@@ -110,10 +122,11 @@ export function* roadMarkings(road: Road) {
       for (const divider of dividers) {
         if (divider.yellow) {
           for (const offset of [divider.offset - 0.12, divider.offset + 0.12])
-            yield {
-              pts: [...point(lo, offset), ...point(hi, offset)],
-              yellow: true,
-            };
+            for (const [a, b] of pieces(lo, hi))
+              yield {
+                pts: [...point(a, offset), ...point(b, offset)],
+                yellow: true,
+              };
         } else {
           for (
             let dash = Math.floor((travelled + lo - 3) / 9) * 9 + 3;
@@ -123,10 +136,14 @@ export function* roadMarkings(road: Road) {
             const a = Math.max(lo, dash - travelled),
               b = Math.min(hi, dash + 3.5 - travelled);
             if (b > a)
-              yield {
-                pts: [...point(a, divider.offset), ...point(b, divider.offset)],
-                yellow: false,
-              };
+              for (const [start, end] of pieces(a, b))
+                yield {
+                  pts: [
+                    ...point(start, divider.offset),
+                    ...point(end, divider.offset),
+                  ],
+                  yellow: false,
+                };
           }
         }
       }
@@ -180,4 +197,78 @@ export function* crosswalkMarkings(road: Road) {
     }
     travelled += length;
   }
+}
+
+/** OSM ways share junction nodes; reserve the crossing street's full width. */
+export function roadJunctionGaps(roads: Road[]) {
+  const nodes = new Map<
+    string,
+    { road: Road; distance: number; dx: number; dz: number }[]
+  >();
+  for (const road of roads) {
+    if (
+      !isStreet(road) &&
+      !(
+        road.crossing &&
+        ["lines", "yes", "zebra", "ladder"].includes(
+          road.crossingMarkings ?? "",
+        )
+      )
+    )
+      continue;
+    let distance = 0;
+    for (let i = 0; i < road.pts.length; i += 2) {
+      const p = road.pts;
+      if (i) distance += Math.hypot(p[i] - p[i - 2], p[i + 1] - p[i - 1]);
+      const a = Math.max(0, i - 2),
+        b = Math.min(p.length - 2, i + 2),
+        dx = p[b] - p[a],
+        dz = p[b + 1] - p[a + 1],
+        length = Math.hypot(dx, dz) || 1;
+      const key = `${Math.round(p[i] * 10)},${Math.round(p[i + 1] * 10)}`;
+      let entries = nodes.get(key);
+      if (!entries) nodes.set(key, (entries = []));
+      entries.push({ road, distance, dx: dx / length, dz: dz / length });
+    }
+  }
+  const result = new Map<Road, [number, number][]>();
+  for (const entries of nodes.values()) {
+    if (entries.length < 2) continue;
+    for (const current of entries) {
+      if (!isStreet(current.road)) continue;
+      let radius = 0;
+      for (const other of entries) {
+        if (other.road === current.road) continue;
+        const sine = Math.abs(current.dx * other.dz - current.dz * other.dx);
+        if (sine > 0.35)
+          radius = Math.max(
+            radius,
+            Math.min(
+              24,
+              (other.road.crossing ? 1.8 : roadWidth(other.road) / 2) / sine +
+                1.5,
+            ),
+          );
+      }
+      if (radius > 0) {
+        let gaps = result.get(current.road);
+        if (!gaps) result.set(current.road, (gaps = []));
+        gaps.push([
+          Math.max(0, current.distance - radius),
+          current.distance + radius,
+        ]);
+      }
+    }
+  }
+  for (const [road, gaps] of result) {
+    gaps.sort((a, b) => a[0] - b[0]);
+    const merged: [number, number][] = [];
+    for (const gap of gaps) {
+      const prev = merged.at(-1);
+      if (prev && gap[0] <= prev[1]) prev[1] = Math.max(prev[1], gap[1]);
+      else merged.push([...gap]);
+    }
+    result.set(road, merged);
+  }
+  return result;
 }
