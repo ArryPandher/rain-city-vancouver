@@ -410,6 +410,25 @@ class Game {
               mode: this.cameraMode,
             },
             player: this.player.toArray(),
+            lighting: {
+              weather: this.world.weather,
+              sunDirection: this.world.sun.position
+                .clone()
+                .sub(this.world.sun.target.position)
+                .normalize()
+                .toArray(),
+              waterSunDirection:
+                this.world.water.uniforms.sunDir.value.toArray(),
+              sunIntensity: this.world.sun.intensity,
+              ambientIntensity: this.world.ambient.intensity,
+              exposure: this.renderer.toneMappingExposure,
+              backgroundRotation: this.scene.backgroundRotation.toArray(),
+              environmentRotation: this.scene.environmentRotation.toArray(),
+              sharedSkyEnvironment:
+                this.scene.background === this.scene.environment,
+              reflectionCaptures: this.reflections?.captures,
+              reflectionError: this.reflections?.lastError,
+            },
           },
           null,
           2,

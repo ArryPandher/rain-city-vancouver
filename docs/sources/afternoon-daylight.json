@@ -1,0 +1,30 @@
+{
+  "width": 2048,
+  "height": 1024,
+  "bytes": 4047254,
+  "sha256": "e70bf97a44982db07fb952b1f74c07e818649c2bbdfeb6ad4f98af7b4431a38f",
+  "md5": "08c11a244add6ef1c3e027234c1fdd22",
+  "peakLuminance": 341586.5958875,
+  "sunPixels": 5,
+  "sourceSunDirection": [
+    0.7211486103559748,
+    0.4739054398107695,
+    0.5053299079803285
+  ],
+  "elevationDegrees": 28.288107223038665,
+  "rotationY": 3.752807864137953,
+  "dayOffset": [
+    -278,
+    149.61315223935466,
+    0
+  ],
+  "asset": "Rustig Koppie Pure Sky",
+  "assetPage": "https://polyhaven.com/a/rustig_koppie_puresky",
+  "source": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/rustig_koppie_puresky_2k.hdr",
+  "license": "CC0-1.0",
+  "licenseURL": "https://polyhaven.com/license",
+  "credit": "Greg Zaal (original), Jarod Guest (sky edits) / Poly Haven",
+  "measurement": "Luminance-weighted spherical centroid of unclamped pixels above half peak, solid-angle weighted; HDRLoader flipY accounted for. Vertical-axis rotation only, no horizon warp.",
+  "runtime": "Same texture and Y rotation for daylight sky and distant environment; luminance limited to16 before upload. Direct sun and water direction match measured elevation and west azimuth. Existing North Shore backdrop is unchanged.",
+  "limits": "Generic photographic lighting with clear blue sky and sparse clouds, not Vancouver weather capture. Fixed summer-afternoon interpretation, not a date/time solar simulation. Local reflection probes preserve direction and recapture on weather changes."
+}

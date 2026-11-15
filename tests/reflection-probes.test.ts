@@ -46,6 +46,7 @@ for (const fail of [false, true])
     nearby.visible = false;
     nearby.castShadow = false;
     nearby.userData.center = [10, 15];
+    nearby.position.set(10, 1, 15); // Actual caster bounds, not only a cell label.
     const material = new T.MeshPhysicalMaterial();
     const surface = new T.Mesh(new T.PlaneGeometry(), material);
     root.add(nearby, surface);

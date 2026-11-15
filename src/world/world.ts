@@ -1,3 +1,5 @@
+import { ShadowCasterVolume } from "../rendering/shadow-caster-volume";
+import { DAYLIGHT_SKY_ROTATION, sunOffset } from "./daylight";
 import { batchStaticChunks } from "./static-chunk-batch";
 import { batchPhotographicFacades } from "./photographic-facade-batch";
 import { clipGalleryStairPath } from "./gallery-rear-entry";
@@ -83,6 +85,7 @@ import { coastalCoverMaterials } from "./coastal-cover";
 import { PROSPECT_FORECOURT } from "./prospect-site";
 export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
+  private readonly casterVolume = new ShadowCasterVolume();
   root = new T.Group();
   materials = new Materials();
   collision: CollisionWorld;
@@ -117,6 +120,7 @@ export class World {
     this.collision = new CollisionWorld(data);
     scene.add(this.root);
     scene.add(this.sun, this.sun.target, this.ambient);
+    sunOffset(this.weather, this.sun.position);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(4096, 4096);
     this.sun.shadow.camera.left = -80;
@@ -248,7 +252,7 @@ export class World {
           "sunset",
           "overcast",
           "city-reflections",
-          "sky",
+          "afternoon-sky",
           "night-reflections",
         ].map((name) => loader.loadAsync(`${BASE}textures/${name}.hdr`)),
       );
@@ -279,7 +283,7 @@ export class World {
         texture.needsUpdate = true;
       }
       this.reflectionTextures = {
-        day: env,
+        day: daylight,
         golden: env,
         overcast: env,
         night: nightEnv,
@@ -487,7 +491,7 @@ export class World {
         time: { value: 0 },
         deep: { value: new T.Color(0x204b58) },
         sky: { value: new T.Color(0xbccdd1) },
-        sunDir: { value: new T.Vector3(-0.6, 0.28, -0.5).normalize() },
+        sunDir: { value: sunOffset(this.weather).normalize() },
         sunColor: { value: new T.Color(0xffd5a3) },
         night: { value: 0 },
       },
@@ -1215,15 +1219,17 @@ export class World {
     this.weather = w;
     // Startup reflection captures happen before update() follows the player.
     // Establish the same directional offset immediately, around the current target.
-    this.sun.position
-      .copy(this.sun.target.position)
-      .add(new T.Vector3(-220, w === "day" ? 330 : 110, 170));
+    sunOffset(w, this.sun.position).add(this.sun.target.position);
     this.northShore?.color.set(
       w === "night" ? 0x233953 : w === "overcast" ? 0x9eafbb : 0xddd6ce,
     );
     const night = w === "night",
       rain = w === "overcast",
       day = w === "day";
+    // Day's sky, distant reflections and direct light share the same measured
+    // solar direction. Local probes capture that lighting in world space.
+    this.scene.backgroundRotation.set(0, day ? DAYLIGHT_SKY_ROTATION : 2.3, 0);
+    this.scene.environmentRotation.set(0, day ? DAYLIGHT_SKY_ROTATION : 1.2, 0);
     if (this.skyTextures[w]) this.scene.background = this.skyTextures[w];
     if (this.reflectionTextures[w])
       this.scene.environment = this.reflectionTextures[w];
@@ -1256,7 +1262,10 @@ export class World {
       night ? 0x091923 : rain ? 0x344d57 : 0x294956,
     );
     this.water.uniforms.sky.value.copy(fog.color);
-    this.water.uniforms.sunDir.value.set(-0.71, 0.35, 0.55).normalize();
+    this.water.uniforms.sunDir.value
+      .copy(this.sun.position)
+      .sub(this.sun.target.position)
+      .normalize();
     this.water.uniforms.night.value = night ? 1 : 0;
     this.nightLights.forEach((m) => (m.emissiveIntensity = night ? 2.0 : 0.25));
   }
@@ -1289,12 +1298,12 @@ export class World {
     const sx = Math.round(x / 2) * 2,
       sz = Math.round(z / 2) * 2,
       ground = this.collision.groundHeight(x, z);
-    this.sun.position.set(
-      sx - 220,
-      ground + (this.weather === "day" ? 330 : 110),
-      sz + 170,
-    );
     this.sun.target.position.set(sx, ground, sz);
+    sunOffset(this.weather, this.sun.position).add(this.sun.target.position);
+    this.water.uniforms.sunDir.value
+      .copy(this.sun.position)
+      .sub(this.sun.target.position)
+      .normalize();
     this.rain.position.set(x, ground, z);
     if (this.rain.visible) {
       const a = this.rain.geometry.getAttribute("position");
@@ -1305,6 +1314,7 @@ export class World {
       }
       a.needsUpdate = true;
     }
+    this.casterVolume.update(this.sun);
     for (const c of this.chunks) {
       const p = c.userData.center;
       if (!p) continue;
@@ -1313,7 +1323,7 @@ export class World {
       c.visible =
         dist <
         (c.userData.detail ? 350 : c instanceof T.InstancedMesh ? 1400 : 2900);
-      c.castShadow = c.userData.allowShadow !== false && dist < 210;
+      c.castShadow = this.casterVolume.includes(c);
     }
   }
 }

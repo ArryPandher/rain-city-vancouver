@@ -1,3 +1,4 @@
+import { ShadowCasterVolume } from "./shadow-caster-volume";
 import * as T from "three";
 
 export interface ReflectionProbeSpec {
@@ -9,6 +10,7 @@ export interface ReflectionProbeSpec {
 
 /** Small static scene captures, refreshed on weather changes when nearby. */
 export class SceneReflections {
+  private readonly casterVolume = new ShadowCasterVolume();
   probes: {
     spec: ReflectionProbeSpec;
     target: T.WebGLCubeRenderTarget;
@@ -90,6 +92,7 @@ export class SceneReflections {
           !(child instanceof T.HemisphereLight)
         )
           show(child, false);
+      this.casterVolume.update(this.sun, probe.camera.position);
       for (const chunk of this.chunks) {
         const p = chunk.userData.center;
         if (p) {
@@ -98,8 +101,7 @@ export class SceneReflections {
             p[1] - probe.spec.position[2],
           );
           shadows.set(chunk, chunk.castShadow);
-          chunk.castShadow =
-            chunk.userData.allowShadow !== false && distance < 210;
+          chunk.castShadow = this.casterVolume.includes(chunk);
           show(chunk, distance < (chunk.userData.detail ? 250 : 1000));
         }
       }
