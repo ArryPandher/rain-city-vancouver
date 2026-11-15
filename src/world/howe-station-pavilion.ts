@@ -136,7 +136,7 @@ export type HoweStationPavilionLayout = ReturnType<
   typeof howeStationPavilionLayout
 >;
 
-/** Complete exterior kit in six material groups. Convex, outward-only glazing
+/** Complete exterior kit in seven material groups. Convex, outward-only glazing
  * provides one stable dielectric layer from outside; no opaque glass backing,
  * double-alpha blend, transmission render, or stacked coplanar panes. The closed
  * stairwell is visual only. All world elevations survive nonzero Batcher datums. */
@@ -209,6 +209,48 @@ export function buildHoweStationPavilion(
       [0, up ? 1 : -1, 0],
     );
 
+  // Photo-fit coping section: a narrow recessed bed joint distinguishes the
+  // cap from the low mineral wall. This replaces the face, never overlays it.
+  const baseFace = (a: Point, b: Point, outward: Point) => {
+    const ga = s.ground(...a),
+      gb = s.ground(...b),
+      low = s.baseTop - 0.078,
+      high = low + 0.012,
+      inset = (q: Point): Point => [
+        q[0] - outward[0] * 0.008,
+        q[1] - outward[1] * 0.008,
+      ],
+      ai = inset(a),
+      bi = inset(b),
+      at = (q: Point, y: number): Vertex3 => [q[0], y, q[1]],
+      n: Vertex3 = [outward[0], 0, outward[1]];
+    if (Math.max(ga, gb) >= low) {
+      quad(
+        m.stone,
+        [at(a, ga), at(b, gb), at(b, s.baseTop), at(a, s.baseTop)],
+        n,
+      );
+      return;
+    }
+    quad(m.stone, [at(a, ga), at(b, gb), at(b, low), at(a, low)], n);
+    quad(m.lining, [at(ai, low), at(bi, low), at(bi, high), at(ai, high)], n);
+    quad(
+      m.stone,
+      [at(a, low), at(b, low), at(bi, low), at(ai, low)],
+      [0, 1, 0],
+    );
+    quad(
+      m.stone,
+      [at(a, high), at(b, high), at(bi, high), at(ai, high)],
+      [0, -1, 0],
+    );
+    quad(
+      m.stone,
+      [at(a, high), at(b, high), at(b, s.baseTop), at(a, s.baseTop)],
+      n,
+    );
+  };
+
   // Outer base meets the supplied ground; inner faces close the actual well.
   // Split the long edges so grade curvature cannot leave a floating straight base.
   const baseSides = Math.ceil(s.length / 0.5);
@@ -218,16 +260,7 @@ export function buildHoweStationPavilion(
     for (let i = 0; i < baseSides; i++) {
       const a = (s.length * i) / baseSides,
         b = (s.length * (i + 1)) / baseSides;
-      quad(
-        m.stone,
-        [
-          [v, s.ground(v, a), a],
-          [v, s.ground(v, b), b],
-          [v, s.baseTop, b],
-          [v, s.baseTop, a],
-        ],
-        [side, 0, 0],
-      );
+      baseFace([v, a], [v, b], [side, 0]);
       horizontal(
         Math.min(v, inner),
         Math.max(v, inner),
@@ -261,16 +294,7 @@ export function buildHoweStationPavilion(
           ]
         : [[-s.radius, s.radius]];
     for (const [a, b] of spans) {
-      quad(
-        m.stone,
-        [
-          [a, s.ground(a, u), u],
-          [b, s.ground(b, u), u],
-          [b, s.baseTop, u],
-          [a, s.baseTop, u],
-        ],
-        [0, 0, -inward],
-      );
+      baseFace([a, u], [b, u], [0, -inward]);
       horizontal(
         a,
         b,
@@ -361,12 +385,18 @@ export function buildHoweStationPavilion(
     }
   }
 
-  // Repeated closed rectangular arch sections, not thin drawn curves. Their
-  // caps/inner/outer faces are generated together by the extrusion triangulator.
-  const segments = 24,
-    thickness = 0.045;
+  // The photograph resolves a strong perimeter arch and finer intermediate
+  // glazing caps. Keep the approximate bay spacing; section sizes are photo-fit
+  // estimates. Every silver section remains a capped, closed solid.
+  const segments = 24;
   for (let rib = 0; rib <= s.ribs; rib++) {
-    const u = (s.length * rib) / s.ribs;
+    const u = (s.length * rib) / s.ribs,
+      end = rib === 0 || rib === s.ribs,
+      thickness = end ? 0.045 : 0.0275,
+      depth = end ? 0.08 : 0.045,
+      sealHalf = depth / 2 + 0.01,
+      sealStart = Math.max(0, u - sealHalf),
+      sealEnd = Math.min(s.length, u + sealHalf);
     const shape = new T.Shape();
     for (let j = 0; j <= segments; j++) {
       const angle = (Math.PI * j) / segments,
@@ -384,11 +414,11 @@ export function buildHoweStationPavilion(
     }
     shape.closePath();
     const arch = new T.ExtrudeGeometry(shape, {
-      depth: 0.08,
+      depth,
       bevelEnabled: false,
       steps: 1,
     });
-    arch.translate(0, 0, u - 0.04);
+    arch.translate(0, 0, u - depth / 2);
     arch.rotateY(yaw);
     arch.translate(s.origin[0], s.landingHeight - batch.offsetY, s.origin[1]);
     mesh.add(arch, m.metal);
@@ -397,26 +427,125 @@ export function buildHoweStationPavilion(
         side * s.radius,
         (s.baseTop + s.springHeight) / 2,
         u,
-        0.09,
+        thickness * 2,
         s.springHeight - s.baseTop + 0.025,
-        0.08,
+        depth,
         m.metal,
       );
+    // The gasket is a thin seat under the pressure cap, exposed only at the
+    // pane edges. Its4mm separation avoids coplanar glass/opaque depth fighting.
+    for (const side of [-1, 1])
+      quad(
+        m.gasket,
+        [
+          [side * (s.radius + 0.004), s.baseTop, sealStart],
+          [side * (s.radius + 0.004), s.baseTop, sealEnd],
+          [side * (s.radius + 0.004), s.springHeight, sealEnd],
+          [side * (s.radius + 0.004), s.springHeight, sealStart],
+        ],
+        [side, 0, 0],
+      );
+    for (let j = 0; j < segments; j++) {
+      const a = (Math.PI * j) / segments,
+        b = (Math.PI * (j + 1)) / segments,
+        point = (angle: number, along: number): Vertex3 => [
+          -(s.radius + 0.004) * Math.cos(angle),
+          s.springHeight + (s.roofRise + 0.004) * Math.sin(angle),
+          along,
+        ];
+      quad(
+        m.gasket,
+        [
+          point(a, sealStart),
+          point(b, sealStart),
+          point(b, sealEnd),
+          point(a, sealEnd),
+        ],
+        [
+          -Math.cos((a + b) / 2) / s.radius,
+          Math.sin((a + b) / 2) / s.roofRise,
+          0,
+        ],
+      );
+    }
   }
-  for (const angle of [
-    0,
-    Math.PI / 4,
-    Math.PI / 2,
-    (3 * Math.PI) / 4,
-    Math.PI,
-  ]) {
+  // Three fine straight roof bars. The two spring-line members already belong
+  // to the side head rails; duplicating them made the former grid read heavier.
+  for (const angle of [Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4]) {
     const v = -s.radius * Math.cos(angle),
-      y = s.springHeight + s.roofRise * Math.sin(angle);
-    beam([v, y, 0], [v, y, s.length], 0.024);
+      y = s.springHeight + s.roofRise * Math.sin(angle),
+      normal = new T.Vector2(
+        -Math.cos(angle) / s.radius,
+        Math.sin(angle) / s.roofRise,
+      ).normalize(),
+      tangent = new T.Vector2(normal.y, -normal.x),
+      point = (across: number, out: number, u: number): Vertex3 => [
+        v + tangent.x * across + normal.x * out,
+        y + tangent.y * across + normal.y * out,
+        u,
+      ];
+    for (const side of [-1, 1]) {
+      quad(
+        m.metal,
+        [
+          point(-0.018, side * 0.016, 0),
+          point(0.018, side * 0.016, 0),
+          point(0.018, side * 0.016, s.length),
+          point(-0.018, side * 0.016, s.length),
+        ],
+        [normal.x * side, normal.y * side, 0],
+      );
+      quad(
+        m.metal,
+        [
+          point(side * 0.018, -0.016, 0),
+          point(side * 0.018, 0.016, 0),
+          point(side * 0.018, 0.016, s.length),
+          point(side * 0.018, -0.016, s.length),
+        ],
+        [tangent.x * side, tangent.y * side, 0],
+      );
+    }
+    for (const u of [0, s.length])
+      quad(
+        m.metal,
+        [
+          point(-0.018, -0.016, u),
+          point(0.018, -0.016, u),
+          point(0.018, 0.016, u),
+          point(-0.018, 0.016, u),
+        ],
+        [0, 0, u === 0 ? -1 : 1],
+      );
+    quad(
+      m.gasket,
+      [
+        point(-0.028, 0.004, 0),
+        point(0.028, 0.004, 0),
+        point(0.028, 0.004, s.length),
+        point(-0.028, 0.004, s.length),
+      ],
+      [normal.x, normal.y, 0],
+    );
   }
   for (const side of [-1, 1]) {
-    for (const y of [s.baseTop + 0.03, 1.35, s.springHeight - 0.035])
-      box(side * s.radius, y, s.length / 2, 0.07, 0.055, s.length, m.metal);
+    for (const [y, width, height] of [
+      [s.baseTop + 0.025, 0.055, 0.04],
+      [1.35, 0.04, 0.035],
+      [s.springHeight - 0.028, 0.065, 0.055],
+    ]) {
+      box(side * s.radius, y, s.length / 2, width, height, s.length, m.metal);
+      quad(
+        m.gasket,
+        [
+          [side * (s.radius + 0.004), y - height / 2 - 0.01, 0],
+          [side * (s.radius + 0.004), y - height / 2 - 0.01, s.length],
+          [side * (s.radius + 0.004), y + height / 2 + 0.01, s.length],
+          [side * (s.radius + 0.004), y + height / 2 + 0.01, 0],
+        ],
+        [side, 0, 0],
+      );
+    }
     quad(
       m.glass,
       [
@@ -428,25 +557,43 @@ export function buildHoweStationPavilion(
       [side, 0, 0],
     );
   }
-  for (let j = 0; j < segments; j++) {
-    const a = (Math.PI * j) / segments,
-      b = (Math.PI * (j + 1)) / segments,
-      va = -s.radius * Math.cos(a),
-      vb = -s.radius * Math.cos(b),
-      ya = s.springHeight + s.roofRise * Math.sin(a),
-      yb = s.springHeight + s.roofRise * Math.sin(b),
-      middle = (a + b) / 2;
-    quad(
-      m.glass,
-      [
-        [va, ya, 0],
-        [vb, yb, 0],
-        [vb, yb, s.length],
-        [va, ya, s.length],
-      ],
-      [-Math.cos(middle) / s.radius, Math.sin(middle) / s.roofRise, 0],
-    );
+  // Shared arch vertices and analytic ellipse normals keep reflections smooth
+  // across the geometric strips. UVs use actual accumulated arc metres.
+  const roofPositions: number[] = [],
+    roofNormals: number[] = [],
+    roofUV: number[] = [],
+    roofIndices: number[] = [];
+  let arc = 0,
+    previous: Point | undefined;
+  for (let j = 0; j <= segments; j++) {
+    const angle = (Math.PI * j) / segments,
+      v = -s.radius * Math.cos(angle),
+      y = s.springHeight + s.roofRise * Math.sin(angle),
+      n = new T.Vector3(
+        ...normal([
+          v / (s.radius * s.radius),
+          (y - s.springHeight) / (s.roofRise * s.roofRise),
+          0,
+        ]),
+      ).normalize();
+    if (previous) arc += Math.hypot(v - previous[0], y - previous[1]);
+    previous = [v, y];
+    for (const u of [0, s.length]) {
+      roofPositions.push(...p(v, y, u));
+      roofNormals.push(n.x, n.y, n.z);
+      roofUV.push(arc, u);
+    }
+    if (j < segments) {
+      const a = j * 2;
+      roofIndices.push(a, a + 3, a + 2, a, a + 1, a + 3);
+    }
   }
+  const roof = new T.BufferGeometry();
+  roof.setAttribute("position", new T.Float32BufferAttribute(roofPositions, 3));
+  roof.setAttribute("normal", new T.Float32BufferAttribute(roofNormals, 3));
+  roof.setAttribute("uv", new T.Float32BufferAttribute(roofUV, 2));
+  roof.setIndex(roofIndices);
+  mesh.add(roof, m.glass);
   for (const [u, front] of [
     [0, -1],
     [s.length, 1],
@@ -490,7 +637,7 @@ export function buildHoweStationPavilion(
     );
     mesh.add(geometry, m.glass);
     box(0, s.springHeight, u, s.width, 0.075, 0.08, m.metal);
-    for (const v of [-s.stairWidth / 2, 0, s.stairWidth / 2])
+    for (const v of [-s.stairWidth / 2, 0, s.stairWidth / 2]) {
       box(
         v,
         (s.springHeight + s.baseTop) / 2,
@@ -500,6 +647,32 @@ export function buildHoweStationPavilion(
         0.08,
         m.metal,
       );
+      // Continue the existing gable members into the curved head, as visible
+      // in the source. This does not introduce an inferred door-leaf pattern.
+      const head =
+        s.springHeight +
+        (s.roofRise - 0.045) * Math.sqrt(1 - (v / (s.radius - 0.045)) ** 2) +
+        0.015;
+      box(
+        v,
+        (s.springHeight + head) / 2,
+        u,
+        0.045,
+        head - s.springHeight,
+        0.08,
+        m.metal,
+      );
+      quad(
+        m.gasket,
+        [
+          [v - 0.04, s.baseTop, u + front * 0.004],
+          [v + 0.04, s.baseTop, u + front * 0.004],
+          [v + 0.04, head, u + front * 0.004],
+          [v - 0.04, head, u + front * 0.004],
+        ],
+        [0, 0, front],
+      );
+    }
   }
   // Closed glazed entrance screen and two source-visible blue T blades.
   quad(

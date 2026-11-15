@@ -114,7 +114,7 @@ test("entry and barrel glazing remain transparent front surfaces with real stair
   );
 });
 
-test("curved structural ribs have real inner/outer depth and capped ends", () => {
+test("fine intermediate ribs and stronger end arches retain solid thickness and capped ends", () => {
   const { layout: s, ray, materials } = fixture,
     u = (s.length * 3) / s.ribs,
     v = 0.51,
@@ -129,11 +129,99 @@ test("curved structural ribs have real inner/outer depth and capped ends", () =>
   assert.equal((top[0].object as T.Mesh).material, materials.metal);
   assert.equal((under[0].object as T.Mesh).material, materials.metal);
   const thickness = top[0].point.y - under[0].point.y;
-  assert.ok(thickness > 0.075 && thickness < 0.12);
+  assert.ok(thickness > 0.045 && thickness < 0.07);
   const y = (top[0].point.y + under[0].point.y) / 2 - s.landingHeight;
   const cap = ray([v, y, u - 0.2], [v, y, u + 0.2]);
   assert.equal((cap[0].object as T.Mesh).material, materials.metal);
-  assert.ok(Math.abs(cap[0].distance - 0.16) < 0.001);
+  assert.ok(Math.abs(cap[0].distance - 0.1775) < 0.001);
+  const endTop = ray(
+      [v, s.springHeight + s.roofRise + 0.5, 0],
+      [v, s.springHeight + s.roofRise - 0.4, 0],
+    ),
+    endUnder = ray(
+      [v, s.springHeight + s.roofRise - 0.4, 0],
+      [v, s.springHeight + s.roofRise + 0.5, 0],
+    ),
+    endThickness = endTop[0].point.y - endUnder[0].point.y;
+  assert.ok(endThickness > 0.075 && endThickness < 0.12);
+  assert.ok(
+    endThickness > thickness * 1.5,
+    "perimeter arch has structural hierarchy",
+  );
+});
+
+test("pane-edge seals sit behind narrow silver caps and coping reveals have real inset depth", () => {
+  const { layout: s, ray, materials } = fixture,
+    u = (s.length * 3) / s.ribs,
+    side = (along: number, height: number) =>
+      ray([s.radius + 0.2, height, along], [s.radius - 0.1, height, along]);
+  assert.equal((side(u, 1.8)[0].object as T.Mesh).material, materials.metal);
+  const gasket = side(u + 0.0285, 1.8)[0],
+    clear = side(u + 0.1, 1.8)[0];
+  assert.equal((gasket.object as T.Mesh).material, materials.gasket);
+  assert.equal((clear.object as T.Mesh).material, materials.glass);
+  assert.ok(
+    Math.abs(clear.distance - gasket.distance - 0.004) < 0.0001,
+    "seal is separated from the declared glass surface",
+  );
+  const reveal = side(0.7, s.baseTop - 0.072)[0],
+    coping = side(0.7, s.baseTop - 0.03)[0];
+  assert.equal((reveal.object as T.Mesh).material, materials.lining);
+  assert.equal((coping.object as T.Mesh).material, materials.stone);
+  assert.ok(
+    Math.abs(reveal.distance - coping.distance - 0.008) < 0.0001,
+    "coping bed is recessed geometry, not a painted stripe",
+  );
+});
+
+test("barrel glass has continuous analytic ellipse normals and metric arc UVs", () => {
+  const { layout: s, meshes, materials } = fixture;
+  let inspected = 0;
+  const samples: { v: number; y: number; uv: number; normal: T.Vector3 }[] = [];
+  for (const mesh of meshes.filter(
+    (mesh) => mesh.material === materials.glass,
+  )) {
+    const p = mesh.geometry.attributes.position,
+      n = mesh.geometry.attributes.normal,
+      uv = mesh.geometry.attributes.uv;
+    for (let i = 0; i < p.count; i++) {
+      const y = p.getY(i) - s.landingHeight,
+        alongNormal = n.getX(i) * s.axis[0] + n.getZ(i) * s.axis[1];
+      if (y <= s.springHeight + 0.05 || Math.abs(alongNormal) > 0.001) continue;
+      const v =
+          (p.getX(i) - s.origin[0]) * s.right[0] +
+          (p.getZ(i) - s.origin[1]) * s.right[1],
+        u =
+          (p.getX(i) - s.origin[0]) * s.axis[0] +
+          (p.getZ(i) - s.origin[1]) * s.axis[1],
+        expected = new T.Vector3(
+          (s.right[0] * v) / s.radius ** 2,
+          (y - s.springHeight) / s.roofRise ** 2,
+          (s.right[1] * v) / s.radius ** 2,
+        ).normalize(),
+        actual = new T.Vector3().fromBufferAttribute(n, i);
+      assert.ok(
+        actual.distanceTo(expected) < 0.0001,
+        "reflection normal follows the ellipse rather than an individual flat strip",
+      );
+      assert.ok(Math.abs(uv.getY(i) - u) < 0.0001);
+      if (Math.abs(u) < 0.0001)
+        samples.push({ v, y, uv: uv.getX(i), normal: actual });
+      inspected++;
+    }
+  }
+  assert.ok(inspected > 20);
+  samples.sort((a, b) => a.v - b.v);
+  for (let i = 1; i < samples.length; i++) {
+    const a = samples[i - 1],
+      b = samples[i],
+      distance = Math.hypot(b.v - a.v, b.y - a.y);
+    assert.ok(Math.abs(b.uv - a.uv - distance) < 0.0001);
+    assert.ok(
+      a.normal.dot(b.normal) > 0.96,
+      "adjacent panes retain smooth reflection direction",
+    );
+  }
 });
 
 test("sloping exterior base closes to its supplied ground while roof and landing remain level", () => {
@@ -186,7 +274,7 @@ test("pavilion materials borrow one environment and preserve the existing dielec
   assert.notEqual(other.stone.map, shared);
 });
 
-test("finite outward geometry stays within a six-batch close-detail budget", () => {
+test("finite outward geometry keeps the existing triangle budget plus one gasket batch", () => {
   let triangles = 0,
     vertices = 0;
   for (const mesh of fixture.meshes) {
@@ -225,7 +313,7 @@ test("finite outward geometry stays within a six-batch close-detail budget", () 
         );
     }
   }
-  assert.equal(fixture.meshes.length, 6);
+  assert.equal(fixture.meshes.length, 7);
   assert.ok(triangles < 7000, `${triangles} triangles`);
   console.log(
     `Pavilion: ${triangles} triangles, ${vertices} vertices, ${fixture.meshes.length} batches`,

@@ -20,25 +20,27 @@ export function createHoweStationPavilionMaterials(
   };
   const glass = createExteriorLobbyGlass(
     "Howe station clear barrel-vault glazing",
-    0.89,
+    0.97,
+    2,
   );
-  glass.roughness = 0.1;
+  glass.roughness = 0.065;
   glass.envMap = environment ?? null;
   const metal = new T.MeshStandardMaterial({
     name: "Howe station satin silver framing",
-    color: 0xbfc8cc,
-    metalness: 0.76,
-    roughness: 0.27,
+    color: 0xc7cbc9,
+    metalness: 0.42,
+    roughness: 0.34,
     envMap: environment ?? null,
   });
   return {
     stone: new T.MeshStandardMaterial({
       name: "Howe station pale mineral base and stair treads",
-      color: 0xc1c0b5,
+      color: 0xb9b8ae,
       map: mineral("color", true),
       normalMap: mineral("normal", false),
-      normalScale: new T.Vector2(0.035, 0.035),
-      roughness: 0.72,
+      roughnessMap: mineral("roughness", false),
+      normalScale: new T.Vector2(0.16, 0.16),
+      roughness: 0.92,
     }),
     lining: new T.MeshStandardMaterial({
       name: "Howe station closed stairwell lining",
@@ -47,6 +49,12 @@ export function createHoweStationPavilionMaterials(
       metalness: 0,
     }),
     metal,
+    gasket: new T.MeshStandardMaterial({
+      name: "Howe station dark resilient glazing seals",
+      color: 0x303735,
+      metalness: 0,
+      roughness: 0.88,
+    }),
     glass,
     signBlue: new T.MeshStandardMaterial({
       name: "Howe station blue transit blades",

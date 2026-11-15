@@ -173,17 +173,27 @@ export class World {
         ),
       );
     if (this.collision.canada) {
-      const stationBatch = new Batcher(this.root, 160);
-      buildHoweStationPavilion(
+      const stationBatch = new Batcher(this.root, 160),
+        stationMaterials = createHoweStationPavilionMaterials(this.materials);
+      const station = buildHoweStationPavilion(
         stationBatch,
         {
           ...HOWE_STATION_SPEC,
           groundHeight: (x, z) =>
             this.collision.baselineGroundHeight(x, z) + 0.15,
         },
-        createHoweStationPavilionMaterials(this.materials),
+        stationMaterials,
       );
       this.chunks.push(...stationBatch.finish());
+      // The enclosure reflects its actual street surroundings. A single static
+      // 128px capture is shared by metal and glass; receivers are omitted from
+      // their own capture by SceneReflections, with the sky as failure fallback.
+      this.reflections.push({
+        name: "Howe station street enclosure",
+        position: station.p(0, 1.8, station.length / 2),
+        materials: [stationMaterials.glass, stationMaterials.metal],
+        intensity: { day: 1, night: 1 },
+      });
     }
     this.chunks.push(
       ...buildHarbourGreen(

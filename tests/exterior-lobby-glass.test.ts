@@ -3,8 +3,12 @@ import assert from "node:assert/strict";
 import * as T from "three";
 import { createExteriorLobbyGlass } from "../src/world/exterior-lobby-glass";
 
-function compiled(throughput = 0.82) {
-  const material = createExteriorLobbyGlass("test exterior glass", throughput),
+function compiled(throughput = 0.82, interfaces: 1 | 2 = 1) {
+  const material = createExteriorLobbyGlass(
+      "test exterior glass",
+      throughput,
+      interfaces,
+    ),
     shader = {
       uniforms: T.UniformsUtils.clone(T.ShaderLib.physical.uniforms),
       vertexShader: T.ShaderLib.physical.vertexShader,
@@ -31,8 +35,13 @@ function expandChunks(source: string): string {
 }
 /** Execute the actual injected arithmetic, leaving Three's BRDF result as an
  * input. This is a CPU blend/energy regression test, not a GPU compile claim. */
-function fragment(throughput: number, facing: number, specular: number[]) {
-  const { material, shader } = compiled(throughput),
+function fragment(
+  throughput: number,
+  facing: number,
+  specular: number[],
+  interfaces: 1 | 2 = 1,
+) {
+  const { material, shader } = compiled(throughput, interfaces),
     patch = shader.fragmentShader.match(
       /float lobbyFacing[\s\S]*?(?=#include <opaque_fragment>)/,
     )?.[0];
@@ -50,7 +59,8 @@ function fragment(throughput: number, facing: number, specular: number[]) {
     "dot",
     "clamp",
     "pow",
-    `let outgoingLight = [99, 98, 97], diffuseColor = {a: 1};\n${patch.replace(/\bfloat\s+/g, "const ")}\nreturn {rgb: outgoingLight, alpha: diffuseColor.a};`,
+    "max",
+    `let outgoingLight = [99, 98, 97], diffuseColor = {a: 1};\n${patch.replace(/\bfloat\s+/g, "const ").replace("totalSpecular*lobbyReflectionGain", "totalSpecular.map(x=>x*lobbyReflectionGain)")}\nreturn {rgb: outgoingLight, alpha: diffuseColor.a};`,
   );
   const normalize = (v: number[]) => {
       const n = Math.hypot(...v);
@@ -66,6 +76,7 @@ function fragment(throughput: number, facing: number, specular: number[]) {
       (a: number[], b: number[]) => a.reduce((s, x, i) => s + x * b[i], 0),
       (x: number, a: number, b: number) => Math.max(a, Math.min(b, x)),
       Math.pow,
+      Math.max,
     ) as { rgb: number[]; alpha: number };
   return { material, ...result };
 }
@@ -88,6 +99,39 @@ function composite(
 }
 const near = (actual: number, expected: number) =>
   assert.ok(Math.abs(actual - expected) < 1e-10, `${actual} != ${expected}`);
+
+test("one-pass thin slab sums both interfaces without duplicating reflected energy at grazing angles", () => {
+  const normal = fragment(1, 1, [0.04, 0.04, 0.04], 2);
+  normal.rgb.forEach((x) => near(x, (2 * 0.04) / 1.04));
+  near(1 - normal.alpha, 0.96 / 1.04);
+  for (const survival of [0, 0.3, 0.82, 0.97, 1]) {
+    for (let i = 0; i <= 100; i++) {
+      const facing = i / 100,
+        f = 0.04 + 0.96 * (1 - facing) ** 5,
+        sample = fragment(survival, facing, [f, f, f], 2),
+        transmitted = 1 - sample.alpha;
+      sample.rgb.forEach((r) => {
+        assert.ok(r >= f - 1e-12 && r <= 1 + 1e-12);
+        assert.ok(transmitted >= -1e-12 && r + transmitted <= 1 + 1e-10);
+        if (survival === 1) near(r + transmitted, 1);
+      });
+      if (i === 0) {
+        near(sample.rgb[0], 1);
+        near(transmitted, 0);
+      }
+    }
+  }
+  const single = compiled(0.97, 1),
+    slab = compiled(0.97, 2);
+  assert.notEqual(
+    single.material.customProgramCacheKey(),
+    slab.material.customProgramCacheKey(),
+  );
+  assert.equal(slab.material.transmission, 0);
+  assert.equal(slab.material.opacity, 1);
+  assert.equal(slab.material.side, T.FrontSide);
+  expandChunks(slab.shader.fragmentShader);
+});
 
 test("lobby shader retains Three's dielectric BRDF and replaces diffuse paint only at output", () => {
   const { material, shader } = compiled(),
