@@ -22,6 +22,7 @@ import { waterfrontCentre } from "./waterfront-centre-building";
 import { fairmontWaterfront } from "./fairmont-waterfront-building";
 import { pwcPlace } from "./pwc-place-building";
 import { granvilleSquareHowe } from "./granville-square-howe";
+import { customsWarehouse } from "./customs-warehouse-building";
 import { createTerminalCityAssembly } from "./terminal-city-building";
 import { rogersTower } from "./rogers-tower";
 import { harbourGreenTower } from "./harbour-towers";
@@ -147,7 +148,11 @@ export function architecture(
     shell.offsetY = detail.offsetY = interiors.offsetY = ground;
     if (specialBuilding(b) || b.id === CACTUS_ID) continue;
     const [baseX, baseZ] = centroid(b.pts);
-    if (collision.howeTerrain?.contains(baseX, baseZ) && ground > 0.2)
+    if (
+      b.id !== "w1363485360" &&
+      collision.howeTerrain?.contains(baseX, baseZ) &&
+      ground > 0.2
+    )
       buildHoweBuildingFoundation(
         shell,
         Array.from({ length: b.pts.length / 2 }, (_, i) => [
@@ -176,6 +181,7 @@ export function architecture(
     if (
       terminalCity(b, shell) ||
       granvilleSquareHowe(b, shell, m) ||
+      customsWarehouse(b, shell, m, reflections) ||
       fairmontWaterfront(
         b,
         shell,

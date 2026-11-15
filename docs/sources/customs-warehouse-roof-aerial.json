@@ -1,0 +1,104 @@
+{
+  "service": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer",
+  "z": 20,
+  "x0": 165691,
+  "y0": 358828,
+  "cx": 165692.79283928176,
+  "cy": 358829.68897943205,
+  "downloads": [
+    {
+      "url": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/20/358828/165691",
+      "bytes": 12674,
+      "row": 358828,
+      "col": 165691
+    },
+    {
+      "url": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/20/358828/165692",
+      "bytes": 12852,
+      "row": 358828,
+      "col": 165692
+    },
+    {
+      "url": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/20/358828/165693",
+      "bytes": 13719,
+      "row": 358828,
+      "col": 165693
+    },
+    {
+      "url": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/20/358829/165691",
+      "bytes": 13051,
+      "row": 358829,
+      "col": 165691
+    },
+    {
+      "url": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/20/358829/165692",
+      "bytes": 11544,
+      "row": 358829,
+      "col": 165692
+    },
+    {
+      "url": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/20/358829/165693",
+      "bytes": 12685,
+      "row": 358829,
+      "col": 165693
+    },
+    {
+      "url": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/20/358830/165691",
+      "bytes": 9946,
+      "row": 358830,
+      "col": 165691
+    },
+    {
+      "url": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/20/358830/165692",
+      "bytes": 11329,
+      "row": 358830,
+      "col": 165692
+    },
+    {
+      "url": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/20/358830/165693",
+      "bytes": 13673,
+      "row": 358830,
+      "col": 165693
+    }
+  ],
+  "trace": {
+    "outerPixels": [
+      [176, 413],
+      [417, 166],
+      [705, 453],
+      [458, 702]
+    ],
+    "flatCenterPixels": [
+      [313, 413],
+      [411, 315],
+      [553, 453],
+      [455, 550]
+    ],
+    "method": "Relative bilinear roof-corner registration; not surveyed roof-plane orthorectification",
+    "flatCenterFit": [
+      {
+        "uv": [0.2830900508187412, 0.2424238689376594],
+        "world": [431.46357060473844, -360.1621916583539]
+      },
+      {
+        "uv": [0.6831505217134223, 0.24593147158982692],
+        "world": [440.55963647147735, -369.0226643706553]
+      },
+      {
+        "uv": [0.6927665912319781, 0.7340150527554301],
+        "world": [453.9542547271161, -356.37860637807313]
+      },
+      {
+        "uv": [0.29789143459547107, 0.7301529306333644],
+        "world": [444.96528640549894, -347.7398279299404]
+      }
+    ],
+    "uncertainty": "About0.5-1m plan allowance; highroof relief displacement cannot be independently removed. Height unknown fromaerial."
+  },
+  "dataset": "https://opendata.vancouver.ca/explore/dataset/orthophoto-imagery-2022/",
+  "license": "Open Government Licence \u2013 Vancouver",
+  "licenseUrl": "https://opendata.vancouver.ca/pages/licence/",
+  "checkedAt": "2026-11-15",
+  "captureDates": "2022-06-06 through 2022-07-01",
+  "usage": "Reference and plan trace only. No aerial photographs distributed as runtime assets."
+}
