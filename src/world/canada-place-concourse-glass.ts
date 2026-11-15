@@ -118,6 +118,7 @@ void main(){
   attenuation.userData.castShadow = false;
   const reflection = createCanadaPlaceConcourseReflectionCandidate();
   reflection.name = "canada-west-glass";
+  reflection.roughness = 0.12;
   reflection.blendSrc = T.OneFactor;
   reflection.blendDst = T.OneFactor;
   reflection.blendSrcAlpha = T.ZeroFactor;

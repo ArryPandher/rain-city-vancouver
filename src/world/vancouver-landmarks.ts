@@ -4,6 +4,10 @@ import { addCanadaPlaceUpperGuard } from "./canada-place-upper-guard";
 import { addCanadaPlaceLettering } from "./canada-place-lettering";
 import { addCanadaPlaceHallStructure } from "./canada-place-hall-structure";
 import {
+  addCanadaPlacePrimarySupports,
+  CANADA_PLACE_CENTRAL_PRIMARY_STATIONS,
+} from "./canada-place-primary-supports";
+import {
   addGalleryFacade,
   galleryFacadeCompatible,
   replaceGalleryWingFaces,
@@ -229,6 +233,9 @@ export async function loadVancouverLandmarks(
       addCanadaPlaceUpperGuard(group);
       addCanadaPlaceLettering(group);
       addCanadaPlaceHallStructure(group);
+      addCanadaPlacePrimarySupports(group, {
+        stations: CANADA_PLACE_CENTRAL_PRIMARY_STATIONS,
+      });
       localReflection(
         "Canada Place west concourse",
         canadaPlaceConcoursePoint(51.55, 18, 11.5),

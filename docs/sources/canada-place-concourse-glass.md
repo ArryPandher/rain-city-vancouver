@@ -50,3 +50,10 @@ The full central framing and stronger throughput (0.62, 0.88, 0.76) were reviewe
 `createCanadaPlaceConcourseReflectionCandidate()` retains the neutral, single-pass reflection-only control. It removed diffuse paint and used custom One/OneMinusSrcAlpha blending, but could not supply per-channel background absorption. It is also not the current paired-pane solution.
 
 Opaque end-cap clones must explicitly restore NormalBlending, premultipliedAlpha false, transparent false, opacity 1 and depthWrite true, with their intended shadow flag and default opaque shader callbacks. Reset separate blend-alpha overrides when deriving a canonical opaque state. Cloning a material copies custom blending even when custom shader callbacks are not copied; opaque end caps must never inherit the active attenuation/additive pair behavior.
+
+
+## Raw capture and reflection sharpness — 2026-11-15
+
+An on-demand debug preview now reads the existing 128px HalfFloat cube faces without recapturing the scene. Native readback shows distinct clouds, mast lines and surrounding facades before PMREM filtering, so the broad rendered bands are not solely missing source detail. CPU ACES/current exposure and sRGB conversion aid inspection; it excludes PMREM, bloom and final grading and is not a final-screen match. Side-face orientation follows Three's deliberately negative-FOV cube-camera convention; the actual cube texture is not rotated. Failure paths restore the current logical framebuffer/face/mip and reject uninitialized targets. The helper loads only when the debug button is clicked.
+
+The current RGB reflection pass uses roughness0.12, changed from0.21 while holding probe resolution/position, environment intensity0.8, transmission, IOR and geometry fixed. Matched front and oblique daylight views retain visible deeper structure and narrower cloud reflections. This is an authored material calibration, not a measured roughness. Curved tiers still stretch repeated environment bands, and one shared probe cannot supply correct parallax along the full facade. No extra cube capture or resolution increase was introduced.

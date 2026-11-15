@@ -1,3 +1,4 @@
+import { attachCarLOD } from "./car-lod";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
@@ -10,15 +11,17 @@ import {
   tyreRadius,
 } from "./vehicle-wheels";
 let template: T.Group | null = null,
-  trafficTemplate: T.Group | null = null;
-async function buildCarTemplate(path: string) {
+  trafficTemplate: T.Group | null = null,
+  distantTemplate: T.Group | null = null;
+async function buildCarTemplate(path: string, reference?: T.Group) {
   const gltf = await new GLTFLoader().loadAsync(`${BASE}models/${path}`);
-  return buildDetailedCarTemplate(gltf.scene);
+  return buildDetailedCarTemplate(gltf.scene, undefined, reference);
 }
 export function buildDetailedCarTemplate(
   raw: T.Group,
   plateTexture: () => T.Texture = () =>
     label("RAIN CITY", 512, 128, "#263a40", "#e6e3d5", 60),
+  reference?: T.Group,
 ) {
   // Normalize Z-up source exports if necessary; committed car assets are already Y-up.
   const sourceBox = new T.Box3().setFromObject(raw, true),
@@ -34,8 +37,10 @@ export function buildDetailedCarTemplate(
     .multiply(
       new T.Matrix4().makeTranslation(-center.x, -box.min.y, -center.z),
     );
+  if (reference) transform.fromArray(reference.userData.sourceNormalization);
   const root = new T.Group(),
     body = new T.Group();
+  root.userData.sourceNormalization = transform.toArray();
   body.name = "car-body";
   root.add(body);
   const materialMap = new Map<T.Material, T.Material>();
@@ -146,10 +151,16 @@ export function buildDetailedCarTemplate(
   };
   for (const [name, w] of wheelGroups) {
     const frame = wheelFrame(w.source, transform);
+    const referenceWheel = reference?.getObjectByName(name);
+    if (referenceWheel) {
+      frame.center.copy(referenceWheel.position);
+      frame.neutral.fromArray(referenceWheel.userData.sourceWheelNeutral);
+    }
     const center = frame.center;
     const steer = new T.Group();
     steer.name = name;
     steer.position.copy(center);
+    steer.userData.sourceWheelNeutral = frame.neutral.toArray();
     root.add(steer);
     const spin = new T.Group();
     spin.name = name + "Spin";
@@ -170,7 +181,9 @@ export function buildDetailedCarTemplate(
       // Disc/rotor, tyre and rim remain on the rolling hub.
       (/BrakePad|Caliper/i.test(o.name) ? steer : spin).add(mesh);
     }
-    spin.userData.rollingRadius = radius;
+    spin.userData.rollingRadius =
+      reference?.getObjectByName(name + "Spin")?.userData.rollingRadius ??
+      radius;
   }
   // Precise source vertices put the tyre bottom at zero. Road meshes sit a few
   // centimetres above collision ground; retain that small visual clearance.
@@ -179,7 +192,15 @@ export function buildDetailedCarTemplate(
 }
 export async function loadDetailedCar() {
   template = await buildCarTemplate("car-concept.glb");
-  trafficTemplate = await buildCarTemplate("car-traffic.glb");
+  const traffic = await new GLTFLoader().loadAsync(
+    `${BASE}models/car-traffic.glb`,
+  );
+  trafficTemplate = buildDetailedCarTemplate(traffic.scene.clone(true));
+  distantTemplate = buildDetailedCarTemplate(
+    traffic.scene.clone(true),
+    undefined,
+    template,
+  );
 }
 export function detailedCar(
   color = 0x3e656a,
@@ -230,4 +251,14 @@ export function cloneDetailedCar(
     kind: "car",
     color,
   };
+}
+
+/** Called after near wheel batching; only the render level changes at distance. */
+export function attachDetailedCarLOD(model: VehicleModel, multiDraw: boolean) {
+  if (distantTemplate && model.group.userData.sourceNormalization)
+    attachCarLOD(
+      model,
+      cloneDetailedCar(distantTemplate, model.color),
+      multiDraw,
+    );
 }

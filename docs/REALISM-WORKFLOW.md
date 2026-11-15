@@ -35,3 +35,8 @@ The integrated camera fix separates above-rail camera air clearance from the who
 ## Glass and central hall checkpoint
 
 The next integrated pass uses ordered coloured-transmission and physical-reflection draws on three glass tiers, plus ten estimated inward curved frames and ties. Native front and both along-facade views show incremental depth improvement, while separate deeper columns and more varied visible structure remain necessary. Static architecture/street batching reduces matching material submissions without reducing their triangles; owned source-buffer release removes 328,620,606 redundant tracked CPU bytes. A 39.5 fps short local sample includes one 216.7 ms hitch and establishes no FPS gain. Keep the full four-region realism goal active. See [the optical checkpoint](CANADA-PLACE-OPTICS.md) for evidence and the concrete next task.
+
+
+## Primary support and distance-detail checkpoint
+
+Five estimated joined primary supports now extend the accepted single-support preview; final daylight glass roughness is0.12 following inspection of the existing raw reflection capture. Source-derived distant geometry applies only to non-AI concept cars, with nearby/driven cars and existing traffic fidelity preserved. The330-test suite, focused final checks and native gameplay pass. A short sample averages39.67fps but does not establish sustained smoothness or an FPS gain. Continue the full four-region goal with the same coordinator and specialists; see [the support checkpoint](CANADA-PLACE-SUPPORTS.md).

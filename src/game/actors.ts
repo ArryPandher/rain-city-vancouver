@@ -1,7 +1,8 @@
+import { updateCarLOD, syncCarLOD } from "../world/car-lod";
 import { batchCarWheels, syncCarWheelBatches } from "../world/wheel-batching";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { detailedCar } from "../world/detailed-car";
+import { detailedCar, attachDetailedCarLOD } from "../world/detailed-car";
 import { VehicleModel, makeCar, makeBike } from "../world/vehicles";
 import { makeCharacter, Character } from "./character";
 import { carState, CarState, angleDelta } from "./physics";
@@ -100,7 +101,10 @@ export class Actors {
         : detailedCar(color, ai) || makeCar(this.world.materials, color);
     mergeGroup(model.body as T.Group);
     model.wheels.forEach(mergeGroup);
-    if (kind === "car") batchCarWheels(model.group, this.wheelMultiDraw);
+    if (kind === "car") {
+      batchCarWheels(model.group, this.wheelMultiDraw);
+      if (!ai) attachDetailedCarLOD(model, this.wheelMultiDraw);
+    }
     model.group.position.set(
       x,
       this.world.collision.height(x, z, referenceY) +
@@ -355,10 +359,14 @@ export class Actors {
     if (Math.floor(this.timer / 4) !== Math.floor((this.timer - dt) / 4))
       this.recycle(player, current);
     for (const v of this.vehicles) {
-      if (v === current) continue;
+      if (v === current) {
+        updateCarLOD(v.model, 0, true);
+        continue;
+      }
       let { state: s } = v;
       const dist = Math.hypot(s.x - player.x, s.z - player.z);
       v.model.group.visible = dist < 650;
+      updateCarLOD(v.model, dist, false);
       if (v.ai && v.road && v.model.group.visible) {
         let r = v.road;
         const ax = r.pts[v.segment],
@@ -524,6 +532,7 @@ export class Actors {
       v.model.pedals?.forEach((p) => (p.rotation.x = phase));
     }
     syncCarWheelBatches(g);
+    syncCarLOD(v.model);
   }
   nearest(x: number, z: number, r = 7) {
     let nearest: Vehicle | null = null,

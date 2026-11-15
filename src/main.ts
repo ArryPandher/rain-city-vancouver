@@ -439,7 +439,42 @@ class Game {
       document.addEventListener("visibilitychange", () => {
         if (document.hidden) this.finishFrameSample("document hidden");
       });
-      panel.append(title, button, sampleButton, report, sampleReport);
+      const probeButton = document.createElement("button");
+      probeButton.textContent = "Inspect concourse reflections";
+      const probeReport = document.createElement("div");
+      probeReport.id = "reflection-probe-preview";
+      probeButton.addEventListener("click", async () => {
+        probeButton.disabled = true;
+        probeReport.textContent = "Reading existing capture…";
+        try {
+          const probe = this.reflections?.probes.find(
+            (entry) => entry.spec.name === "Canada Place west concourse",
+          );
+          if (!probe) throw new Error("Concourse capture is unavailable.");
+          const { previewReflectionProbe } = await import(
+            "./rendering/reflection-probe-preview"
+          );
+          const result = await previewReflectionProbe(this.renderer, probe);
+          if (!result.ok) throw new Error(result.error);
+          const description = document.createElement("p");
+          description.textContent = result.description;
+          result.canvas.style.maxWidth = "100%";
+          probeReport.replaceChildren(description, result.canvas);
+        } catch (error) {
+          probeReport.textContent = String(error);
+        } finally {
+          probeButton.disabled = false;
+        }
+      });
+      panel.append(
+        title,
+        button,
+        sampleButton,
+        probeButton,
+        report,
+        sampleReport,
+        probeReport,
+      );
       document.body.append(panel);
     }
     this.ready = true;
@@ -1070,7 +1105,8 @@ class Game {
       shortenChaseBoom(
         focus,
         desired,
-        (p) => this.world.collision.cameraBlocked(p.x, p.z, 0.25, p.y) && p.y < 45,
+        (p) =>
+          this.world.collision.cameraBlocked(p.x, p.z, 0.25, p.y) && p.y < 45,
       );
       desired.y = Math.max(
         this.world.collision.height(desired.x, desired.z, this.player.y) + 0.5,
