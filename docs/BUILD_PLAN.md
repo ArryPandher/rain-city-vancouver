@@ -1,6 +1,6 @@
 # Build plan — 2026-11-14
 
-> Current direction (2026-11-14): **browser-only is essential**. The playable prototype is far below the requested visual goal. Prioritize high-fidelity Coal Harbour, Robson/Granville and a Stanley Park seawall region, using the [quality assessment and review brief](QUALITY-ASSESSMENT.md). GTA V is the nearer visual benchmark; GTA VI remains a reference. These are milestones within the full Vancouver objective. Use one Chrome tab maximum and avoid two simultaneous game instances.
+> Current direction (2026-11-14): **browser-only is essential**. The playable prototype is far below the requested visual goal. Prioritize high-fidelity Coal Harbour, Robson/Granville and a Stanley Park seawall region, using the [quality assessment and review brief](QUALITY-ASSESSMENT.md). GTA V is the nearer visual benchmark; GTA VI remains a reference. Arry reaffirmed that a few convincing regions in ordinary gameplay are the priority: architecture, street depth, materials, lighting and animation checked against real Vancouver views. Use only the existing Codex in-app browser and one game instance. New photo-mode features are not a priority.
 
 Build a substantial playable Vancouver vertical slice with real OpenStreetMap streets and building footprints, custom landmarks, on-foot exploration, cars, bikes, weapons, NPCs, missions, cinematic rendering and a shareable GitHub Pages release.
 

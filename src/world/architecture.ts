@@ -26,6 +26,7 @@ import { commodore } from "./commodore";
 import { prospectLighthouse } from "./prospect-lighthouse";
 import { buildingHeight } from "./building-profile";
 import { pitchedRoof } from "./pitched-roof";
+import { podiumPlanters } from "./podium-planters";
 import { houseMaterial } from "./house-material";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 function tint(g: T.BufferGeometry, c: T.Color) {
@@ -432,13 +433,53 @@ export function architecture(
         }
       }
       if (podium && detailed) {
-        const roofBand = new T.BoxGeometry(
-          Math.min(w * 0.35, 15),
-          0.8,
-          Math.min(d * 0.4, 17),
-        );
-        roofBand.translate(x - w * 0.24, podium + 0.45, z + d * 0.23);
-        detail.add(roofBand, m.grass, x, z);
+        const pw = Math.min(w * 0.35, 15),
+          pd = Math.min(d * 0.4, 17),
+          px = x - w * 0.24,
+          pz = z + d * 0.23;
+        const candidate = [
+          px - pw / 2,
+          pz - pd / 2,
+          px + pw / 2,
+          pz - pd / 2,
+          px + pw / 2,
+          pz + pd / 2,
+          px - pw / 2,
+          pz + pd / 2,
+        ];
+        for (const planter of podiumPlanters(b.pts, outline, candidate)) {
+          // A low stone container bears directly on the podium roof. Its inset
+          // planting surface stays within the rim, never through a tower wall.
+          for (const ring of [planter.curb.outer, ...planter.curb.holes]) {
+            const side = walls(ring, 0.42);
+            side.translate(0, podium, 0);
+            detail.add(side, ledge, x, z);
+          }
+          for (const rim of planter.rim)
+            detail.add(
+              flatPolygon(rim.outer, rim.holes, podium + 0.42),
+              ledge,
+              x,
+              z,
+            );
+          for (const planting of planter.planting) {
+            // Inner faces turn toward the bed and meet the recessed turf.
+            for (const ring of [planting.outer, ...planting.holes]) {
+              const reversed: number[] = [];
+              for (let i = ring.length - 2; i >= 0; i -= 2)
+                reversed.push(ring[i], ring[i + 1]);
+              const inner = walls(reversed, 0.12);
+              inner.translate(0, podium + 0.3, 0);
+              detail.add(inner, ledge, x, z);
+            }
+            detail.add(
+              flatPolygon(planting.outer, planting.holes, podium + 0.3),
+              m.grass,
+              x,
+              z,
+            );
+          }
+        }
       }
       // Only mapped street-facing edges get shopfronts; alleys keep their service appearance.
       for (let i = 0; detailed && i < b.pts.length; i += 2) {

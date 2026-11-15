@@ -6,8 +6,8 @@
 
 - Browser-only is essential. A native Unreal application is not the deliverable.
 - GTA VI remains the visual reference; Arry wants to work toward at least GTA V quality, starting with a few more convincing regions.
-- Keep the full Vancouver map and requested walking, car, bike, gun and NPC features. Interiors are not required.
-- Use one Chrome tab maximum, reusing the existing tab. Avoid simultaneous Chrome and in-app game instances. Unload the owned Chrome test page between checks. Both local browser surfaces consume the laptop's RAM/GPU; the in-app browser is not a separate cloud computer.
+- Preserve the existing Vancouver map and requested walking, car, bike, gun and NPC features. Prioritize a few exceptionally convincing regions in ordinary gameplay. Interiors and new photo-mode features are not priorities. Arry wants driving/shooting clips and near-photographic correspondence to real Vancouver viewpoints.
+- Use only the existing Codex in-app browser for this project, as Arry explicitly clarified. Keep one game instance. Chrome is no longer the test surface. The Codex browser still uses local RAM/GPU.
 
 ## Honest assessment
 
@@ -35,7 +35,7 @@ Recent medium-tree work reduced each tree from 206,013 to 95,375 triangles while
 2. **Robson Square / Granville.** Civic terraces and gardens, theatre/storefront identity, street furniture and believable pedestrian-scale lighting/materials.
 3. **A Stanley Park seawall section.** Forest edge, coastal rock, water contact, path texture scale, vegetation variety and a convincing continuous bike route.
 
-These regions are the next quality milestones within the Vancouver game, not a redefinition of the full goal. Keep the wider map usable while improving the priority districts. Finish and evaluate the first region before spreading the same unresolved visual problems across all three.
+Arry reaffirmed that making a few of these regions convincing is the immediate goal. Keep the wider map usable while improving the priority districts. Finish and evaluate the first region before spreading the same unresolved visual problems across all three. Use the concrete references and route in [Coal Harbour visual gates](COAL-HARBOUR-VISUAL-GATES.md).
 
 ## Region acceptance gates (proposed working targets)
 

@@ -216,13 +216,30 @@ function seedHeight(x: number, z: number) {
     cycle = pathDistance(x, z, HARBOUR_CYCLE).d,
     upper = pathDistance(x, z, HARBOUR_UPPER).d;
   const inPark = pointInPoly(x, z, HARBOUR_PARK);
+  const parkRing = harbourWays.w37057434.pts;
+  const parkEdge = pathDistance(x, z, parkRing).d;
+  const landwardEdge = Array.from(
+    { length: HARBOUR_BOUNDARY.length / 2 - HARBOUR_COAST.length + 1 },
+    (_, i) => {
+      const j = (i + HARBOUR_COAST.length - 1) * 2;
+      return [HARBOUR_BOUNDARY[j], HARBOUR_BOUNDARY[j + 1]] as Point;
+    },
+  );
+  const apronDepth = pathDistance(x, z, landwardEdge).d;
+  const parkGrade = 1.55 + (4.59 * cycle) / (cycle + upper + 0.001);
+  // The mapped park edge is a land-use boundary, not a retaining wall. Extend
+  // its grade across the landward apron to the city datum. The former separate
+  // outside formula jumped roughly four metres at the Cordova frontage.
   let y = inPark
-    ? 1.55 + (4.59 * cycle) / (cycle + upper + 0.001)
+    ? parkGrade
     : coast < cycle + 3
       ? 1.04
-      : 6.14 * Math.max(0, 1 - upper / 75);
+      : (parkGrade * apronDepth) / (apronDepth + parkEdge + 0.001);
   if (inPark && cycle > 5 && upper > 5)
-    y += 0.8 * Math.sin(Math.PI * clamp(cycle / (cycle + upper)));
+    y +=
+      0.8 *
+      Math.sin(Math.PI * clamp(cycle / (cycle + upper))) *
+      clamp(parkEdge / 12);
   if (coast < 10) y = 1.04 + 0.51 * clamp(coast / 10);
   // The western tip is a shared cycle/upper-path entrance, not a six-metre ridge.
   if (x < -225) y = 1.55 + (y - 1.55) * clamp((x + 274) / 49);

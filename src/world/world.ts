@@ -1,3 +1,9 @@
+import {
+  curbObstacles,
+  harbourCurbGeometry,
+  hasHarbourCurbs,
+} from "./street-curbs";
+import { buildHarbourFrontage } from "./harbour-frontage";
 import { buildHarbourGreen } from "./harbour-green";
 import {
   HARBOUR_CUSTOM_ROADS,
@@ -131,6 +137,12 @@ export class World {
         this.materials,
         this.collision,
         this.reflections,
+      ),
+      ...buildHarbourFrontage(
+        this.root,
+        this.data,
+        this.materials,
+        this.collision,
       ),
       ...buildJackPoole(
         this.root,
@@ -489,6 +501,7 @@ export class World {
       roughness: 0.6,
     });
     const junctions = roadJunctionGaps(this.data.roads);
+    const curbCuts = curbObstacles(this.data.roads);
     for (const r of this.data.roads) {
       if (
         r.id &&
@@ -546,7 +559,13 @@ export class World {
           scale,
           onTerrain && !bridgeRoute,
         );
-      if (street)
+      if (hasHarbourCurbs(r)) {
+        const edges = harbourCurbGeometry(r, curbCuts, height);
+        b.add(edges.gutter, m.concrete, x, z, "harbour-gutter");
+        b.add(edges.curb, m.stone, x, z, "harbour-curb-face");
+        b.add(edges.apron, m.concrete, x, z, "harbour-curb-apron");
+      }
+      if (street && !hasHarbourCurbs(r))
         for (let i = 0; i < r.pts.length - 2; i += 2) {
           const ax = r.pts[i],
             az = r.pts[i + 1],

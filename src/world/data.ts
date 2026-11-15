@@ -317,6 +317,15 @@ export const LANDMARKS: Landmark[] = [
     "Five white sails, the working harbour and the North Shore beyond.",
   ),
   lm(
+    "harbour-green",
+    "Harbour Green Park",
+    "Coal Harbour",
+    ungeo(-104.53, -757.17),
+    ungeo(-119, -734),
+    2.62,
+    "The Bute Street steps, spray fountain and harbourfront lawns.",
+  ),
+  lm(
     "robson",
     "Robson Square",
     "Downtown",

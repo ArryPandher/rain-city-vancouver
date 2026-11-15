@@ -12,7 +12,8 @@ import {
 import type { Materials } from "./materials";
 import type { CollisionWorld } from "./collision";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
-import { SpatialInstances } from "./spatial-instances";
+import { harbourLawnMaterial, type LawnEdge } from "./harbour-lawn-material";
+import { reconcileTrees } from "./tree-profile";
 import { ringTriangles, partitionTriangle } from "./triangle-partition";
 import { JACK_BOUNDARY, jackTriangleHeight } from "./jack-poole-site";
 import map from "./harbour-green-map.json";
@@ -111,11 +112,27 @@ export function buildHarbourGreen(
       metalness,
       side: T.DoubleSide,
     });
-  const lawn = material("maintained grass", 0xa9bd88, 0.98);
-  lawn.map = m.texture("harbour-green/grass_ground-color.webp", true);
-  lawn.normalMap = m.texture("harbour-green/grass_ground-normal.webp");
-  lawn.normalScale.set(0.32, 0.32);
-  lawn.roughnessMap = m.texture("harbour-green/grass_ground-roughness.webp");
+  const lawnEdges: LawnEdge[] = [];
+  for (const polygon of harbourLawns)
+    for (const ring of polygon)
+      for (let i = 0; i < ring.length - 1; i++)
+        lawnEdges.push({ a: ring[i], b: ring[i + 1], halfWidth: 0 });
+  for (const path of harbourPaths)
+    for (let i = 0; i < path.pts.length - 1; i++)
+      lawnEdges.push({
+        a: path.pts[i],
+        b: path.pts[i + 1],
+        halfWidth: path.width / 2,
+      });
+  const lawnTrees = reconcileTrees(data.trees ?? [], data.publicTrees).filter(
+    (t) =>
+      harbourContains(t.x, t.z) &&
+      inLawns(t.x, t.z) &&
+      !harbourClearGround(t.x, t.z) &&
+      !collision.water(t.x, t.z) &&
+      !collision.blocked(t.x, t.z, 0.35),
+  );
+  const lawn = harbourLawnMaterial(m, lawnEdges, lawnTrees);
   const paving = material("grey waterfront pavers", 0xadb2ac, 0.9);
   paving.map = m.texture("seawall/pavers-color.webp", true);
   paving.normalMap = m.texture("seawall/pavers-normal.webp");
@@ -631,71 +648,7 @@ export function buildHarbourGreen(
   }
   mesh.finish();
   const chunks = batch.finish();
-  // Low grass geometry is distributed in small spatial tiles, never one park-wide draw.
-  const blades: number[] = [],
-    bladeUV: number[] = [];
-  for (let i = 0; i < 6; i++) {
-    const a = random() * Math.PI * 2,
-      x = (random() - 0.5) * 0.75,
-      z = (random() - 0.5) * 0.75,
-      w = 0.008 + random() * 0.006,
-      h = 0.07 + random() * 0.09;
-    blades.push(
-      x - w * Math.cos(a),
-      0,
-      z - w * Math.sin(a),
-      x + w * Math.cos(a),
-      0,
-      z + w * Math.sin(a),
-      x + 0.04 * Math.sin(a),
-      h,
-      z + 0.04 * Math.cos(a),
-    );
-    bladeUV.push(0, 0, 1, 0, 0.5, 1);
-  }
-  const bladeGeometry = new T.BufferGeometry();
-  bladeGeometry.setAttribute(
-    "position",
-    new T.Float32BufferAttribute(blades, 3),
-  );
-  bladeGeometry.setAttribute("uv", new T.Float32BufferAttribute(bladeUV, 2));
-  bladeGeometry.computeVertexNormals();
-  const grass = material("short lawn blades", 0x668b39, 0.98);
-  grass.userData.castShadow = false;
-  const points: Vertex3[] = [];
-  for (let x = -280; x < 80; x += 0.95)
-    for (let z = -920; z < -680; z += 0.95) {
-      const xx = x + random() * 0.6,
-        zz = z + random() * 0.6;
-      if (
-        harbourContains(xx, zz) &&
-        inLawns(xx, zz) &&
-        !harbourClearGround(xx, zz)
-      )
-        points.push([xx, height(xx, zz), zz]);
-    }
-  const source = new T.InstancedMesh(bladeGeometry, grass, points.length);
-  source.name = "Harbour Green short grass";
-  source.receiveShadow = true;
-  const dummy = new T.Object3D();
-  points.forEach((p, i) => {
-    dummy.position.set(...p);
-    dummy.rotation.y = random() * Math.PI * 2;
-    dummy.updateMatrix();
-    source.setMatrixAt(i, dummy.matrix);
-  });
-  source.instanceMatrix.needsUpdate = true;
-  const tiles = new SpatialInstances(source, parent, 24);
-  tiles.update();
-  for (const tile of tiles.tiles) {
-    tile.userData.detail = true;
-    tile.userData.allowShadow = false;
-    tile.computeBoundingSphere();
-    tile.userData.center = [
-      tile.boundingSphere!.center.x,
-      tile.boundingSphere!.center.z,
-    ];
-    chunks.push(tile);
-  }
+  // Maintained turf reads as a continuous short surface. Sparse upright needle
+  // instances made this lawn glitter under night lights and implied unmown grass.
   return chunks;
 }

@@ -16,6 +16,7 @@ import { Actors, Vehicle } from "./game/actors";
 import { makeCharacter, makeWeapon, Character } from "./game/character";
 import { drive, damp, angleDelta } from "./game/physics";
 import { GameAudio } from "./game/audio";
+import { PointerInput } from "./game/pointer-input";
 import { Combat, WEAPONS } from "./game/combat";
 import { Missions, formatTime } from "./game/missions";
 import "./ui/style.css";
@@ -44,6 +45,10 @@ class Game {
   ready = false;
   photo = false;
   mouseLocked = false;
+  pointerInput = new PointerInput();
+  pointerLockPending = false;
+  pointerLockUnavailable = false;
+  pointerFallbackHintShown = false;
   mouseDown = false;
   aiming = false;
   mouseYaw = 0;
@@ -164,42 +169,84 @@ class Game {
     window.addEventListener("keyup", (e) => this.keys.delete(e.code));
     window.addEventListener("blur", () => {
       this.keys.clear();
-      this.mouseDown = false;
+      this.clearPointerInput();
       if (this.running) this.pause();
     });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden && this.running) this.pause();
     });
     document.addEventListener("pointerlockchange", () => {
+      const wasLocked = this.mouseLocked;
       this.mouseLocked =
         document.pointerLockElement === this.renderer.domElement;
-      if (!this.mouseLocked) {
-        this.mouseDown = false;
-        this.aiming = false;
-        if (this.running && !this.photo) this.pause();
-      }
+      this.clearPointerInput();
+      if (this.mouseLocked) {
+        this.pointerLockPending = false;
+        this.pointerLockUnavailable = false;
+      } else if (wasLocked && this.running && !this.photo) this.pause();
     });
     this.renderer.domElement.addEventListener("click", () => {
       if (this.running || this.photo) this.lock();
     });
-    window.addEventListener("mousemove", (e) => {
-      if (!this.mouseLocked) return;
-      this.mouseYaw -= e.movementX * 0.0022 * this.sensitivity;
+    window.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse") return;
+      const delta = this.pointerInput.move(
+        e.clientX,
+        e.clientY,
+        e.movementX,
+        e.movementY,
+        e.buttons,
+        (this.running && !ui.modalOpen && !ui.mapOpen) || this.photo,
+        this.mouseLocked,
+      );
+      this.syncPointerInput();
+      if (!delta) return;
+      this.mouseYaw -= delta[0] * 0.0022 * this.sensitivity;
       this.pitch = Math.max(
         -0.95,
-        Math.min(0.9, this.pitch + e.movementY * 0.0018 * this.sensitivity),
+        Math.min(0.9, this.pitch + delta[1] * 0.0018 * this.sensitivity),
       );
       this.autoCameraTimer = 2.3;
     });
-    window.addEventListener("mousedown", (e) => {
-      if (!this.running || !this.mouseLocked) return;
-      if (e.button === 0) this.mouseDown = true;
-      if (e.button === 2) this.aiming = true;
+    // Mouse button events include chord changes (left fire while right aiming),
+    // unlike pointerdown, which only fires for the first pressed mouse button.
+    this.renderer.domElement.addEventListener("mousedown", (e) => {
+      const accepted = this.pointerInput.down(e.button, e.clientX, e.clientY, {
+        active: this.running && !ui.modalOpen && !ui.mapOpen,
+        canvas: e.target === this.renderer.domElement,
+        locked: this.mouseLocked,
+        weapon: !!this.combat && !this.combat.holstered && !this.vehicle,
+      });
+      this.syncPointerInput();
+      if (accepted) e.preventDefault();
+    });
+    this.renderer.domElement.addEventListener("pointerdown", (e) => {
+      if (
+        e.pointerType !== "mouse" ||
+        this.mouseLocked ||
+        !this.running ||
+        ui.modalOpen ||
+        ui.mapOpen ||
+        e.target !== this.renderer.domElement ||
+        ![0, 2].includes(e.button)
+      )
+        return;
+      try {
+        this.renderer.domElement.setPointerCapture(e.pointerId);
+      } catch {}
     });
     window.addEventListener("mouseup", (e) => {
-      if (e.button === 0) this.mouseDown = false;
-      if (e.button === 2) this.aiming = false;
+      this.pointerInput.up(e.button);
+      this.syncPointerInput();
     });
+    window.addEventListener("pointerup", (e) => {
+      if (!e.buttons && this.renderer.domElement.hasPointerCapture(e.pointerId))
+        this.renderer.domElement.releasePointerCapture(e.pointerId);
+    });
+    this.renderer.domElement.addEventListener("lostpointercapture", () =>
+      this.clearPointerInput(),
+    );
+    window.addEventListener("pointercancel", () => this.clearPointerInput());
     this.renderer.domElement.addEventListener("contextmenu", (e) =>
       e.preventDefault(),
     );
@@ -338,7 +385,9 @@ class Game {
     return {
       x,
       z,
-      heading: id === "ironworkers" ? l.heading : (p?.heading ?? l.heading),
+      heading: ["ironworkers", "harbour-green"].includes(id)
+        ? l.heading
+        : (p?.heading ?? l.heading),
     };
   }
   start(mode: "drive" | "walk") {
@@ -358,8 +407,45 @@ class Game {
         : "WASD to walk · V for a car · 1, 2, 3 for weapons",
     );
   }
+  syncPointerInput() {
+    this.mouseDown = this.pointerInput.firing;
+    this.aiming = this.pointerInput.aiming;
+  }
+  clearPointerInput() {
+    this.pointerInput.reset();
+    this.syncPointerInput();
+  }
   lock() {
-    if (document.pointerLockElement === this.renderer.domElement) return;
+    if (
+      this.pointerLockUnavailable &&
+      !this.pointerFallbackHintShown &&
+      this.running
+    ) {
+      this.pointerFallbackHintShown = true;
+      ui.toast(
+        "Drag to look · Weapon out: right-drag to aim, left-click to fire",
+      );
+    }
+    if (
+      document.pointerLockElement === this.renderer.domElement ||
+      this.pointerLockPending ||
+      this.pointerLockUnavailable
+    )
+      return;
+    this.pointerLockPending = true;
+    // Some embedded browsers silently ignore the request. One bounded check
+    // enables drag controls without repeat permission requests on every click.
+    window.setTimeout(() => {
+      this.pointerLockPending = false;
+      if (document.pointerLockElement === this.renderer.domElement) return;
+      this.pointerLockUnavailable = true;
+      if (!this.pointerFallbackHintShown && this.running) {
+        this.pointerFallbackHintShown = true;
+        ui.toast(
+          "Drag to look · Weapon out: right-drag to aim, left-click to fire",
+        );
+      }
+    }, 750);
     try {
       const p = this.renderer.domElement.requestPointerLock();
       if (p && typeof p.catch === "function") p.catch(() => {});
@@ -376,8 +462,7 @@ class Game {
   pause() {
     if (!this.ready) return;
     this.running = false;
-    this.mouseDown = false;
-    this.aiming = false;
+    this.clearPointerInput();
     this.keys.clear();
     if (document.pointerLockElement) document.exitPointerLock();
     this.audio.suspend();
@@ -1216,7 +1301,10 @@ class Game {
     ui.$("damage").style.opacity = String(this.damage);
     if (new URLSearchParams(location.search).has("debug"))
       ui.$("fps").textContent =
-        `${Math.round(this.fps)} fps · ${this.renderer.info.render.calls} calls · ${(this.renderer.info.render.triangles / 1000).toFixed(0)}k tris`;
+        `${Math.round(this.fps)} fps · ${this.renderer.info.render.calls} calls · ${(this.renderer.info.render.triangles / 1000).toFixed(0)}k tris · Position ${this.player
+          .toArray()
+          .map((v) => v.toFixed(2))
+          .join(", ")} · Heading ${this.heading.toFixed(3)}`;
   }
   frame(now: number) {
     requestAnimationFrame((t) => this.frame(t));
