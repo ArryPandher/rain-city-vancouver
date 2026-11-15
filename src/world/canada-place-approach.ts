@@ -122,7 +122,34 @@ export function canadaPlaceApproachGeometry(
           q = pts[i],
           r = pts[(i + 1) % 3],
           s = pts[(i + 2) % 3];
-        if (longest > 2 && depth < 22) {
+        const ys = pts.map((p) => site.supportHeight(...p));
+        const centre: Point = [
+          (a[0] + b[0] + c[0]) / 3,
+          (a[1] + b[1] + c[1]) / 3,
+        ];
+        const heightError = Math.abs(
+          site.supportHeight(...centre) - (ys[0] + ys[1] + ys[2]) / 3,
+        );
+        const edgeVector = new T.Vector3(
+          b[0] - a[0],
+          ys[1] - ys[0],
+          b[1] - a[1],
+        );
+        const otherVector = new T.Vector3(
+          c[0] - a[0],
+          ys[2] - ys[0],
+          c[1] - a[1],
+        );
+        const cross = edgeVector.cross(otherVector);
+        const normalY = Math.abs(cross.y) / Math.max(1e-20, cross.length());
+        // Curved approach fields need height-error subdivision as well as
+        // distance subdivision. Thin clipping wedges can otherwise tilt almost
+        // vertically despite all three vertices lying on a gentle grade.
+        if (
+          (longest > 2 || heightError > 0.015 || normalY < 0.82) &&
+          depth < 26 &&
+          longest > 0.025
+        ) {
           const mid: Point = [(q[0] + r[0]) / 2, (q[1] + r[1]) / 2];
           emit(q, mid, s, depth + 1);
           emit(mid, r, s, depth + 1);
@@ -294,14 +321,22 @@ export function canadaPlaceApproachGeometry(
   for (let i = 0; i < positions.count; i++) {
     const x = positions.getX(i),
       z = positions.getZ(i),
-      d = 0.05;
+      d = 0.05,
+      // A derivative must sample one continuous field. At a hotel cut, the
+      // generic sampler outside the apron falls back to a different datum;
+      // differencing that fallback fabricates a near-vertical pavement normal.
+      // Extend only the owning field for this 5 cm lighting derivative. Actual
+      // pavement/collision bounds and emitted vertex heights remain unchanged.
+      height = site.fairmontApron?.covers(x, z)
+        ? site.fairmontApron.height
+        : site.pwcApron?.covers(x, z)
+          ? site.pwcApron.height
+          : site.supportHeight;
     normal
       .set(
-        -(site.supportHeight(x + d, z) - site.supportHeight(x - d, z)) /
-          (2 * d),
+        -(height(x + d, z) - height(x - d, z)) / (2 * d),
         1,
-        -(site.supportHeight(x, z + d) - site.supportHeight(x, z - d)) /
-          (2 * d),
+        -(height(x, z + d) - height(x, z - d)) / (2 * d),
       )
       .normalize();
     normals.setXYZ(i, normal.x, normal.y, normal.z);

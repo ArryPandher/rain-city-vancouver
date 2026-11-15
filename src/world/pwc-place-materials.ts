@@ -1,5 +1,6 @@
 import * as T from "three";
 import type { Materials } from "./materials";
+import { createExteriorLobbyGlass } from "./exterior-lobby-glass";
 
 /** Existing CC0 mineral maps; source photography is never used as a texture. */
 export function createPwcPlaceMaterials(library: Pick<Materials, "texture">) {
@@ -39,14 +40,7 @@ export function createPwcPlaceMaterials(library: Pick<Materials, "texture">) {
       clearcoat: 0.65,
       envMapIntensity: 0.8,
     }),
-    lobbyGlass: new T.MeshPhysicalMaterial({
-      name: "PwC Place recessed lobby glazing",
-      color: 0x879a97,
-      metalness: 0.28,
-      roughness: 0.12,
-      clearcoat: 1,
-      envMapIntensity: 0.8,
-    }),
+    lobbyGlass: createExteriorLobbyGlass("PwC Place recessed lobby glazing"),
     metal: new T.MeshStandardMaterial({
       name: "PwC Place silver curtain wall frames",
       color: 0xc7ceca,

@@ -30,19 +30,23 @@ The floor schedule uses two nominal lobby/mezzanine divisions to 8.2 m and eight
 
 ## Ground frontage, materials and integration
 
-The lobby has 0.8 m recessed glazing, backing another 0.11 m behind it, four-sided returns, a low plinth, substantial round pale columns and a metal fascia. The current Canada Place collision site and named road layer put the tested Howe frontage at Y=0. The geometry and reflection probe honor `batch.offsetY` rather than imposing a new datum.
+The Howe ground frontage now replaces the old 0.8 m pane / 0.11 m backing gap with an exterior recess: substantial pale columns at the outer fascia, a supported stone floor, downward-facing soffit, side returns, and closed rear glazing. The owner's photograph supports that depth hierarchy and the sparse round columns; it does **not** provide measured setbacks, a verified door-leaf pattern, or a surveyed slab schedule.
 
-The explicit frontage contract in `PWC_PLACE_ENTRANCE` uses retained edge **[464.548599, −396.13] → [479.048599, −411.13]**, outward approximately **[−0.7196, −0.6950]**. Positive `facadeFrame` depth goes inside. Its reserved interval u=6–12 m, threshold 0.18 m, head 6.8 m and glazing depth 0.8 m are photo-fit estimates. The exact door position/leaf layout is unresolved, so this pass supplies conservative recessed commercial glazing rather than claiming a surveyed doorway. The existing residential door/window kit was rejected; see [the entrance asset study](pwc-entrance-kit-study.md).
+`pwc-lobby-site.ts` describes the two Howe-facing retained edges, their open exterior polygons, every rear/side closing segment, and five circular column footprints. The main glazing sits 2.4 m inside the mapped outline; the entry interval u=6–12 m on edge 0 steps back to 3.4 m. The floor is 0.18 m and the soffit 7.75 m above the caller datum. These are explicit photo-fit estimates. Corner pockets are 1.08 m deep and return behind the column shafts; the five columns have a 0.48 m radius and remain at the existing 0.53 m depth. The geometry has no pane or side return through a shaft. The adjacent retained facade's end bay is shortened to clear the shared corner column.
 
-The historical corner/plaza passage is documented but not opened through the retained collision footprint. No new ground slab, street post, walkway or interior route is introduced. The seven material groups distinguish pale stone, green vision glazing, muted spandrels, lobby glass, silver framing, closed backing and roof membrane. The mineral texture samplers are cloned and kept at metre scale; glazing remains an opaque reflective approximation.
+Each rear glazed section has another 1.2 m of modeled closed depth, including floor, soffit, side closures and dark backing. Restrained vertical lining piers provide parallax through the glass; these are a simplified closed visual backing, not surveyed room contents or gameplay interiors. No old primary-front pane remains in front of the recess. The sparse commercial framing retains an entrance-scale transom around 3.15 m and a higher division at 6.8 m, while leaving precise door leaves and hardware unresolved. The existing residential door/window kit remains rejected; see [the entrance asset study](pwc-entrance-kit-study.md).
 
-Root integration calls `pwcPlace(building,batch,library,reflections)` from `src/world/pwc-place-building.ts` before generic architecture. The wrapper dispatches only this ID and adds one static exterior probe. It does not modify the parkade or neighbour factories.
+The explicit `PWC_PLACE_ENTRANCE` contract uses retained edge **[464.548599, −396.13] → [479.048599, −411.13]**, outward approximately **[−0.7196, −0.6950]**. Positive `facadeFrame` depth goes inside. Edge 1 continues to **[484.548599, −422.13]**. Both recess mouths coincide exactly with their mapped edge, retain solid corner piers, and stop at rear glass/stone. The contract is intended for the matching collision subtraction and column obstacles; geometry-only ray tests do not establish integrated walkability. The current Canada Place collision site and named road layer put the tested Howe frontage at Y=0. Geometry continues to honor `batch.offsetY`.
+
+The documented historical plaza passage is not reconstructed as a through-building route. The external outline, tower, roof parts and upper facade schedule remain unchanged. Other ground faces retain simpler closed bays, with glass moved to 1.12 m and backing to 1.9 m to clear their round columns. The seven material groups still distinguish stone, vision glass, spandrels, lobby glass, framing, dark backing and roof membrane. The source photograph remains research-only; mineral maps use the existing CC0 set and cloned metre-scale samplers. Glass optics are integrated separately from the section geometry.
+
+Root integration calls `pwcPlace(building,batch,library,reflections)` from `src/world/pwc-place-building.ts` before generic architecture. The wrapper dispatches only this ID and assigns separate static tower and street-lobby reflection probes. It does not modify the parkade or neighbour factories.
 
 ## Verification and limits
 
-Six focused tests in `tests/pwc-place.test.ts` and TypeScript checking pass on 2026-11-15. They verify retained footprint/dispatch, source roof differences and separate caps, actual glass-first/backing-second rays, the two facade regimes, lobby recess and ground support, absence of low geometry beyond the footprint, finite normals/bounds, material sampler ownership and consistent nonzero model/probe offsets.
+Nine focused tests in `tests/pwc-place.test.ts` and TypeScript checking pass for the 2026-11-15 candidate. They verify retained footprint/dispatch, source roof differences and separate caps, the two upper facade regimes, actual rear-glass-first/backing-second rays, both lobby depths, supported floor and downward soffit rays, every rear/side closure, column-circle agreement and complete-model clearance from adjacent panels, finite normals/bounds, and caller offsets. The remaining ground faces and all upper geometry stay within the original outline. The collision integration, ordinary round-trip walk and browser performance review are separate acceptance work; these checks do not substitute for them.
 
-The assembly contains **18,821 triangles in seven material batches**, plus one static reflection probe. These are geometry costs, not measured frame-rate gains. The integrated native review is recorded below; the project log records full-suite, build and publication checks. Exact roof sections, door survey, plaza circulation, glass optical behavior and surrounding generic buildings remain fidelity limits; this work does not establish AAA parity.
+The current assembly contains **19,185 triangles in seven material batches**, 364 triangles above the prior 18,821-triangle version. The two new Howe sections alone contain **1,016 triangles across four existing materials**. No new texture or material group is needed. These are measured geometry counts, not measured frame-rate gains. Exact door positions, setbacks, plaza circulation, glass optics and surrounding generic buildings remain fidelity limits; this work does not establish AAA parity. The integrated review below describes the preceding shallow-lobby baseline, not acceptance of this deeper candidate.
 
 ## Integrated daylight review
 
@@ -63,3 +67,59 @@ p99 51.9 ms, maximum 67.6 ms, 32 frames over 50 ms and none over 100 ms. This is
 723×670 at pixel ratio1.35 / Balanced on the local laptop, not a sustained or
 1080p result and not a controlled FPS improvement. Local screenshot/profile
 evidence is under `artifacts/local/pwc-*`. Publication is recorded separately.
+
+## Howe forecourt and graded lobby, 2026-11-15
+
+An ordinary walk toward PwC stopped at the generated support-edge guard near
+`(465.85, 1.06, -411.87)`. The old Howe support ended short of the retained
+frontage, while the original lobby floor remained flat at 0.18 m. The owner's
+photograph supports an accessible paved approach; it does not establish a
+surveyed slope or justify flattening the existing street.
+
+`pwc-apron-site.ts` now defines a bounded exterior forecourt between retained
+PwC facade edges 0/1 and their projections onto the existing mapped Howe way
+`w232195213`. Its footprint is clipped against all original building outlines.
+It adds no road, changes no tower geometry and excludes building interiors.
+The bounds are x450.40–484.55 / z−433.26–−396.13. The Canada Place site unions
+this forecourt with its original support, so the obsolete internal retaining
+edge and guard disappear through the existing shared boundary generator.
+
+Original support heights remain authoritative wherever the original mask
+exists. New paving interpolates actual original support-boundary heights
+toward a frontage profile sampled from the existing Howe road. The corner
+uses continuous weighted interpolation rather than an abrupt nearest-edge
+switch. This crossfall is an explicit gameplay integration estimate, not a
+surveyed real-world forecourt reconstruction. Dense actual-map checks found
+an 8.58% maximum sampled x/z grade component; every sampled old Howe road
+height remained exactly unchanged.
+
+`createPwcLobbySite(groundHeight, datum)` samples the exterior base grade 45 mm
+outside the wall and caches floor panels, opening polygons, rear/side closures,
+columns and `floorAt`. The floor is base grade +0.18 m: the approach's 0.15 m
+walking finish plus a 30 mm threshold lip. It is constant across the shallow
+depth of each strip and follows the frontage longitudinally. The current
+section endpoints range from approximately 0.46 to 2.87 m; occupied opening
+samples range from 0.50 to 2.82 m. The ceiling stays at 7.75 m and the tower
+roof stays at 83 m above the original building datum.
+
+The floor mesh and collision use identical cached triangles. Glazing,
+opaque cavity backing, side returns, lower frames and lining ribs meet that
+floor. Column bottoms extend slightly below the lower adjacent floor sample
+to avoid gaps on the slope. The existing section plan, 2.4/3.4 m glazing
+depths, 1.2 m backing cavity and substantial round columns remain. Glass and
+rear closures remain solid to gameplay; this adds exterior circulation only.
+`buildPwcPlace` accepts the exterior base-grade callback as its fourth argument;
+the root wrapper and collision integration use the same callback and datum.
+
+Focused validation: 15 tests passed in `tests/pwc-apron.test.ts` and
+`tests/pwc-place.test.ts`. They reproduce the old guard blockage and verify
+its removal, preserve all sampled old Howe grades, check bounded support and
+Float32 render boundaries, compare actual apron/lobby triangles with shared
+height samplers, test sloped column/glazing contact, traverse both open recess
+approaches while retaining rear-glass collision, and verify a non-flat callback
+with a nonzero caller datum. Existing tower roof, material batching, facade
+depth and column/panel clearance checks passed. These checks do not establish
+ordinary browser appearance or sustained frame pacing; the integrated native
+walk/drive acceptance remains a separate scene-level check.
+
+The street screen uses a level estimated 5.0 m transom across the graded frontage; only its bottom threshold follows the paving. Draping the intermediate architectural rail with the floor produced a visibly sloping screen and was corrected before release. This transom height remains a photo-fit estimate.

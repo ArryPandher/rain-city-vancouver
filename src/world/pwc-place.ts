@@ -7,6 +7,8 @@ import {
   type Vertex3,
 } from "./architectural-mesh";
 import type { PwcPlaceMaterials } from "./pwc-place-materials";
+import { buildPwcLobbyFrontage } from "./pwc-lobby";
+import { createPwcLobbySite } from "./pwc-lobby-site";
 import {
   PWC_PLACE_ID as ID,
   PWC_PLACE_ORIGIN as centre,
@@ -31,9 +33,14 @@ export function buildPwcPlace(
   batch: Batcher,
   building: { id: string; pts: number[] },
   m: PwcPlaceMaterials,
+  groundHeight?: (x: number, z: number) => number,
 ) {
   if (building.id !== ID) return false;
   const mesh = new ArchitecturalMesh(batch, ...centre);
+  const lobbySite = createPwcLobbySite(
+    groundHeight ?? (() => batch.offsetY),
+    batch.offsetY,
+  );
   const quad = (material: T.Material, p: Vertex3[], normal: Vertex3) => {
     const cross = new T.Vector3(...p[1])
       .sub(new T.Vector3(...p[0]))
@@ -109,27 +116,28 @@ export function buildPwcPlace(
       material,
     );
 
-  // The retained footprint remains closed. No unsurveyed plaza passage, new
-  // ground plane or post beyond the existing collision boundary is introduced.
+  // The mapped outline stays fixed. Howe recesses stop at closed rear glazing;
+  // no through-building passage or geometry beyond that outline is introduced.
   cap([base], 0, m.backing);
   cap([base], lobbyTop, m.roof);
   for (let i = 0; i < base.length; i++) {
+    if (buildPwcLobbyFrontage(mesh, i, m, lobbySite)) continue;
     const f = facadeFrame(base[i], base[(i + 1) % base.length]),
       left = Math.min(0.9, f.length / 3),
-      right = f.length - left;
+      right = f.length - (i === base.length - 1 ? 2.2 : left);
     face(f, m.stone, 0, f.length, 0, 0.18);
     face(f, m.stone, 0, left, 0.18, 7.75);
     face(f, m.stone, right, f.length, 0.18, 7.75);
-    face(f, m.backing, left, right, 0.18, 7.75, 0.91);
-    face(f, m.lobbyGlass, left, right, 0.18, 7.75, 0.8);
+    face(f, m.backing, left, right, 0.18, 7.75, 1.9);
+    face(f, m.lobbyGlass, left, right, 0.18, 7.75, 1.12);
     face(f, m.metal, 0, f.length, 7.75, lobbyTop);
     const along: Vertex3 = [-f.outward[1], 0, f.outward[0]];
     quad(
       m.stone,
       [
         f.p(left, 0.18),
-        f.p(left, 0.18, 0.95),
-        f.p(left, 7.75, 0.95),
+        f.p(left, 0.18, 1.95),
+        f.p(left, 7.75, 1.95),
         f.p(left, 7.75),
       ],
       along,
@@ -139,8 +147,8 @@ export function buildPwcPlace(
       [
         f.p(right, 0.18),
         f.p(right, 7.75),
-        f.p(right, 7.75, 0.95),
-        f.p(right, 0.18, 0.95),
+        f.p(right, 7.75, 1.95),
+        f.p(right, 0.18, 1.95),
       ],
       along.map((v) => -v) as Vertex3,
     );
@@ -150,14 +158,14 @@ export function buildPwcPlace(
     ] as const)
       quad(
         m.stone,
-        [f.p(left, y), f.p(right, y), f.p(right, y, 0.95), f.p(left, y, 0.95)],
+        [f.p(left, y), f.p(right, y), f.p(right, y, 1.95), f.p(left, y, 1.95)],
         [...normal],
       );
     const bays = Math.max(1, Math.round((right - left) / 2));
     for (let j = 0; j <= bays; j++) {
       const u = left + ((right - left) * j) / bays;
       mesh.box(
-        f.p(u, 3.965, 0.765),
+        f.p(u, 3.965, 1.08),
         0.065,
         7.57,
         0.12,
@@ -166,7 +174,7 @@ export function buildPwcPlace(
       );
     }
     for (const y of [3.15, 6.8])
-      face(f, m.metal, left, right, y, y + 0.09, 0.73);
+      face(f, m.metal, left, right, y, y + 0.09, 1.04);
     if (f.length < 6) continue;
     const columns =
       i === 0
@@ -182,7 +190,9 @@ export function buildPwcPlace(
         ? columns
         : columns.map(
             (_, j) =>
-              0.65 + (j * (f.length - 1.3)) / Math.max(1, columns.length - 1),
+              1.6 +
+              (j * (f.length - 1.6 - (i === base.length - 1 ? 2.8 : 1.6))) /
+                Math.max(1, columns.length - 1),
           );
     for (const u of locations) {
       const g = new T.CylinderGeometry(0.48, 0.48, 7.75, 20),

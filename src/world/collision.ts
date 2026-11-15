@@ -1,4 +1,15 @@
 import {
+  createExteriorRecessCollision,
+  type ExteriorRecessCollision,
+} from "./exterior-recess-collision";
+import { createFairmontArcadeSite } from "./fairmont-arcade-site";
+import {
+  FAIRMONT_WATERFRONT_ID,
+  FAIRMONT_WATERFRONT_RING,
+} from "./fairmont-waterfront-site";
+import { PWC_PLACE_ID, PWC_PLACE_RING } from "./pwc-place-site";
+import { createPwcLobbySite } from "./pwc-lobby-site";
+import {
   canadaPlaceCapabilities,
   type CanadaPlaceCapabilities,
 } from "./canada-place-capabilities";
@@ -245,6 +256,7 @@ export class CollisionWorld {
   robsonGarden?: Building;
   convention?: ConventionSite;
   canada?: CanadaPlaceSite;
+  private exteriorRecesses = new Map<string, ExteriorRecessCollision>();
   buildings = new SpatialHash<Building>();
   roads = new SpatialHash<Road>(100);
   forestObstacles = new SpatialHash<{ x: number; z: number; radius: number }>(
@@ -264,6 +276,9 @@ export class CollisionWorld {
     this.harbour = data.areas.some((a) => a.name === "Harbour Green Park");
     for (const source of data.buildings) {
       let b = source;
+      if (b.id === FAIRMONT_WATERFRONT_ID)
+        b = { ...b, pts: FAIRMONT_WATERFRONT_RING.flat() };
+      if (b.id === PWC_PLACE_ID) b = { ...b, pts: PWC_PLACE_RING.flat() };
       const harbour = harbourTower(b.id);
       if (harbour) b = { ...b, pts: harbour.parts[0].pts.flat() };
       if (b.id === FAIRMONT_ID) b = { ...b, pts: fairmontFootprint };
@@ -329,8 +344,64 @@ export class CollisionWorld {
           Math.max(r.pts[i + 1], r.pts[i + 3]),
         );
     }
+    const hotel = data.buildings.find((b) => b.id === FAIRMONT_WATERFRONT_ID);
+    if (hotel) {
+      const base = this.baselineGroundHeight(...centroid(hotel.pts));
+      const site = createFairmontArcadeSite(
+        this.baselineGroundHeight.bind(this),
+        base,
+      );
+      this.exteriorRecesses.set(
+        hotel.id,
+        createExteriorRecessCollision({
+          footprint: FAIRMONT_WATERFRONT_RING,
+          openings: site.openPolygons,
+          closures: site.closures.map((s) => [s.a, s.b]),
+          columns: site.piers,
+          floorAt: (x, z) => {
+            const y = site.floorAt(x, z);
+            return y === undefined ? undefined : base + y;
+          },
+          ceiling: (x, z) =>
+            base + (site.ceilingAt(x, z) ?? site.canopyTopAt(x, z) - 0.64),
+        }),
+      );
+    }
+    const pwc = data.buildings.find((b) => b.id === PWC_PLACE_ID);
+    if (pwc) {
+      const base = this.baselineGroundHeight(...centroid(pwc.pts));
+      const site = createPwcLobbySite(
+        this.baselineGroundHeight.bind(this),
+        base,
+      );
+      this.exteriorRecesses.set(
+        pwc.id,
+        createExteriorRecessCollision({
+          footprint: PWC_PLACE_RING,
+          openings: site.openPolygons,
+          closures: site.closures,
+          columns: site.columns.map((p) => ({
+            point: [p.x, p.z],
+            radius: p.radius,
+          })),
+          floorAt: (x, z) => {
+            const y = site.floorAt(x, z);
+            return y === undefined ? undefined : base + y;
+          },
+          ceiling: base + site.ceiling,
+        }),
+      );
+    }
   }
-  groundHeight(x: number, z: number) {
+  groundHeight(x: number, z: number): number {
+    for (const recess of this.exteriorRecesses.values()) {
+      const y = recess.floorAt(x, z);
+      if (y !== undefined) return y;
+    }
+    return this.baselineGroundHeight(x, z);
+  }
+  /** Exterior approach before recessed-building floor overrides. */
+  baselineGroundHeight(x: number, z: number) {
     if (this.canada && supportedDeck(x, z, 0, this.canadaGeometry))
       return CANADA_PLACE_DECK_Y;
     return this.canada?.baselineHeight(x, z) ?? this.existingGroundHeight(x, z);
@@ -498,6 +569,11 @@ export class CollisionWorld {
       )
         continue;
       if (b.id === CACTUS_ID && jackRoofAccess(x, z, referenceY)) continue;
+      const recess = this.exteriorRecesses.get(b.id);
+      if (recess) {
+        if (recess.blocked(x, z, r, referenceY, camera)) return true;
+        continue;
+      }
       if (pointInPoly(x, z, b.pts)) return true;
       for (let i = 0; i < b.pts.length; i += 2) {
         const j = (i + 2) % b.pts.length;

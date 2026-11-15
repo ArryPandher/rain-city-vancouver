@@ -1,5 +1,6 @@
 import * as T from "three";
 import type { Materials } from "./materials";
+import { createExteriorLobbyGlass } from "./exterior-lobby-glass";
 export function createFairmontWaterfrontMaterials(
   library: Pick<Materials, "texture">,
 ) {
@@ -31,6 +32,10 @@ export function createFairmontWaterfrontMaterials(
   canopyGlass.userData.castShadow = false;
   return {
     canopyGlass,
+    lobbyGlass: createExteriorLobbyGlass(
+      "Fairmont Waterfront recessed lobby glazing",
+      0.86,
+    ),
     panel: new T.MeshStandardMaterial({
       name: "Fairmont Waterfront pale panel grid",
       color: 0xd4d8d4,
@@ -38,15 +43,17 @@ export function createFairmontWaterfrontMaterials(
       normalMap: mineral("normal", false),
       normalScale: new T.Vector2(0.06, 0.06),
       roughness: 0.64,
-      metalness: 0.12,
+      metalness: 0,
     }),
     glass: new T.MeshPhysicalMaterial({
       name: "Fairmont Waterfront blue reflective glazing",
-      color: 0x769caf,
-      metalness: 0.52,
-      roughness: 0.14,
-      clearcoat: 1,
-      clearcoatRoughness: 0.1,
+      // Opaque dark-room and reflective coating approximation. Effective IOR
+      // gives one ~12.6% normal reflection lobe, not bulk uncoated glass.
+      color: 0x24485f,
+      metalness: 0,
+      roughness: 0.09,
+      clearcoat: 0,
+      ior: 2.1,
       envMapIntensity: 0.9,
     }),
     metal: new T.MeshStandardMaterial({

@@ -6,6 +6,16 @@ import {
   PEDESTRIAN_POOL_LIMIT,
   type CanadaPedestrianCircuit,
 } from "./canada-place-pedestrians";
+import {
+  createHowePedestrianCircuits,
+  howePedestrianAssignment,
+  howePedestrianPoint,
+  howePedestrianHeight,
+  advanceHowePedestrian,
+  findHowePedestrianSpawn,
+  HOWE_PEDESTRIAN_SLOTS,
+  type HowePedestrianCircuit,
+} from "./howe-pedestrians";
 import { updateCarLOD, syncCarLOD } from "../world/car-lod";
 import { batchCarWheels, syncCarWheelBatches } from "../world/wheel-batching";
 import * as T from "three";
@@ -38,6 +48,7 @@ export interface Vehicle {
   health: number;
 }
 export interface Pedestrian {
+  howe?: { route: number; distance: number; pace: number; speed: number };
   canadaDistance?: number;
   canadaSpeed?: number;
   character: Character;
@@ -93,6 +104,7 @@ export class Actors {
   random = seeded(518);
   timer = 0;
   canadaCircuit: CanadaPedestrianCircuit | null = null;
+  howeCircuits: HowePedestrianCircuit[] | null = null;
   constructor(
     public world: World,
     private readonly wheelMultiDraw = false,
@@ -172,7 +184,29 @@ export class Actors {
       v.name = ["Pacific GT", "Harbour Coupe", "West End GT"][i % 3];
     }
     this.canadaCircuit ??= createCanadaPedestrianCircuit(this.world.collision);
+    this.howeCircuits ??= createHowePedestrianCircuits(this.world.collision);
     for (let i = this.peds.length; i < PEDESTRIAN_POOL_LIMIT; i++) {
+      let howe: Pedestrian["howe"];
+      const howeSlot = i - CANADA_PEDESTRIAN_SLOTS;
+      if (
+        this.howeCircuits &&
+        howeSlot >= 0 &&
+        howeSlot < HOWE_PEDESTRIAN_SLOTS
+      ) {
+        const assignment = howePedestrianAssignment(
+          this.howeCircuits,
+          howeSlot,
+        );
+        const distance = findHowePedestrianSpawn(
+          this.howeCircuits[assignment.route],
+          assignment.distance,
+          this.world.collision,
+          this.pedestrianBodies(),
+          this.howeVehicleObstacles(),
+        );
+        if (distance !== undefined)
+          howe = { ...assignment, distance, speed: 0 };
+      }
       const canadaDistance =
         this.canadaCircuit && i < CANADA_PEDESTRIAN_SLOTS
           ? (i * this.canadaCircuit.length) / CANADA_PEDESTRIAN_SLOTS
@@ -180,14 +214,19 @@ export class Actors {
       const fixed =
         canadaDistance !== undefined
           ? canadaPedestrianPoint(this.canadaCircuit!, canadaDistance)
-          : null;
+          : howe
+            ? howePedestrianPoint(this.howeCircuits![howe.route], howe.distance)
+            : null;
       const side = i % 2 ? 1 : -1;
       const at = fixed
         ? {
             ...fixed,
             road: {
               kind: "footway",
-              pts: this.canadaCircuit!.points.flatMap((p) => [p.x, p.z]),
+              pts: (howe
+                ? this.howeCircuits![howe.route]
+                : this.canadaCircuit!
+              ).points.flatMap((p) => [p.x, p.z]),
             } as Road,
             t: 0,
             segment: 0,
@@ -207,11 +246,16 @@ export class Actors {
       this.world.scene.add(p.group);
       p.group.position.set(
         at.x,
-        fixed ? 7.88 : this.world.collision.roadHeight(at.road, at.x, at.z),
+        howe
+          ? howePedestrianHeight(this.world.collision, at)
+          : fixed
+            ? 7.88
+            : this.world.collision.roadHeight(at.road, at.x, at.z),
         at.z,
       );
       p.group.rotation.y = at.heading;
       const ped: Pedestrian = {
+        howe,
         canadaDistance,
         character: p,
         road: at.road,
@@ -354,7 +398,7 @@ export class Actors {
       this.sync(v, 0);
     }
     for (const p of this.peds) {
-      if (p.canadaDistance !== undefined) continue;
+      if (p.canadaDistance !== undefined || p.howe) continue;
       if (!afterTravel && p.character.group.position.distanceTo(player) < 450)
         continue;
       const at = this.place(walkingSpans, player.x, player.z, {
@@ -395,6 +439,40 @@ export class Actors {
         height: down ? 0.55 : 1.8,
       };
     });
+  }
+  private howeVehicleObstacles() {
+    return this.vehicles.map((v) => ({
+      x: v.state.x,
+      z: v.state.z,
+      y: v.model.group.position.y,
+      heading: v.state.heading,
+      kind: v.kind,
+      speed: v.state.speed,
+    }));
+  }
+  howePedestrianSummary() {
+    return {
+      totalPool: this.peds.length,
+      circuitLengths: this.howeCircuits?.map((c) => c.length) ?? [],
+      assigned: this.peds
+        .filter((p) => p.howe)
+        .map((p) => ({
+          id: p.character.group.id,
+          route: p.howe!.route,
+          distance: p.howe!.distance,
+          position: p.character.group.position.toArray(),
+          speed: p.howe!.speed,
+          state:
+            p.down > 0
+              ? "down"
+              : p.howe!.speed === 0
+                ? "waiting"
+                : p.panic > 0
+                  ? "panic"
+                  : "walking",
+          visible: p.character.group.visible,
+        })),
+    };
   }
   /** Read-only, requested diagnostics; stable object IDs and fixed world progress. */
   canadaPedestrianSummary() {
@@ -507,18 +585,49 @@ export class Actors {
       obj.visible = dist < 190;
       if (p.down > 0) {
         if (p.canadaDistance !== undefined) p.canadaSpeed = 0;
+        if (p.howe) p.howe.speed = 0;
         p.down -= dt;
         obj.rotation.z = Math.PI / 2;
         obj.position.y =
-          this.world.collision.height(
-            obj.position.x,
-            obj.position.z,
-            obj.position.y,
-          ) + 0.18;
+          (p.howe
+            ? howePedestrianHeight(this.world.collision, obj.position)
+            : this.world.collision.height(
+                obj.position.x,
+                obj.position.z,
+                obj.position.y,
+              )) + 0.18;
         continue;
       }
       obj.rotation.z = 0;
       p.panic = Math.max(0, p.panic - dt);
+      if (p.howe && this.howeCircuits) {
+        const bodies = this.pedestrianBodies().filter(
+          (_, i) => this.peds[i] !== p,
+        );
+        bodies.push({
+          x: player.x,
+          z: player.z,
+          y: player.y,
+          radius: 0.55,
+          height: 1.8,
+        });
+        const next = advanceHowePedestrian(
+          this.howeCircuits[p.howe.route],
+          { ...p.howe, panic: p.panic, down: p.down },
+          dt,
+          this.world.collision,
+          bodies,
+          this.howeVehicleObstacles(),
+        );
+        p.howe.distance = next.distance;
+        p.howe.speed = next.speed;
+        if (next.speed > 0)
+          obj.rotation.y +=
+            angleDelta(obj.rotation.y, next.heading) * (1 - Math.exp(-dt * 8));
+        obj.position.set(next.x, next.y, next.z);
+        if (obj.visible) p.character.update(this.timer, next.speed, false);
+        continue;
+      }
       if (p.canadaDistance !== undefined && this.canadaCircuit) {
         const obstacles = [
           ...(Math.abs(player.y - 7.88) < 2.5

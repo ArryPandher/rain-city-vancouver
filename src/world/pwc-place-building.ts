@@ -12,16 +12,23 @@ export function pwcPlace(
   batch: Batcher,
   library: Materials,
   reflections: ReflectionProbeSpec[],
+  groundHeight?: (x: number, z: number) => number,
 ) {
   if (building.id !== PWC_PLACE_ID) return false;
   const m = createPwcPlaceMaterials(library),
     baseY = batch.offsetY;
-  if (!buildPwcPlace(batch, building, m)) return false;
+  if (!buildPwcPlace(batch, building, m, groundHeight)) return false;
   reflections.push({
     name: "PwC Place Howe exterior",
     position: [469, baseY + 35, -437],
-    materials: [m.glass, m.spandrel, m.lobbyGlass, m.metal],
+    materials: [m.glass, m.spandrel, m.metal],
     intensity: { day: 0.85, night: 0.85 },
+  });
+  reflections.push({
+    name: "PwC Place street lobby",
+    position: [461, baseY + 3.5, -419],
+    materials: [m.lobbyGlass],
+    intensity: { day: 1, night: 1 },
   });
   return true;
 }

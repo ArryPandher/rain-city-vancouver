@@ -71,8 +71,13 @@ test("bounded approach has upward surfaces, actual support walls, and a small st
       );
   }
   const n = parts.pavement.getAttribute("normal");
+  const lowest = Array.from({ length: n.count }, (_, i) => i).reduce((a, b) =>
+      n.getY(a) < n.getY(b) ? a : b,
+    ),
+    floorPositions = parts.pavement.getAttribute("position");
   assert.ok(
-    Array.from({ length: n.count }, (_, i) => n.getY(i)).every((y) => y > 0.8),
+    n.getY(lowest) > 0.8,
+    `upward normal ${n.getY(lowest)} at ${floorPositions.getX(lowest)},${floorPositions.getY(lowest)},${floorPositions.getZ(lowest)}`,
   );
   const wall = parts.retaining.getAttribute("position");
   assert.ok(
@@ -118,15 +123,23 @@ test("real building interiors and source Canada Place pier receive no new top su
 });
 test("rendered grade follows shared support profile rather than a long floating ribbon", () => {
   const p = parts.pavement.getAttribute("position");
-  let worst = 0;
+  let worst = 0,
+    location = "";
   for (let i = 0; i < p.count; i += 3) {
     const x = (p.getX(i) + p.getX(i + 1) + p.getX(i + 2)) / 3,
       z = (p.getZ(i) + p.getZ(i + 1) + p.getZ(i + 2)) / 3,
       y = (p.getY(i) + p.getY(i + 1) + p.getY(i + 2)) / 3;
     const offset = p.getY(i) - site.supportHeight(p.getX(i), p.getZ(i));
-    worst = Math.max(worst, Math.abs(y - site.supportHeight(x, z) - offset));
+    const error = Math.abs(y - site.supportHeight(x, z) - offset);
+    if (error > worst) {
+      worst = error;
+      location = `${x},${z} triangle:${[0, 1, 2].map((j) => [p.getX(i + j), p.getY(i + j), p.getZ(i + j)])}`;
+    }
   }
-  assert.ok(worst < 0.03, `maximum interpolation error:${worst}`);
+  assert.ok(
+    worst < 0.03,
+    `maximum interpolation error:${worst} at ${location}`,
+  );
 });
 
 test("exposed perimeter guards are supported and leave entry, building contacts and matched ties open", () => {

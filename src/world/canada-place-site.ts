@@ -1,4 +1,9 @@
 import polygonClipping from "polygon-clipping";
+import { createPwcApronSite } from "./pwc-apron-site";
+import {
+  createFairmontApronSite,
+  FAIRMONT_APRON_DRIVEWAY_ID,
+} from "./fairmont-apron-site";
 import {
   pointInPoly,
   roadWidth,
@@ -32,7 +37,6 @@ export const CANADA_PLACE_ROAD_IDS = new Set<string>([
 export const CANADA_PLACE_SERVICE_IDS = new Set([
   "w143682532",
   "w143682533",
-  "w251586099",
   "w251863020",
 ]);
 export type CanadaPlaceSupportPolygon = { outer: Point[]; holes: Point[][] };
@@ -191,15 +195,15 @@ export function createCanadaPlaceSite(options: CanadaPlaceSiteOptions) {
       : [[connector]];
     clipped = polygonClipping.union(clipped, addition);
   }
-  const supportPolygons: CanadaPlaceSupportPolygon[] = clipped.map((p) => ({
+  const primaryPolygons: CanadaPlaceSupportPolygon[] = clipped.map((p) => ({
     outer: p[0].slice(0, -1) as Point[],
     holes: p.slice(1).map((h) => h.slice(0, -1) as Point[]),
   }));
-  const flat = supportPolygons.map((p) => ({
+  const flat = primaryPolygons.map((p) => ({
     outer: p.outer.flat(),
     holes: p.holes.map((h) => h.flat()),
   }));
-  const contains = (x: number, z: number) =>
+  const primaryContains = (x: number, z: number) =>
     Number.isFinite(x) &&
     Number.isFinite(z) &&
     flat.some(
@@ -213,7 +217,7 @@ export function createCanadaPlaceSite(options: CanadaPlaceSiteOptions) {
       ? westernHeight(...westEnd)
       : CANADA_PLACE_BASE_HEIGHT;
   /** Unmasked sampler for rendering boundary vertices (pointInPoly excludes some edges). */
-  const supportHeight = (x: number, z: number) => {
+  const primaryHeight = (x: number, z: number) => {
     const h = nearest(howePath, x, z, true);
     const w = waterfrontPath.length ? nearest(waterfrontPath, x, z) : undefined;
     const howeHeight = canadaPlaceHoweProfile(h.station, howeLength);
@@ -233,6 +237,46 @@ export function createCanadaPlaceSite(options: CanadaPlaceSiteOptions) {
     const corner = band + (1 - band) * (1 - smooth(w.distance / 0.5));
     return howeHeight * (1 - corner) + waterfrontHeight * corner;
   };
+  const fairmontApron = createFairmontApronSite({
+    roads,
+    buildings,
+    primaryPolygons,
+    primaryContains,
+    primaryHeight,
+  });
+  const pwcApron = createPwcApronSite({
+    roads,
+    buildings,
+    primaryPolygons,
+    primaryContains,
+    primaryHeight,
+  });
+  if (pwcApron)
+    clipped = polygonClipping.union(
+      clipped,
+      ...pwcApron.supportPolygons.map((p) => [p.outer, ...p.holes]),
+    );
+  if (fairmontApron) {
+    clipped = polygonClipping.union(
+      clipped,
+      ...fairmontApron.supportPolygons.map((p) => [p.outer, ...p.holes]),
+    );
+    roadIds.add(FAIRMONT_APRON_DRIVEWAY_ID);
+  }
+  const supportPolygons: CanadaPlaceSupportPolygon[] = clipped.map((p) => ({
+    outer: p[0].slice(0, -1) as Point[],
+    holes: p.slice(1).map((h) => h.slice(0, -1) as Point[]),
+  }));
+  const contains = (x: number, z: number) =>
+    primaryContains(x, z) ||
+    !!fairmontApron?.contains(x, z) ||
+    !!pwcApron?.contains(x, z);
+  const supportHeight = (x: number, z: number) =>
+    fairmontApron?.covers(x, z)
+      ? fairmontApron.height(x, z)
+      : pwcApron?.covers(x, z)
+        ? pwcApron.height(x, z)
+        : primaryHeight(x, z);
   const baselineHeight = (x: number, z: number) =>
     contains(x, z) ? supportHeight(x, z) : undefined;
   const bounds = supportPolygons
@@ -262,6 +306,8 @@ export function createCanadaPlaceSite(options: CanadaPlaceSiteOptions) {
   return {
     baselineHeight,
     supportHeight,
+    fairmontApron,
+    pwcApron,
     contains,
     intersects,
     supportPolygons,

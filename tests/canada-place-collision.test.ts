@@ -244,8 +244,30 @@ test("western integration matches existing ground across its entire road end", (
   }
 });
 test("retaining side entry cannot lift a ground-level actor onto the raised street", () => {
-  const from: Point = [484.2239858005012, -488.118207470961],
-    to: Point = [484.6066692328663, -489.0420870034724];
+  // Remaining eastern retaining edge of the mapped Canada Place turn
+  // (w1550614843), beyond both new hotel/office apron footprints.
+  const edgeA: Point = [507.53452121505586, -492.9905231928914],
+    edgeB: Point = [510.53452121505586, -488.0905231928914],
+    from: Point = [509.5462319975016, -490.85381550867453],
+    to: Point = [508.52281043261013, -490.22723087710824];
+  assert.ok(
+    collision.canada!.supportPolygons.some((p) =>
+      p.outer.some((a, i) => {
+        const b = p.outer[(i + 1) % p.outer.length];
+        return (
+          Math.hypot(a[0] - edgeA[0], a[1] - edgeA[1]) < 1e-6 &&
+          Math.hypot(b[0] - edgeB[0], b[1] - edgeB[1]) < 1e-6
+        );
+      }),
+    ),
+    "fixture is an actual remaining support boundary",
+  );
+  for (const point of [from, to]) {
+    assert.equal(collision.canada!.fairmontApron?.covers(...point), false);
+    assert.equal(collision.canada!.pwcApron?.covers(...point), false);
+  }
+  assert.equal(collision.canada!.contains(...from), false);
+  assert.equal(collision.canada!.contains(...to), true);
   assert.equal(collision.groundHeight(...from), 0);
   assert.ok(collision.groundHeight(...to) > 7);
   const moved = collision.move(
@@ -280,15 +302,37 @@ test("retaining side entry cannot lift a ground-level actor onto the raised stre
   }
 });
 test("vehicle exit chooses supported height instead of the seven-metre roadside drop", () => {
-  const x = 477.852,
-    z = -493.061,
-    heading = 4.182,
-    y = 7.73;
+  // Same remaining eastern Canada Place edge as the retaining-entry test;
+  // the former hotel-side drop is now correctly supported by the new apron.
+  const x = 507.75524425894145,
+    z = -489.7572924034336,
+    heading = 0.549374484771553,
+    y = 7.525253297933688;
   const preferred: Point = [
     x + Math.cos(heading) * 2.3,
     z - Math.sin(heading) * 2.3,
   ];
+  assert.ok(Math.abs(collision.groundHeight(x, z) - y) < 1e-8);
+  assert.equal(
+    collision.blocked(x, z, 1.16, y),
+    false,
+    "the car itself has clear supported space",
+  );
+  for (const point of [[x, z] as Point, preferred]) {
+    assert.equal(collision.canada!.fairmontApron?.covers(...point), false);
+    assert.equal(collision.canada!.pwcApron?.covers(...point), false);
+  }
   assert.ok(collision.groundHeight(...preferred) < 1);
+  assert.equal(
+    collision.blocked(...preferred, 0.4, 0),
+    false,
+    "drop rejection is not an unrelated wall",
+  );
+  assert.equal(
+    collision.water(...preferred, 0),
+    false,
+    "drop rejection is not an unrelated water mask",
+  );
   const exit = collision.vehicleExit(x, z, heading, y);
   assert.ok(exit, "opposite door should have a supported landing");
   assert.ok(Math.abs(collision.groundHeight(...exit) - y) < 0.6);

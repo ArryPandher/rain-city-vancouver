@@ -27,6 +27,7 @@ import type { Building } from "../src/world/data";
 import type { Materials } from "../src/world/materials";
 import type { ReflectionProbeSpec } from "../src/rendering/reflection-probes";
 import { CollisionWorld } from "../src/world/collision";
+import { createFairmontArcadeSite } from "../src/world/fairmont-arcade-site";
 
 function fixture() {
   const root = new T.Group(),
@@ -161,7 +162,7 @@ test("complete hotel geometry has finite outward faces, metric panel UVs and bou
     triangles > 12000 && triangles < 55000,
     `hotel triangles ${triangles}`,
   );
-  assert.ok(built.meshes.length <= 8);
+  assert.ok(built.meshes.length <= 9);
 });
 
 test("tower and lobby windows have real recesses with glass ahead of closed backings", () => {
@@ -195,6 +196,7 @@ test("tower and lobby windows have real recesses with glass ahead of closed back
   check(tower[index], tower[(index + 1) % tower.length], 40);
   const baseIndex = ring.findIndex(
     (a, i) =>
+      i > 2 &&
       Math.hypot(
         ring[(i + 1) % ring.length][0] - a[0],
         ring[(i + 1) % ring.length][1] - a[1],
@@ -260,8 +262,10 @@ test("Howe canopy retains its mapped projection and has one transparent sheet wi
     const sheetBelow = underside.filter(
       (h) => (h.object as T.Mesh).material === built.m.canopyGlass,
     );
-    assert.equal(sheetAbove.length, 1);
-    assert.equal(sheetBelow.length, 1);
+    // A ray on a tessellation vertex may hit adjacent triangles of the same
+    // sheet. Count distinct surface depths, not those coincident boundary hits.
+    assert.equal(new Set(sheetAbove.map((h) => h.point.y.toFixed(4))).size, 1);
+    assert.equal(new Set(sheetBelow.map((h) => h.point.y.toFixed(4))).size, 1);
     assert.ok(Math.abs(sheetAbove[0].point.y - sheetBelow[0].point.y) < 1e-5);
     assert.ok(
       !underside.some((h) => (h.object as T.Mesh).material === built.m.dark),
@@ -290,11 +294,26 @@ test("Howe canopy clears the active approach grade and adds no low posts outside
     collision.canada,
     "use current named roads so the raised Canada approach is active",
   );
+  const grade = collision.baselineGroundHeight.bind(collision),
+    site = createFairmontArcadeSite(grade),
+    activeRoot = new T.Group(),
+    activeBatch = new Batcher(activeRoot);
+  buildFairmontWaterfront(
+    activeBatch,
+    { id: ID, pts: ring.flat() },
+    built.m,
+    grade,
+  );
+  const activeMeshes = activeBatch.finish();
+  activeRoot.updateMatrixWorld(true);
   let minimum = Infinity,
     samples = 0;
   const check = (x: number, z: number) => {
     if (pointInPoly(x, z, ring.flat())) return;
-    minimum = Math.min(minimum, canopyBottom - collision.groundHeight(x, z));
+    minimum = Math.min(
+      minimum,
+      site.canopyTopAt(x, z) - 0.64 - collision.baselineGroundHeight(x, z),
+    );
     samples++;
   };
   for (let x = 463; x <= 480; x += 0.5)
@@ -307,8 +326,8 @@ test("Howe canopy clears the active approach grade and adds no low posts outside
       check(a[0] + ((b[0] - a[0]) * j) / 32, a[1] + ((b[1] - a[1]) * j) / 32);
   }
   assert.ok(samples > 1000);
-  assert.ok(minimum > 2.95, `minimum modeled head clearance ${minimum}`);
-  for (const mesh of built.meshes) {
+  assert.ok(minimum > 4.5, `minimum modeled head clearance ${minimum}`);
+  for (const mesh of activeMeshes) {
     const p = mesh.geometry.getAttribute("position");
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i),
@@ -324,7 +343,7 @@ test("Howe canopy clears the active approach grade and adds no low posts outside
       );
       if (distance > 0.08)
         assert.ok(
-          p.getY(i) >= canopyBottom - 0.001,
+          p.getY(i) >= site.canopyTopAt(x, z) - 0.67,
           "no low posts or floors beyond the hotel boundary",
         );
     }
@@ -361,8 +380,9 @@ test("caller ground offsets all hotel geometry and its reflection capture togeth
     true,
   );
   assert.equal(batch.offsetY, 3.4);
-  assert.equal(reflections.length, 1);
+  assert.equal(reflections.length, 2);
   assert.equal(reflections[0].position[1], 38.4);
+  assert.ok(Math.abs(reflections[1].position[1] - 5.6) < 1e-8);
   let min = Infinity,
     max = -Infinity;
   for (const mesh of batch.finish()) {

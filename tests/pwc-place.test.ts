@@ -12,6 +12,12 @@ import {
   type Building,
 } from "../src/world/data";
 import { CollisionWorld } from "../src/world/collision";
+import {
+  PWC_LOBBY_COLUMNS,
+  PWC_LOBBY_RECESSES,
+  PWC_LOBBY_SECTIONS,
+  PWC_LOBBY_BACKING_GAP,
+} from "../src/world/pwc-lobby-site";
 import { buildingHeight } from "../src/world/building-profile";
 import { buildPwcPlace, type PwcPlaceMaterials } from "../src/world/pwc-place";
 import { createPwcPlaceMaterials } from "../src/world/pwc-place-materials";
@@ -171,7 +177,7 @@ test("two registered facade rhythms keep physical glass, spandrels and shadow ca
   }
 });
 
-test("Howe lobby has genuine recess depth and a level supported frontage without road posts", () => {
+test("Howe lobby has genuine recess depth and a connected supported frontage without road posts", () => {
   const collision = new CollisionWorld(mapData()),
     f = pwcPlaceEntranceFrame();
   assert.ok(collision.canada);
@@ -181,14 +187,15 @@ test("Howe lobby has genuine recess depth and a level supported frontage without
     entrance.right,
   ]) {
     const p = f.p(u, 0, -1.2);
-    assert.ok(Math.abs(collision.groundHeight(p[0], p[2])) < 0.00001);
+    assert.ok(collision.canada.pwcApron?.contains(p[0], p[2]));
+    assert.ok(collision.groundHeight(p[0], p[2]) > 0.5);
   }
   const hits = ray(
     new T.Vector3(...f.p(9.1, 2, -1)),
-    new T.Vector3(...f.p(9.1, 2, 1.2)),
+    new T.Vector3(...f.p(9.1, 2, 5)),
   );
   assert.equal((hits[0].object as T.Mesh).material, materials.lobbyGlass);
-  assert.ok(Math.abs(hits[0].distance - 1.8) < 0.002);
+  assert.ok(Math.abs(hits[0].distance - (1 + entrance.depth)) < 0.002);
   assert.ok(
     hits.some((h) => (h.object as T.Mesh).material === materials.backing),
   );
@@ -214,6 +221,139 @@ test("Howe lobby has genuine recess depth and a level supported frontage without
         distance < 0.081,
         "ground-level geometry remains within the original PwC outline",
       );
+    }
+  }
+});
+
+test("Howe recess ray sections reach rear glass, a separate closed cavity and real entry returns", () => {
+  for (const section of PWC_LOBBY_SECTIONS) {
+    const f = section.frame;
+    for (const [u, d] of [
+      [3.03, section.depth],
+      ...(section.entry ? [[8.43, section.entry.depth]] : []),
+    ]) {
+      const hits = ray(
+        new T.Vector3(...f.p(u, 1.75, -1)),
+        new T.Vector3(...f.p(u, 1.75, d + PWC_LOBBY_BACKING_GAP + 0.1)),
+      );
+      assert.equal((hits[0].object as T.Mesh).material, materials.lobbyGlass);
+      assert.ok(
+        Math.abs(hits[0].distance - (d + 1)) < 0.002,
+        "no obsolete front pane blocks the exterior recess",
+      );
+      const back = hits.find(
+        (h) => (h.object as T.Mesh).material === materials.backing,
+      )!;
+      assert.ok(
+        Math.abs(back.distance - hits[0].distance - PWC_LOBBY_BACKING_GAP) <
+          0.002,
+      );
+      const floorHits = ray(
+        new T.Vector3(...f.p(u, 1.75, d - 0.35)),
+        new T.Vector3(...f.p(u, -0.1, d - 0.35)),
+      );
+      assert.ok(Math.abs(floorHits[0].point.y - 0.18) < 0.0001);
+      assert.equal((floorHits[0].object as T.Mesh).material, materials.stone);
+      const roofHits = ray(
+        new T.Vector3(...f.p(u, 1.75, d - 0.35)),
+        new T.Vector3(...f.p(u, 8, d - 0.35)),
+      );
+      assert.ok(
+        Math.abs(roofHits[0].point.y - 7.75) < 0.0001,
+        "the recess has a downward-facing soffit",
+      );
+      assert.equal((roofHits[0].object as T.Mesh).material, materials.stone);
+    }
+    for (const [a, b] of PWC_LOBBY_RECESSES[section.edge].closingSegments) {
+      const dx = b[0] - a[0],
+        dz = b[1] - a[1],
+        l = Math.hypot(dx, dz),
+        mid = new T.Vector3((a[0] + b[0]) / 2, 2.3, (a[1] + b[1]) / 2),
+        inward = new T.Vector3(-dz / l, 0, dx / l),
+        hits = ray(
+          mid.clone().addScaledVector(inward, 0.25),
+          mid.clone().addScaledVector(inward, -0.15),
+        );
+      assert.ok(
+        hits.length > 0,
+        "every collision closure has an actual visible surface",
+      );
+      assert.ok(hits[0].distance < 0.255);
+    }
+  }
+});
+
+test("Howe columns match their collision circles, land on the datum and clear every lobby panel", () => {
+  assert.equal(PWC_LOBBY_COLUMNS.length, 5);
+  for (const c of PWC_LOBBY_COLUMNS) {
+    for (const recess of PWC_LOBBY_RECESSES)
+      for (const [a, b] of recess.closingSegments)
+        assert.ok(
+          segmentPoint(c.x, c.z, ...a, ...b).d > c.radius + 0.05,
+          "column shaft must not cut a pane or side return",
+        );
+    const top = ray(
+      new T.Vector3(c.x, 8.05, c.z),
+      new T.Vector3(c.x, 7.5, c.z),
+    );
+    assert.equal((top[0].object as T.Mesh).material, materials.stone);
+    assert.ok(Math.abs(top[0].point.y - c.top) < 0.0001);
+    const section = PWC_LOBBY_SECTIONS.find((s) => {
+        const p = s.frame.p(0, 0),
+          d = -(
+            (c.x - p[0]) * s.frame.outward[0] +
+            (c.z - p[2]) * s.frame.outward[1]
+          );
+        return Math.abs(d - 0.53) < 1e-6;
+      })!,
+      out = new T.Vector3(
+        section.frame.outward[0],
+        0,
+        section.frame.outward[1],
+      );
+    for (const y of [0.19, 2.1, 7.6]) {
+      const center = new T.Vector3(c.x, y, c.z),
+        hits = ray(center.clone().addScaledVector(out, 0.8), center);
+      assert.equal((hits[0].object as T.Mesh).material, materials.stone);
+      assert.ok(
+        Math.abs(hits[0].distance - (0.8 - c.radius)) < 0.005,
+        "visible shaft agrees with the solid circle down to the supported floor",
+      );
+    }
+  }
+});
+
+test("adjacent retained facade panels do not penetrate the Howe column shafts", () => {
+  // Slice the complete assembled model at pedestrian height. This catches
+  // adjacent-face returns and mullions that a per-section plan check misses.
+  for (const mesh of meshes) {
+    const p = mesh.geometry.getAttribute("position"),
+      index = mesh.geometry.index!;
+    for (let i = 0; i < index.count; i += 3) {
+      const triangle = [0, 1, 2].map((j) =>
+          new T.Vector3().fromBufferAttribute(p, index.getX(i + j)),
+        ),
+        segment: T.Vector3[] = [];
+      for (let j = 0; j < 3; j++) {
+        const a = triangle[j],
+          b = triangle[(j + 1) % 3];
+        if (a.y < 2 !== b.y < 2)
+          segment.push(a.clone().lerp(b, (2 - a.y) / (b.y - a.y)));
+      }
+      if (segment.length !== 2) continue;
+      for (const c of PWC_LOBBY_COLUMNS)
+        assert.ok(
+          segmentPoint(
+            c.x,
+            c.z,
+            segment[0].x,
+            segment[0].z,
+            segment[1].x,
+            segment[1].z,
+          ).d >=
+            c.radius - 0.01,
+          `a ${mesh.material instanceof T.Material ? mesh.material.name : "facade"} panel penetrates a column`,
+        );
     }
   }
 });

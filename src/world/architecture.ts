@@ -156,8 +156,20 @@ export function architecture(
     }
     if (
       terminalCity(b, shell) ||
-      fairmontWaterfront(b, shell, m, reflections) ||
-      pwcPlace(b, shell, m, reflections) ||
+      fairmontWaterfront(
+        b,
+        shell,
+        m,
+        reflections,
+        collision.baselineGroundHeight.bind(collision),
+      ) ||
+      pwcPlace(
+        b,
+        shell,
+        m,
+        reflections,
+        collision.baselineGroundHeight.bind(collision),
+      ) ||
       waterfrontCentre(b, shell, m, reflections) ||
       ericksonPlace(b, shell, m, reflections) ||
       fairmontPacificRim(b, shell, m, collision, reflections) ||

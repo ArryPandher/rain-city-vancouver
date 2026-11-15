@@ -10,9 +10,13 @@ export const FAIRMONT_WATERFRONT_HEIGHT = 69.44;
 export const FAIRMONT_WATERFRONT_RING = source.baseRing as Point[];
 export const FAIRMONT_WATERFRONT_CANOPY_SOURCE_RING = source.canopy
   .ring as Point[];
-/** Estimated fascia section fitted above the current Howe approach grade. */
-export const FAIRMONT_WATERFRONT_CANOPY_TOP = 8.12;
-export const FAIRMONT_WATERFRONT_CANOPY_UNDERSIDE = 7.48;
+/** City 162733: 22.08 m top minus 15.65 m local base = 6.43 m.
+ * Applied above the local apron; the sampled slope is an integration estimate. */
+export const FAIRMONT_WATERFRONT_CANOPY_TOP = 6.43;
+export const FAIRMONT_WATERFRONT_CANOPY_UNDERSIDE =
+  FAIRMONT_WATERFRONT_CANOPY_TOP - 0.64;
+/** Preserve the existing fourth-level row; only the Howe base grows to it. */
+export const FAIRMONT_WATERFRONT_HOWE_BASE_TOP = 8 + (2 * 56) / 19;
 // Historical roof points exceed the retained wall by roughly 1–2 m. Move only
 // the attachment edge into that wall; preserve the mapped outer projection.
 export const FAIRMONT_WATERFRONT_CANOPY_RING: Point[] =

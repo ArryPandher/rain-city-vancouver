@@ -1,4 +1,10 @@
 import * as T from "three";
+import polygonClipping from "polygon-clipping";
+import { buildFairmontArcade } from "./fairmont-arcade";
+import {
+  FAIRMONT_ARCADE_FRONTAGES,
+  createFairmontArcadeSite,
+} from "./fairmont-arcade-site";
 import { segmentPoint, type Point } from "./data";
 import { Batcher, flatPolygon } from "./geometry";
 import {
@@ -13,8 +19,7 @@ import {
   FAIRMONT_WATERFRONT_PARTS as parts,
   FAIRMONT_WATERFRONT_ORIGIN as centre,
   FAIRMONT_WATERFRONT_CANOPY_RING as canopy,
-  FAIRMONT_WATERFRONT_CANOPY_TOP as canopyTop,
-  FAIRMONT_WATERFRONT_CANOPY_UNDERSIDE as canopyBottom,
+  FAIRMONT_WATERFRONT_HOWE_BASE_TOP as howeBaseTop,
   fairmontWaterfrontPartHeight,
   fairmontWaterfrontLevel,
 } from "./fairmont-waterfront-site";
@@ -25,10 +30,15 @@ export function buildFairmontWaterfront(
   batch: Batcher,
   b: { id: string; pts: number[] },
   m: FairmontWaterfrontMaterials,
+  groundHeight?: (x: number, z: number) => number,
 ) {
   if (b.id !== ID) return false;
   // All authored heights are relative to the caller's building ground datum.
-  const mesh = new ArchitecturalMesh(batch, ...centre);
+  const mesh = new ArchitecturalMesh(batch, ...centre),
+    arcade = createFairmontArcadeSite(
+      groundHeight ?? (() => batch.offsetY),
+      batch.offsetY,
+    );
   const quad = (mat: T.Material, p: Vertex3[], normal: Vertex3) => {
     const cross = new T.Vector3(...p[1])
       .sub(new T.Vector3(...p[0]))
@@ -126,88 +136,205 @@ export function buildFairmontWaterfront(
       face(f, m.metal, u, u + edge, low, high, depth - 0.01);
     if (lobby) face(f, m.metal, wl, wr, 3.9, 4.02, depth - 0.01);
   };
-  // Whole mapped base remains closed. The raised Canada Place approach can
-  // bury part of this wall; neither the datum nor the collision ring is moved.
-  cap(ring, 8, m.roof);
+  // Roof and foundation remain closed. The source-supported Howe frontage is
+  // replaced below by an exterior recess with its own closed rear boundary.
+  // Do not leave the old 8 m cap suspended through the raised arcade.
+  for (const polygon of polygonClipping.difference(
+    [ring],
+    ...arcade.openPolygons.map((p) => [p]),
+  ))
+    mesh.add(
+      flatPolygon(
+        polygon[0].flat(),
+        polygon.slice(1).map((p) => p.flat()),
+        8,
+        1,
+      ),
+      m.roof,
+    );
   cap(ring, 0, m.dark);
   for (let i = 0; i < ring.length; i++) {
     const f = facadeFrame(ring[i], ring[(i + 1) % ring.length]);
-    const cols = Math.max(1, Math.round(f.length / 5.5));
-    for (let j = 0; j < cols; j++)
-      window(f, (j * f.length) / cols, ((j + 1) * f.length) / cols, 0, 8, true);
+    const replacement = FAIRMONT_ARCADE_FRONTAGES.find(
+        (section) => section.edge === i,
+      ),
+      start = replacement?.length ?? 0,
+      remaining = f.length - start,
+      cols = Math.max(1, Math.round(remaining / 5.5));
+    for (let j = 0; j < cols && remaining > 0.001; j++)
+      window(
+        f,
+        start + (j * remaining) / cols,
+        start + ((j + 1) * remaining) / cols,
+        0,
+        8,
+        true,
+      );
     // Deep, substantial fascia distinguishes the broad podium from room bays.
-    face(f, m.panel, 0, f.length, 7.5, 8, -0.035);
+    face(f, m.panel, start, f.length, 7.5, 8, -0.035);
   }
+  buildFairmontArcade(
+    mesh,
+    m,
+    groundHeight ?? (() => batch.offsetY),
+    batch.offsetY,
+    arcade,
+  );
   // The MCM Howe view and City roof part 162733 establish this continuous
   // projection. Its estimated section fits the existing sloped street; the
-  // cantilever has no posts or new floor inside the public walking route.
-  // A single physical sheet is visible from either side. Do not add a reverse
-  // duplicate or an opaque ceiling: the owner photo shows transmitted daylight.
-  cap(canopy, canopyTop - 0.06, m.canopyGlass);
+  // cantilever adds no low posts beyond the retained hotel footprint.
+  // One planar transparent sheet: source plan vertices, fitted structural roof.
+  const roofSheet = flatPolygon(canopy.flat(), [], 0, 1),
+    roofPosition = roofSheet.getAttribute("position");
+  for (let i = 0; i < roofPosition.count; i++)
+    roofPosition.setY(
+      i,
+      arcade.canopyTopAt(roofPosition.getX(i), roofPosition.getZ(i)) - 0.06,
+    );
+  roofSheet.computeVertexNormals();
+  mesh.add(roofSheet, m.canopyGlass);
+  // Closed rectangular members follow the roof at both ends and across width.
   const canopyBar = (
     a: Point,
     b: Point,
-    y: number,
+    offset: number,
     width: number,
     height: number,
   ) => {
-    const dx = b[0] - a[0],
-      dz = b[1] - a[1];
-    mesh.box(
-      [(a[0] + b[0]) / 2, y, (a[1] + b[1]) / 2],
-      Math.hypot(dx, dz),
-      height,
-      width,
-      m.metal,
-      -Math.atan2(dz, dx),
-    );
+    const length = Math.hypot(b[0] - a[0], b[1] - a[1]),
+      nx = -(b[1] - a[1]) / length,
+      nz = (b[0] - a[0]) / length,
+      count = 1; // A straight spanning member has only its two end sections.
+    const corner = (t: number, side: number, vertical: number): Vertex3 => {
+      const x = a[0] + (b[0] - a[0]) * t + (nx * side * width) / 2,
+        z = a[1] + (b[1] - a[1]) * t + (nz * side * width) / 2;
+      return [
+        x,
+        arcade.canopyTopAt(x, z) + offset + (vertical * height) / 2,
+        z,
+      ];
+    };
+    for (let i = 0; i < count; i++) {
+      const l = i / count,
+        r = (i + 1) / count,
+        a0 = corner(l, -1, -1),
+        a1 = corner(l, 1, -1),
+        b0 = corner(r, -1, -1),
+        b1 = corner(r, 1, -1),
+        a2 = corner(l, -1, 1),
+        a3 = corner(l, 1, 1),
+        b2 = corner(r, -1, 1),
+        b3 = corner(r, 1, 1);
+      quad(m.metal, [a0, b0, b1, a1], [0, -1, 0]);
+      quad(m.metal, [a2, a3, b3, b2], [0, 1, 0]);
+      quad(m.metal, [a0, a2, b2, b0], [-nx, 0, -nz]);
+      quad(m.metal, [a1, b1, b3, a3], [nx, 0, nz]);
+      if (i === 0)
+        quad(m.metal, [a0, a1, a3, a2], [-(b[0] - a[0]), 0, -(b[1] - a[1])]);
+      if (i === count - 1)
+        quad(m.metal, [b0, b2, b3, b1], [b[0] - a[0], 0, b[1] - a[1]]);
+    }
   };
   for (let i = 0; i < canopy.length; i++) {
     const a = canopy[i],
       b = canopy[(i + 1) % canopy.length],
       f = facadeFrame(a, b),
-      low = canopyBottom + 0.12,
-      high = canopyTop - 0.12;
-    face(f, m.metal, 0, f.length, canopyBottom, low);
-    face(f, m.metal, 0, f.length, high, canopyTop);
-    face(f, m.dark, 0, f.length, low, high, 0.1);
-    face(f, m.glass, 0, f.length, low, high, 0.035);
-    for (const [y, normal] of [
-      [low, [0, 1, 0]],
-      [high, [0, -1, 0]],
-    ] as const)
-      quad(
-        m.metal,
-        [f.p(0, y), f.p(f.length, y), f.p(f.length, y, 0.1), f.p(0, y, 0.1)],
-        [...normal],
-      );
+      count = 1, // Each source-plan fascia edge is straight in the fitted plane.
+      p = (u: number, offset: number, depth = 0): Vertex3 => {
+        const q = f.p(u, 0, depth);
+        q[1] = arcade.canopyTopAt(q[0], q[2]) + offset;
+        return q;
+      },
+      normal: Vertex3 = [f.outward[0], 0, f.outward[1]];
+    for (let j = 0; j < count; j++) {
+      const l = (f.length * j) / count,
+        r = (f.length * (j + 1)) / count;
+      for (const [low, high, depth, mat] of [
+        [-0.64, -0.52, 0, m.metal],
+        [-0.12, 0, 0, m.metal],
+        [-0.52, -0.12, 0.1, m.dark],
+        [-0.52, -0.12, 0.035, m.glass],
+      ] as const)
+        quad(
+          mat,
+          [
+            p(l, low, depth),
+            p(r, low, depth),
+            p(r, high, depth),
+            p(l, high, depth),
+          ],
+          normal,
+        );
+      for (const [y, normal] of [
+        [-0.52, [0, 1, 0]],
+        [-0.12, [0, -1, 0]],
+      ] as const)
+        quad(
+          m.metal,
+          [p(l, y), p(r, y), p(r, y, 0.1), p(l, y, 0.1)],
+          [...normal],
+        );
+    }
     const frames = Math.max(1, Math.round(f.length / 1.35));
-    for (let j = 0; j <= frames; j++)
+    for (let j = 0; j <= frames; j++) {
+      const q = p((f.length * j) / frames, -0.32, 0.03);
       mesh.box(
-        f.p((f.length * j) / frames, (low + high) / 2, 0.03),
+        q,
         0.055,
-        high - low,
+        0.4,
         0.06,
         m.metal,
         -Math.atan2(b[1] - a[1], b[0] - a[0]),
       );
-    // Keep the buried attachment frame simple; the outer edge carries visible
-    // transverse members above head height, beneath the transparent roof sheet.
+    }
     if (i >= 1 && i <= 6) continue;
     const beams = Math.max(1, Math.round(f.length / 2.8));
     for (let j = 0; j < beams; j++) {
-      const p = f.p(((j + 0.5) * f.length) / beams, 0, 0.08);
+      const q = f.p(((j + 0.5) * f.length) / beams, 0, 0.08);
       let closest = { x: canopy[1][0], z: canopy[1][1], d: Infinity };
       for (let k = 1; k < 7; k++) {
-        const q = segmentPoint(p[0], p[2], ...canopy[k], ...canopy[k + 1]);
-        if (q.d < closest.d) closest = q;
+        const candidate = segmentPoint(
+          q[0],
+          q[2],
+          ...canopy[k],
+          ...canopy[k + 1],
+        );
+        if (candidate.d < closest.d) closest = candidate;
       }
-      const front: Point = [p[0], p[2]],
+      const front: Point = [q[0], q[2]],
         back: Point = [closest.x, closest.z];
-      canopyBar(front, back, canopyBottom + 0.08, 0.12, 0.16);
-      canopyBar(front, back, canopyTop - 0.035, 0.065, 0.07);
+      canopyBar(front, back, -0.56, 0.12, 0.16);
+      canopyBar(front, back, -0.035, 0.065, 0.07);
     }
   }
+  const howeIntervals = (f: ReturnType<typeof facadeFrame>) => {
+    const origin = f.p(0, 0),
+      end = f.p(f.length, 0),
+      tx = (end[0] - origin[0]) / f.length,
+      tz = (end[2] - origin[2]) / f.length;
+    return FAIRMONT_ARCADE_FRONTAGES.flatMap((section) => {
+      const sectionFrame = facadeFrame(section.a, section.b);
+      if (
+        f.outward[0] * sectionFrame.outward[0] +
+          f.outward[1] * sectionFrame.outward[1] <
+        0.98
+      )
+        return [];
+      const distance = Math.abs(
+        (section.a[0] - origin[0]) * f.outward[0] +
+          (section.a[1] - origin[2]) * f.outward[1],
+      );
+      if (distance > 0.08) return [];
+      const project = (p: Point) =>
+          (p[0] - origin[0]) * tx + (p[1] - origin[2]) * tz,
+        l = Math.max(0, Math.min(project(section.a), project(section.b))),
+        r = Math.min(
+          f.length,
+          Math.max(project(section.a), project(section.b)),
+        );
+      return r - l > 0.001 ? [[l, r]] : [];
+    });
+  };
   for (const part of parts) {
     cap(part.ring, part.high, m.roof);
     const levels =
@@ -225,9 +352,10 @@ export function buildFairmontWaterfront(
         part.ring[(i + 1) % part.ring.length],
       );
       const cols = Math.max(
-        1,
-        Math.round(f.length / (part.name === "crown" ? 1.4 : 3.8)),
-      );
+          1,
+          Math.round(f.length / (part.name === "crown" ? 1.4 : 3.8)),
+        ),
+        intervals = part.name === "tower" ? howeIntervals(f) : [];
       for (let j = 0; j < cols; j++) {
         const l = (j * f.length) / cols,
           r = ((j + 1) * f.length) / cols;
@@ -247,6 +375,21 @@ export function buildFairmontWaterfront(
             face(f, m.metal, l, r, lo, lo + 0.12, 0.07);
             if (floor === levels.length - 2)
               face(f, m.metal, l, r, hi - 0.12, hi, 0.07);
+          } else if (lo < howeBaseTop && intervals.length) {
+            const cuts = [
+              ...new Set([
+                l,
+                r,
+                ...intervals.flat().filter((u) => u > l && u < r),
+              ]),
+            ].sort((a, b) => a - b);
+            for (let k = 0; k < cuts.length - 1; k++) {
+              const left = cuts[k],
+                right = cuts[k + 1],
+                mid = (left + right) / 2;
+              if (!intervals.some(([a, b]) => mid >= a && mid <= b))
+                window(f, left, right, lo, hi);
+            }
           } else window(f, l, r, lo, hi);
         }
       }

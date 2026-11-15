@@ -24,7 +24,7 @@ export const PWC_PLACE_ENTRANCE = {
   right: 12,
   floor: 0.18,
   top: 6.8,
-  depth: 0.8,
+  depth: 3.4,
 };
 export const pwcPlaceEntranceFrame = () =>
   facadeFrame(PWC_PLACE_ENTRANCE.a, PWC_PLACE_ENTRANCE.b);

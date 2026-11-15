@@ -437,6 +437,7 @@ class Game {
                 }
               : null,
             pedestrianActivity: this.actors.canadaPedestrianSummary(),
+            howePedestrianActivity: this.actors.howePedestrianSummary(),
             lastPedestrianContact: this.lastPedestrianContact,
             fallbackTreeBatching:
               getFallbackTreeBatchController(this.world.root)?.enabled ?? false,
@@ -489,7 +490,15 @@ class Game {
         if (document.hidden) this.finishFrameSample("document hidden");
       });
       const probeButton = document.createElement("button");
-      probeButton.textContent = "Inspect concourse reflections";
+      probeButton.textContent = "Inspect selected reflections";
+      const probeSelect = document.createElement("select");
+      probeSelect.setAttribute("aria-label", "Reflection capture");
+      for (const probe of this.reflections?.probes ?? []) {
+        const option = document.createElement("option");
+        option.value = option.textContent = probe.spec.name;
+        probeSelect.append(option);
+      }
+      probeSelect.value = "Canada Place west concourse";
       const probeReport = document.createElement("div");
       probeReport.id = "reflection-probe-preview";
       probeButton.addEventListener("click", async () => {
@@ -497,9 +506,9 @@ class Game {
         probeReport.textContent = "Reading existing capture…";
         try {
           const probe = this.reflections?.probes.find(
-            (entry) => entry.spec.name === "Canada Place west concourse",
+            (entry) => entry.spec.name === probeSelect.value,
           );
-          if (!probe) throw new Error("Concourse capture is unavailable.");
+          if (!probe) throw new Error("Selected capture is unavailable.");
           const { previewReflectionProbe } = await import(
             "./rendering/reflection-probe-preview"
           );
@@ -567,6 +576,7 @@ class Game {
         title,
         button,
         sampleButton,
+        probeSelect,
         probeButton,
         comparisons,
         report,
