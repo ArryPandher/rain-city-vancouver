@@ -477,7 +477,11 @@ export class World {
       this.root,
     );
     cityBase.castShadow = false;
-    this.chunks.push(...b.finish(false));
+    const chunks = b.finish(false);
+    batchStaticChunks(this.root, chunks, this.facadeMultiDraw, {
+      releaseOwnedPreRenderGeometry: true,
+    });
+    this.chunks.push(...chunks);
     this.water = new T.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
@@ -696,7 +700,11 @@ export class World {
         for (let i = 0; i < p.count; i++)
           uv.setXY(i, p.getX(i) / scale, p.getZ(i) / scale);
       }
-    this.chunks.push(...b.finish(false));
+    const chunks = b.finish(false);
+    batchStaticChunks(this.root, chunks, this.facadeMultiDraw, {
+      releaseOwnedPreRenderGeometry: true,
+    });
+    this.chunks.push(...chunks);
   }
   buildings() {
     const result = architecture(

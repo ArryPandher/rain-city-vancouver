@@ -104,8 +104,8 @@ test("junction stays wholly inboard of accepted canopy and flashing meets existi
       assert.ok(new T.Vector3().fromBufferAttribute(n, i).length() > 0.99);
     }
   });
-  assert.ok(triangles < 1500);
-  assert.equal(root.children.length, 4);
+  assert.ok(triangles < 1800);
+  assert.equal(root.children.length, 5);
   const canopyRoot = new T.Group();
   addCanadaPlaceCanopy(canopyRoot, new Map());
   canopyRoot.updateMatrixWorld(true);
@@ -120,4 +120,61 @@ test("junction stays wholly inboard of accepted canopy and flashing meets existi
     assert.ok(existing, "originalcrownbeam contactsnewinboardflashing");
     assert.ok(existing.distance < 0.015);
   }
+});
+
+test("paired hotel panes reveal one continuous closed volume without partitions or a transom floor", () => {
+  const mesh = root.children.find(
+    (o) => o.name === "canada-hotel-glass",
+  ) as T.Mesh;
+  assert.ok(Array.isArray(mesh.material));
+  assert.equal(mesh.material.length, 2);
+  for (const m of mesh.material) {
+    assert.equal(m.transparent, true);
+    assert.equal(m.depthWrite, false);
+  }
+  assert.equal(mesh.castShadow, false);
+  assert.deepEqual(
+    mesh.geometry.groups.map((g) => [g.start, g.count, g.materialIndex]),
+    [
+      [0, mesh.geometry.index!.count, 0],
+      [0, mesh.geometry.index!.count, 1],
+    ],
+  );
+  const pitch = (q.end - q.start) / q.paneCount;
+  for (const i of [0, 8, 17, 25, 33])
+    for (const y of [16.2, 18.2]) {
+      const s = q.start + (i + 0.5) * pitch,
+        p = at(s, y, q.wallOut + q.glassOffset);
+      for (const direction of [
+        out.clone().negate(),
+        along.clone(),
+        along.clone().negate(),
+        new T.Vector3(0, 1, 0),
+        new T.Vector3(0, -1, 0),
+      ]) {
+        const from = p.clone().addScaledVector(out, -0.015);
+        const hits = cast(from, direction, 60).filter((h) => h.object !== mesh);
+        assert.ok(hits.length);
+        assert.equal(hits[0].object.name, "canada-hotel-window-lining");
+        if (direction.dot(out) < -0.99)
+          assert.ok(
+            Math.abs(hits[0].distance - (q.cavityDepth - 0.015)) < 1e-4,
+          );
+        const horizontal = direction.dot(along);
+        const expected =
+          horizontal > 0.99
+            ? q.end - s
+            : horizontal < -0.99
+              ? s - q.start
+              : direction.y > 0.99
+                ? q.glassTop - y
+                : direction.y < -0.99
+                  ? y - q.glassBottom
+                  : q.cavityDepth - 0.015;
+        assert.ok(
+          Math.abs(hits[0].distance - expected) < 1e-4,
+          "only continuous outer ends/floor/ceiling/back close the volume, never a pane partition or mid-transom floor",
+        );
+      }
+    }
 });

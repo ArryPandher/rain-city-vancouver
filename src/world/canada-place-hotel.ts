@@ -1,3 +1,7 @@
+import {
+  createCanadaPlaceHotelGlazingPair,
+  createCanadaPlaceHotelGlazingMesh,
+} from "./canada-place-hotel-glass";
 import { landmarkSurfaceUV } from "./landmark-surfaces";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
@@ -23,6 +27,7 @@ export const CANADA_PLACE_HOTEL_JUNCTION = {
   overhang: 0.75,
   soffitY: 20.02,
   paneCount: 34,
+  cavityDepth: 0.7,
 } as const;
 export const canadaPlaceHotelPoint = canadaPlaceCanopyPoint;
 
@@ -48,20 +53,14 @@ export function createCanadaPlaceHotelJunction(
     roughness: 0.4,
     metalness: 0.18,
   });
-  const glass = (source.get("glass") ?? new T.MeshStandardMaterial()).clone();
-  glass.name = "canada-hotel-glass";
-  glass.color.setHex(0x688c80);
-  glass.roughness = 0.19;
-  glass.metalness = 0.18;
-  glass.transparent = false;
-  glass.opacity = 1;
-  glass.depthWrite = true;
-  glass.side = T.FrontSide;
-  glass.envMapIntensity = 1;
-  if (glass instanceof T.MeshPhysicalMaterial) {
-    glass.transmission = 0;
-    glass.clearcoat = 0.12;
-  }
+  const pair = createCanadaPlaceHotelGlazingPair();
+  const glass = pair.reflection;
+  const lining = new T.MeshStandardMaterial({
+    name: "canada-hotel-window-lining",
+    color: 0x80807b,
+    roughness: 0.9,
+    metalness: 0,
+  });
   const shadow = new T.MeshStandardMaterial({
     name: "canada-hotel-soffit-recess",
     color: 0x49544e,
@@ -193,6 +192,38 @@ export function createCanadaPlaceHotelJunction(
     );
   }
   plane(frame, q.start, q.end, q.transom - 0.045, q.transom + 0.045, front);
+  // One continuous shallow exterior-visible volume behind the entire band.
+  // No room partitions or intermediate floor behind the window transom.
+  const back = rear - q.cavityDepth;
+  plane(lining, q.start, q.end, q.glassBottom, q.glassTop, back);
+  for (const [s, n] of [
+    [q.start, along],
+    [q.end, along.clone().negate()],
+  ] as const)
+    quad(
+      lining,
+      [
+        at(s, q.glassBottom, back),
+        at(s, q.glassBottom, rear),
+        at(s, q.glassTop, rear),
+        at(s, q.glassTop, back),
+      ],
+      n,
+    );
+  for (const [y, n] of [
+    [q.glassBottom, up],
+    [q.glassTop, up.clone().negate()],
+  ] as const)
+    quad(
+      lining,
+      [
+        at(q.start, y, back),
+        at(q.end, y, back),
+        at(q.end, y, rear),
+        at(q.start, y, rear),
+      ],
+      n,
+    );
   for (let i = 0; i < q.paneCount; i++) {
     const l = q.start + i * pitch + half,
       r = q.start + (i + 1) * pitch - half;
@@ -302,9 +333,16 @@ export function createCanadaPlaceHotelJunction(
     const g = mergeGeometries(parts, false)!;
     parts.forEach((p) => p.dispose());
     if (m === stone) landmarkSurfaceUV(g, [1, 1]);
-    const mesh = new T.Mesh(g, m);
-    mesh.name = m.name;
-    mesh.castShadow = mesh.receiveShadow = true;
+    const mesh =
+      m === glass
+        ? createCanadaPlaceHotelGlazingMesh(g, pair)
+        : new T.Mesh(g, m);
+    if (m === glass) g.dispose();
+    else {
+      mesh.name = m.name;
+      mesh.castShadow = true;
+    }
+    mesh.receiveShadow = true;
     root.add(mesh);
   }
   return root;

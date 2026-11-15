@@ -194,7 +194,7 @@ export function staticBatchMemoryProfile(scene: T.Object3D) {
   });
   return {
     scope:
-      "All registered static architecture/street-detail batches in the loaded scene, including invisible and off-camera cells; excludes photographic-facade and wheel batches and unbatched geometry.",
+      "All registered static architecture/street-detail/ground batches in the loaded scene, including invisible and off-camera cells; excludes photographic-facade and wheel batches and unbatched geometry.",
     note: "CPU backing-buffer byte lengths, uniquely counted across this scope. Released-owned bytes are historical, not retained in the total. Excludes GPU driver allocation, JS object overhead and material/image textures; not a process-RAM or GPU-memory measurement.",
     batchCount,
     sourceCount: sources.size,

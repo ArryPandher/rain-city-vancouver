@@ -134,6 +134,33 @@ test("new overhang joins the retained source cap with a tangible closed undersid
     );
   }
 });
+test("actual source opening exposes the closed backing behind the transparent hotel panes", async () => {
+  const { root, hotel } = await fixture;
+  const paneOut = -2.3906388876802315;
+  for (const u of [4, 12, 24, 38, 48])
+    for (const y of [16.2, 18.1]) {
+      const hit = ray(root, at(u, y, paneOut - 0.01), at(u, y, paneOut - 0.8));
+      assert.ok(hit, `open backing behind ${u}/${y}`);
+      assert.equal(
+        hit.object.name,
+        "canada-hotel-window-lining",
+        "old source must not hide the new depth",
+      );
+      const expected = at(u, y, paneOut - 0.7);
+      assert.ok(hit.point.distanceTo(expected) < 1e-4);
+    }
+  const glass = hotel.children.find(
+    (child) => child.name === "canada-hotel-glass",
+  ) as T.Mesh;
+  assert.ok(Array.isArray(glass.material));
+  assert.equal(glass.material.length, 2);
+  assert.ok(
+    glass.material.every(
+      (material) => material.transparent && !material.depthWrite,
+    ),
+  );
+  assert.equal(glass.castShadow, false);
+});
 test("hotel additions leave original canopy skin and public deck support unobstructed", async () => {
   const { root, original, hotel } = await fixture;
   for (const u of [3.37, 18.17, 36.31, 50.41])
@@ -178,8 +205,8 @@ test("hotel generated batches keep added geometry and CPU buffers bounded", asyn
     if (g.index) buffers.add(g.index.array.buffer);
   }
   const bytes = [...buffers].reduce((sum, b) => sum + b.byteLength, 0);
-  assert.ok(hotel.children.length <= 4);
-  assert.ok(triangles < 1500);
+  assert.ok(hotel.children.length <= 5);
+  assert.ok(triangles < 900);
   assert.ok(bytes < 160000);
   t.diagnostic(
     `${hotel.children.length} batches, ${triangles} triangles, ${bytes} unique CPU geometry bytes (not GPU/driver memory)`,
