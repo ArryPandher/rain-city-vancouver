@@ -23,6 +23,7 @@ import { fairmontWaterfront } from "./fairmont-waterfront-building";
 import { pwcPlace } from "./pwc-place-building";
 import { granvilleSquareHowe } from "./granville-square-howe";
 import { customsWarehouse } from "./customs-warehouse-building";
+import { pacificCoast } from "./pacific-coast-building";
 import { createTerminalCityAssembly } from "./terminal-city-building";
 import { rogersTower } from "./rogers-tower";
 import { harbourGreenTower } from "./harbour-towers";
@@ -150,6 +151,7 @@ export function architecture(
     const [baseX, baseZ] = centroid(b.pts);
     if (
       b.id !== "w1363485360" &&
+      b.id !== "w143683962" &&
       collision.howeTerrain?.contains(baseX, baseZ) &&
       ground > 0.2
     )
@@ -182,6 +184,7 @@ export function architecture(
       terminalCity(b, shell) ||
       granvilleSquareHowe(b, shell, m) ||
       customsWarehouse(b, shell, m, reflections) ||
+      pacificCoast(b, shell, m, reflections) ||
       fairmontWaterfront(
         b,
         shell,

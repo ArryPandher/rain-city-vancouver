@@ -1,0 +1,209 @@
+{
+  "buildingId": "w143683962",
+  "address": "325 Howe Street",
+  "name": "P. Angela Webster Building",
+  "sourceYear": 2009,
+  "checkedAt": "2026-11-15",
+  "dataset": "https://opendata.vancouver.ca/explore/dataset/building-footprints-2009/",
+  "query": "https://opendata.vancouver.ca/api/records/1.0/search/?dataset=building-footprints-2009&q=bldgid%3A150434&rows=100",
+  "metadata": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/building-footprints-2009",
+  "license": "Open Government Licence \u2013 Vancouver",
+  "licenseUrl": "https://opendata.vancouver.ca/pages/licence/",
+  "runtimeFootprint": [
+    [
+      416.0485985560963,
+      -407.1300000001447
+    ],
+    [
+      427.5485985560963,
+      -395.1300000001447
+    ],
+    [
+      405.0485985560963,
+      -372.6300000001447
+    ],
+    [
+      393.0485985560963,
+      -384.6300000001447
+    ]
+  ],
+  "centroidGround": 9.25777315521867,
+  "inferredCityToWorldOffset": -7.52,
+  "roofWorldMaxima": {
+    "flat": 34.05,
+    "highest": 36.91
+  },
+  "roofRelativeMaxima": {
+    "flat": 24.792226844781325,
+    "highest": 27.652226844781325
+  },
+  "overlap": {
+    "runtimeArea": 537.375,
+    "sourceArea": 476.308717301421,
+    "overlapArea": 431.6676589425333
+  },
+  "records": [
+    {
+      "id": 165371,
+      "bldgid": 150434,
+      "topelev_m": 44.43,
+      "baseelev_m": 16.15,
+      "hgt_agl": 28.28,
+      "base_m": 16.56,
+      "med_slope": 32,
+      "rooftype": "Pitched",
+      "len": 34.63,
+      "wid": 13.85,
+      "geographicRings": [
+        [
+          [
+            -123.11419958551443,
+            49.28652633750648
+          ],
+          [
+            -123.11425268045875,
+            49.2864898619953
+          ],
+          [
+            -123.11434510094445,
+            49.28654274135156
+          ],
+          [
+            -123.11429439049414,
+            49.286580653480776
+          ],
+          [
+            -123.11419958551443,
+            49.28652633750648
+          ]
+        ]
+      ],
+      "worldRings": [
+        [
+          [
+            421.116867782022,
+            -389.80134796615357
+          ],
+          [
+            417.26211279807956,
+            -385.76934496027707
+          ],
+          [
+            410.5522775692939,
+            -391.61462900135245
+          ],
+          [
+            414.2339155024918,
+            -395.80543576484
+          ],
+          [
+            421.116867782022,
+            -389.80134796615357
+          ]
+        ]
+      ],
+      "areaM2": 50.26810698049667,
+      "runtimeOverlapM2": 50.26810698049667
+    },
+    {
+      "id": 166938,
+      "bldgid": 150434,
+      "topelev_m": 41.57,
+      "baseelev_m": 15.69,
+      "hgt_agl": 25.88,
+      "base_m": 16.56,
+      "med_slope": 7,
+      "rooftype": "Flat",
+      "len": 34.63,
+      "wid": 13.85,
+      "geographicRings": [
+        [
+          [
+            -123.11408626291598,
+            49.286604061967246
+          ],
+          [
+            -123.11419958551443,
+            49.28652633750648
+          ],
+          [
+            -123.11429439049414,
+            49.286580653480776
+          ],
+          [
+            -123.11434510094445,
+            49.28654274135156
+          ],
+          [
+            -123.11425268045875,
+            49.2864898619953
+          ],
+          [
+            -123.11441490874643,
+            49.286378633731466
+          ],
+          [
+            -123.1145527613018,
+            49.28646465335465
+          ],
+          [
+            -123.11422411552941,
+            49.286690081979046
+          ],
+          [
+            -123.11408626291598,
+            49.286604061967246
+          ]
+        ]
+      ],
+      "worldRings": [
+        [
+          [
+            429.34422081473815,
+            -398.39300985924365
+          ],
+          [
+            421.116867782022,
+            -389.80134796615357
+          ],
+          [
+            414.2339155024918,
+            -395.80543576484
+          ],
+          [
+            410.5522775692939,
+            -391.61462900135245
+          ],
+          [
+            417.26211279807956,
+            -385.76934496027707
+          ],
+          [
+            405.48414959518965,
+            -373.47417267616163
+          ],
+          [
+            395.4758930340254,
+            -382.9827818227734
+          ],
+          [
+            419.33596003794696,
+            -407.90166196359394
+          ],
+          [
+            429.34422081473815,
+            -398.39300985924365
+          ]
+        ]
+      ],
+      "areaM2": 426.0406103209243,
+      "runtimeOverlapM2": 381.39955196203664
+    }
+  ],
+  "cautions": [
+    "TOPELEV_M is the highest element elevation, not every roof, cornice or parapet height.",
+    "City2009 geometry is generalized and historical, not a present survey.",
+    "Photographic visible course counts do not imply removal of hidden lower floors from existing total height.",
+    "Retain runtime collision footprint; register source roof objects deliberately rather than stretching/merging surrounding buildings."
+  ]
+}
