@@ -410,6 +410,7 @@ class Game {
               mode: this.cameraMode,
             },
             player: this.player.toArray(),
+            pedestrianActivity: this.actors.canadaPedestrianSummary(),
             lighting: {
               weather: this.world.weather,
               sunDirection: this.world.sun.position

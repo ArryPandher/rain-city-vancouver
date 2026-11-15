@@ -400,3 +400,74 @@ test("actual source paving pattern registration survives world baking and spatia
     "positions moved while local metre registration stayed fixed",
   );
 });
+
+test("aggregate courses exclude field joints and per-slab variation with continuous terminations", async () => {
+  const { canadaPlacePavingFieldWeight: weight } = await import(
+    "../src/world/canada-place-paving"
+  );
+  // Course centres, intersections, both edges, and an ordinary slab joint.
+  for (const x of [12, 18, 120, 300]) {
+    assert.equal(weight(x, 3), 0);
+    assert.equal(weight(x, 6.5), 0);
+    for (const side of [-1, 1]) {
+      assert.equal(weight(x + side * 0.079, 3), 0);
+      assert.ok(Math.abs(weight(x + side * 0.084, 3) - 0.5) < 1e-10);
+      assert.equal(weight(x + side * 0.089, 3), 1);
+    }
+  }
+  for (const x of [13.5, 16.5, 121.5]) {
+    assert.equal(weight(x, 3), 1, "ordinary slab joints remain");
+    assert.equal(weight(x, 6.5), 0);
+    assert.ok(Math.abs(weight(x, 6.624) - 0.5) < 1e-10);
+  }
+  assert.equal(
+    weight(12, 11),
+    1,
+    "outside the authored west treatment is unchanged",
+  );
+  assert.equal(weight(-6, 3), 1);
+  // Check bounded continuous exclusion at submillimetre intervals, including
+  // the crossing where the nearest course changes and the layout fades out.
+  for (const [x, y] of [
+    [12.08, 3],
+    [13.5, 6.62],
+    [12.08, 6.62],
+    [306, 3],
+  ]) {
+    let previous = weight(x - 0.01, y);
+    for (let i = 1; i <= 200; i++) {
+      const v = weight(x - 0.01 + i * 0.0001, y);
+      assert.ok(Number.isFinite(v) && v >= 0 && v <= 1);
+      assert.ok(Math.abs(v - previous) < 0.02);
+      previous = v;
+    }
+  }
+  const material = canadaPlacePavingMaterial(new T.MeshStandardMaterial(), {
+    color: new T.Texture(),
+    normal: new T.Texture(),
+    roughness: new T.Texture(),
+  });
+  const shader = {
+    uniforms: {},
+    vertexShader: T.ShaderLib.standard.vertexShader,
+    fragmentShader: T.ShaderLib.standard.fragmentShader,
+  };
+  material.onBeforeCompile(shader as any, {} as T.WebGLRenderer);
+  assert.ok(shader.fragmentShader.includes("seam*=fieldWeight"));
+  assert.ok(
+    shader.fragmentShader.includes(
+      "mix(1.0,mix(.97,1.03,variation),fieldWeight)",
+    ),
+  );
+  assert.ok(
+    shader.fragmentShader.includes("gradient*slope*field.x+height*field.yz"),
+    "normal uses complete product-rule derivative, including terminating edge",
+  );
+  assert.ok(shader.fragmentShader.includes("dFdx(metres)*.25"));
+  assert.equal(
+    /dFd[xy]\([^)]*(?:fwidth|fieldWeight|pavingDetail)/.test(
+      shader.fragmentShader,
+    ),
+    false,
+  );
+});

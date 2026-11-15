@@ -1,3 +1,11 @@
+import {
+  createCanadaPedestrianCircuit,
+  canadaPedestrianPoint,
+  advanceCanadaPedestrian,
+  CANADA_PEDESTRIAN_SLOTS,
+  PEDESTRIAN_POOL_LIMIT,
+  type CanadaPedestrianCircuit,
+} from "./canada-place-pedestrians";
 import { updateCarLOD, syncCarLOD } from "../world/car-lod";
 import { batchCarWheels, syncCarWheelBatches } from "../world/wheel-batching";
 import * as T from "three";
@@ -30,6 +38,8 @@ export interface Vehicle {
   health: number;
 }
 export interface Pedestrian {
+  canadaDistance?: number;
+  canadaSpeed?: number;
   character: Character;
   road: Road;
   t: number;
@@ -82,6 +92,7 @@ export class Actors {
   peds: Pedestrian[] = [];
   random = seeded(518);
   timer = 0;
+  canadaCircuit: CanadaPedestrianCircuit | null = null;
   constructor(
     public world: World,
     private readonly wheelMultiDraw = false,
@@ -160,14 +171,33 @@ export class Actors {
       v.state.speed = i < 16 ? 6 + this.random() * 6 : 0;
       v.name = ["Pacific GT", "Harbour Coupe", "West End GT"][i % 3];
     }
-    for (let i = 0; i < 34; i++) {
+    this.canadaCircuit ??= createCanadaPedestrianCircuit(this.world.collision);
+    for (let i = this.peds.length; i < PEDESTRIAN_POOL_LIMIT; i++) {
+      const canadaDistance =
+        this.canadaCircuit && i < CANADA_PEDESTRIAN_SLOTS
+          ? (i * this.canadaCircuit.length) / CANADA_PEDESTRIAN_SLOTS
+          : undefined;
+      const fixed =
+        canadaDistance !== undefined
+          ? canadaPedestrianPoint(this.canadaCircuit!, canadaDistance)
+          : null;
       const side = i % 2 ? 1 : -1;
-      const at = this.place(walkingSpans, x, z, {
-        radius: 240,
-        minDistance: 16,
-        pedestrian: true,
-        side,
-      });
+      const at = fixed
+        ? {
+            ...fixed,
+            road: {
+              kind: "footway",
+              pts: this.canadaCircuit!.points.flatMap((p) => [p.x, p.z]),
+            } as Road,
+            t: 0,
+            segment: 0,
+          }
+        : this.place(walkingSpans, x, z, {
+            radius: 240,
+            minDistance: 16,
+            pedestrian: true,
+            side,
+          });
       if (!at) continue;
       const p = makeCharacter(this.world.materials, i + 1);
       mergeGroup(p.hips);
@@ -177,10 +207,12 @@ export class Actors {
       this.world.scene.add(p.group);
       p.group.position.set(
         at.x,
-        this.world.collision.roadHeight(at.road, at.x, at.z),
+        fixed ? 7.88 : this.world.collision.roadHeight(at.road, at.x, at.z),
         at.z,
       );
+      p.group.rotation.y = at.heading;
       const ped: Pedestrian = {
+        canadaDistance,
         character: p,
         road: at.road,
         t: at.t,
@@ -322,6 +354,7 @@ export class Actors {
       this.sync(v, 0);
     }
     for (const p of this.peds) {
+      if (p.canadaDistance !== undefined) continue;
       if (!afterTravel && p.character.group.position.distanceTo(player) < 450)
         continue;
       const at = this.place(walkingSpans, player.x, player.z, {
@@ -344,6 +377,30 @@ export class Actors {
       p.panic = 0;
       p.character.group.rotation.y = at.heading;
     }
+  }
+  /** Read-only, requested diagnostics; stable object IDs and fixed world progress. */
+  canadaPedestrianSummary() {
+    return {
+      totalPool: this.peds.length,
+      circuitLength: this.canadaCircuit?.length ?? null,
+      assigned: this.peds
+        .filter((p) => p.canadaDistance !== undefined)
+        .map((p) => ({
+          id: p.character.group.id,
+          distance: p.canadaDistance,
+          position: p.character.group.position.toArray(),
+          speed: p.canadaSpeed ?? 0,
+          state:
+            p.down > 0
+              ? "down"
+              : (p.canadaSpeed ?? 0) === 0
+                ? "waiting"
+                : p.panic > 0
+                  ? "panic"
+                  : "walking",
+          visible: p.character.group.visible,
+        })),
+    };
   }
   roadPoint(r: Road, seg: number, t: number, offset: number) {
     return pointOnRoad(r, seg, t, offset);
@@ -431,6 +488,7 @@ export class Actors {
         dist = obj.position.distanceTo(player);
       obj.visible = dist < 190;
       if (p.down > 0) {
+        if (p.canadaDistance !== undefined) p.canadaSpeed = 0;
         p.down -= dt;
         obj.rotation.z = Math.PI / 2;
         obj.position.y =
@@ -443,6 +501,46 @@ export class Actors {
       }
       obj.rotation.z = 0;
       p.panic = Math.max(0, p.panic - dt);
+      if (p.canadaDistance !== undefined && this.canadaCircuit) {
+        const obstacles = [
+          ...(Math.abs(player.y - 7.88) < 2.5
+            ? [{ x: player.x, z: player.z, radius: 0.8 }]
+            : []),
+          ...this.vehicles
+            .filter((v) => Math.abs(v.model.group.position.y - 7.88) < 2.5)
+            .map((v) => ({
+              x: v.state.x,
+              z: v.state.z,
+              radius: v.kind === "car" ? 2.8 : 1.2,
+            })),
+          ...this.peds
+            .filter(
+              (other) =>
+                other !== p &&
+                Math.abs(other.character.group.position.y - 7.88) < 2.5,
+            )
+            .map((other) => ({
+              x: other.character.group.position.x,
+              z: other.character.group.position.z,
+              radius: 0.4,
+            })),
+        ];
+        const next = advanceCanadaPedestrian(
+          this.canadaCircuit,
+          { distance: p.canadaDistance, panic: p.panic, down: p.down },
+          dt,
+          this.world.collision,
+          obstacles,
+        );
+        p.canadaDistance = next.distance;
+        p.canadaSpeed = next.speed;
+        if (next.speed > 0)
+          obj.rotation.y +=
+            angleDelta(obj.rotation.y, next.heading) * (1 - Math.exp(-dt * 8));
+        obj.position.set(next.x, 7.88, next.z);
+        if (obj.visible) p.character.update(this.timer, next.speed, false);
+        continue;
+      }
       const r = p.road,
         speed = p.panic > 0 ? 4.8 : 1.2;
       const next = advanceRoadCursor(r, p, dt * speed);

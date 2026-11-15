@@ -1,6 +1,10 @@
 import * as T from "three";
 import { BASE } from "./materials";
 import { CANADA_PLACE_GROUND_STAYS } from "./canada-place-ground-stays-data";
+import {
+  canadaPlaceFixtureContactUniforms,
+  CANADA_PLACE_FIXTURE_CONTACT_GLSL,
+} from "./canada-place-fixture-contact";
 /** Dry-photo-supported composition; dimensions and reflectance ratios are estimates. */
 export const CANADA_PLACE_PAVING_LAYOUT = {
   dividerInward: 6.5,
@@ -46,6 +50,24 @@ export function canadaPlacePavingTint(along: number, inward: number) {
     : inward > p.dividerInward
       ? p.serviceTint
       : p.fieldTint;
+}
+/** Course exclusion in the interior west strip; 8mm feather is an estimated
+ * construction transition, not a new displacement or dark perimeter joint. */
+export function canadaPlacePavingFieldWeight(along: number, inward: number) {
+  const smooth = (a: number, b: number, x: number) => {
+    const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  };
+  const d = Math.min(
+    Math.abs(((((along + 3) % 6) + 6) % 6) - 3) - 0.08,
+    Math.abs(inward - 6.5) - 0.12,
+  );
+  const west =
+    smooth(0, 3, along) *
+    (1 - smooth(305, 308, along)) *
+    smooth(-0.1, 0.25, inward) *
+    (1 - smooth(10, 10.5, inward));
+  return 1 - west * (1 - smooth(0, 0.008, d));
 }
 export const CANADA_PLACE_CONTACT_WIDTH = 0.14;
 export const CANADA_PLACE_CONTACT_STRENGTH = 0.38;
@@ -189,6 +211,7 @@ export function extractCanadaPlacePaving(
 export function canadaPlacePavingMaterial(
   mineral: T.MeshStandardMaterial,
   maps = loadPavingMaps(),
+  options: { fixturesPresent?: boolean } = {},
 ) {
   const material = mineral.clone();
   material.name = "Canada Place promenade paving";
@@ -209,6 +232,10 @@ export function canadaPlacePavingMaterial(
     layout: CANADA_PLACE_PAVING_LAYOUT,
   };
   material.onBeforeCompile = (shader) => {
+    Object.assign(
+      shader.uniforms,
+      canadaPlaceFixtureContactUniforms(options.fixturesPresent === true),
+    );
     shader.uniforms.anchorContactCenters = {
       value: CANADA_PLACE_GROUND_STAYS.map((a) => new T.Vector2(...a.center)),
     };
@@ -247,6 +274,7 @@ varying vec2 vPavingMetres;
 varying vec2 vAnchorPavingPoint;
 uniform vec2 anchorContactCenters[5];
 uniform vec2 anchorContactVertices[40];
+${CANADA_PLACE_FIXTURE_CONTACT_GLSL}
 float anchorContact(vec2 p){
  float distanceToBase=1.0;
  for(int a=0;a<5;a++){
@@ -263,6 +291,24 @@ float anchorContact(vec2 p){
   }
  }
  return 1.0-${CANADA_PLACE_CONTACT_STRENGTH.toFixed(2)}*(1.0-smoothstep(0.0,${CANADA_PLACE_CONTACT_WIDTH.toFixed(2)},distanceToBase));
+}
+// Value and analytic derivative of smoothstep; no derivative of filtered data.
+vec2 pavingRamp(float a,float b,float x){
+ float t=clamp((x-a)/(b-a),0.0,1.0);
+ return vec2(t*t*(3.0-2.0*t),6.0*t*(1.0-t)/(b-a));
+}
+// x = field weight, yz = exact metre-space gradient of that weight.
+vec3 pavingFieldWeight(vec2 p){
+ float signedCross=mod(p.x+3.0,6.0)-3.0;
+ float crossDistance=abs(signedCross)-.08;
+ float dividerDistance=abs(p.y-6.5)-.12;
+ vec2 course=pavingRamp(0.0,.008,min(crossDistance,dividerDistance));
+ vec2 direction=crossDistance<dividerDistance?vec2(sign(signedCross),0.0):vec2(0.0,sign(p.y-6.5));
+ vec2 a=pavingRamp(0.0,3.0,p.x),b=pavingRamp(305.0,308.0,p.x);
+ vec2 c=pavingRamp(-.1,.25,p.y),d=pavingRamp(10.0,10.5,p.y);
+ float west=a.x*(1.0-b.x)*c.x*(1.0-d.x);
+ vec2 westGradient=vec2((a.y*(1.0-b.x)-a.x*b.y)*c.x*(1.0-d.x),a.x*(1.0-b.x)*(c.y*(1.0-d.x)-c.x*d.y));
+ return vec3(1.0-west*(1.0-course.x),west*course.y*direction-westGradient*(1.0-course.x));
 }
 vec3 pavingDetail(vec2 metres){
  vec2 cell=metres/vec2(1.5,.75);
@@ -281,7 +327,12 @@ vec3 pavingDetail(vec2 metres){
  // Restrict this observed west-trail treatment to the source edge corridor.
  float west=smoothstep(0.0,3.0,metres.x)*(1.0-smoothstep(305.0,308.0,metres.x));
  west*=smoothstep(-.1,.25,metres.y)*(1.0-smoothstep(10.0,10.5,metres.y));
- return vec3(seam,mix(.97,1.03,variation)*mix(1.0,composition,west),-seam*.002);
+ // Pixel-sized four-point quadrature filters the course/field exclusion using
+ // only first derivatives of metre coordinates (never derivatives of fwidth).
+ vec2 dx=dFdx(metres)*.25,dy=dFdy(metres)*.25;
+ float fieldWeight=.25*(pavingFieldWeight(metres+dx+dy).x+pavingFieldWeight(metres+dx-dy).x+pavingFieldWeight(metres-dx+dy).x+pavingFieldWeight(metres-dx-dy).x);
+ seam*=fieldWeight;
+ return vec3(seam,mix(1.0,mix(.97,1.03,variation),fieldWeight)*mix(1.0,composition,west),-seam*.002);
 }
 // Analytic gradient of the 2mm joint recess. Do not differentiate the
 // fwidth-filtered colour seam: higher-order GLSL derivatives are undefined.
@@ -293,7 +344,10 @@ vec2 pavingReliefGradient(vec2 metres){
  float slope=.002*6.0*t*(1.0-t)/.008;
  vec2 direction=sign(vec2(.5)-fraction);
  vec2 gradient=edge.x<edge.y?vec2(direction.x,0.0):vec2(0.0,direction.y);
- return gradient*slope;
+ vec3 field=pavingFieldWeight(metres);
+ float height=-.002*(1.0-t*t*(3.0-2.0*t));
+ // Product rule keeps the terminating joint continuous at course boundaries.
+ return gradient*slope*field.x+height*field.yz;
 }`,
       )
       .replace(
@@ -311,7 +365,10 @@ diffuseColor.rgb*=paving.y*(1.0-paving.x*.28);`,
 // Local indirect-light occlusion only: retain direct sun, albedo and all geometry.
 float anchorIndirect=anchorContact(vAnchorPavingPoint);
 reflectedLight.indirectDiffuse*=anchorIndirect;
-reflectedLight.indirectSpecular*=anchorIndirect;`,
+reflectedLight.indirectSpecular*=anchorIndirect;
+float fixtureIndirect=canadaFixtureContact(vAnchorPavingPoint);
+reflectedLight.indirectDiffuse*=fixtureIndirect;
+reflectedLight.indirectSpecular*=fixtureIndirect;`,
       )
       .replace(
         "#include <normal_fragment_maps>",
@@ -326,6 +383,6 @@ if(abs(pavingDet)>1e-8)normal=normalize(abs(pavingDet)*normal-pavingGradient);`,
       );
   };
   material.customProgramCacheKey = () =>
-    "canada-place-paving-v5-dry-grain-trial";
+    "canada-place-paving-v7-course-fixture-contact";
   return material;
 }

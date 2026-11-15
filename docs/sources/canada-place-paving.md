@@ -46,3 +46,27 @@ Native review found the first strip composition still too pale and mottled. This
 After the diffuse map is sampled, its grain contrast is reduced to **65% around decoded linear mean 0.8253**. The shader captures the pre-map diffuse product and mixes the mapped result toward that product multiplied by the mean. Thus material tint and any prior vertex colour remain multiplicative, including black; the change does not wash the tint toward a fixed grey. Layout tint is applied afterward. The affine operation preserves the measured map mean to the precision of the rounded pivot and reduces its standard deviation from approximately 0.0973 to 0.0632 before material/layout tint. No map files, metric UVs, normal strength, roughness, geometry, contact calculation, captures or draw counts change. Cache key: `canada-place-paving-v5-dry-grain-trial`.
 
 All nine focused paving tests pass, including 331 actual source support rays, transformed/batched UV registration, shader integration ordering, and actual decoded-map mean/contrast checks under several diffuse products. CPU checks establish the intended operation, not its appearance. Parent native daylight review is the acceptance step; no build or browser reload was performed for this change.
+
+### Aggregate-course joint topology (2026-11-15)
+
+The accepted dry colours, map response, metre registration and original source
+triangles are unchanged. Slab-grid joints and per-slab colour variation now stop
+at transverse aggregate courses and the longitudinal divider. Previously every
+6m course inherited a slab seam down its centre. TourbyTransit and Brenco show
+distinct construction courses; exact joint widths are not surveyed. An estimated
+8mm smooth termination avoids a hard normal discontinuity without inventing a
+new dark perimeter band. Aggregate texture grain itself remains continuous.
+
+Colour exclusion uses four metre-space samples from first pixel derivatives.
+Normal relief uses the analytic product-rule gradient of the 2mm slab recess and
+course exclusion, including the layout fade; it never differentiates fwidth or
+other derivative results. Existing distance filtering suppresses unresolved
+normal detail. This changes fragment arithmetic only: zero added geometry,
+textures, draws, displacement or collision. Anchor contact is unchanged.
+Native moving-view acceptance remains the parent task's check.
+
+### Existing globe-pole contact
+
+The four authored promenade fixtures now supply their source-local centres and actual0.16m visible base radius to the paving material. A short estimated0.08m falloff attenuates indirect diffuse/specular light by at most22%; direct sun, albedo, source geometry and the existing five stay-anchor contacts are untouched. No rail-foot contact expansion is included. The renderer enables this only when the same source-compatibility gate adds the four fixtures; default/fallback materials shade nothing at absent fixtures.
+
+Actual GLTFLoader/baked-source tests resolve the extracted deck at local7.7989358902m and the modeled pole feet at7.8m. The1.064mm difference is source quantization, not a centimetre-scale placement failure; geometry is unchanged. The0.18m collision envelope is deliberately larger than the visible0.16m foot and is not used as the contact boundary. Three integration/source tests cover capability gating,20 actual deck rays around the four feet, the compact falloff and indirect-only shader placement.

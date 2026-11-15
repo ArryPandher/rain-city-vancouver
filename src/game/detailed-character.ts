@@ -144,8 +144,59 @@ export function makeDetailedCharacterFromTemplate(
     : 1.84;
   const scale = height / (bounds.max.y - bounds.min.y);
   body.scale.set(scale * (1 + (variant % 5) * 0.018), scale, scale);
-  const floor = 0.11 - bounds.min.y * scale;
+  const floor = -bounds.min.y * scale;
   body.position.y = floor;
+  // Sparse sole probes from the actual boot meshes, chosen once in bind pose.
+  // Keep the lowest vertex in each foot's 3x5 sole grid: at most30 skin samples,
+  // not a full vertex/bounding-box scan for every actor on every frame.
+  group.updateMatrixWorld(true);
+  const soleProbes: { mesh: T.SkinnedMesh; index: number }[] = [];
+  const probePoint = new T.Vector3(),
+    rootInverse = new T.Matrix4();
+  body.traverse((o) => {
+    if (!(o instanceof T.SkinnedMesh) || !/^Cloth_boots/.test(o.name)) return;
+    o.skeleton.update();
+    const feet = [[], []] as {
+      index: number;
+      x: number;
+      y: number;
+      z: number;
+    }[][];
+    for (let i = 0; i < o.geometry.attributes.position.count; i++) {
+      o.getVertexPosition(i, probePoint).applyMatrix4(o.matrixWorld);
+      feet[probePoint.x < 0 ? 0 : 1].push({
+        index: i,
+        x: probePoint.x,
+        y: probePoint.y,
+        z: probePoint.z,
+      });
+    }
+    for (const vertices of feet) {
+      if (!vertices.length) continue;
+      const minX = Math.min(...vertices.map((v) => v.x)),
+        maxX = Math.max(...vertices.map((v) => v.x));
+      const minZ = Math.min(...vertices.map((v) => v.z)),
+        maxZ = Math.max(...vertices.map((v) => v.z));
+      const cells = new Map<number, (typeof vertices)[number]>();
+      for (const v of vertices) {
+        const x = Math.min(
+          2,
+          Math.floor((3 * (v.x - minX)) / Math.max(1e-8, maxX - minX)),
+        );
+        const z = Math.min(
+          4,
+          Math.floor((5 * (v.z - minZ)) / Math.max(1e-8, maxZ - minZ)),
+        );
+        const key = x + z * 3,
+          previous = cells.get(key);
+        if (!previous || v.y < previous.y) cells.set(key, v);
+      }
+      for (const v of cells.values())
+        soleProbes.push({ mesh: o, index: v.index });
+    }
+  });
+  const soleSkeletons = [...new Set(soleProbes.map((p) => p.mesh.skeleton))];
+  group.userData.soleProbeCount = soleProbes.length;
   const mixer = new T.AnimationMixer(body);
   const actions = new Map(
     template.animations.map((clip) => [clip.name, mixer.clipAction(clip)]),
@@ -202,9 +253,28 @@ export function makeDetailedCharacterFromTemplate(
     pose.restore();
     mixer.update(dt);
     pose.capture();
-    body.position.y = floor + (bike ? 0.07 : 0);
+    // Preserve the existing bike seating/IK origin (old110mm lift +70mm seat).
+    body.position.y = floor + (bike ? 0.18 : 0);
     body.position.z = bike ? -0.24 : 0;
     group.updateWorldMatrix(true, true);
+    if (!bike && speed <= 4.2 && soleProbes.length) {
+      // Idle/walk have a support foot; running retains its airborne phase.
+      // SkinnedMesh.updateMatrixWorld refreshes attached bindMatrixInverse;
+      // updateWorldMatrix alone does not, especially after root translation.
+      group.updateMatrixWorld(true);
+      rootInverse.copy(group.matrixWorld).invert();
+      soleSkeletons.forEach((s) => s.update());
+      let lowest = Infinity;
+      for (const p of soleProbes) {
+        p.mesh
+          .getVertexPosition(p.index, probePoint)
+          .applyMatrix4(p.mesh.matrixWorld)
+          .applyMatrix4(rootInverse);
+        lowest = Math.min(lowest, probePoint.y);
+      }
+      body.position.y -= T.MathUtils.clamp(lowest, -0.06, 0.06);
+      group.updateWorldMatrix(true, true);
+    }
     if (bike) {
       const spine = bone("spine_01");
       const axis = new T.Vector3(1, 0, 0).applyQuaternion(

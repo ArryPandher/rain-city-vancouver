@@ -194,7 +194,12 @@ export async function loadVancouverLandmarks(
       mesh.castShadow = mesh.receiveShadow = true;
       group.add(mesh);
       if (paving) {
-        const deck = new T.Mesh(paving, canadaPlacePavingMaterial(mat));
+        const deck = new T.Mesh(
+          paving,
+          canadaPlacePavingMaterial(mat, undefined, {
+            fixturesPresent: refineCanadaCanopy,
+          }),
+        );
         deck.name = "Canada Place public promenade paving";
         deck.castShadow = deck.receiveShadow = true;
         group.add(deck);
