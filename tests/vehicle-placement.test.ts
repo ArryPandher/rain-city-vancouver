@@ -160,6 +160,7 @@ test("native Canada Place road projection prefers a clear departure over the nex
     concourse: true,
     entranceCanopy: true,
     groundStays: true,
+    promenadeFixtures: true,
   });
   const player = { x: 579.05, z: -643.53, y: 7.88 };
   const nearest = collision.nearestRoad(player.x, player.z, 100)!;

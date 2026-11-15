@@ -9,6 +9,7 @@ import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { MeshoptDecoder } from "meshoptimizer";
 import {
   canadaPlacePavingMaterial,
+  CANADA_PLACE_PAVING_GRAIN,
   extractCanadaPlacePaving,
   CANADA_PLACE_PAVING_SOURCE,
   canadaPlacePavingFingerprint,
@@ -166,6 +167,21 @@ test("paving uses dedicated licensed maps without modifying source material or v
   assert.equal(shader.vertexShader.includes("transformed +="), false);
   assert.ok(shader.fragmentShader.includes("fwidth(metres)"));
   assert.ok(shader.fragmentShader.includes("pavingGradient"));
+  const baseCapture = shader.fragmentShader.indexOf(
+    "vec3 pavingDiffuseBase=diffuseColor.rgb;",
+  );
+  const mapSample = shader.fragmentShader.indexOf("#include <map_fragment>");
+  const grain = shader.fragmentShader.indexOf(
+    "diffuseColor.rgb=mix(pavingDiffuseBase*0.8253,diffuseColor.rgb,0.65);",
+  );
+  const bands = shader.fragmentShader.indexOf("diffuseColor.rgb*=paving.y");
+  assert.ok(
+    baseCapture >= 0 &&
+      baseCapture < mapSample &&
+      mapSample < grain &&
+      grain < bands,
+    "grain reduction retains the pre-map diffuse product and precedes layout tint",
+  );
   assert.equal(
     (shader.fragmentShader.match(/vec3 paving=pavingDetail/g) ?? []).length,
     1,
@@ -205,6 +221,21 @@ test("dedicated compressed maps preserve mean reflectance while restoring measur
     `mean reflectance ${oldMean} -> ${newMean}`,
   );
   assert.ok(deviation(next, newMean) > deviation(old, oldMean) * 4);
+  const { mean: pivot, contrast } = CANADA_PLACE_PAVING_GRAIN;
+  // Decode the real shipped map, then exercise the affine operation used after
+  // map_fragment with multiple material/vertex-colour products (including black).
+  for (const base of [0, 0.12, 0.37, 1]) {
+    const filtered = next.map(
+      (v) => base * pivot * (1 - contrast) + base * v * contrast,
+    );
+    assert.ok(Math.abs(mean(filtered) - base * newMean) < 0.0001);
+    assert.ok(
+      Math.abs(
+        deviation(filtered, mean(filtered)) -
+          base * deviation(next, newMean) * 0.65,
+      ) < 1e-10,
+    );
+  }
   const rough = await channel(
     "public/textures/canada-place-paving/roughness.webp",
   );
@@ -303,5 +334,69 @@ test("contact uniforms preserve baked UV coordinates and affect only indirect li
   assert.ok(
     shader.fragmentShader.indexOf("float anchorIndirect=") >
       shader.fragmentShader.indexOf("#include <aomap_fragment>"),
+  );
+});
+
+test("dry paving coordinates follow source metre UVs and crossing bands do not double brighten", async () => {
+  const {
+    canadaPlacePavingCoordinates: coordinates,
+    canadaPlacePavingTint: tint,
+    CANADA_PLACE_PAVING_LAYOUT: p,
+  } = await import("../src/world/canada-place-paving");
+  const a = [-223.69801349034887, 62.32778289488352],
+    b = [47.08629353363758, -84.64734079947858];
+  assert.deepEqual(coordinates(a[0], -a[1]), [0, 0]);
+  const end = coordinates(b[0], -b[1]);
+  assert.ok(Math.abs(end[1]) < 1e-10);
+  assert.ok(Math.abs(end[0] - Math.hypot(b[0] - a[0], b[1] - a[1])) < 1e-10);
+  assert.equal(tint(3, 3), p.fieldTint);
+  assert.equal(tint(3, 8), p.serviceTint);
+  assert.equal(tint(3, 6.5), p.aggregateTint);
+  assert.equal(
+    tint(6, 6.5),
+    p.aggregateTint,
+    "divider/cross-band junction has one aggregate value",
+  );
+  assert.equal(tint(6, 3), tint(12, 3), "metric cross-band repetition");
+  for (let x = -12; x <= 12; x += 0.05)
+    for (const z of [0, 3, 6.38, 6.5, 6.62, 8])
+      assert.ok(
+        tint(x, z) >= 0.53 && tint(x, z) <= 1.08,
+        "bounded dry material contrast",
+      );
+});
+
+test("actual source paving pattern registration survives world baking and spatial batching", async () => {
+  const { canadaPlacePavingCoordinates: coordinates } = await import(
+    "../src/world/canada-place-paving"
+  );
+  const { Batcher } = await import("../src/world/geometry");
+  const concrete = (await fixture()).find((p) => p.name === "concrete")!;
+  const top = extractCanadaPlacePaving(concrete.g, concrete.name)!;
+  const uv = top.getAttribute("uv");
+  const expected = Array.from({ length: uv.count }, (_, i) =>
+    coordinates(uv.getX(i), uv.getY(i)),
+  );
+  const world = top
+    .clone()
+    .applyMatrix4(
+      new T.Matrix4()
+        .makeRotationY(0.31)
+        .premultiply(new T.Matrix4().makeTranslation(600, 0.08, -600)),
+    );
+  const batch = new Batcher(new T.Group(), 400);
+  batch.add(world, new T.MeshStandardMaterial(), 600, -600);
+  const baked = batch.finish()[0].geometry;
+  const actual = baked.getAttribute("uv");
+  assert.deepEqual(
+    Array.from({ length: actual.count }, (_, i) =>
+      coordinates(actual.getX(i), actual.getY(i)),
+    ),
+    expected,
+  );
+  assert.notEqual(
+    baked.getAttribute("position").getX(0),
+    top.getAttribute("position").getX(0),
+    "positions moved while local metre registration stayed fixed",
   );
 });

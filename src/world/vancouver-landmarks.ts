@@ -1,4 +1,6 @@
 import { canadaPlaceCapabilities } from "./canada-place-capabilities";
+import { addCanadaPlacePromenadeFixtures } from "./canada-place-promenade-fixtures";
+import { CANADA_PLACE_PROMENADE_FIXTURES } from "./canada-place-promenade-fixtures-data";
 import { createCanadaPlaceDoorGlass } from "./canada-place-door-glass";
 import { addCanadaPlaceUpperGuard } from "./canada-place-upper-guard";
 import { addCanadaPlaceLettering } from "./canada-place-lettering";
@@ -248,6 +250,7 @@ export async function loadVancouverLandmarks(
       );
     }
     if (refineCanadaCanopy) {
+      addCanadaPlacePromenadeFixtures(group, CANADA_PLACE_PROMENADE_FIXTURES);
       const canopy = addCanadaPlaceCanopy(group, canadaMaterials);
       localReflection(
         "Canada Place entrance conservatory",
@@ -262,6 +265,7 @@ export async function loadVancouverLandmarks(
       canadaPlace = canadaPlaceCapabilities(
         true,
         refineCanada,
+        refineCanadaCanopy,
         refineCanadaCanopy,
       );
   }

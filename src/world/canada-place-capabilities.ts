@@ -4,16 +4,19 @@ export type CanadaPlaceCapabilities = {
   concourse: boolean;
   entranceCanopy: boolean;
   groundStays: boolean;
+  promenadeFixtures: boolean;
 };
 export function canadaPlaceCapabilities(
   loaded = false,
   concourse = false,
   entranceCanopy = false,
+  promenadeFixtures = false,
 ): CanadaPlaceCapabilities {
   return {
     loaded,
     concourse: loaded && concourse,
     entranceCanopy: loaded && entranceCanopy,
     groundStays: loaded && concourse,
+    promenadeFixtures: loaded && promenadeFixtures,
   };
 }

@@ -1,5 +1,7 @@
 # Canada Place promenade refinement
 
+The later fixture-row and dry-paving checkpoint is recorded in [Canada Place fixtures](CANADA-PLACE-FIXTURES.md).
+
 Subsequent architectural work is recorded in [Canada Place entrance and concourse](CANADA-PLACE-CONCOURSE.md). The results below describe the earlier 5d8476d checkpoint.
 
 This checkpoint concentrates detail along the already connected public Canadian Trail. It improves a small playable region; it does not establish photographic fidelity or GTA VI parity. Canada Place remains the first scene to finish before moving the same standard to Robson Square/Art Gallery, Granville's theatre blocks and a Stanley Park seawall stretch.

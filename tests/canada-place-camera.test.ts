@@ -33,6 +33,7 @@ function fixture(loaded = true) {
     concourse: loaded,
     entranceCanopy: loaded,
     groundStays: loaded,
+    promenadeFixtures: loaded,
   });
   return c;
 }

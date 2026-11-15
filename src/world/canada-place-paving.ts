@@ -1,6 +1,52 @@
 import * as T from "three";
 import { BASE } from "./materials";
 import { CANADA_PLACE_GROUND_STAYS } from "./canada-place-ground-stays-data";
+/** Dry-photo-supported composition; dimensions and reflectance ratios are estimates. */
+export const CANADA_PLACE_PAVING_LAYOUT = {
+  dividerInward: 6.5,
+  dividerWidth: 0.24,
+  crossPeriod: 6,
+  crossWidth: 0.16,
+  fieldTint: 0.68,
+  serviceTint: 0.53,
+  aggregateTint: 1.08,
+};
+/** Linear decoded map mean; contrast changes grain, not its mean or UV scale. */
+export const CANADA_PLACE_PAVING_GRAIN = { mean: 0.8253, contrast: 0.65 };
+const pavingOrigin = new T.Vector2(-223.69801349034887, 62.32778289488352);
+const pavingAlong = new T.Vector2(
+  270.78430702398645,
+  -146.9751236943621,
+).normalize();
+/** Input is original baked source UV, independent of later world transforms. */
+export function canadaPlacePavingCoordinates(
+  u: number,
+  v: number,
+): [number, number] {
+  const x = u - pavingOrigin.x,
+    z = -v - pavingOrigin.y;
+  return [
+    x * pavingAlong.x + z * pavingAlong.y,
+    -x * pavingAlong.y + z * pavingAlong.x,
+  ];
+}
+/** Sharp interior-zone sample for composition/joins, before pixel filtering. */
+export function canadaPlacePavingTint(along: number, inward: number) {
+  const p = CANADA_PLACE_PAVING_LAYOUT;
+  const cross =
+    Math.abs(
+      ((((along + p.crossPeriod / 2) % p.crossPeriod) + p.crossPeriod) %
+        p.crossPeriod) -
+        p.crossPeriod / 2,
+    ) <=
+    p.crossWidth / 2;
+  const divider = Math.abs(inward - p.dividerInward) <= p.dividerWidth / 2;
+  return cross || divider
+    ? p.aggregateTint
+    : inward > p.dividerInward
+      ? p.serviceTint
+      : p.fieldTint;
+}
 export const CANADA_PLACE_CONTACT_WIDTH = 0.14;
 export const CANADA_PLACE_CONTACT_STRENGTH = 0.38;
 /** Distance to the exact chamfered perimeter; beneath the opaque body is hidden. */
@@ -160,6 +206,7 @@ export function canadaPlacePavingMaterial(
     reliefMetres: 0.002,
     bandPeriodMetres: 6,
     bandWidthMetres: 0.16,
+    layout: CANADA_PLACE_PAVING_LAYOUT,
   };
   material.onBeforeCompile = (shader) => {
     shader.uniforms.anchorContactCenters = {
@@ -185,7 +232,8 @@ export function canadaPlacePavingMaterial(
 // Raw baked UV survives later world-position batching and texture repeats.
 vAnchorPavingPoint=vec2(uv.x,-uv.y);
 // Longitudinal axis of mapped west pier; all values remain local metres.
-vPavingMetres=vec2(dot(position.xz,vec2(.878,-.478)),dot(position.xz,vec2(.478,.878)));`,
+vec2 pavingLocal=vAnchorPavingPoint-vec2(${pavingOrigin.x},${pavingOrigin.y});
+vPavingMetres=vec2(dot(pavingLocal,vec2(${pavingAlong.x},${pavingAlong.y})),dot(pavingLocal,vec2(${-pavingAlong.y},${pavingAlong.x})));`,
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
@@ -223,8 +271,17 @@ vec3 pavingDetail(vec2 metres){
  float seam=(1.0-smoothstep(.004,.004+footprint*.5,min(edge.x,edge.y)))*min(1.0,.008/footprint);
  float variation=fract(sin(dot(floor(cell),vec2(127.1,311.7)))*43758.5453);
  float bandDistance=abs(mod(metres.x+3.0,6.0)-3.0);
- float band=1.0-smoothstep(.08,.08+footprint,bandDistance);
- return vec3(seam,mix(.94,1.06,variation)*mix(1.0,1.22,band),-seam*.002);
+ float crossBand=(1.0-smoothstep(.08,.08+footprint,bandDistance))*min(1.0,.16/footprint);
+ float dividerDistance=abs(metres.y-${CANADA_PLACE_PAVING_LAYOUT.dividerInward});
+ float divider=(1.0-smoothstep(.12,.12+footprint,dividerDistance))*min(1.0,.24/footprint);
+ // A continuous darker service strip, not random dark/grunge patches.
+ float service=smoothstep(6.5,6.5+footprint,metres.y);
+ float field=mix(${CANADA_PLACE_PAVING_LAYOUT.fieldTint},${CANADA_PLACE_PAVING_LAYOUT.serviceTint},service);
+ float composition=mix(field,${CANADA_PLACE_PAVING_LAYOUT.aggregateTint},max(crossBand,divider));
+ // Restrict this observed west-trail treatment to the source edge corridor.
+ float west=smoothstep(0.0,3.0,metres.x)*(1.0-smoothstep(305.0,308.0,metres.x));
+ west*=smoothstep(-.1,.25,metres.y)*(1.0-smoothstep(10.0,10.5,metres.y));
+ return vec3(seam,mix(.97,1.03,variation)*mix(1.0,composition,west),-seam*.002);
 }
 // Analytic gradient of the 2mm joint recess. Do not differentiate the
 // fwidth-filtered colour seam: higher-order GLSL derivatives are undefined.
@@ -241,7 +298,10 @@ vec2 pavingReliefGradient(vec2 metres){
       )
       .replace(
         "#include <map_fragment>",
-        `#include <map_fragment>
+        `// Preserve material tint and any vertex colour already applied before the map.
+vec3 pavingDiffuseBase=diffuseColor.rgb;
+#include <map_fragment>
+diffuseColor.rgb=mix(pavingDiffuseBase*${CANADA_PLACE_PAVING_GRAIN.mean},diffuseColor.rgb,${CANADA_PLACE_PAVING_GRAIN.contrast});
 vec3 paving=pavingDetail(vPavingMetres);
 diffuseColor.rgb*=paving.y*(1.0-paving.x*.28);`,
       )
@@ -266,6 +326,6 @@ if(abs(pavingDet)>1e-8)normal=normalize(abs(pavingDet)*normal-pavingGradient);`,
       );
   };
   material.customProgramCacheKey = () =>
-    "canada-place-paving-v3-anchor-contact";
+    "canada-place-paving-v5-dry-grain-trial";
   return material;
 }

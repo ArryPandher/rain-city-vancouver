@@ -3,6 +3,7 @@ import {
   type CanadaPlaceCapabilities,
 } from "./canada-place-capabilities";
 import { galleryRearStepHeight } from "./gallery-rear-entry";
+import { canadaPlacePromenadeFixtureAt } from "./canada-place-promenade-fixtures-data";
 import { canadaPlaceGuardSegments } from "./canada-place-guards";
 import {
   createCanadaPlaceSite,
@@ -207,6 +208,7 @@ export class CollisionWorld {
       capabilities.loaded,
       capabilities.concourse,
       capabilities.entranceCanopy,
+      capabilities.promenadeFixtures,
     );
   }
   barriers = new SpatialHash<{
@@ -423,6 +425,21 @@ export class CollisionWorld {
       this.canada &&
       this.canadaGeometry.loaded &&
       referenceY >= CANADA_PLACE_DECK_Y - 0.5;
+    if (this.canada && this.canadaGeometry.promenadeFixtures) {
+      const y = Number.isFinite(referenceY)
+        ? referenceY
+        : this.groundHeight(x, z);
+      if (
+        canadaPlacePromenadeFixtureAt(
+          x,
+          z,
+          r,
+          camera ? y - r : y,
+          camera ? r * 2 : 1.8,
+        )
+      )
+        return true;
+    }
     // Public deck eligibility never opens the closed hotel/exhibition volumes.
     if (
       this.canada &&
