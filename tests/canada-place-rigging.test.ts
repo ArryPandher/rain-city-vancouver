@@ -76,3 +76,31 @@ test("replacement rigging is bounded above public routes and connected at all st
     assert.ok(Math.abs(hit.point.y - m.anchor[1]) < 0.15);
   }
 });
+
+test("ground stays supersede west roof sockets while retaining east sockets and all mast shafts", () => {
+  const root = new T.Group();
+  const meshes = addCanadaPlaceRigging(root, true);
+  root.updateMatrixWorld(true);
+  for (const mast of CANADA_MASTS) {
+    const socketRay = new T.Raycaster(
+      new T.Vector3(mast.anchor[0], 19, mast.anchor[2]),
+      new T.Vector3(0, -1, 0),
+      0,
+      1.5,
+    );
+    assert.equal(
+      socketRay.intersectObjects(meshes).length > 0,
+      mast.side === 1,
+    );
+    const shaftRay = new T.Raycaster(
+      new T.Vector3(mast.base[0] + 1, 25, mast.base[2]),
+      new T.Vector3(-1, 0, 0),
+      0,
+      2,
+    );
+    assert.ok(
+      shaftRay.intersectObjects(meshes).length,
+      "shaft remains connected to the sail peak",
+    );
+  }
+});

@@ -19,6 +19,7 @@ import {
   CANADA_PLACE_CONCOURSE_PROFILE,
   CANADA_PLACE_CONCOURSE_STATIONS,
   CANADA_PLACE_CONCOURSE_FOOTPRINTS,
+  CANADA_PLACE_CONCOURSE_GROUND_FOOTPRINTS,
   canadaPlaceConcoursePoint,
   canadaPlaceFacadeCompatible,
   replaceCanadaPlaceWestFaces,
@@ -270,7 +271,7 @@ test("mineral sill replaces the bottom glass strip without coplanar overlap", as
     stations = CANADA_PLACE_CONCOURSE_STATIONS,
     i = Math.floor(stations.length / 2),
     s = (stations[i].s + stations[i + 1].s) / 2;
-  const target = canadaPlaceConcoursePoint(s, 14.4, 7.88),
+  const target = canadaPlaceConcoursePoint(s, 12.4, 7.88),
     from = target.clone().add(new T.Vector3(stations[i].nx, 0, stations[i].nz));
   const glass = additions.find((m) => m.name === "canada-west-glass")!,
     wall = additions.find((m) => m.name === "canada-west-wall")!;
@@ -307,4 +308,107 @@ test("glass normals join smoothly within each curve and keep tier-reset creases"
   const crease = normalsAt(9);
   assert.ok(crease.some((n) => n.y > 0.99));
   assert.ok(crease.some((n) => Math.abs(n.y) < 0.01));
+});
+
+test("upright upper fascias replace curved ends and close both transition cheeks", async () => {
+  const { root } = await fixture;
+  const profile = CANADA_PLACE_CONCOURSE_PROFILE;
+  const stations = CANADA_PLACE_CONCOURSE_STATIONS;
+  for (const st of [stations[5], stations[stations.length - 6]]) {
+    const out = profile[17][0] * st.scale;
+    for (const y of [15.8, 17.2]) {
+      const target = canadaPlaceConcoursePoint(st.s + 0.02, out, y);
+      const from = target.clone().add(new T.Vector3(st.nx, 0, st.nz));
+      const hit = ray(root, from, target);
+      assert.ok(hit, "upright fascia is closed from promenade");
+      assert.equal(hit.object.name, "canada-west-wall");
+      assert.ok(
+        Math.abs(hit.distance - 1) < 0.02,
+        "both heights occupy an upright plane",
+      );
+      assert.ok(
+        Math.abs(hit.face!.normal.y) < 0.01,
+        "fascia is physically vertical, not recoloured curved glass",
+      );
+    }
+  }
+  for (const [boundary, direction] of [
+    [22, 1],
+    [stations.at(-1)!.s - 22, -1],
+  ]) {
+    const from = canadaPlaceConcoursePoint(
+      boundary + direction * 0.5,
+      9.6,
+      17.1,
+    );
+    const to = canadaPlaceConcoursePoint(boundary - direction * 0.1, 9.6, 17.1);
+    const hit = ray(root, from, to);
+    assert.ok(
+      hit,
+      "transition return closes gap between curve and upright fascia",
+    );
+    assert.equal(hit.object.name, "canada-west-wall");
+    assert.ok(hit.distance > 0.4 && hit.distance < 0.6);
+  }
+});
+
+test("recessed ground doors and closed soffit leave real space below unchanged canopy", async () => {
+  const { additions } = await fixture;
+  const root = new T.Group();
+  for (const mesh of additions) root.add(mesh.clone());
+  root.updateMatrixWorld(true);
+  const stations = CANADA_PLACE_CONCOURSE_STATIONS;
+  for (const index of [
+    5,
+    Math.floor(stations.length / 2),
+    stations.length - 6,
+  ]) {
+    const a = stations[index],
+      b = stations[index + 1];
+    const s = (a.s + b.s) / 2,
+      scale = (a.scale + b.scale) / 2;
+    const face = canadaPlaceConcoursePoint(s, 12.4 * scale, 9.4);
+    const from = canadaPlaceConcoursePoint(s, 15 * scale, 9.4);
+    const hit = ray(root, from, face);
+    assert.ok(hit, "door front remains closed");
+    assert.equal(hit.object.name, "canada-west-glass");
+    assert.ok(
+      hit.point.distanceTo(face) < 0.02,
+      "door plane recessed from outer curve",
+    );
+    const under = canadaPlaceConcoursePoint(s, 13.4 * scale, 10.2);
+    const soffit = ray(root, under, under.clone().setY(10.8));
+    assert.ok(soffit, "overhang has a downward-facing closed underside");
+    assert.equal(soffit.object.name, "canada-west-wall");
+    assert.ok(Math.abs(soffit.point.y - 10.75) < 0.0001);
+    assert.ok(soffit.face!.normal.y < -0.99);
+    const world = [
+      under.x + CANADA_PLACE_ORIGIN[0],
+      under.z + CANADA_PLACE_ORIGIN[1],
+    ] as [number, number];
+    assert.equal(
+      pointInPoly(...world, CANADA_PLACE_CONCOURSE_GROUND_FOOTPRINTS[0]),
+      false,
+    );
+    assert.equal(
+      pointInPoly(...world, CANADA_PLACE_CONCOURSE_FOOTPRINTS[0]),
+      true,
+    );
+  }
+  for (const [index, sign] of [
+    [0, -1],
+    [stations.length - 1, 1],
+  ]) {
+    const st = stations[index];
+    const toward = new T.Vector3(-st.nz * sign, 0, st.nx * sign);
+    const target = canadaPlaceConcoursePoint(st.s, 11.6 * st.scale, 9.4);
+    const hit = ray(root, target.clone().add(toward), target);
+    assert.ok(hit, "recessed glass end remains closed");
+    const open = canadaPlaceConcoursePoint(st.s, 13.4 * st.scale, 9.4);
+    assert.equal(
+      ray(root, open.clone().add(toward), open),
+      undefined,
+      "end does not close public recess with phantom glass",
+    );
+  }
 });

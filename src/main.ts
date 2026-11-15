@@ -19,6 +19,7 @@ import { makeCharacter, makeWeapon, Character } from "./game/character";
 import { drive, damp, angleDelta } from "./game/physics";
 import {
   startupBikeSpot,
+  summonedVehicleSpot,
   approachingVehicleContact,
 } from "./game/vehicle-placement";
 import { GameAudio } from "./game/audio";
@@ -732,26 +733,12 @@ class Game {
     );
     const heading = nearest?.heading ?? this.heading;
     // Keep summoned vehicles clear of the ride we just left and ambient traffic.
-    let spot: [number, number] | null = null;
-    for (const distance of [0, 12, -12, 20, -20, 30]) {
-      for (const lateral of [0, 3, -3]) {
-        const x =
-          p[0] + Math.sin(heading) * distance + Math.cos(heading) * lateral;
-        const z =
-          p[1] + Math.cos(heading) * distance - Math.sin(heading) * lateral;
-        if (
-          !this.world.collision.blocked(x, z, 1.3) &&
-          !this.world.collision.water(x, z) &&
-          this.actors.vehicles.every(
-            (v) => Math.hypot(v.state.x - x, v.state.z - z) > 6,
-          )
-        ) {
-          spot = [x, z];
-          break;
-        }
-      }
-      if (spot) break;
-    }
+    const spot = summonedVehicleSpot(
+      this.world.collision,
+      { x: p[0], z: p[1], heading, y: this.player.y },
+      kind,
+      this.actors.vehicles.map((v) => v.state),
+    );
     if (!spot) {
       ui.toast(
         "This street is crowded. Walk to a clear spot to bring a vehicle.",

@@ -1164,5 +1164,29 @@
     "license": "CC0-1.0",
     "credit": "Charlotte Baglioni / Poly Haven",
     "changes": "One joint-free tile face cropped from original 1K maps and mirrored with normal R/G signs corrected. Original granular albedo modulation retained within ±20% and matched to previous floor mean; roughness recalibrated to 0.75–0.85. 512px WebP maps. Generic mineral reference, not a Vancouver paving scan."
+  },
+  {
+    "file": "textures/canada-place-plinth/color.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_diff_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "Joint/tie-hole-free 200px crop at (300,380) from committed 1K concrete maps. Mirrored with normal-sign correction, neutralized restrained albedo modulation around linear0.82, roughness bounded0.74–0.86, compressed512pxWebP. Generic mineral texture, not a Vancouver scan. No new source downloads.",
+    "bytes": 58512
+  },
+  {
+    "file": "textures/canada-place-plinth/normal.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_nor_gl_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "Joint/tie-hole-free 200px crop at (300,380) from committed 1K concrete maps. Mirrored with normal-sign correction, neutralized restrained albedo modulation around linear0.82, roughness bounded0.74–0.86, compressed512pxWebP. Generic mineral texture, not a Vancouver scan. No new source downloads.",
+    "bytes": 24120
+  },
+  {
+    "file": "textures/canada-place-plinth/roughness.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_rough_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "Joint/tie-hole-free 200px crop at (300,380) from committed 1K concrete maps. Mirrored with normal-sign correction, neutralized restrained albedo modulation around linear0.82, roughness bounded0.74–0.86, compressed512pxWebP. Generic mineral texture, not a Vancouver scan. No new source downloads.",
+    "bytes": 8262
   }
 ]

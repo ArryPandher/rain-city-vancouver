@@ -1,0 +1,19 @@
+/** Per-loaded-instance geometry capabilities. No shared mutable availability flags. */
+export type CanadaPlaceCapabilities = {
+  loaded: boolean;
+  concourse: boolean;
+  entranceCanopy: boolean;
+  groundStays: boolean;
+};
+export function canadaPlaceCapabilities(
+  loaded = false,
+  concourse = false,
+  entranceCanopy = false,
+): CanadaPlaceCapabilities {
+  return {
+    loaded,
+    concourse: loaded && concourse,
+    entranceCanopy: loaded && entranceCanopy,
+    groundStays: loaded && concourse,
+  };
+}

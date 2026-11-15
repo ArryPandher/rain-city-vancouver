@@ -1,0 +1,28 @@
+{
+  "title": "Painted mineral surface for Canada Place protective plinths",
+  "source": "https://polyhaven.com/a/concrete_wall_009",
+  "author": "Charlotte Baglioni / Poly Haven",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "changes": "Joint/tie-hole-free 200px crop at (300,380) from committed 1K concrete maps. Mirrored with normal-sign correction, neutralized restrained albedo modulation around linear0.82, roughness bounded0.74–0.86, compressed512pxWebP. Generic mineral texture, not a Vancouver scan. No new source downloads.",
+  "files": [
+    {
+      "file": "textures/canada-place-plinth/color.webp",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_diff_1k.jpg",
+      "inputMD5": "183930f83ca9b70797b1226833d64bf3",
+      "bytes": 58512
+    },
+    {
+      "file": "textures/canada-place-plinth/normal.webp",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_nor_gl_1k.jpg",
+      "inputMD5": "68c543079c71fd14e9f0b38b126eb116",
+      "bytes": 24120
+    },
+    {
+      "file": "textures/canada-place-plinth/roughness.webp",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_rough_1k.jpg",
+      "inputMD5": "4b5da97ce2a223738a67457ff9b75081",
+      "bytes": 8262
+    }
+  ]
+}

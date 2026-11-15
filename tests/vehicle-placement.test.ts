@@ -3,12 +3,37 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {
   startupBikeSpot,
+  summonedVehicleSpot,
   approachingVehicleContact,
   type PlacementCollision,
 } from "../src/game/vehicle-placement";
 import { CollisionWorld } from "../src/world/collision";
 import { KX, ORIGIN, type CityData } from "../src/world/data";
 const flat: PlacementCollision = { safe: (x, z) => [x, z], height: () => 0 };
+test("summoning never falls back into water, a different level or occupied space", () => {
+  const surface = { ...flat, blocked: () => false, water: () => false };
+  const origin = { x: 0, z: 0, y: 0, heading: 0 };
+  assert.deepEqual(summonedVehicleSpot(surface, origin, "car", []), [0, 0]);
+  const spot = summonedVehicleSpot(surface, origin, "car", [{ x: 0, z: 0 }]);
+  assert.ok(spot && Math.hypot(...spot) > 6);
+  assert.equal(
+    summonedVehicleSpot({ ...surface, water: () => true }, origin, "car", []),
+    undefined,
+  );
+  assert.equal(
+    summonedVehicleSpot({ ...surface, height: () => 3 }, origin, "car", []),
+    undefined,
+  );
+  assert.equal(
+    summonedVehicleSpot(
+      { ...surface, blocked: () => true },
+      origin,
+      "bike",
+      [],
+    ),
+    undefined,
+  );
+});
 test("startup bike prefers behind the car and validates every occupied position after safe projection", () => {
   const spawn = { x: 0, z: 0, heading: 0 };
   assert.deepEqual(startupBikeSpot(flat, spawn, []), [4, -8]);

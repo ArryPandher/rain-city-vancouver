@@ -1,4 +1,6 @@
+import type { CanadaPlaceCapabilities } from "./canada-place-capabilities";
 import { geo, pointInPoly, segmentPoint } from "./data";
+import { CANADA_PLACE_GROUND_STAYS } from "./canada-place-ground-stays-data";
 import source from "./canada-place-deck-data.json";
 import canopy from "./canada-place-canopy-data.json";
 import concourse from "./canada-place-concourse-data.json";
@@ -30,7 +32,7 @@ export const CANADA_PLACE_HALL = worldRing(
 export const CANADA_PLACE_SOLID_MASSES = [
   CANADA_PLACE_HOTEL,
   CANADA_PLACE_ENTRANCE_CANOPY,
-  concourse.worldFootprint,
+  concourse.groundWorldFootprint,
   ...CANADA_PLACE_SAILS,
   CANADA_PLACE_TERMINAL,
   CANADA_PLACE_HALL,
@@ -71,8 +73,16 @@ export const CANADA_PLACE_DECK_ROUTE = [
   [-190, 47],
   [-155, 28],
   [-115, 7],
-  [-75, -15],
-  [-30, -39],
+  // A continuous waterside line outside the exact ground-stay bases.
+  // Vehicle centre radius is1.16m; 1.45m base-edge offset retains physical steering clearance.
+  ...CANADA_PLACE_GROUND_STAYS.map((a) => {
+    const halfDepth = Math.max(...a.perimeter.map((p) => p[1]));
+    const offset = halfDepth + 1.45 + (a.bay === 0 || a.bay === 4 ? 0.05 : 0);
+    return [
+      a.center[0] + a.normal[0] * offset,
+      a.center[1] + a.normal[1] * offset,
+    ];
+  }),
   [15, -63],
   [42, -75],
 ].map(([x, z]) => canadaPlaceWorld(x, z));
@@ -98,10 +108,48 @@ export function inCanadaPlacePier(x: number, z: number, r = 0) {
 }
 /** Closed hotel/exhibition/end-hall volume at and above public deck. The 0.55 m
  * margin includes source projecting facade trim; it is deliberately conservative. */
-export function solidAt(x: number, z: number, r = 0) {
+export function solidAt(
+  x: number,
+  z: number,
+  r = 0,
+  referenceY = CANADA_PLACE_DECK_Y,
+  capabilities?: CanadaPlaceCapabilities,
+) {
   if (!valid(x, z, r)) return true;
-  return CANADA_PLACE_SOLID_MASSES.some(
+  const enabledMasses = CANADA_PLACE_SOLID_MASSES.filter(
+    (p) =>
+      (!capabilities ||
+        capabilities.concourse ||
+        p !== concourse.groundWorldFootprint) &&
+      (!capabilities ||
+        capabilities.entranceCanopy ||
+        p !== CANADA_PLACE_ENTRANCE_CANOPY),
+  );
+  const masses =
+    referenceY >= concourse.groundGlassHeadY + 0.08
+      ? enabledMasses.map((p) =>
+          p === concourse.groundWorldFootprint ? concourse.worldFootprint : p,
+        )
+      : enabledMasses;
+  return masses.some(
     (p) => pointInPoly(x, z, p) || edgeDistance(x, z, p) <= r + 0.55,
+  );
+}
+/** Exact visible plinth footprint, independently height-gated. Do not add the
+ * larger facade trim allowance or turn the2.45m blocks into infinite walls. */
+export function canadaPlaceGroundStayAt(
+  x: number,
+  z: number,
+  r = 0,
+  referenceY = Infinity,
+) {
+  if (!valid(x, z, r) || Number.isNaN(referenceY)) return true;
+  return CANADA_PLACE_GROUND_STAYS.some(
+    (a) =>
+      (!Number.isFinite(referenceY) ||
+        (referenceY >= a.worldMinY - 0.02 && referenceY < a.worldMaxY)) &&
+      (pointInPoly(x, z, a.worldFootprint) ||
+        edgeDistance(x, z, a.worldFootprint) < r),
   );
 }
 /** Backed entrance opening only; outside PIER the approach owns its support. */
@@ -113,11 +161,17 @@ export function inCanadaPlaceEntryConnector(x: number, z: number, r = 0) {
 /** Exposed public source surface only. Caller height-gates entry: this says
  * nothing about traversing the lower solid pier, private terraces or sea.
  * Only at the backed entry connector may the actor circle straddle the pier rim. */
-export function supportedDeck(x: number, z: number, r = 0) {
+export function supportedDeck(
+  x: number,
+  z: number,
+  r = 0,
+  capabilities?: CanadaPlaceCapabilities,
+) {
   if (
+    (capabilities && !capabilities.loaded) ||
     !valid(x, z, r) ||
     !pointInPoly(x, z, CANADA_PLACE_PIER) ||
-    solidAt(x, z, r)
+    solidAt(x, z, r, CANADA_PLACE_DECK_Y, capabilities)
   )
     return false;
   const entryOpening = inCanadaPlaceEntryConnector(x, z, r);

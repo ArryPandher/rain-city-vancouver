@@ -1,3 +1,4 @@
+import { canadaPlaceCapabilities } from "./canada-place-capabilities";
 import {
   addGalleryFacade,
   galleryFacadeCompatible,
@@ -24,6 +25,8 @@ import {
   CANADA_PLACE_CANOPY_LENGTH,
 } from "./canada-place-canopy";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
+import { addCanadaPlaceGroundStays } from "./canada-place-ground-stays";
+import { canadaPlacePlinthMaterial } from "./canada-place-plinth-material";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
@@ -88,6 +91,7 @@ export async function loadVancouverLandmarks(
   materials: Materials,
   reflections: ReflectionProbeSpec[] = [],
 ) {
+  let canadaPlace = canadaPlaceCapabilities();
   const response = await fetch(`${BASE}data/vancouver-landmarks.json`);
   if (!response.ok) throw new Error("Vancouver landmark catalog unavailable");
   const assets: LandmarkAsset[] = await response.json();
@@ -183,7 +187,9 @@ export async function loadVancouverLandmarks(
         polygon: hull.flat(),
         box: new T.Box2().setFromPoints(hull.map((p) => new T.Vector2(...p))),
       });
-    if (asset.id === "canada-place") addCanadaPlaceRigging(group);
+    if (asset.id === "canada-place") addCanadaPlaceRigging(group, refineCanada);
+    if (refineCanada)
+      addCanadaPlaceGroundStays(group, canadaPlacePlinthMaterial(materials));
     const localReflection = (
       name: string,
       point: T.Vector3,
@@ -223,6 +229,12 @@ export async function loadVancouverLandmarks(
     }
     if (refineGallery) addGalleryFacade(group, galleryMaterials);
     parent.add(group);
+    if (asset.id === "canada-place")
+      canadaPlace = canadaPlaceCapabilities(
+        true,
+        refineCanada,
+        refineCanadaCanopy,
+      );
   }
-  return assets.length;
+  return { count: assets.length, canadaPlace };
 }

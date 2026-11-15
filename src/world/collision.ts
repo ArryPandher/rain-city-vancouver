@@ -1,3 +1,7 @@
+import {
+  canadaPlaceCapabilities,
+  type CanadaPlaceCapabilities,
+} from "./canada-place-capabilities";
 import { galleryRearStepHeight } from "./gallery-rear-entry";
 import { canadaPlaceGuardSegments } from "./canada-place-guards";
 import {
@@ -14,6 +18,7 @@ import {
   CANADA_PLACE_DECK_COLLIDER_IDS,
   supportedDeck,
   solidAt,
+  canadaPlaceGroundStayAt,
   inCanadaPlacePier,
 } from "./canada-place-deck";
 import { harbourTower } from "./harbour-towers-site";
@@ -196,6 +201,14 @@ export class SpatialHash<T> {
   }
 }
 export class CollisionWorld {
+  private canadaGeometry = canadaPlaceCapabilities();
+  setCanadaPlaceCapabilities(capabilities: CanadaPlaceCapabilities) {
+    this.canadaGeometry = canadaPlaceCapabilities(
+      capabilities.loaded,
+      capabilities.concourse,
+      capabilities.entranceCanopy,
+    );
+  }
   barriers = new SpatialHash<{
     ax: number;
     az: number;
@@ -311,7 +324,8 @@ export class CollisionWorld {
     }
   }
   groundHeight(x: number, z: number) {
-    if (this.canada && supportedDeck(x, z)) return CANADA_PLACE_DECK_Y;
+    if (this.canada && supportedDeck(x, z, 0, this.canadaGeometry))
+      return CANADA_PLACE_DECK_Y;
     return this.canada?.baselineHeight(x, z) ?? this.existingGroundHeight(x, z);
   }
   /** Pre-Canada surface sampler: the western tie must never recurse into itself. */
@@ -366,7 +380,8 @@ export class CollisionWorld {
     if (
       this.canada &&
       referenceY >= CANADA_PLACE_DECK_Y - 0.5 &&
-      (supportedDeck(x, z) || this.canada.contains(x, z))
+      (supportedDeck(x, z, 0, this.canadaGeometry) ||
+        this.canada.contains(x, z))
     )
       return false;
     if (this.harbour && harbourGroundHeight(x, z) !== undefined) return false;
@@ -390,9 +405,23 @@ export class CollisionWorld {
       this.groundHeight(x, z) > referenceY + 0.45
     )
       return true;
-    const canadaLevel = this.canada && referenceY >= CANADA_PLACE_DECK_Y - 0.5;
+    const canadaLevel =
+      this.canada &&
+      this.canadaGeometry.loaded &&
+      referenceY >= CANADA_PLACE_DECK_Y - 0.5;
     // Public deck eligibility never opens the closed hotel/exhibition volumes.
-    if (canadaLevel && inCanadaPlacePier(x, z) && solidAt(x, z, r)) return true;
+    if (
+      this.canada &&
+      this.canadaGeometry.groundStays &&
+      canadaPlaceGroundStayAt(x, z, r, referenceY)
+    )
+      return true;
+    if (
+      canadaLevel &&
+      inCanadaPlacePier(x, z) &&
+      solidAt(x, z, r, referenceY, this.canadaGeometry)
+    )
+      return true;
     if (this.robsonGarden && robsonObstacle(x, z, r)) return true;
     const bridge = this.bridgeAt(x, z, referenceY);
     if (
@@ -413,8 +442,8 @@ export class CollisionWorld {
       if (
         canadaLevel &&
         CANADA_PLACE_DECK_COLLIDER_IDS.has(b.id) &&
-        !solidAt(x, z, r) &&
-        (supportedDeck(x, z, r) ||
+        !solidAt(x, z, r, referenceY, this.canadaGeometry) &&
+        (supportedDeck(x, z, r, this.canadaGeometry) ||
           (!inCanadaPlacePier(x, z) && this.canada!.contains(x, z)))
       )
         continue;

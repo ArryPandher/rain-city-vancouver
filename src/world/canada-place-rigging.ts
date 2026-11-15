@@ -48,8 +48,12 @@ export function removeCanadaPlaceThinMasts(g: T.BufferGeometry) {
   return removed;
 }
 
-/** Bounded roof-only rigging in the same local coordinate frame as the GLB. */
-export function addCanadaPlaceRigging(parent: T.Object3D) {
+/** Mast shafts and roof attachments in the same local coordinate frame as the
+ * GLB. Grounded west tie-backs supersede the earlier roof-valley approximation. */
+export function addCanadaPlaceRigging(
+  parent: T.Object3D,
+  westGroundStays = false,
+) {
   const batch = new Batcher(parent, 512),
     mesh = new ArchitecturalMesh(batch, 0, 0);
   const paint = new T.MeshStandardMaterial({
@@ -78,6 +82,7 @@ export function addCanadaPlaceRigging(parent: T.Object3D) {
       collar.translate(mast.base[0], y, mast.base[2]);
       mesh.add(collar, steel);
     }
+    if (westGroundStays && mast.side === 0) continue;
     // Source edge valley is18m; its straight stay chord sits above the concave
     // membrane profile. Both ends meet physical shaft/anchor fittings.
     const top: [number, number, number] = [mast.tip[0], 46.17, mast.tip[2]];

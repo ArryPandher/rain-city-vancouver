@@ -139,6 +139,15 @@ export function replaceCanadaPlaceWestFaces(
 }
 type V = [number, number, number];
 export const CANADA_PLACE_CONCOURSE_FOOTPRINTS = [concourse.worldFootprint];
+export const CANADA_PLACE_CONCOURSE_GROUND_FOOTPRINTS = [
+  concourse.groundWorldFootprint,
+];
+/** Source-local bounds; landmark placement adds its existing +0.08m Y. */
+export const CANADA_PLACE_CONCOURSE_GROUND_BOUNDS = {
+  baseY: concourse.groundGlassBaseY,
+  headY: concourse.groundGlassHeadY,
+  outward: concourse.groundOutward,
+};
 export const CANADA_PLACE_CONCOURSE_PROFILE = concourse.profile;
 export const CANADA_PLACE_CONCOURSE_STATIONS = concourse.stations;
 export function canadaPlaceConcoursePoint(
@@ -159,7 +168,7 @@ export function canadaPlaceConcoursePoint(
   return new T.Vector3(x + nx * outward, y, z + nz * outward);
 }
 /** The full west strip is a continuous three-step section. Highest glazing is
- * concentrated in one broad central stretch; end fascias are opaque. Exact
+ * concentrated in one broad central stretch; end fascias are upright solid sections. Exact
  * transition stations/sections are estimates from the documented photos. */
 /** Three shared material batches, opaque-backed reflective panes; no interiors,
  * probes, random room lights or changes to the rest of the landmark materials. */
@@ -218,10 +227,14 @@ export function addCanadaPlaceWestFacade(
   }
   const stations = concourse.stations,
     profile = concourse.profile;
-  const at = (i: number, k: number): V =>
+  const at = (i: number, k: number, fascia = false): V =>
     canadaPlaceConcoursePoint(
       stations[i].s,
-      profile[k][0] * stations[i].scale,
+      (k === 0
+        ? concourse.groundOutward
+        : fascia && k >= 18 && k <= 25
+          ? profile[17][0]
+          : profile[k][0]) * stations[i].scale,
       profile[k][1],
     ).toArray() as V;
   const beam = (a: V, b: V, width = 0.065) => {
@@ -273,9 +286,15 @@ export function addCanadaPlaceWestFacade(
   };
   for (let i = 1; i < stations.length; i++) {
     const middle = (stations[i - 1].s + stations[i].s) / 2;
+    const fasciaSection =
+      middle < concourse.upperGlazing[0] || middle > concourse.upperGlazing[1];
+    const sectionAt = (j: number, k: number) => at(j, k, fasciaSection);
     for (let k = 1; k < profile.length; k++) {
-      const [oa, ya] = profile[k - 1],
-        [ob, yb] = profile[k];
+      const [rawA, ya] = profile[k - 1],
+        [rawB, yb] = profile[k];
+      const oa =
+        fasciaSection && k - 1 >= 18 && k - 1 <= 25 ? profile[17][0] : rawA;
+      const ob = fasciaSection && k >= 18 && k <= 25 ? profile[17][0] : rawB;
       const roof = k === profile.length - 2,
         back = k === profile.length - 1;
       const upperFascia =
@@ -288,8 +307,8 @@ export function addCanadaPlaceWestFacade(
       const outward: V = back
         ? [-nx, 0, -nz]
         : [nx * (yb - ya), oa - ob, nz * (yb - ya)];
-      const lowerA = at(i - 1, k - 1),
-        lowerB = at(i, k - 1);
+      const lowerA = sectionAt(i - 1, k - 1),
+        lowerB = sectionAt(i, k - 1);
       // The sill owns the lowest 170 mm; no coplanar glazing behind it.
       if (k === 1) {
         lowerA[1] = 7.97;
@@ -305,11 +324,42 @@ export function addCanadaPlaceWestFacade(
               curveNormal(i - 1, k, tier),
             ]
           : undefined;
-      quad(m, [lowerA, lowerB, at(i, k), at(i - 1, k)], outward, smooth);
+      const upperA = sectionAt(i - 1, k),
+        upperB = sectionAt(i, k);
+      if (k === 1) {
+        const a = canadaPlaceConcoursePoint(
+          stations[i - 1].s,
+          concourse.groundOutward * stations[i - 1].scale,
+          concourse.groundGlassHeadY,
+        );
+        const b = canadaPlaceConcoursePoint(
+          stations[i].s,
+          concourse.groundOutward * stations[i].scale,
+          concourse.groundGlassHeadY,
+        );
+        upperA.splice(0, 3, ...a.toArray());
+        upperB.splice(0, 3, ...b.toArray());
+      }
+      quad(m, [lowerA, lowerB, upperB, upperA], outward, smooth);
       // Horizontal glazing rails follow the curved profile and station offsets.
-      if (!back && (k <= 2 || (k - 1) % 4 === 0 || roof))
-        beam(at(i - 1, k - 1), at(i, k - 1), roof ? 0.11 : 0.045);
+      if (
+        !back &&
+        (!upperFascia || roof) &&
+        (k <= 2 || (k - 1) % 4 === 0 || roof)
+      )
+        beam(sectionAt(i - 1, k - 1), sectionAt(i, k - 1), roof ? 0.11 : 0.045);
     }
+    const doorHead = (j: number): V =>
+      canadaPlaceConcoursePoint(
+        stations[j].s,
+        concourse.groundOutward * stations[j].scale,
+        concourse.groundGlassHeadY,
+      ).toArray() as V;
+    quad(
+      wall,
+      [doorHead(i - 1), doorHead(i), at(i, 1), at(i - 1, 1)],
+      [0, -1, 0],
+    );
     // Grounded mineral sill at the outer doors, rather than a floating glass edge.
     const a = at(i - 1, 0),
       b = at(i, 0),
@@ -320,42 +370,101 @@ export function addCanadaPlaceWestFacade(
     quad(wall, [a, b, c, d], [stations[i].nx, 0, stations[i].nz]);
     const headA = canadaPlaceConcoursePoint(
       stations[i - 1].s,
-      14.4 * stations[i - 1].scale,
+      concourse.groundOutward * stations[i - 1].scale,
       10.03,
     ).toArray() as V;
     const headB = canadaPlaceConcoursePoint(
       stations[i].s,
-      14.4 * stations[i].scale,
+      concourse.groundOutward * stations[i].scale,
       10.03,
     ).toArray() as V;
     beam(headA, headB, 0.07);
   }
   for (let i = 0; i < stations.length; i++) {
-    for (let k = 1; k < profile.length - 1; k++)
+    const fascia =
+      stations[i].s < concourse.upperGlazing[0] ||
+      stations[i].s > concourse.upperGlazing[1];
+    for (let k = 1; k < profile.length - 1; k++) {
+      if (fascia && k > 17 && k < 26) continue;
       beam(
-        at(i, k - 1),
-        at(i, k),
+        at(i, k - 1, fascia),
+        k === 1
+          ? (canadaPlaceConcoursePoint(
+              stations[i].s,
+              concourse.groundOutward * stations[i].scale,
+              concourse.groundGlassHeadY,
+            ).toArray() as V)
+          : at(i, k, fascia),
         i === 0 || i === stations.length - 1 ? 0.1 : 0.055,
       );
+    }
+  }
+  // Solid cheek returns close the difference between upright fascia and curved
+  // glazing at the two explicitly estimated longitudinal transitions.
+  const cheek = [...profile.slice(17, 26), [profile[17][0], profile[25][1]]];
+  const cheekTriangles = T.ShapeUtils.triangulateShape(
+    cheek.map(([o, y]) => new T.Vector2(o, y)),
+    [],
+  );
+  for (const boundary of concourse.upperGlazing) {
+    const i = stations.findIndex((st) => Math.abs(st.s - boundary) < 0.0001);
+    const st = stations[i];
+    const sign = boundary === concourse.upperGlazing[0] ? 1 : -1;
+    const n: V = [-st.nz * sign, 0, st.nx * sign];
+    for (const tri of cheekTriangles) {
+      const v = tri.map(
+        (j) =>
+          canadaPlaceConcoursePoint(
+            st.s,
+            cheek[j][0] * st.scale,
+            cheek[j][1],
+          ).toArray() as V,
+      );
+      quad(wall, [v[0], v[1], v[2], v[2]], n);
+    }
   }
   // One clearly closed paired-door reading in the central concourse; no
   // guessed operating entrance, signage or interior access is introduced.
   const doorStation = concourse.length / 2;
   for (const delta of [-0.14, 0.14]) {
-    const a = canadaPlaceConcoursePoint(doorStation + delta, 14.45, 8.78);
-    const b = canadaPlaceConcoursePoint(doorStation + delta, 14.45, 9.23);
+    const a = canadaPlaceConcoursePoint(
+      doorStation + delta,
+      concourse.groundOutward + 0.05,
+      8.78,
+    );
+    const b = canadaPlaceConcoursePoint(
+      doorStation + delta,
+      concourse.groundOutward + 0.05,
+      9.23,
+    );
     beam(a.toArray() as V, b.toArray() as V, 0.032);
   }
   // Closed glazed ends expose the tiered section, with tapered plan depth and
   // opaque upper fascia instead of a fifteen-metre blank end wall.
-  const contour = profile.map(([o, y]) => new T.Vector2(o, y));
-  const triangles = T.ShapeUtils.triangulateShape(contour, []);
+  const endProfile = [
+    [concourse.groundOutward, profile[0][1]],
+    [concourse.groundOutward, concourse.groundGlassHeadY],
+    ...profile
+      .slice(1)
+      .map(([o, y], j) => [j + 1 >= 18 && j + 1 <= 25 ? profile[17][0] : o, y]),
+  ];
+  const triangles = T.ShapeUtils.triangulateShape(
+    endProfile.map(([o, y]) => new T.Vector2(o, y)),
+    [],
+  );
   for (const i of [0, stations.length - 1]) {
     const near = stations[i === 0 ? 1 : i - 1],
       here = stations[i];
     const direction: V = [here.x - near.x, 0, here.z - near.z];
     for (const tri of triangles) {
-      const v = tri.map((k) => at(i, k));
+      const v = tri.map(
+        (k) =>
+          canadaPlaceConcoursePoint(
+            here.s,
+            endProfile[k][0] * here.scale,
+            endProfile[k][1],
+          ).toArray() as V,
+      );
       quad(glass, [v[0], v[1], v[2], v[2]], direction);
     }
   }
