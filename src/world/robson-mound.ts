@@ -7,11 +7,15 @@ import {
   ROBSON_MOUND_BOUNDS,
   ROBSON_MOUND_OUTLINE,
   robsonMoundEdgeDistance,
-  robsonMoundHeight,
   robsonMoundIntersects,
   robsonMoundPathClear,
   robsonMoundPlanting,
 } from "./robson-mound-site";
+import {
+  robsonMoundCirculationTerrainHeight,
+  clipRobsonMoundCirculation,
+  createRobsonMoundCirculationGeometry,
+} from "./robson-mound-circulation";
 
 type Point = [number, number];
 export interface RobsonMoundShrub {
@@ -44,6 +48,17 @@ export function fitRobsonMoundPath(
   };
   const add = (a: Vertex, b: Vertex, c: Vertex, depth = 0) => {
     const ps = [a, b, c];
+    const longest = Math.max(
+      ...ps.map((v, i) =>
+        Math.hypot(v[0] - ps[(i + 1) % 3][0], v[2] - ps[(i + 1) % 3][2]),
+      ),
+    );
+    const area2 = Math.abs(
+      (b[0] - a[0]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[0] - a[0]),
+    );
+    // Polygon cuts rounded to Float32 can leave micrometre-wide slivers.
+    // They have no visible surface and must not seed adaptive subdivision.
+    if (area2 <= longest * 0.0001) return;
     const local = robsonMoundIntersects([
       a[0],
       a[2],
@@ -120,7 +135,7 @@ export function robsonMoundGeometry() {
   const positions: number[] = [],
     normals: number[] = [],
     uv: number[] = [];
-  const h = (p: Point) => robsonMoundHeight(...p) ?? 0;
+  const h = (p: Point) => robsonMoundCirculationTerrainHeight(...p) ?? 0;
   const midpoint = (a: Point, b: Point): Point => [
     (a[0] + b[0]) / 2,
     (a[1] + b[1]) / 2,
@@ -177,7 +192,7 @@ export function robsonMoundGeometry() {
   g.setAttribute("normal", new T.Float32BufferAttribute(normals, 3));
   g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
   g.name = "Robson Hornby mound — mapped turf contour";
-  return g;
+  return clipRobsonMoundCirculation(g);
 }
 
 export function robsonMoundShrubs(roads: Road[]) {
@@ -199,7 +214,7 @@ export function robsonMoundShrubs(roads: Road[]) {
       out.push({
         x: xx,
         z: zz,
-        y: robsonMoundHeight(xx, zz)!,
+        y: robsonMoundCirculationTerrainHeight(xx, zz)!,
         height: 0.62 + amount * 0.43 + random() * 0.12,
         width: 2.35 + amount * 0.25 + random() * 0.1,
         rotation: random() * Math.PI * 2,
@@ -250,7 +265,12 @@ export function robsonMoundShrubGeometry(
       ((sourcePositions.getY(i) - bounds.min.y) /
         (bounds.max.y - bounds.min.y)) *
       shrub.height;
-    positions.setXYZ(i, x, (robsonMoundHeight(x, z) ?? 0) + rise + 0.015, z);
+    positions.setXYZ(
+      i,
+      x,
+      (robsonMoundCirculationTerrainHeight(x, z) ?? 0) + rise + 0.015,
+      z,
+    );
     // Foliage normals describe the rounded clump, not the support planes.
     const n = new T.Vector3(
       dx * 0.65,
@@ -296,6 +316,12 @@ export function buildRobsonMound(
   });
   leaves.map!.wrapS = leaves.map!.wrapT = T.ClampToEdgeWrapping;
   batch.add(robsonMoundGeometry(), turf, -126, 78);
+  batch.add(
+    createRobsonMoundCirculationGeometry(),
+    materials.concrete,
+    -126,
+    78,
+  );
   const shrubSource = broadleafVolumeGeometry(true);
   for (const shrub of robsonMoundShrubs(roads)) {
     batch.add(robsonMoundShrubGeometry(shrub, shrubSource), leaves, -126, 78);

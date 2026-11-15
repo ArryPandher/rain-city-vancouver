@@ -10,6 +10,8 @@ Real OpenStreetMap streets and footprints cover downtown, Stanley Park, East Van
 
 This is a substantial independent browser prototype. It is not a full AAA game, a surveyed city reconstruction, or a Rockstar product. Architecture, characters, traffic and landmark models remain stylized and approximate.
 
+The latest exterior pass rebuilds Fairmont Waterfront beside Canada Place and adds mapped Robson garden stairs, connected paths and revised planting. [Changes, gameplay evidence and remaining limitations](docs/ROBSON-GARDEN-HOTEL.md).
+
 ## Play
 
 Use a desktop browser with WebGL 2, a keyboard and a mouse. Choose **Enter Vancouver** to drive or **Explore on foot**. Click the game to capture the mouse; Escape releases it. The first load prepares the city and shaders. Balanced graphics is recommended for laptops. Settings include High and Performance modes, Pacific daylight, golden hour, rain and night. M opens fast travel and activities.

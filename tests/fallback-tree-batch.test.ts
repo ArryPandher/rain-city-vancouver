@@ -27,6 +27,7 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import shape from "../src/world/broadleaf-volume-data.json";
 import { Terrain } from "../src/world/terrain";
 import { sunOffset } from "../src/world/daylight";
+import { ROBSON_MOUND_TREE_SITES } from "../src/world/robson-mound-trees";
 async function fixture() {
   const read = (p: string) => JSON.parse(fs.readFileSync(p, "utf8"));
   const d = read("public/data/vancouver.json");
@@ -254,8 +255,76 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
           : 0),
       0,
     );
-  assert.equal(total(bf), 1536532);
-  assert.equal(total(sf, true), 335528);
+  // The eight mapped Robson trees now have dedicated physical meshes, not
+  // fallback instances. Account for their former per-cell submission explicitly.
+  const dedicated = w.root.getObjectByName(
+    "Robson mapped mature broadleaf trees",
+  );
+  assert.ok(dedicated);
+  assert.equal(ROBSON_MOUND_TREE_SITES.length, 8);
+  assert.deepEqual(
+    [...dedicated.userData.robsonMoundTrees.sourceIds].sort(),
+    ROBSON_MOUND_TREE_SITES.map((s) => s.osmId).sort(),
+  );
+  assert.equal(dedicated.userData.robsonMoundTrees.count, 8);
+  for (const site of ROBSON_MOUND_TREE_SITES) {
+    assert.ok(
+      !w.treeSamples.some(
+        (t: any) => Math.hypot(t.x - site.x, t.z - site.z) < 0.35,
+      ),
+      `dedicated source ${site.osmId} must not remain in the fallback payload`,
+    );
+  }
+  const replacedCell = w.treeSamples.find(
+    (t: any) => Math.floor(t.x / 192) === -1 && Math.floor(t.z / 192) === 0,
+  );
+  assert.ok(
+    replacedCell,
+    "remaining peers establish the original Robson cell LOD",
+  );
+  const replacedSources = [
+    replacedCell.crown,
+    replacedCell.trunk,
+  ] as T.InstancedMesh[];
+  const removedPayload = (frustum: T.Frustum, shadow = false) =>
+    ROBSON_MOUND_TREE_SITES.reduce((sum, site) => {
+      assert.equal(Math.floor(site.x / 192), -1);
+      assert.equal(Math.floor(site.z / 192), 0);
+      return (
+        sum +
+        replacedSources.reduce(
+          (n, source) =>
+            n +
+            (source.visible &&
+            (!shadow || source.castShadow) &&
+            frustum.intersectsObject(source)
+              ? source.geometry.index!.count / 3
+              : 0),
+          0,
+        )
+      );
+    }, 0);
+  assert.equal(
+    removedPayload(bf),
+    2848,
+    "eight former crown/wood instances at this cell's current LOD",
+  );
+  assert.equal(
+    removedPayload(sf, true),
+    0,
+    "Robson replacements are outside the Canada Place shadow camera",
+  );
+  const removedBeauty = removedPayload(bf);
+  const expectedOriginalBeauty = 1536532 - removedBeauty;
+  for (const site of ROBSON_MOUND_TREE_SITES)
+    assert.ok(
+      bf.containsPoint(
+        new T.Vector3(site.x, collision.groundHeight(site.x, site.z), site.z),
+      ),
+      "each removed Robson source was also inside per-instance beauty coverage",
+    );
+  assert.equal(total(bf), expectedOriginalBeauty);
+  assert.equal(total(sf, true) + removedPayload(sf, true), 335528);
   // Fault after the first group's buffers exist must leave the original path intact.
   const addGeometry = T.BatchedMesh.prototype.addGeometry;
   let adds = 0;
@@ -337,7 +406,7 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
     ),
     "off-camera trees continue casting valid shadows",
   );
-  assert.equal(beauty, 1163284);
+  assert.equal(beauty + removedBeauty, 1163284);
   assert.equal(shade, 63240);
   assert.equal(
     draw(camera),
@@ -561,7 +630,7 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
   }
   assert.equal(
     total(bf),
-    1536532,
+    expectedOriginalBeauty,
     "original draw path is restored without changing selected LOD or population",
   );
   // A real canonical update while off must reach batching immediately on re-enable.

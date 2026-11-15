@@ -26,6 +26,12 @@ import {
   robsonMoundIntersects,
   robsonMoundPathClear,
 } from "../src/world/robson-mound-site";
+import {
+  robsonMoundCirculationTerrainHeight,
+  robsonMoundCirculationHeight,
+  createRobsonMoundCirculationGeometry,
+  clipRobsonMoundCirculation,
+} from "../src/world/robson-mound-circulation";
 
 function map() {
   const d: CityData = JSON.parse(
@@ -40,7 +46,7 @@ function map() {
   return d;
 }
 
-test("Robson mound retains the actual mapped woodland ring and source-bounded crest", () => {
+test("normalized mound base retains the mapped woodland ring and perimeter", () => {
   const d = map();
   const source = d.areas.find(
     (a) =>
@@ -61,7 +67,7 @@ test("Robson mound retains the actual mapped woodland ring and source-bounded cr
         peak = Math.max(peak, y);
       }
     }
-  assert.equal(peak, ROBSON_MOUND_CREST, "smoothing retains the stated crest");
+  assert.equal(peak, ROBSON_MOUND_CREST, "legacy base normalization stays stable; runtime soil is rescaled separately");
   for (let i = 0; i < source.pts.length; i += 2) {
     const j = (i + 2) % source.pts.length;
     for (let t = 0; t <= 1; t += 0.1) {
@@ -78,18 +84,25 @@ test("Robson mound retains the actual mapped woodland ring and source-bounded cr
 test("mound terrain and walking height agree across the lawn and planted slopes", () => {
   const geometry = robsonMoundGeometry();
   const mesh = new T.Mesh(geometry, new T.MeshBasicMaterial());
+  const stairs = new T.Mesh(
+    createRobsonMoundCirculationGeometry(),
+    new T.MeshBasicMaterial(),
+  );
   const collision = new CollisionWorld(map());
   mesh.updateMatrixWorld(true);
+  stairs.updateMatrixWorld(true);
   let checked = 0,
     error = 0;
   for (let x = -142.25; x < -109; x += 1.7)
     for (let z = 54.25; z < 102; z += 1.7) {
-      const h = robsonMoundHeight(x, z);
+      const h =
+        robsonMoundCirculationHeight(x, z) ??
+        robsonMoundCirculationTerrainHeight(x, z);
       if (h === undefined) continue;
       const hits = new T.Raycaster(
         new T.Vector3(x, 20, z),
         new T.Vector3(0, -1, 0),
-      ).intersectObject(mesh);
+      ).intersectObjects([mesh, stairs]);
       assert.ok(hits.length, `no terrain at ${x},${z}`);
       assert.equal(collision.groundHeight(x, z), h);
       error = Math.max(error, Math.abs(hits[0].point.y - h));
@@ -102,6 +115,7 @@ test("mound terrain and walking height agree across the lawn and planted slopes"
     "bounded terrain cost",
   );
   geometry.dispose();
+  stairs.geometry.dispose();
 });
 
 test("mapped mound footways follow the same grade without changing the retained lower route", () => {
@@ -114,17 +128,20 @@ test("mapped mound footways follow the same grade without changing the retained 
       robsonMoundIntersects(r.pts) &&
       ["footway", "steps", "path"].includes(r.kind),
   )) {
+    const continuousHeight = (x: number, z: number) =>
+      robsonMoundCirculationTerrainHeight(x, z) ??
+      collision.roadHeight(road, x, z);
     const rough = ribbon(
       subdividePath(road.pts),
       roadWidth(road),
       0.07,
-      (x, z) => collision.roadHeight(road, x, z),
+      continuousHeight,
       5,
       true,
     );
     const g = fitRobsonMoundPath(
-      rough,
-      (x, z) => collision.roadHeight(road, x, z),
+      clipRobsonMoundCirculation(rough, continuousHeight, 0.07),
+      continuousHeight,
       0.07,
     );
     const p = g.getAttribute("position"),
@@ -135,6 +152,11 @@ test("mapped mound footways follow the same grade without changing the retained 
         : [i, i + 1, i + 2];
       const x = ids.reduce((s, j) => s + p.getX(j), 0) / 3;
       const z = ids.reduce((s, j) => s + p.getZ(j), 0) / 3;
+      assert.equal(
+        robsonMoundCirculationHeight(x, z),
+        undefined,
+        `generic ribbons leave real stairs exposed at ${x},${z}; vertices ${ids.map((j) => [p.getX(j), p.getZ(j)])}`,
+      );
       if (robsonMoundHeight(x, z) === undefined) continue;
       const y = ids.reduce((s, j) => s + p.getY(j), 0) / 3;
       error = Math.max(
@@ -145,7 +167,7 @@ test("mapped mound footways follow the same grade without changing the retained 
     }
     g.dispose();
   }
-  assert.ok(samples > 50);
+  assert.ok(samples > 0, `remaining slope samples ${samples}`);
   assert.ok(error < 0.02, `path interpolation error ${error}`);
   for (let u = -194; u <= -174; u += 0.2) {
     const [x, z] = gridXZ(u, -22);
@@ -170,7 +192,7 @@ test("mound planting is rooted to the shared terrain and leaves mapped routes op
   );
   for (const s of shrubs) {
     assert.ok(pointInPoly(s.x, s.z, ROBSON_MOUND_OUTLINE));
-    assert.equal(s.y, robsonMoundHeight(s.x, s.z));
+    assert.equal(s.y, robsonMoundCirculationTerrainHeight(s.x, s.z));
     assert.equal(robsonMoundPathClear(s.x, s.z, d.roads, 1.45), true);
   }
 });
@@ -192,7 +214,7 @@ test("mound shrubs form broad low leaf volumes with top coverage and grounded ed
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i),
         z = p.getZ(i),
-        y = robsonMoundHeight(x, z);
+        y = robsonMoundCirculationTerrainHeight(x, z);
       assert.notEqual(
         y,
         undefined,

@@ -69,6 +69,11 @@ import {
 import { ROBSON_PLANTERS, gridXZ } from "./robson-site";
 import { buildRobsonMound, fitRobsonMoundPath } from "./robson-mound";
 import { robsonMoundIntersects } from "./robson-mound-site";
+import {
+  clipRobsonMoundCirculation,
+  robsonMoundCirculationTerrainHeight,
+} from "./robson-mound-circulation";
+import { buildRobsonMoundTrees, isRobsonMoundTree } from "./robson-mound-trees";
 import { reconcileTrees, treeProfile, type TreeProfile } from "./tree-profile";
 import { ForestHabitat } from "./forest-habitat";
 import { ForestDetail, forestGround } from "./forest";
@@ -597,6 +602,7 @@ export class World {
       const seawall = /^Stanley Park Seawall/.test(r.name ?? "");
       const bridgeRoute = /Lions Gate Bridge/.test(r.name ?? "");
       const height = (x: number, z: number) =>
+        (moundRoad ? robsonMoundCirculationTerrainHeight(x, z) : undefined) ??
         this.collision.roadHeight(r, x, z);
       const roadRibbon = (
         points: number[],
@@ -613,7 +619,10 @@ export class World {
           scale,
           onTerrain && !bridgeRoute,
         );
-        if (moundRoad) geometry = fitRobsonMoundPath(geometry, height, y);
+        if (moundRoad) {
+          geometry = clipRobsonMoundCirculation(geometry, height, y);
+          geometry = fitRobsonMoundPath(geometry, height, y);
+        }
         if (
           this.collision.canada &&
           ["footway", "path", "pedestrian", "steps"].includes(r.kind)
@@ -749,13 +758,29 @@ export class World {
   vegetation() {
     const rand = seeded(7503),
       m = this.materials,
-      trees = reconcileTrees(this.data.trees, this.data.publicTrees).filter(
+      mappedTrees = reconcileTrees(
+        this.data.trees,
+        this.data.publicTrees,
+      ).filter(
         (t) =>
           !jackSurface(t.x, t.z) &&
           !(this.collision.harbour && harbourClearGround(t.x, t.z)) &&
           !this.collision.water(t.x, t.z) &&
           !this.collision.blocked(t.x, t.z, 0.35),
       );
+    if (this.collision.robsonGarden) {
+      const moundTrees = buildRobsonMoundTrees(
+        this.root,
+        m,
+        mappedTrees,
+        (x, z) => this.collision.groundHeight(x, z),
+      );
+      for (const mesh of moundTrees.children)
+        if (mesh instanceof T.Mesh) this.chunks.push(mesh);
+    }
+    const trees = this.collision.robsonGarden
+      ? mappedTrees.filter((t) => !isRobsonMoundTree(t.x, t.z))
+      : mappedTrees;
     // Densify the forest interior while keeping mapped roads and trails open.
     if (this.collision.robsonGarden)
       for (const bed of ROBSON_PLANTERS) {

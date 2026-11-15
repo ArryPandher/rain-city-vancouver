@@ -418,6 +418,9 @@ class Game {
             ),
             treeDetail: this.world.treeDetailStream?.status,
             streetTreeLOD: this.world.detailedTrees?.lodState,
+            streetTreeShadowReceivers: this.renderer.shadowMap.enabled
+              ? this.world.detailedTrees?.shadowReceiverState
+              : undefined,
             camera: {
               position: this.camera.position.toArray(),
               fov: this.camera.fov,
@@ -1646,13 +1649,25 @@ class Game {
       }
     }
     this.renderer.info.reset();
-    this.shadowCache.render(
-      this.renderer,
-      this.camera,
-      `${this.lastWorldUpdate}/${this.world.weather}/${this.quality}`,
-      this.running || ui.introOpen,
-      () => this.composer.render(),
-    );
+    const draw = (shadowPolicyChanged = false) => {
+      if (shadowPolicyChanged) this.renderer.shadowMap.needsUpdate = true;
+      this.shadowCache.render(
+        this.renderer,
+        this.camera,
+        `${this.lastWorldUpdate}/${this.world.weather}/${this.quality}`,
+        this.running || ui.introOpen,
+        () => this.composer.render(),
+      );
+    };
+    // Restrict only this gameplay render. Reflection capture above uses the
+    // complete caster set, and the scoped policy restores authored flags.
+    if (this.renderer.shadowMap.enabled && this.world.detailedTrees)
+      this.world.detailedTrees.withShadowReceivers(
+        this.camera,
+        this.world.sun,
+        draw,
+      );
+    else draw();
   }
   debugState() {
     return {

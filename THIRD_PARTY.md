@@ -1,5 +1,11 @@
 # Third-party credits and licenses
 
+## Fairmont Waterfront and Robson garden reconstruction
+
+Fairmont Waterfront hotel part plans and the Robson garden route/tree positions derive from © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). The compact hotel plan in `src/world/fairmont-waterfront-parts.json` retains that source attribution; original procedural rendering code is MIT, not a relicensing of the geographic database.
+
+Hotel roof/canopy data includes City of Vancouver **Building footprints 2009**, group 151150 and roof part 162733. Contains information licensed under the [Open Government Licence – Vancouver](https://opendata.vancouver.ca/pages/licence/). Historical roof outlines and heights were projected, clipped and interpreted for the game. Existing CC0 Poly Haven mineral, bark and foliage maps are reused. Reference photographs are not distributed. [Hotel sources and modifications](docs/sources/fairmont-waterfront.md); [Robson circulation and height limitations](docs/sources/robson-mound-circulation.md); [tree sources](docs/sources/robson-mound-trees.md).
+
 ## Geographic data — OpenStreetMap / ODbL
 
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), available under the [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/).

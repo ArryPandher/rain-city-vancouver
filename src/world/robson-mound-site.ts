@@ -2,9 +2,10 @@ import { pointInPoly, roadWidth, segmentPoint, type Road } from "./data";
 import { gridUV } from "./robson-site";
 
 /** Existing mapped woodland at Robson/Hornby, registered against aerial imagery.
- * CSLA describes the mound as almost 8 m above the plaza; TCLF gives 25 ft.
- * The outline is source geometry. The smooth interior contour is an estimate,
- * not a recovered survey. See docs/sources/robson-mound.md. */
+ * The outline is source geometry. This legacy normalized contour is not a
+ * survey: CSLA/TCLF height descriptions do not resolve our runtime ground datum.
+ * robson-mound-circulation rescales and recontours it for actual soil/contact.
+ * See docs/sources/robson-mound-circulation.md. */
 export const ROBSON_MOUND_OUTLINE = [
   -142.951401, 81.87, -142.951401, 76.87, -134.951401, 69.37, -135.951401,
   59.37, -131.451401, 54.37, -123.451401, 55.37, -109.451401, 73.37,
@@ -32,8 +33,8 @@ export function robsonMoundEdgeDistance(x: number, z: number) {
   return distance;
 }
 
-/** One datum for terrain, existing tree roots, planting and pedestrian ribbons.
- * The smoothstep has zero slope at the grade-level perimeter and at the crest. */
+/** Normalized base field for the shared circulation/soil reconstruction.
+ * The smoothstep has zero slope at the perimeter and normalized maximum. */
 export function robsonMoundHeight(x: number, z: number) {
   const b = ROBSON_MOUND_BOUNDS;
   if (

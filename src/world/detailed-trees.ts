@@ -1,3 +1,4 @@
+import { TreeShadowReceivers } from "../rendering/tree-shadow-receivers";
 import { yieldDetailFrame } from "./detail-stream";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -41,6 +42,30 @@ export class DetailedTrees {
   private lastView = new T.Quaternion();
   private lastProjectionScale: number | undefined;
   lodState = { near: 0, medium: 0 };
+  private readonly shadowReceivers = new TreeShadowReceivers();
+  /** Last successful final-render policy, not temporarily restored cast flags. */
+  get shadowReceiverState() {
+    return this.shadowReceivers.state;
+  }
+  /** Apply only during final gameplay rendering, after reflection captures.
+   * Re-evaluates even when paused or when slot selection has not changed. */
+  withShadowReceivers<R>(
+    camera: T.Camera,
+    sun: T.DirectionalLight,
+    draw: (changed: boolean) => R,
+  ): R {
+    camera.updateWorldMatrix(true, false);
+    sun.updateWorldMatrix(true, false);
+    sun.target.updateWorldMatrix(true, false);
+    const meshes: T.InstancedMesh[] = [];
+    for (const slot of this.slots) {
+      if (!slot.group.visible) continue;
+      slot.group.updateWorldMatrix(true, true);
+      for (const level of slot.levels)
+        for (const mesh of level) if (mesh.visible) meshes.push(mesh);
+    }
+    return this.shadowReceivers.render(meshes, camera, sun, draw);
+  }
   static async load(scene: T.Scene) {
     const loader = new GLTFLoader();
     const models = [];

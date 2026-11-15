@@ -3,7 +3,11 @@ import {
   type CanadaPlaceCapabilities,
 } from "./canada-place-capabilities";
 import { galleryRearStepHeight } from "./gallery-rear-entry";
-import { robsonMoundHeight } from "./robson-mound-site";
+import {
+  robsonMoundCirculationHeight,
+  robsonMoundCirculationTerrainHeight,
+  robsonMoundCirculationBlocked,
+} from "./robson-mound-circulation";
 import { canadaPlacePromenadeFixtureAt } from "./canada-place-promenade-fixtures-data";
 import { canadaPlaceGuardSegments } from "./canada-place-guards";
 import {
@@ -347,7 +351,10 @@ export class CollisionWorld {
     if (lookout !== undefined) return lookout;
     const forecourt = this.data.terrain && prospectForecourtHeight(x, z);
     if (forecourt !== undefined) return forecourt;
-    const mound = this.robsonGarden && robsonMoundHeight(x, z);
+    const mound =
+      this.robsonGarden &&
+      (robsonMoundCirculationHeight(x, z) ??
+        robsonMoundCirculationTerrainHeight(x, z));
     if (mound !== undefined) return mound;
     return this.robsonGarden
       ? (robsonHeight(x, z, this.robsonGarden.pts) ??
@@ -456,7 +463,12 @@ export class CollisionWorld {
       solidAt(x, z, r, referenceY, this.canadaGeometry)
     )
       return true;
-    if (this.robsonGarden && robsonObstacle(x, z, r)) return true;
+    if (
+      this.robsonGarden &&
+      (robsonObstacle(x, z, r) ||
+        robsonMoundCirculationBlocked(x, z, r, referenceY, camera))
+    )
+      return true;
     const bridge = this.bridgeAt(x, z, referenceY);
     if (
       bridge &&
