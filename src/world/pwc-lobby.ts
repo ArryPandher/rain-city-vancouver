@@ -3,7 +3,6 @@ import { ArchitecturalMesh, type Vertex3 } from "./architectural-mesh";
 import type { PwcPlaceMaterials } from "./pwc-place-materials";
 import {
   PWC_LOBBY_CEILING as ceiling,
-  PWC_LOBBY_BACKING_GAP as backingGap,
   createPwcLobbySite,
   type PwcLobbySite,
 } from "./pwc-lobby-site";
@@ -105,14 +104,16 @@ export function buildPwcLobbyFrontage(
     far: number,
     left: boolean,
     material = m.stone,
+    low: Height = floor,
+    high: Height = ceiling,
   ) =>
     quad(
       material,
       [
-        f.p(u, floor(u), near),
-        f.p(u, floor(u), far),
-        f.p(u, ceiling, far),
-        f.p(u, ceiling, near),
+        f.p(u, at(low, u), near),
+        f.p(u, at(low, u), far),
+        f.p(u, at(high, u), far),
+        f.p(u, at(high, u), near),
       ],
       [
         left ? -f.outward[1] : f.outward[1],
@@ -153,15 +154,53 @@ export function buildPwcLobbyFrontage(
     }
     const left = Math.min(ua, ub),
       right = Math.max(ua, ub),
-      back = da + backingGap;
-    // The rear mass is well behind the glass. All four cavity boundaries are
-    // modeled so oblique views never see through an unclosed building shell.
+      // Visual-only depth estimate: the collision surface remains the glass.
+      // All sampled cavity points stay inside the retained source footprint.
+      back = da + 3.2,
+      entryZone = entry && da === entry.depth,
+      centre = (left + right) / 2,
+      rearZones = entryZone
+        ? [
+            { left, right: centre - 1.6, depth: back, material: m.lobbyRear },
+            {
+              left: centre - 1.6,
+              right: centre + 1.6,
+              depth: back + 1,
+              material: m.backing,
+            },
+            { left: centre + 1.6, right, depth: back, material: m.lobbyRear },
+          ]
+        : [{ left, right, depth: back, material: m.lobbyRear }];
     face(left, right, floor, ceiling, da, m.lobbyGlass);
-    face(left, right, floor, ceiling, back, m.backing);
-    horizontal(left, right, da, back, floor, true);
-    horizontal(left, right, da, back, ceiling, false);
-    side(left, da, back, true, m.backing);
-    side(right, da, back, false, m.backing);
+    side(left, da, back, true, m.lobbyLining);
+    side(right, da, back, false, m.lobbyLining);
+
+    // Continuous full-height rear surfaces replace the bordered pale fields.
+    // Only structural returns/soffits remain pale. The deeper dark entry is a
+    // closed visual inference; no door leaves, room use or furnishings claimed.
+    for (let zone = 0; zone < rearZones.length; zone++) {
+      const rear = rearZones[zone],
+        previous = rearZones[zone - 1];
+      face(rear.left, rear.right, floor, ceiling, rear.depth, rear.material);
+      horizontal(rear.left, rear.right, da, rear.depth, floor, true);
+      horizontal(
+        rear.left,
+        rear.right,
+        da,
+        rear.depth,
+        ceiling,
+        false,
+        m.lobbyLining,
+      );
+      if (previous && previous.depth !== rear.depth)
+        side(
+          rear.left,
+          Math.min(previous.depth, rear.depth),
+          Math.max(previous.depth, rear.depth),
+          rear.depth > previous.depth,
+          m.lobbyLining,
+        );
+    }
     // Continuous commercial screen: sparse full-height uprights and a low
     // entrance-scale transom, without pretending to know the door leaves.
     const bays = Math.max(
@@ -202,17 +241,17 @@ export function buildPwcLobbyFrontage(
         mesh.add(geometry, m.metal);
       }
     }
-    // Large-scale lining ribs supply parallax behind transparent glass. They
-    // stop at the floor and soffit; this is a closed exterior visual pocket.
-    const ribs = Math.max(1, Math.round((right - left) / 3.4));
+    // Sparse rear structural ribs are independent of the glazing divisions.
+    // Entry depth returns replace its old centre rib, keeping that view open.
+    const ribs = entryZone ? 1 : Math.max(1, Math.round((right - left) / 3.4));
     for (let rib = 1; rib < ribs; rib++) {
       const u = left + ((right - left) * rib) / ribs;
       mesh.box(
-        f.p(u, (floor(u) + ceiling) / 2, back - 0.15),
-        0.22,
+        f.p(u, (floor(u) + ceiling) / 2, back - 0.3),
+        0.28,
         ceiling - floor(u),
-        0.3,
-        m.stone,
+        0.6,
+        m.lobbyLining,
         yaw,
       );
     }

@@ -407,7 +407,10 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
     "off-camera trees continue casting valid shadows",
   );
   assert.equal(beauty + removedBeauty, 1163284);
-  assert.equal(shade, 63240);
+  // The same mapped payload under the east-facing morning shadow camera.
+  // Rotating the fixed sun changes which individual trees cast into this view;
+  // the original source payload/beauty and restoration assertions stay fixed.
+  assert.equal(shade, 70594);
   assert.equal(
     draw(camera),
     beauty,

@@ -76,7 +76,9 @@ test("unclamped photographic HDR solar disc aligns with the daylight sun using o
     rotated.angleTo(sunOffset("day")) < 1e-7,
     "photographic and directional sun coincide",
   );
-  assert.ok(rotated.x < 0 && Math.abs(rotated.z) < 1e-8, "sun points west");
+  assert.ok(rotated.x > 0 && Math.abs(rotated.z) < 1e-8, "sun points east");
+  assert.ok(Math.abs(source.rotationY - DAYLIGHT_SKY_ROTATION) < 1e-10);
+  assert.ok(new T.Vector3(...source.dayOffset).distanceTo(sunOffset("day")) < 1e-10);
   t.diagnostic(
     `${pixels} half-peak pixels; elevation ${elevation.toFixed(6)} degrees; peak ${peak.toFixed(2)}`,
   );

@@ -137,6 +137,8 @@ function assembled(
       "glass",
       "spandrel",
       "lobbyGlass",
+      "lobbyLining",
+      "lobbyRear",
       "metal",
       "backing",
       "roof",

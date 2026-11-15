@@ -123,3 +123,57 @@ ordinary browser appearance or sustained frame pacing; the integrated native
 walk/drive acceptance remains a separate scene-level check.
 
 The street screen uses a level estimated 5.0 m transom across the graded frontage; only its bottom threshold follows the paving. Draping the intermediate architectural rail with the floor produced a visibly sloping screen and was corrected before release. This transom height remains a photo-fit estimate.
+
+## Closed lobby lining readability, 2026-11-15
+
+The owner image `artifacts/local/pwc-place-reference/cf-owner-001.jpg` shows
+pale substantial ground-level structure, a differentiated grey/green screen
+and a darker entrance zone. `artifacts/local/howe-final-pwc.jpg` instead read
+as an almost uniformly black ground frontage. The existing dielectric glass
+passes roughly 79% of the background at normal incidence. An initial revision
+used broad pale rear fields in the 1.2 m cavity; actual native review in
+`artifacts/local/cavity-pwc-west.jpg` rejected these because they looked like
+boards covering the windows. Passing geometry tests did not establish a
+successful visual result, and those bordered pale fields have been removed.
+
+The revised closed visual cavity puts subdued, continuous full-height rear
+surfaces 3.2 m behind the unchanged glazing. The deeper entry has a 3.2 m wide
+central zone a further 1.0 m back, with real pale depth returns on both sides.
+It retains the original darker backing material at that deepest plane. The
+other rear surfaces use a separate neutral mineral material: colour
+`#555b58`, roughness 0.76, metalness 0 and no emission, with existing CC0
+mineral colour/normal maps. Its linear base-colour luminance is about 22% of
+the pale lining's and about four times the deepest backing's. This supplies
+three different reflectances without bright rectangles behind each pane.
+
+The useful side and ceiling lining remains `#b6b5ac`, roughness 0.46,
+metalness 0, with existing mineral maps and no emission. Sparse non-entry
+rear ribs project 600 mm from the subdued rear plane and use that pale lining;
+their divisions are independent of the front glazing bays. The entry's
+actual depth returns replace its former central rib. All floor, side, rear
+and ceiling closures meet; the additional floor is behind the solid glazing
+and inaccessible. Exterior floor triangles, glass/collision location, source
+footprint, tower, reflection probes and level 5.0 m transom are unchanged.
+No room furnishings, signs, lights, door-leaf pattern or accessible interior
+has been added.
+
+The 3.2/4.2 m visual depths, rib dimensions and finishes are explicit bounded
+visualization estimates. The source photograph does not resolve actual rear
+interior construction. Every lining vertex and sampled cavity area stays
+within the retained source outline; pairwise polygon intersections of even
+the conservative rectangular cavity envelopes are empty. The 1.2 m constant
+in the original site module is historical; this deeper visual assembly is
+local to `pwc-lobby.ts` and changes no gameplay section or collision contract.
+
+The complete static PwC builder now emits 23,151 triangles / 45,291 vertices
+in nine material batches, compared with checkpoint `a5aa83d`'s 23,147 /
+45,283 in seven batches: +4 triangles, +8 vertices and two batches. Compared
+with the rejected pale-field candidate, this removes 468 triangles and 936
+vertices while adding one material batch. No asset, light or transmission
+pass was added. Sixteen focused tests in `tests/pwc-place.test.ts` and
+`tests/pwc-apron.test.ts` passed, including first-hit material/depth rays,
+closed deeper-entry returns/floor/ceiling, rib separation, footprint bounds,
+graded floor contact, column clearance and existing scene contracts.
+`npm run check` and `git diff --check` passed. The revised assembly is ready
+for integrated east/morning third-person review; that visual outcome remains
+unverified here.

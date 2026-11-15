@@ -1473,7 +1473,7 @@ class Game {
         : this.world.weather === "overcast"
           ? "14:08"
           : this.world.weather === "day"
-            ? "13:24"
+            ? "08:30"
             : "17:42";
     ui.show("speed-panel", !!veh);
     ui.show("ammo", !veh && !this.combat.holstered);

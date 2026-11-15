@@ -162,7 +162,7 @@ test("complete hotel geometry has finite outward faces, metric panel UVs and bou
     triangles > 12000 && triangles < 55000,
     `hotel triangles ${triangles}`,
   );
-  assert.ok(built.meshes.length <= 9);
+  assert.ok(built.meshes.length <= 11);
 });
 
 test("tower and lobby windows have real recesses with glass ahead of closed backings", () => {

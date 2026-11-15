@@ -2,7 +2,7 @@ import { attachCarLOD } from "./car-lod";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { normalizeGeometry } from "./geometry";
+import { carBodyGeometry, carGeometryLayout } from "./car-body-geometry";
 import { VehicleModel } from "./vehicles";
 import { BASE, label } from "./materials";
 import {
@@ -44,7 +44,7 @@ export function buildDetailedCarTemplate(
   body.name = "car-body";
   root.add(body);
   const materialMap = new Map<T.Material, T.Material>();
-  const bodyGroups = new Map<T.Material, T.BufferGeometry[]>();
+  const bodyGroups = new Map<T.Material, Map<string, T.BufferGeometry[]>>();
   const wheelGroups = new Map<
     string,
     { meshes: T.Mesh[]; source: T.Object3D }
@@ -112,39 +112,45 @@ export function buildDetailedCarTemplate(
         materialMap.set(src, mat!);
       }
       // glTF submeshes have already been separated by the loader for multi-material primitives.
-      const geo = o.geometry
-        .clone()
-        .applyMatrix4(transform.clone().multiply(o.matrixWorld));
-      if (!geo.getAttribute("uv"))
-        geo.setAttribute(
-          "uv",
-          new T.Float32BufferAttribute(
-            new Float32Array(geo.getAttribute("position").count * 2),
-            2,
-          ),
-        );
-      geo.deleteAttribute("tangent");
-      geo.deleteAttribute("uv1");
-      geo.deleteAttribute("uv2");
-      let arr = bodyGroups.get(mat!);
-      if (!arr) bodyGroups.set(mat!, (arr = []));
-      arr.push(normalizeGeometry(geo));
+      const geo = carBodyGeometry(
+        o.geometry,
+        transform.clone().multiply(o.matrixWorld),
+      );
+      let layouts = bodyGroups.get(mat!);
+      if (!layouts) bodyGroups.set(mat!, (layouts = new Map()));
+      const layout = carGeometryLayout(geo);
+      let arr = layouts.get(layout);
+      if (!arr) layouts.set(layout, (arr = []));
+      arr.push(geo);
     }
   });
-  for (const [mat, gs] of bodyGroups) {
-    const g = mergeGeometries(gs);
-    if (g) {
-      const mesh = new T.Mesh(g, mat);
-      mesh.castShadow = mesh.receiveShadow = true;
-      body.add(mesh);
+  for (const [mat, layouts] of bodyGroups) {
+    for (const gs of layouts.values()) {
+      const merged = mergeGeometries(gs);
+      for (const g of merged ? [merged] : gs) {
+        const mesh = new T.Mesh(g, mat);
+        mesh.castShadow = mesh.receiveShadow = true;
+        body.add(mesh);
+      }
+      if (merged) gs.forEach((g) => g.dispose());
     }
-    gs.forEach((g) => g.dispose());
   }
   const wheelMaterials = new Map<T.Material, T.Material>();
   const wheelMaterial = (source: T.Material) => {
     let material = wheelMaterials.get(source);
     if (!material) {
       material = source.clone();
+      // The concept asset uses an illuminated atlas on its decorative rims.
+      // Ground the street-car finish without changing tyres, brakes or lamps.
+      if (
+        material instanceof T.MeshStandardMaterial &&
+        /^(Rim1|Rim2)$/.test(material.name)
+      ) {
+        material.emissive.set(0x000000);
+        material.emissiveIntensity = 0;
+        material.emissiveMap = null;
+        if (material.name === "Rim2") material.roughness = 0.24;
+      }
       wheelMaterials.set(source, material);
     }
     return material;

@@ -6,6 +6,7 @@ import { Batcher } from "../src/world/geometry";
 import { facadeFrame } from "../src/world/architectural-mesh";
 import { KX, ORIGIN, pointInPoly, segmentPoint } from "../src/world/data";
 import { CollisionWorld } from "../src/world/collision";
+import { FAIRMONT_LOBBY_CAVITY as cavity } from "../src/world/fairmont-arcade";
 import { buildFairmontWaterfront } from "../src/world/fairmont-waterfront";
 import { createFairmontWaterfrontMaterials } from "../src/world/fairmont-waterfront-materials";
 import {
@@ -129,7 +130,13 @@ test("public edge is open at eye and ankle height with deep glazing and opaque r
   ]) {
     const hits = ray(
       new T.Vector3(...f.p(u, height, -0.5)),
-      new T.Vector3(...f.p(u, height, depth + 0.2)),
+      new T.Vector3(
+        ...f.p(
+          u,
+          height,
+          depth + cavity.wallDepth + cavity.bayExtraDepth + 0.15,
+        ),
+      ),
     );
     assert.ok(hits.length > 1, "rear glass and opaque backing close the bay");
     assert.equal((hits[0].object as T.Mesh).material, materials.lobbyGlass);
@@ -137,8 +144,17 @@ test("public edge is open at eye and ankle height with deep glazing and opaque r
       Math.abs(hits[0].distance - depth - 0.5) < 0.003,
       "flat old facade panels/glass must be removed",
     );
+    const closing = hits.find(
+      (hit) => (hit.object as T.Mesh).material !== materials.lobbyGlass,
+    )!;
     assert.ok(
-      hits.some((hit) => (hit.object as T.Mesh).material === materials.dark),
+      closing.distance >= depth + 0.5 + cavity.lowerDepth - 0.003,
+      "the old opaque backing 8 cm behind the glass is removed",
+    );
+    assert.ok(
+      [materials.lobbyLining, materials.lobbyRear].includes(
+        (closing.object as T.Mesh).material as T.MeshStandardMaterial,
+      ),
     );
   }
 });
@@ -239,7 +255,7 @@ test("arcade additions retain finite batched geometry and a bounded hotel cost",
     );
   }
   assert.ok(triangles < 55000, `hotel triangles ${triangles}`);
-  assert.ok(meshes.length <= 9);
+  assert.ok(meshes.length <= 11);
 });
 
 test("a genuinely graded caller surface produces matched sloping floor triangles without uplifting the hotel", () => {
@@ -430,4 +446,236 @@ test("roof fit is one plane with an unchanged mean source rise and no vertex cla
         ) < 1e-10,
       );
     }
+});
+
+test("fixed lobby glazing reveals pale lower lining, a deeper grey wall and a darker upper recess", () => {
+  const section = site.sections[1],
+    f = facadeFrame(section.a, section.b),
+    t = 0.18,
+    u = t * f.length,
+    floor = section.heightAt(t),
+    ceiling = section.ceilingAt(t, true);
+  const zones = [
+    {
+      height: floor + 0.35,
+      inset: cavity.lowerDepth,
+      material: materials.lobbyLining,
+    },
+    {
+      height: floor + 1.75,
+      inset: cavity.wallDepth + cavity.bayExtraDepth,
+      material: materials.lobbyRear,
+    },
+    {
+      height: ceiling - 0.28,
+      inset: cavity.upperDepth,
+      material: materials.dark,
+    },
+  ];
+  for (const zone of zones) {
+    const hits = ray(
+      new T.Vector3(...f.p(u, zone.height, -0.5)),
+      new T.Vector3(
+        ...f.p(
+          u,
+          zone.height,
+          depth + cavity.wallDepth + cavity.bayExtraDepth + 0.15,
+        ),
+      ),
+    );
+    assert.equal((hits[0].object as T.Mesh).material, materials.lobbyGlass);
+    const opaque = hits.find(
+      (h) => (h.object as T.Mesh).material !== materials.lobbyGlass,
+    )!;
+    assert.equal((opaque.object as T.Mesh).material, zone.material);
+    assert.ok(
+      Math.abs(opaque.distance - (0.5 + depth + zone.inset)) < 0.003,
+      "separate closed planes create visible parallax behind the existing glass",
+    );
+  }
+});
+
+test("visual cavity is closed above, below, behind and at its ends while collision stays at the glass", () => {
+  const section = site.sections[1],
+    f = facadeFrame(section.a, section.b),
+    t = 0.18,
+    floor = section.heightAt(t),
+    ceiling = section.ceilingAt(t, true),
+    xz = section.back(t, 0);
+  xz[0] -= f.outward[0] * 0.85;
+  xz[2] -= f.outward[1] * 0.85;
+  const down = ray(
+    new T.Vector3(xz[0], floor + 0.4, xz[2]),
+    new T.Vector3(xz[0], floor - 0.1, xz[2]),
+  );
+  assert.ok(
+    down.some(
+      (h) =>
+        Math.abs(h.point.y - floor) < 0.01 &&
+        (h.object as T.Mesh).material === materials.roof,
+    ),
+  );
+  const up = ray(
+    new T.Vector3(xz[0], ceiling - 0.3, xz[2]),
+    new T.Vector3(xz[0], ceiling + 0.1, xz[2]),
+  );
+  assert.ok(
+    up.some(
+      (h) =>
+        Math.abs(h.point.y - ceiling) < 0.015 &&
+        (h.object as T.Mesh).material === materials.lobbyLining,
+    ),
+  );
+  const division = ray(
+    new T.Vector3(xz[0], cavity.divisionTop - 0.15, xz[2]),
+    new T.Vector3(xz[0], cavity.divisionTop + 0.05, xz[2]),
+  );
+  assert.ok(
+    division.some(
+      (h) =>
+        Math.abs(h.point.y - (cavity.divisionTop - cavity.divisionThickness)) <
+          0.001 && (h.object as T.Mesh).material === materials.lobbyLining,
+    ),
+  );
+  for (const [s, end] of [
+    [site.sections[0], 0],
+    [site.sections.at(-1)!, 1],
+  ] as const) {
+    const ff = facadeFrame(s.a, s.b),
+      inside = end ? 0.98 : 0.02,
+      y = s.heightAt(inside) + 1.6,
+      from = s.back(inside, y),
+      to = s.back(end === 0 ? -0.04 : 1.04, y);
+    for (const p of [from, to]) {
+      p[0] -= ff.outward[0] * 0.3;
+      p[2] -= ff.outward[1] * 0.3;
+    }
+    const hits = ray(new T.Vector3(...from), new T.Vector3(...to));
+    assert.ok(
+      hits.some((h) => (h.object as T.Mesh).material === materials.lobbyLining),
+      "terminal return closes oblique views",
+    );
+  }
+  const behind = f.p(t * f.length, floor, depth + 0.35);
+  assert.equal(
+    collision.blocked(behind[0], behind[2], 0.2, floor + 0.15),
+    true,
+    "visual scenery does not open the hotel interior",
+  );
+});
+
+test("new cavity lining stays within source footprint and behind glazing without extra textures or emission", () => {
+  const lining = meshes.filter(
+    (mesh) =>
+      mesh.material === materials.lobbyLining ||
+      mesh.material === materials.lobbyRear,
+  );
+  assert.equal(lining.length, 2);
+  for (const mesh of lining) {
+    const p = mesh.geometry.getAttribute("position");
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i),
+        z = p.getZ(i);
+      assert.ok(
+        pointInPoly(x, z, ring.flat()),
+        "lining stays inside original building",
+      );
+      const distances = site.sections
+        .map((section) => {
+          const q = segmentPoint(x, z, ...section.backA, ...section.backB),
+            f = facadeFrame(section.a, section.b);
+          return {
+            distance: q.d,
+            depth: -(x - q.x) * f.outward[0] - (z - q.z) * f.outward[1],
+          };
+        })
+        .sort((a, b) => a.distance - b.distance);
+      assert.ok(
+        distances[0].depth >= -0.00005,
+        "no new lining in front of fixed glazing",
+      );
+    }
+  }
+  assert.equal(materials.lobbyRear.map, null);
+  assert.equal(materials.lobbyRear.normalMap, null);
+  assert.equal(materials.lobbyRear.emissive.getHex(), 0);
+  assert.equal(materials.lobbyRear.metalness, 0);
+  assert.ok(
+    materials.lobbyRear.color.r < materials.lobbyLining.color.r * 0.35 &&
+      materials.lobbyRear.color.g < materials.lobbyLining.color.g * 0.35,
+    "rear fields stay substantially darker than structural lining",
+  );
+  assert.equal(materials.lobbyLining.map, null);
+  assert.equal(materials.lobbyLining.normalMap, null);
+  assert.equal(materials.lobbyLining.emissive.getHex(), 0);
+  assert.equal(materials.lobbyLining.metalness, 0);
+  assert.ok(materials.lobbyLining.roughness > 0.8);
+});
+
+test("broad structural-bay centres have closed extra recesses without changing front glazing", () => {
+  const section = site.sections[1],
+    f = facadeFrame(section.a, section.b),
+    stations = site.piers
+      .filter((p) => p.edge === section.edge)
+      .map((p) => p.along)
+      .sort((a, b) => a - b),
+    start = stations[0],
+    end = stations[1],
+    span = end - start,
+    centre = (start + end) / (2 * section.length),
+    shoulder = (start + 0.7) / section.length;
+  const at = (t: number, y: number, inset: number) => {
+    const p = section.back(t, y);
+    return new T.Vector3(
+      p[0] - f.outward[0] * inset,
+      y,
+      p[2] - f.outward[1] * inset,
+    );
+  };
+  for (const [t, inset] of [
+    [centre, cavity.wallDepth + cavity.bayExtraDepth],
+    [shoulder, cavity.wallDepth],
+  ]) {
+    const y = section.heightAt(t) + 1.8,
+      hits = ray(
+        at(t, y, -0.2),
+        at(t, y, cavity.wallDepth + cavity.bayExtraDepth + 0.15),
+      );
+    assert.equal((hits[0].object as T.Mesh).material, materials.lobbyGlass);
+    const wall = hits.find(
+      (h) => (h.object as T.Mesh).material !== materials.lobbyGlass,
+    )!;
+    assert.equal((wall.object as T.Mesh).material, materials.lobbyRear);
+    assert.ok(Math.abs(wall.distance - inset - 0.2) < 0.003);
+  }
+  for (const [along, direction] of [
+    [start + span * 0.25, 1],
+    [end - span * 0.25, -1],
+  ]) {
+    const t = along / section.length,
+      y = section.heightAt(t) + 1.8,
+      hits = ray(
+        at(t + direction * 0.015, y, cavity.wallDepth + 0.25),
+        at(t - direction * 0.015, y, cavity.wallDepth + 0.25),
+      );
+    assert.ok(
+      hits.some((h) => (h.object as T.Mesh).material === materials.lobbyLining),
+      "side return closes each deeper centre",
+    );
+  }
+  const low = section.heightAt(centre) + cavity.lowerBand,
+    high = section.ceilingAt(centre, true) - cavity.upperBand;
+  for (const [from, to] of [
+    [low + 0.2, low - 0.2],
+    [high - 0.2, high + 0.2],
+  ]) {
+    const hits = ray(
+      at(centre, from, cavity.wallDepth + 0.25),
+      at(centre, to, cavity.wallDepth + 0.25),
+    );
+    assert.ok(
+      hits.some((h) => (h.object as T.Mesh).material === materials.lobbyLining),
+      "deeper centre has a floor and upper return",
+    );
+  }
 });

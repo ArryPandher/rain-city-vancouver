@@ -12,6 +12,21 @@ import {
 } from "./fairmont-arcade-site";
 import { FAIRMONT_WATERFRONT_HOWE_BASE_TOP } from "./fairmont-waterfront-site";
 
+/** Estimated visual lining behind fixed, collision-closed glazing. The MCM
+ * photo establishes depth and pale/dark structure, not these dimensions. */
+export const FAIRMONT_LOBBY_CAVITY = {
+  lowerDepth: 1.35,
+  wallDepth: 1.75,
+  bayExtraDepth: 0.5,
+  upperDepth: 1.9,
+  lowerBand: 1,
+  upperBand: 0.55,
+  ribFront: 0.6,
+  ribWidth: 0.34,
+  divisionTop: 8,
+  divisionThickness: 0.06,
+} as const;
+
 /** Open exterior arcade, closed by real rear glazing and side returns.
  * Collision uses the same floor triangles, pier centres and closed boundary. */
 export function buildFairmontArcade(
@@ -22,6 +37,27 @@ export function buildFairmontArcade(
   preparedSite?: FairmontArcadeSite,
 ) {
   const site = preparedSite ?? createFairmontArcadeSite(groundHeight, datum);
+  // Broad centres follow the structural-pier bays, not individual glass leaves.
+  // Short terminal remnants stay on the original wall plane.
+  const bayRecesses = site.sections.map((section) => {
+    const stations = [
+      0,
+      ...site.piers.filter((p) => p.edge === section.edge).map((p) => p.along),
+      section.length,
+    ].sort((a, b) => a - b);
+    return stations.slice(1).flatMap((end, i) => {
+      const start = stations[i],
+        span = end - start;
+      return span < 2.8
+        ? []
+        : [
+            {
+              left: (start + span * 0.25) / section.length,
+              right: (end - span * 0.25) / section.length,
+            },
+          ];
+    });
+  });
   const quad = (mat: T.Material, p: Vertex3[], normal: Vertex3) => {
     const cross = new T.Vector3(...p[1])
       .sub(new T.Vector3(...p[0]))
@@ -64,16 +100,168 @@ export function buildFairmontArcade(
       ],
       [0, -1, 0],
     );
-    quad(
+    // The former 8 cm dark backing made transmitted views read as black paint.
+    // These connected planes form a closed, stepped visual cavity behind the
+    // unchanged glass. There is no doorway or extension to the playable floor.
+    const cavity = FAIRMONT_LOBBY_CAVITY,
+      lowerTopL = a[1] + cavity.lowerBand,
+      lowerTopR = b[1] + cavity.lowerBand,
+      upperLowL = rearCeilingL - cavity.upperBand,
+      upperLowR = rearCeilingR - cavity.upperBand;
+    const wall = (
+      mat: T.Material,
+      loL: number,
+      loR: number,
+      hiL: number,
+      hiR: number,
+      inset: number,
+    ) =>
+      quad(
+        mat,
+        [
+          back(l, loL, inset),
+          back(r, loR, inset),
+          back(r, hiR, inset),
+          back(l, hiL, inset),
+        ],
+        normal,
+      );
+    const shelf = (
+      mat: T.Material,
+      yL: number,
+      yR: number,
+      front: number,
+      rear: number,
+      up: boolean,
+    ) =>
+      quad(
+        mat,
+        [
+          back(l, yL, front),
+          back(r, yR, front),
+          back(r, yR, rear),
+          back(l, yL, rear),
+        ],
+        [0, up ? 1 : -1, 0],
+      );
+    // Neutral lower lining, a farther grey field and a narrow dark upper zone
+    // have different real depths; the window is not backed by one bright card.
+    wall(m.lobbyLining, a[1], b[1], lowerTopL, lowerTopR, cavity.lowerDepth);
+    const recesses = bayRecesses[panel.section],
+      cuts = [
+        l,
+        ...recesses
+          .flatMap((bay) => [bay.left, bay.right])
+          .filter((t) => t > l + 1e-8 && t < r - 1e-8),
+        r,
+      ].sort((a, b) => a - b);
+    for (let i = 1; i < cuts.length; i++) {
+      const left = cuts[i - 1],
+        right = cuts[i],
+        middle = (left + right) / 2,
+        inset =
+          cavity.wallDepth +
+          (recesses.some((bay) => middle > bay.left && middle < bay.right)
+            ? cavity.bayExtraDepth
+            : 0),
+        loL = section.heightAt(left) + cavity.lowerBand,
+        loR = section.heightAt(right) + cavity.lowerBand,
+        hiL = section.ceilingAt(left, true) - cavity.upperBand,
+        hiR = section.ceilingAt(right, true) - cavity.upperBand;
+      quad(
+        m.lobbyRear,
+        [
+          back(left, loL, inset),
+          back(right, loR, inset),
+          back(right, hiR, inset),
+          back(left, hiL, inset),
+        ],
+        normal,
+      );
+      quad(
+        m.lobbyLining,
+        [
+          back(left, loL, cavity.lowerDepth),
+          back(right, loR, cavity.lowerDepth),
+          back(right, loR, inset),
+          back(left, loL, inset),
+        ],
+        [0, 1, 0],
+      );
+      quad(
+        m.lobbyLining,
+        [
+          back(left, hiL, inset),
+          back(right, hiR, inset),
+          back(right, hiR, cavity.upperDepth),
+          back(left, hiL, cavity.upperDepth),
+        ],
+        [0, inset <= cavity.upperDepth ? 1 : -1, 0],
+      );
+      // Continue the retained cap lining into the deeper centre, so its
+      // upper/lower sections stay closed behind the unchanged glass.
+      const divisionBottom = cavity.divisionTop - cavity.divisionThickness;
+      if (
+        inset > cavity.upperDepth &&
+        Math.max(section.heightAt(left), section.heightAt(right)) <
+          divisionBottom &&
+        Math.min(
+          section.ceilingAt(left, true),
+          section.ceilingAt(right, true),
+        ) > cavity.divisionTop
+      )
+        quad(
+          m.lobbyLining,
+          [
+            back(left, divisionBottom, cavity.upperDepth),
+            back(right, divisionBottom, cavity.upperDepth),
+            back(right, divisionBottom, inset),
+            back(left, divisionBottom, inset),
+          ],
+          [0, -1, 0],
+        );
+    }
+    wall(
       m.dark,
-      [
-        back(l, 0, 0.08),
-        back(r, 0, 0.08),
-        back(r, rearCeilingR, 0.08),
-        back(l, rearCeilingL, 0.08),
-      ],
-      normal,
+      upperLowL,
+      upperLowR,
+      rearCeilingL,
+      rearCeilingR,
+      cavity.upperDepth,
     );
+    shelf(m.roof, a[1], b[1], 0, cavity.lowerDepth, true);
+    shelf(
+      m.lobbyLining,
+      rearCeilingL,
+      rearCeilingR,
+      0,
+      cavity.upperDepth,
+      false,
+    );
+    // Existing podium cap remains at Y=8 behind the facade. Give its exposed
+    // underside and edge thickness instead of leaving a one-sided roof sheet.
+    const divisionBottom = cavity.divisionTop - cavity.divisionThickness;
+    if (
+      Math.max(a[1], b[1]) < divisionBottom &&
+      Math.min(rearCeilingL, rearCeilingR) > cavity.divisionTop
+    ) {
+      shelf(
+        m.lobbyLining,
+        divisionBottom,
+        divisionBottom,
+        0.04,
+        cavity.upperDepth,
+        false,
+      );
+      wall(
+        m.lobbyLining,
+        divisionBottom,
+        divisionBottom,
+        cavity.divisionTop,
+        cavity.divisionTop,
+        0.04,
+      );
+    }
     quad(
       m.panel,
       [back(l, a[1]), back(r, b[1]), back(r, lowR), back(l, lowL)],
@@ -120,7 +308,116 @@ export function buildFairmontArcade(
   }
   for (const section of site.sections) {
     const f = facadeFrame(section.a, section.b),
-      windows = Math.max(1, Math.round(f.length / 2.1));
+      windows = Math.max(1, Math.round(f.length / 2.1)),
+      cavity = FAIRMONT_LOBBY_CAVITY,
+      rear = (t: number, y: number, inset: number): Vertex3 => {
+        const p = section.back(t, y);
+        return [p[0] - f.outward[0] * inset, y, p[2] - f.outward[1] * inset];
+      };
+    for (const bay of bayRecesses[site.sections.indexOf(section)]) {
+      for (const [t, direction] of [
+        [bay.left, 1],
+        [bay.right, -1],
+      ] as const) {
+        const low = section.heightAt(t) + cavity.lowerBand,
+          high = section.ceilingAt(t, true) - cavity.upperBand;
+        quad(
+          m.lobbyLining,
+          [
+            rear(t, low, cavity.wallDepth),
+            rear(t, low, cavity.wallDepth + cavity.bayExtraDepth),
+            rear(t, high, cavity.wallDepth + cavity.bayExtraDepth),
+            rear(t, high, cavity.wallDepth),
+          ],
+          [-f.outward[1] * direction, 0, f.outward[0] * direction],
+        );
+      }
+    }
+    // Close each section at its actual glass edge. Adjacent angled sections
+    // meet behind these opaque returns, so oblique views never escape the shell.
+    for (const [t, direction] of [
+      [0, 1],
+      [1, -1],
+    ] as const) {
+      const low = section.heightAt(t),
+        high = section.ceilingAt(t, true);
+      quad(
+        m.lobbyLining,
+        [
+          rear(t, low, 0),
+          rear(t, low, cavity.upperDepth),
+          rear(t, high, cavity.upperDepth),
+          rear(t, high, 0),
+        ],
+        [-f.outward[1] * direction, 0, f.outward[0] * direction],
+      );
+    }
+    // Restrained lining ribs align with the existing round-pier stations;
+    // they are rear structure, never another row of public-space columns.
+    for (const pier of site.piers.filter((p) => p.edge === section.edge)) {
+      const t = Math.max(
+          cavity.ribWidth / f.length,
+          Math.min(1 - cavity.ribWidth / f.length, pier.along / f.length),
+        ),
+        l = t - cavity.ribWidth / (2 * f.length),
+        r = t + cavity.ribWidth / (2 * f.length),
+        lowL = section.heightAt(l),
+        lowR = section.heightAt(r),
+        highL = section.ceilingAt(l, true),
+        highR = section.ceilingAt(r, true),
+        n: Vertex3 = [f.outward[0], 0, f.outward[1]],
+        along: Vertex3 = [-f.outward[1], 0, f.outward[0]];
+      quad(
+        m.lobbyLining,
+        [
+          rear(l, lowL, cavity.ribFront),
+          rear(r, lowR, cavity.ribFront),
+          rear(r, highR, cavity.ribFront),
+          rear(l, highL, cavity.ribFront),
+        ],
+        n,
+      );
+      quad(
+        m.lobbyLining,
+        [
+          rear(l, lowL, cavity.ribFront),
+          rear(l, lowL, cavity.upperDepth),
+          rear(l, highL, cavity.upperDepth),
+          rear(l, highL, cavity.ribFront),
+        ],
+        along,
+      );
+      quad(
+        m.lobbyLining,
+        [
+          rear(r, lowR, cavity.ribFront),
+          rear(r, highR, cavity.ribFront),
+          rear(r, highR, cavity.upperDepth),
+          rear(r, lowR, cavity.upperDepth),
+        ],
+        along.map((v) => -v) as Vertex3,
+      );
+      quad(
+        m.lobbyLining,
+        [
+          rear(l, lowL, cavity.ribFront),
+          rear(r, lowR, cavity.ribFront),
+          rear(r, lowR, cavity.upperDepth),
+          rear(l, lowL, cavity.upperDepth),
+        ],
+        [0, -1, 0],
+      );
+      quad(
+        m.lobbyLining,
+        [
+          rear(l, highL, cavity.ribFront),
+          rear(l, highL, cavity.upperDepth),
+          rear(r, highR, cavity.upperDepth),
+          rear(r, highR, cavity.ribFront),
+        ],
+        [0, 1, 0],
+      );
+    }
     for (let i = 0; i <= windows; i++) {
       const t = i / windows,
         ceiling = section.ceilingAt(t, true),

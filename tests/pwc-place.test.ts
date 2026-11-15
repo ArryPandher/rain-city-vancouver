@@ -16,7 +16,6 @@ import {
   PWC_LOBBY_COLUMNS,
   PWC_LOBBY_RECESSES,
   PWC_LOBBY_SECTIONS,
-  PWC_LOBBY_BACKING_GAP,
 } from "../src/world/pwc-lobby-site";
 import { buildingHeight } from "../src/world/building-profile";
 import { buildPwcPlace, type PwcPlaceMaterials } from "../src/world/pwc-place";
@@ -43,9 +42,17 @@ import {
 const root = new T.Group(),
   batch = new Batcher(root);
 const materials = Object.fromEntries(
-  ["stone", "glass", "spandrel", "lobbyGlass", "metal", "backing", "roof"].map(
-    (name) => [name, new T.MeshStandardMaterial({ name })],
-  ),
+  [
+    "stone",
+    "glass",
+    "spandrel",
+    "lobbyGlass",
+    "lobbyLining",
+    "lobbyRear",
+    "metal",
+    "backing",
+    "roof",
+  ].map((name) => [name, new T.MeshStandardMaterial({ name })]),
 ) as unknown as PwcPlaceMaterials;
 assert.equal(
   buildPwcPlace(batch, { id: ID, pts: base.flat() }, materials),
@@ -192,7 +199,7 @@ test("Howe lobby has genuine recess depth and a connected supported frontage wit
   }
   const hits = ray(
     new T.Vector3(...f.p(9.1, 2, -1)),
-    new T.Vector3(...f.p(9.1, 2, 5)),
+    new T.Vector3(...f.p(9.1, 2, 8)),
   );
   assert.equal((hits[0].object as T.Mesh).material, materials.lobbyGlass);
   assert.ok(Math.abs(hits[0].distance - (1 + entrance.depth)) < 0.002);
@@ -234,19 +241,23 @@ test("Howe recess ray sections reach rear glass, a separate closed cavity and re
     ]) {
       const hits = ray(
         new T.Vector3(...f.p(u, 1.75, -1)),
-        new T.Vector3(...f.p(u, 1.75, d + PWC_LOBBY_BACKING_GAP + 0.1)),
+        new T.Vector3(...f.p(u, 1.75, d + 4.3)),
       );
       assert.equal((hits[0].object as T.Mesh).material, materials.lobbyGlass);
       assert.ok(
         Math.abs(hits[0].distance - (d + 1)) < 0.002,
         "no obsolete front pane blocks the exterior recess",
       );
-      const back = hits.find(
-        (h) => (h.object as T.Mesh).material === materials.backing,
-      )!;
+      const entryZone = section.entry && d === section.entry.depth,
+        back = hits.find(
+          (h) =>
+            (h.object as T.Mesh).material ===
+            (entryZone ? materials.backing : materials.lobbyRear),
+        )!;
       assert.ok(
-        Math.abs(back.distance - hits[0].distance - PWC_LOBBY_BACKING_GAP) <
+        Math.abs(back.distance - hits[0].distance - (entryZone ? 4.2 : 3.2)) <
           0.002,
+        "subdued rear surfaces and the deeper entry remain visibly behind the glass",
       );
       const floorHits = ray(
         new T.Vector3(...f.p(u, 1.75, d - 0.35)),
@@ -358,7 +369,72 @@ test("adjacent retained facade panels do not penetrate the Howe column shafts", 
   }
 });
 
-test("PwC geometry is finite, outward and bounded in seven material batches", () => {
+test("subdued rear bays reveal pale structure and a deeper closed entry without pale rear panels", () => {
+  const section = PWC_LOBBY_SECTIONS.find((s) => s.entry)!,
+    f = section.frame,
+    entry = section.entry!,
+    back = entry.depth + 3.2,
+    shoot = (a: [number, number, number], b: [number, number, number]) =>
+      ray(new T.Vector3(...f.p(...a)), new T.Vector3(...f.p(...b)));
+  const rear = shoot([6.7, 2, entry.depth + 0.15], [6.7, 2, back + 0.02]),
+    dark = shoot([8.43, 2, entry.depth + 0.15], [8.43, 2, back + 1.02]);
+  assert.equal((rear[0].object as T.Mesh).material, materials.lobbyRear);
+  assert.equal((dark[0].object as T.Mesh).material, materials.backing);
+  assert.ok(Math.abs(rear[0].distance - 3.05) < 0.002);
+  assert.ok(
+    Math.abs(dark[0].distance - rear[0].distance - 1) < 0.002,
+    "the central entry has actual additional depth",
+  );
+  assert.ok(
+    !rear.some((h) => (h.object as T.Mesh).material === materials.lobbyLining),
+    "a full-height pale field no longer covers the rear view",
+  );
+
+  const returns = [
+    shoot([8.2, 2, back + 0.5], [6.8, 2, back + 0.5]),
+    shoot([9.8, 2, back + 0.5], [11.2, 2, back + 0.5]),
+  ];
+  for (const hits of returns) {
+    assert.equal((hits[0].object as T.Mesh).material, materials.lobbyLining);
+    assert.ok(
+      Math.abs(hits[0].distance - 0.8) < 0.002,
+      "both deeper-entry returns are closed and correctly face the pocket",
+    );
+  }
+  const roof = shoot([8.43, 7.4, back + 0.5], [8.43, 8, back + 0.5]),
+    floor = shoot([8.43, 0.4, back + 0.5], [8.43, 0, back + 0.5]);
+  assert.equal((roof[0].object as T.Mesh).material, materials.lobbyLining);
+  assert.ok(Math.abs(roof[0].distance - 0.35) < 0.002);
+  assert.equal((floor[0].object as T.Mesh).material, materials.stone);
+  assert.ok(Math.abs(floor[0].distance - 0.22) < 0.002);
+
+  const side = PWC_LOBBY_SECTIONS.find((s) => !s.entry)!,
+    u = 1.75 + (side.frame.length - 3.5) / 3,
+    rib = ray(
+      new T.Vector3(...side.frame.p(u, 2, side.depth + 0.15)),
+      new T.Vector3(...side.frame.p(u, 2, side.depth + 3.3)),
+    );
+  assert.equal((rib[0].object as T.Mesh).material, materials.lobbyLining);
+  assert.ok(
+    Math.abs(rib[0].distance - 2.45) < 0.002,
+    "the sparse rear structural rib projects 600 mm in front of the rear plane",
+  );
+
+  for (const mesh of meshes.filter((m) =>
+    [materials.lobbyLining, materials.lobbyRear].includes(
+      m.material as T.MeshStandardMaterial,
+    ),
+  )) {
+    const p = mesh.geometry.getAttribute("position");
+    for (let i = 0; i < p.count; i++)
+      assert.ok(
+        pointInPoly(p.getX(i), p.getZ(i), base.flat()),
+        "every visual cavity vertex stays inside the retained source footprint",
+      );
+  }
+});
+
+test("PwC geometry is finite, outward and bounded in nine material batches", () => {
   let triangles = 0,
     min = Infinity,
     max = -Infinity;
@@ -403,7 +479,7 @@ test("PwC geometry is finite, outward and bounded in seven material batches", ()
   assert.equal(min, 0);
   assert.ok(Math.abs(max - height) < 0.00001);
   assert.ok(triangles > 12000 && triangles < 26000, `triangles ${triangles}`);
-  assert.equal(meshes.length, 7);
+  assert.equal(meshes.length, 9);
 });
 
 test("shared maps keep their samplers and caller datum shifts geometry and probe together", () => {
@@ -413,6 +489,37 @@ test("shared maps keep their samplers and caller datum shifts geometry and probe
     m = createPwcPlaceMaterials(library);
   assert.deepEqual(texture.repeat.toArray(), [3, 4]);
   assert.notEqual(m.stone.map, texture);
+  assert.notEqual(m.lobbyLining.map, texture);
+  assert.notEqual(m.lobbyLining.map, m.stone.map);
+  assert.notEqual(m.lobbyLining.normalMap, m.stone.normalMap);
+  assert.equal(m.lobbyLining.map?.colorSpace, T.SRGBColorSpace);
+  assert.equal(m.lobbyLining.normalMap?.colorSpace, T.NoColorSpace);
+  assert.ok(m.lobbyLining.roughness >= 0.4 && m.lobbyLining.roughness <= 0.6);
+  assert.equal(m.lobbyLining.metalness, 0);
+  assert.equal(m.lobbyLining.emissive.getHex(), 0);
+  assert.equal(m.lobbyLining.transparent, false);
+  assert.notEqual(m.lobbyRear.map, m.lobbyLining.map);
+  assert.equal(m.lobbyRear.metalness, 0);
+  assert.equal(m.lobbyRear.emissive.getHex(), 0);
+  assert.equal(m.lobbyRear.transparent, false);
+  assert.ok(m.lobbyRear.roughness > m.lobbyLining.roughness);
+  const luminance = (c: T.Color) => c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722;
+  assert.ok(
+    luminance(m.lobbyLining.color) > luminance(m.backing.color) * 10,
+    "readability comes from mineral reflectance under scene light",
+  );
+  assert.ok(
+    luminance(m.lobbyLining.color) < luminance(m.stone.color),
+    "lining remains subordinate to the photographed pale exterior structure",
+  );
+  assert.ok(
+    luminance(m.lobbyRear.color) < luminance(m.lobbyLining.color) * 0.3,
+    "broad rear surfaces stay substantially darker than structural linings",
+  );
+  assert.ok(
+    luminance(m.lobbyRear.color) > luminance(m.backing.color) * 2,
+    "neutral rear bays remain distinct from the deepest entry shade",
+  );
   assert.ok(m.glass.roughness < m.spandrel.roughness);
   assert.equal(m.glass.transparent, false);
   const batch = new Batcher(new T.Group()),

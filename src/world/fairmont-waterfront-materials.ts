@@ -36,6 +36,18 @@ export function createFairmontWaterfrontMaterials(
       "Fairmont Waterfront recessed lobby glazing",
       0.86,
     ),
+    lobbyRear: new T.MeshStandardMaterial({
+      name: "Fairmont Waterfront charcoal rear cavity fields",
+      color: 0x505957,
+      metalness: 0,
+      roughness: 0.88,
+    }),
+    lobbyLining: new T.MeshStandardMaterial({
+      name: "Fairmont Waterfront neutral lobby cavity lining",
+      color: 0xc2bfb4,
+      metalness: 0,
+      roughness: 0.84,
+    }),
     panel: new T.MeshStandardMaterial({
       name: "Fairmont Waterfront pale panel grid",
       color: 0xd4d8d4,

@@ -58,7 +58,7 @@ test("weather establishes gameplay sun direction before startup reflection captu
     World.prototype.setWeather.call(world, weather);
     assert.deepEqual(world.sun.target.position.toArray(), target.toArray());
     const expected =
-      weather === "day" ? [-278, 149.61315223935466, 0] : [-220, 110, 170];
+      weather === "day" ? [278, 149.61315223935466, 0] : [-220, 110, 170];
     assert.ok(
       world.sun.position
         .clone()
@@ -86,9 +86,13 @@ test("initial daylight and first player-follow update agree on direction and int
   assert.equal(world.sun.intensity, 3.4);
 });
 
-test("daylight illuminates the source northwest facade from a plausible western afternoon sun", async () => {
+test("morning daylight faces the Howe hotel and preserves a physically plausible solar direction", async () => {
   const { canadaPlaceCanopyPoint: at } = await import(
     "../src/world/canada-place-canopy"
+  );
+  const { facadeFrame } = await import("../src/world/architectural-mesh");
+  const { FAIRMONT_WATERFRONT_RING: ring } = await import(
+    "../src/world/fairmont-waterfront-site"
   );
   const world = fixture();
   World.prototype.setWeather.call(world, "day");
@@ -99,14 +103,22 @@ test("daylight illuminates the source northwest facade from a plausible western 
   const azimuth =
     ((Math.atan2(direction.x, -direction.z) * 180) / Math.PI + 360) % 360;
   const elevation = (Math.asin(direction.y) * 180) / Math.PI;
-  assert.ok(Math.abs(azimuth - 270) < 1e-8);
+  assert.ok(Math.abs(azimuth - 90) < 1e-8);
   assert.ok(Math.abs(elevation - 28.288107223038665) < 0.00001);
   const facadeNormal = at(0, 0, 1)
     .sub(at(0, 0, 0))
     .normalize();
   assert.ok(
-    facadeNormal.dot(direction) > 0.4 && facadeNormal.dot(direction) < 0.42,
+    facadeNormal.dot(direction) < -0.4 && facadeNormal.dot(direction) > -0.42,
+    "the west concourse correctly loses direct light; no facade-specific light override",
   );
+  for (const edge of [0, 1, 2]) {
+    const n = facadeFrame(ring[edge], ring[edge + 1]).outward;
+    assert.ok(
+      new T.Vector3(n[0], 0, n[1]).dot(direction) > 0.8,
+      "the source Howe-facing hotel planes can receive morning sun before occlusion",
+    );
+  }
   // Solar declination implied by this azimuth/elevation at Vancouver must lie
   // within Earth's obliquity; arbitrary west/high sun can be impossible here.
   const lat = (49.29 * Math.PI) / 180,
