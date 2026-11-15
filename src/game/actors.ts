@@ -98,7 +98,8 @@ export class Actors {
     model.wheels.forEach(mergeGroup);
     model.group.position.set(
       x,
-      this.world.collision.height(x, z, referenceY) + 0.12,
+      this.world.collision.height(x, z, referenceY) +
+        (model.group.userData.roadClearance ?? 0.12),
       z,
     );
     model.group.rotation.y = heading;
@@ -467,7 +468,8 @@ export class Actors {
       g = v.model.group;
     g.position.set(
       s.x,
-      this.world.collision.height(s.x, s.z, g.position.y) + 0.13,
+      this.world.collision.height(s.x, s.z, g.position.y) +
+        (g.userData.roadClearance ?? 0.13),
       s.z,
     );
     g.rotation.order = "YXZ";
@@ -497,7 +499,10 @@ export class Actors {
         g.position.y,
       );
     g.rotation.z = Math.atan2(right - left, 2);
-    v.model.wheels.forEach((w) => (w.rotation.x += (s.speed * dt) / 0.34));
+    v.model.wheels.forEach(
+      (w) =>
+        (w.rotation.x += (s.speed * dt) / (w.userData.rollingRadius || 0.34)),
+    );
     v.model.front.forEach((w) => (w.rotation.y = s.steer));
     if (v.kind === "car") {
       v.model.body.rotation.z =

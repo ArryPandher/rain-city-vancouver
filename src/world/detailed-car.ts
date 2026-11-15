@@ -4,17 +4,28 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { normalizeGeometry } from "./geometry";
 import { VehicleModel } from "./vehicles";
 import { BASE, label } from "./materials";
+import {
+  canonicalWheelGeometry,
+  wheelFrame,
+  tyreRadius,
+} from "./vehicle-wheels";
 let template: T.Group | null = null,
   trafficTemplate: T.Group | null = null;
 async function buildCarTemplate(path: string) {
   const gltf = await new GLTFLoader().loadAsync(`${BASE}models/${path}`);
-  const raw = gltf.scene;
-  // Source is Z-up with its nose facing -Y. Bake into this game's Y-up, +Z-forward convention.
-  const sourceBox = new T.Box3().setFromObject(raw),
+  return buildDetailedCarTemplate(gltf.scene);
+}
+export function buildDetailedCarTemplate(
+  raw: T.Group,
+  plateTexture: () => T.Texture = () =>
+    label("RAIN CITY", 512, 128, "#263a40", "#e6e3d5", 60),
+) {
+  // Normalize Z-up source exports if necessary; committed car assets are already Y-up.
+  const sourceBox = new T.Box3().setFromObject(raw, true),
     size = sourceBox.getSize(new T.Vector3());
   if (size.z < size.y) raw.rotation.x = -Math.PI / 2;
   raw.updateMatrixWorld(true);
-  const box = new T.Box3().setFromObject(raw),
+  const box = new T.Box3().setFromObject(raw, true),
     center = box.getCenter(new T.Vector3()),
     extent = box.getSize(new T.Vector3()),
     scale = 4.9 / extent.z;
@@ -29,7 +40,10 @@ async function buildCarTemplate(path: string) {
   root.add(body);
   const materialMap = new Map<T.Material, T.Material>();
   const bodyGroups = new Map<T.Material, T.BufferGeometry[]>();
-  const wheelGroups = new Map<string, { meshes: T.Mesh[]; bounds: T.Box3 }>();
+  const wheelGroups = new Map<
+    string,
+    { meshes: T.Mesh[]; source: T.Object3D }
+  >();
   raw.traverse((o) => {
     if (!(o instanceof T.Mesh)) return;
     let parent: T.Object3D | null = o,
@@ -44,9 +58,8 @@ async function buildCarTemplate(path: string) {
     if (which) {
       let group = wheelGroups.get(which);
       if (!group)
-        wheelGroups.set(which, (group = { meshes: [], bounds: new T.Box3() }));
+        wheelGroups.set(which, (group = { meshes: [], source: parent! }));
       group.meshes.push(o);
-      group.bounds.expandByObject(o);
       return;
     }
     if (/Emblem|Wipers|Pedal|Floormat|Engine|InteriorRearHatch/.test(o.name))
@@ -88,7 +101,7 @@ async function buildCarTemplate(path: string) {
             mat.emissiveIntensity = 2;
           }
           if (mat.name === "License") {
-            mat.map = label("RAIN CITY", 512, 128, "#263a40", "#e6e3d5", 60);
+            mat.map = plateTexture();
           }
         }
         materialMap.set(src, mat!);
@@ -123,7 +136,8 @@ async function buildCarTemplate(path: string) {
     gs.forEach((g) => g.dispose());
   }
   for (const [name, w] of wheelGroups) {
-    const center = w.bounds.getCenter(new T.Vector3()).applyMatrix4(transform);
+    const frame = wheelFrame(w.source, transform);
+    const center = frame.center;
     const steer = new T.Group();
     steer.name = name;
     steer.position.copy(center);
@@ -131,19 +145,27 @@ async function buildCarTemplate(path: string) {
     const spin = new T.Group();
     spin.name = name + "Spin";
     steer.add(spin);
+    let radius = 0;
     for (const o of w.meshes) {
-      const g = o.geometry
-        .clone()
-        .applyMatrix4(transform.clone().multiply(o.matrixWorld));
-      g.translate(-center.x, -center.y, -center.z);
+      const g = canonicalWheelGeometry(o, transform, frame);
       const mat = Array.isArray(o.material)
         ? o.material.map((m) => m.clone())
         : o.material.clone();
+      const mats = Array.isArray(mat) ? mat : [mat];
+      if (mats.some((m) => /Tire/i.test(m.name)))
+        radius = Math.max(radius, tyreRadius(g));
       const mesh = new T.Mesh(g, mat);
+      mesh.name = o.name || mats.map((m) => m.name).join(" / ");
       mesh.castShadow = mesh.receiveShadow = true;
-      spin.add(mesh);
+      // Calipers turn with the knuckle but do not rotate around the axle.
+      // Disc/rotor, tyre and rim remain on the rolling hub.
+      (/BrakePad|Caliper/i.test(o.name) ? steer : spin).add(mesh);
     }
+    spin.userData.rollingRadius = radius;
   }
+  // Precise source vertices put the tyre bottom at zero. Road meshes sit a few
+  // centimetres above collision ground; retain that small visual clearance.
+  root.userData.roadClearance = 0.04;
   return root;
 }
 export async function loadDetailedCar() {
