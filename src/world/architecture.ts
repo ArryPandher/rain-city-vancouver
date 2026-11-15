@@ -19,6 +19,7 @@ import { conventionCentre } from "./convention-centre";
 import { fairmontPacificRim } from "./fairmont-pacific-rim";
 import { waterfrontCentre } from "./waterfront-centre-building";
 import { fairmontWaterfront } from "./fairmont-waterfront-building";
+import { pwcPlace } from "./pwc-place-building";
 import { createTerminalCityAssembly } from "./terminal-city-building";
 import { rogersTower } from "./rogers-tower";
 import { harbourGreenTower } from "./harbour-towers";
@@ -156,6 +157,7 @@ export function architecture(
     if (
       terminalCity(b, shell) ||
       fairmontWaterfront(b, shell, m, reflections) ||
+      pwcPlace(b, shell, m, reflections) ||
       waterfrontCentre(b, shell, m, reflections) ||
       ericksonPlace(b, shell, m, reflections) ||
       fairmontPacificRim(b, shell, m, collision, reflections) ||

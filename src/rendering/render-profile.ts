@@ -142,8 +142,14 @@ export function profileRender(
       }
     }
     const fallbackTreeMemory = new Set<object>();
+    const terrainBatchMemory: { name: string; memory: object }[] = [];
     const fallbackTreeBatches: { name: string; pass: object }[] = [];
     scene.traverse((object) => {
+      if (object.userData.terrainBatchMemory)
+        terrainBatchMemory.push({
+          name: object.name,
+          memory: { ...object.userData.terrainBatchMemory },
+        });
       if (!object.userData.fallbackTreeMemory) return;
       fallbackTreeMemory.add(object.userData.fallbackTreeMemory);
       fallbackTreeBatches.push({
@@ -153,6 +159,7 @@ export function profileRender(
     });
     return {
       staticBatchMemory: staticBatchMemoryProfile(scene),
+      terrainBatchMemory,
       fallbackTreeMemory: [...fallbackTreeMemory],
       fallbackTreeBatches,
       capabilities: {

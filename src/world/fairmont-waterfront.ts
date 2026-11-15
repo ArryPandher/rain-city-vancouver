@@ -141,8 +141,9 @@ export function buildFairmontWaterfront(
   // The MCM Howe view and City roof part 162733 establish this continuous
   // projection. Its estimated section fits the existing sloped street; the
   // cantilever has no posts or new floor inside the public walking route.
-  cap(canopy, canopyTop - 0.06, m.glass);
-  cap(canopy, canopyBottom + 0.16, m.dark, true);
+  // A single physical sheet is visible from either side. Do not add a reverse
+  // duplicate or an opaque ceiling: the owner photo shows transmitted daylight.
+  cap(canopy, canopyTop - 0.06, m.canopyGlass);
   const canopyBar = (
     a: Point,
     b: Point,
@@ -191,7 +192,7 @@ export function buildFairmontWaterfront(
         -Math.atan2(b[1] - a[1], b[0] - a[0]),
       );
     // Keep the buried attachment frame simple; the outer edge carries visible
-    // transverse members above head height, under the closed opaque soffit.
+    // transverse members above head height, beneath the transparent roof sheet.
     if (i >= 1 && i <= 6) continue;
     const beams = Math.max(1, Math.round(f.length / 2.8));
     for (let j = 0; j < beams; j++) {

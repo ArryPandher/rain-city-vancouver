@@ -20,7 +20,7 @@ export function fairmontWaterfront(
   reflections.push({
     name: "Fairmont Waterfront harbour exterior",
     position: [472, baseY + 35, -520],
-    materials: [materials.glass, materials.metal],
+    materials: [materials.glass, materials.metal, materials.canopyGlass],
     intensity: { day: 0.9, night: 0.9 },
   });
   return true;

@@ -13,7 +13,24 @@ export function createFairmontWaterfrontMaterials(
     t.updateMatrix();
     return t;
   };
+  // One thin, lightly tinted roof sheet; the frame casts the grille shadow.
+  const canopyGlass = new T.MeshPhysicalMaterial({
+    name: "Fairmont Waterfront transparent canopy roof",
+    color: 0xe3eeeb,
+    metalness: 0,
+    roughness: 0.12,
+    ior: 1.5,
+    transmission: 0,
+    transparent: true,
+    opacity: 0.24,
+    depthWrite: false,
+    side: T.DoubleSide,
+    envMapIntensity: 0.9,
+  });
+  canopyGlass.forceSinglePass = true;
+  canopyGlass.userData.castShadow = false;
   return {
+    canopyGlass,
     panel: new T.MeshStandardMaterial({
       name: "Fairmont Waterfront pale panel grid",
       color: 0xd4d8d4,

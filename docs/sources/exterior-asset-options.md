@@ -85,10 +85,15 @@ mechanics reuse would not solve our facade-depth problem.
 
 ## Recommendation
 
-First reuse a few additional **already-sourced Urban Apartments components**
-for a source-verified commercial-side detail study, with bespoke proportions
-rather than whole-kit building replacement. Next evaluate **one Factory Facade
-service bay** if that topology is present in the target photographs. Seating is
+The first actual-mesh study rejected the **already-sourced Urban Apartments
+components** for PwC Place: its raised timber door panels, letter slots and
+decorative sash window are residential. Scaling or retinting cannot make them
+the commercial storefront in the owner's photo. The measured audit is in
+[pwc-entrance-kit-study.md](pwc-entrance-kit-study.md). Keep these components for
+compatible residential buildings. For PwC, author one complete closed recessed
+commercial frontage with shared existing materials and source-fit proportions.
+Next evaluate **one Factory Facade service bay** if that topology is present in
+the target photographs. Seating is
 a separate small prop improvement. For each, report actual selected triangles,
 material groups, compressed maps, decoded buffers and native close/far views
 before adoption; preserve existing geographic envelope and collision support.

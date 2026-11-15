@@ -1,5 +1,9 @@
 # Third-party credits and licenses
 
+## PwC Place
+
+`src/world/pwc-place-parts.json` combines © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) part outlines with City of Vancouver **Building footprints 2009**, roof parts 161154/161155/162140. The geographic derivative retains [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) and contains information licensed under the [Open Government Licence – Vancouver](https://opendata.vancouver.ca/pages/licence/). Height normalization and source conflicts are documented, not represented as a current survey. Original rendering code is MIT; existing CC0 mineral maps retain their credits. Cadillac Fairview photography and City design drawings are reference only and are not distributed. [Sources, interpretation and limits](docs/sources/pwc-place.md).
+
 ## Fairmont Waterfront and Robson garden reconstruction
 
 Fairmont Waterfront hotel part plans and the Robson garden route/tree positions derive from © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). The compact hotel plan in `src/world/fairmont-waterfront-parts.json` retains that source attribution; original procedural rendering code is MIT, not a relicensing of the geographic database.

@@ -31,11 +31,9 @@ import { CollisionWorld } from "../src/world/collision";
 function fixture() {
   const root = new T.Group(),
     batch = new Batcher(root);
-  const m = Object.fromEntries(
-    ["panel", "glass", "metal", "dark", "roof", "soil", "foliage"].map(
-      (name) => [name, new T.MeshStandardMaterial({ name })],
-    ),
-  ) as unknown as FairmontWaterfrontMaterials;
+  const m = createFairmontWaterfrontMaterials({
+    texture: () => new T.Texture(),
+  });
   batch.offsetY = 0;
   assert.equal(
     buildFairmontWaterfront(batch, { id: ID, pts: ring.flat() }, m),
@@ -163,7 +161,7 @@ test("complete hotel geometry has finite outward faces, metric panel UVs and bou
     triangles > 12000 && triangles < 55000,
     `hotel triangles ${triangles}`,
   );
-  assert.ok(built.meshes.length <= 7);
+  assert.ok(built.meshes.length <= 8);
 });
 
 test("tower and lobby windows have real recesses with glass ahead of closed backings", () => {
@@ -223,7 +221,7 @@ test("each roof stage is closed at its source-bound height rather than one gener
   }
 });
 
-test("Howe canopy retains the mapped projection, meets the wall and has a closed top and underside", () => {
+test("Howe canopy retains its mapped projection and has one transparent sheet with no opaque ceiling", () => {
   assert.equal(canopy.length, 15);
   for (let i = 0; i < canopy.length; i++) {
     if (i >= 1 && i <= 7) {
@@ -256,9 +254,18 @@ test("Howe canopy retains the mapped projection, meets the wall and has a closed
       top[0].point.y >= canopyTop - 0.061 &&
         top[0].point.y <= canopyTop + 0.001,
     );
+    const sheetAbove = top.filter(
+      (h) => (h.object as T.Mesh).material === built.m.canopyGlass,
+    );
+    const sheetBelow = underside.filter(
+      (h) => (h.object as T.Mesh).material === built.m.canopyGlass,
+    );
+    assert.equal(sheetAbove.length, 1);
+    assert.equal(sheetBelow.length, 1);
+    assert.ok(Math.abs(sheetAbove[0].point.y - sheetBelow[0].point.y) < 1e-5);
     assert.ok(
-      underside[0].point.y >= canopyBottom - 0.001 &&
-        underside[0].point.y <= canopyBottom + 0.161,
+      !underside.some((h) => (h.object as T.Mesh).material === built.m.dark),
+      "no opaque full-area soffit remains below the glazed roof",
     );
   }
 });
@@ -367,4 +374,45 @@ test("caller ground offsets all hotel geometry and its reflection capture togeth
   }
   assert.ok(Math.abs(min - 3.4) < 0.00001);
   assert.ok(Math.abs(max - H - 3.4) < 0.00001);
+});
+
+test("canopy roof optical flags survive batching while the physical grille retains shadows", () => {
+  const glass = built.meshes.find(
+    (mesh) => mesh.material === built.m.canopyGlass,
+  )!;
+  assert.ok(glass);
+  assert.equal(glass.castShadow, false);
+  assert.equal(glass.userData.allowShadow, false);
+  assert.equal(built.m.canopyGlass.transparent, true);
+  assert.equal(built.m.canopyGlass.depthWrite, false);
+  assert.equal(built.m.canopyGlass.forceSinglePass, true);
+  assert.equal(built.m.canopyGlass.side, T.DoubleSide);
+  assert.equal(built.m.canopyGlass.transmission, 0);
+  assert.ok(
+    built.m.canopyGlass.opacity > 0 && built.m.canopyGlass.opacity < 0.4,
+  );
+  assert.equal(built.m.glass.transparent, false, "tower glazing is unaffected");
+  const metal = built.meshes.find((mesh) => mesh.material === built.m.metal)!;
+  assert.equal(metal.castShadow, true);
+  let open = 0,
+    frames = 0;
+  for (let x = 463.23; x < 480; x += 0.43)
+    for (let z = -493.19; z < -450; z += 0.47) {
+      if (!pointInPoly(x, z, canopy.flat()) || pointInPoly(x, z, ring.flat()))
+        continue;
+      const hits = ray(
+        new T.Vector3(x, canopyBottom - 0.1, z),
+        new T.Vector3(x, canopyTop + 0.2, z),
+      );
+      const opaque = hits.filter(
+        (h) => (h.object as T.Mesh).material !== built.m.canopyGlass,
+      );
+      if (opaque.length) frames++;
+      else open++;
+    }
+  assert.ok(frames > 20, "real frame members still cross the roof area");
+  assert.ok(
+    open > frames,
+    "most canopy roof area admits daylight between physical members",
+  );
 });

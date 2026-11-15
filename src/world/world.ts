@@ -1,4 +1,5 @@
 import { batchFallbackTrees } from "./fallback-tree-batch";
+import { batchTerrainTiles } from "./terrain-batch";
 import { ShadowCasterVolume } from "../rendering/shadow-caster-volume";
 import { DAYLIGHT_SKY_ROTATION, sunOffset } from "./daylight";
 import { batchStaticChunks } from "./static-chunk-batch";
@@ -474,6 +475,11 @@ export class World {
         terrainCutWall(elevationGrid, PROSPECT_FORECOURT, 2.06, cliff(m.stone)),
       );
       this.root.add(...ground);
+      try {
+        batchTerrainTiles(this.root, ground, this.facadeMultiDraw);
+      } catch (error) {
+        console.warn("Terrain batching unavailable; keeping original tiles", error);
+      }
       this.chunks.push(...ground);
     }
     const cityBase = mesh(
