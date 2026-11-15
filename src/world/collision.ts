@@ -4,6 +4,10 @@ import {
 } from "./exterior-recess-collision";
 import { createFairmontArcadeSite } from "./fairmont-arcade-site";
 import {
+  createFairmontArrivalIsland,
+  type FairmontArrivalIsland,
+} from "./fairmont-arrival-island";
+import {
   FAIRMONT_WATERFRONT_ID,
   FAIRMONT_WATERFRONT_RING,
 } from "./fairmont-waterfront-site";
@@ -256,6 +260,7 @@ export class CollisionWorld {
   robsonGarden?: Building;
   convention?: ConventionSite;
   canada?: CanadaPlaceSite;
+  fairmontArrivalIsland?: FairmontArrivalIsland;
   private exteriorRecesses = new Map<string, ExteriorRecessCollision>();
   buildings = new SpatialHash<Building>();
   roads = new SpatialHash<Road>(100);
@@ -346,6 +351,10 @@ export class CollisionWorld {
     }
     const hotel = data.buildings.find((b) => b.id === FAIRMONT_WATERFRONT_ID);
     if (hotel) {
+      if (this.canada?.fairmontApron)
+        this.fairmontArrivalIsland = createFairmontArrivalIsland(
+          this.baselineGroundHeight.bind(this),
+        );
       const base = this.baselineGroundHeight(...centroid(hotel.pts));
       const site = createFairmontArcadeSite(
         this.baselineGroundHeight.bind(this),
@@ -494,6 +503,8 @@ export class CollisionWorld {
     referenceY: number,
     camera: boolean,
   ) {
+    if (this.fairmontArrivalIsland?.blocked(x, z, r, referenceY, camera))
+      return true;
     // A retaining face is not a step: low actors cannot enter the raised
     // support through its side and be snapped up by ground-following physics.
     if (

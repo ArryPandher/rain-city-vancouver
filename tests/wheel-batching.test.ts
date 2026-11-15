@@ -12,7 +12,7 @@ import {
   syncCarWheelBatches,
 } from "../src/world/wheel-batching";
 
-async function source(file: string) {
+async function rawSource(file: string) {
   const bytes = await readFile(`public/models/${file}.glb`);
   const loader = new GLTFLoader();
   loader.register(() => ({
@@ -23,7 +23,10 @@ async function source(file: string) {
     bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
     "",
   );
-  return buildDetailedCarTemplate(gltf.scene, () => new T.Texture());
+  return gltf.scene;
+}
+async function source(file: string) {
+  return buildDetailedCarTemplate(await rawSource(file), () => new T.Texture());
 }
 function wheelMeshes(car: T.Group) {
   const result: T.Mesh[] = [];
@@ -47,6 +50,126 @@ function pose(car: T.Group, spin: number, steer: number) {
   }
   car.updateMatrixWorld(true);
 }
+
+for (const file of ["car-concept", "car-traffic"])
+  test(`${file}: coherent rim coating preserves distinct batches and every other source wheel material`, async () => {
+    const raw = await rawSource(file);
+    const sourceMaterials = new Map<string, T.MeshStandardMaterial>();
+    raw.traverse((object) => {
+      if (
+        object instanceof T.Mesh &&
+        object.material instanceof T.MeshStandardMaterial
+      )
+        sourceMaterials.set(object.material.name, object.material);
+    });
+    const finish = (material: T.MeshStandardMaterial) => ({
+      color: material.color.toArray(),
+      metalness: material.metalness,
+      roughness: material.roughness,
+      emissive: material.emissive.toArray(),
+      emissiveIntensity: material.emissiveIntensity,
+      normalScale: material.normalScale.toArray(),
+      aoMapIntensity: material.aoMapIntensity,
+      envMapIntensity: material.envMapIntensity,
+    });
+    const snapshots = new Map(
+      [...sourceMaterials].map(([name, material]) => [name, finish(material)]),
+    );
+    const originalEmissiveMaps = new Map(
+      [...sourceMaterials].map(([name, material]) => [
+        name,
+        material.emissiveMap,
+      ]),
+    );
+    const template = buildDetailedCarTemplate(raw, () => new T.Texture());
+    const meshes = wheelMeshes(template);
+    const rims = ["Rim1", "Rim2"].map((name) => {
+      const parts = meshes.filter(
+        (mesh) => (mesh.material as T.Material).name === name,
+      );
+      assert.equal(parts.length, 4);
+      assert.equal(new Set(parts.map((mesh) => mesh.material)).size, 1);
+      const material = parts[0].material as T.MeshStandardMaterial;
+      assert.equal(material.color.getHex(), 0x8b9299);
+      assert.equal(material.metalness, 0);
+      assert.equal(material.roughness, 0.42);
+      assert.equal(material.emissive.getHex(), 0);
+      assert.equal(material.emissiveIntensity, 0);
+      assert.equal(material.emissiveMap, null);
+      assert.equal(material.aoMap, sourceMaterials.get(name)!.aoMap);
+      assert.equal(
+        material.aoMapIntensity,
+        sourceMaterials.get(name)!.aoMapIntensity,
+      );
+      assert.notEqual(material, sourceMaterials.get(name));
+      return material;
+    });
+    assert.notEqual(
+      rims[0],
+      rims[1],
+      "eight parts on one material would disable wheel batching",
+    );
+    for (const mesh of meshes) {
+      const material = mesh.material as T.MeshStandardMaterial;
+      if (/^Rim[12]$/.test(material.name)) continue;
+      const original = sourceMaterials.get(material.name)!;
+      assert.deepEqual(
+        finish(material),
+        finish(original),
+        `${material.name} finish unchanged`,
+      );
+      for (const key of [
+        "map",
+        "normalMap",
+        "emissiveMap",
+        "aoMap",
+        "metalnessMap",
+        "roughnessMap",
+      ] as const)
+        assert.equal(
+          material[key],
+          original[key],
+          `${material.name} ${key} unchanged`,
+        );
+    }
+    for (const [name, material] of sourceMaterials) {
+      assert.deepEqual(
+        finish(material),
+        snapshots.get(name),
+        `${name} source material remains unmodified`,
+      );
+      assert.equal(material.emissiveMap, originalEmissiveMaps.get(name));
+    }
+    const body = template.getObjectByName("car-body")!;
+    const paint = (
+      body.children as T.Mesh<T.BufferGeometry, T.MeshPhysicalMaterial>[]
+    ).find((mesh) => /Paint 1/.test(mesh.material.name))!.material;
+    assert.equal(paint.color.getHex(), 0x3e656a);
+    assert.equal(paint.metalness, 0.72);
+    assert.equal(paint.roughness, 0.23);
+    assert.equal(paint.clearcoat, 1);
+    assert.equal(paint.clearcoatRoughness, 0);
+    const lamps = (
+      body.children as T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>[]
+    ).map((mesh) => mesh.material);
+    assert.equal(
+      lamps.find((m) => /Headlight/i.test(m.name))!.emissiveIntensity,
+      2,
+    );
+    assert.equal(
+      lamps.find((m) => /Brakelight/i.test(m.name))!.emissiveIntensity,
+      0.6,
+    );
+    const batches = batchCarWheels(cloneDetailedCar(template).group, true);
+    assert.equal(batches.length, 6);
+    assert.equal(
+      batches.filter((batch) =>
+        /^Rim[12]$/.test((batch.material as T.Material).name),
+      ).length,
+      2,
+    );
+  });
+
 for (const [file, triangles] of [
   ["car-concept", 65240],
   ["car-traffic", 18588],

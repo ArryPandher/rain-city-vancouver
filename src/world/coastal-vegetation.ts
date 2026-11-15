@@ -22,6 +22,7 @@ export class CoastalVegetation {
     result.sites = [
       ...coastalPlantSites(data, collision),
       ...harbourPlantSites(collision),
+      ...(collision.fairmontArrivalIsland?.plants ?? []),
     ];
     const model = await new GLTFLoader().loadAsync(
       `${BASE}models/forest/coastal-broadleaf.glb`,

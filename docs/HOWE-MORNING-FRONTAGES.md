@@ -66,7 +66,7 @@ together, so no quantitative contribution is assigned to an individual change.
 The car tangent-only player/camera pose and lighting match exactly apart from
 floating-point FOV noise. Dynamic scenery and host load differ.
 
-The final rim view was checked at the same third-person camera. Bright spoke highlights remain; no large cosmetic gain is claimed. The runtime no longer treats the decorative rims as emitters, and the original geometry/contact silhouette remains intact. The full driving route and public release check are still pending.
+The final rim view was checked at the same third-person camera. Bright spoke highlights remain; no large cosmetic gain is claimed. The runtime no longer treats the decorative rims as emitters, and the original geometry/contact silhouette remains intact. Checkpoint cd58776 subsequently passed all 511 CI tests and Pages run 43750830603. Its public DOM and HTTP bundle matched the local hash. Actual local input verified driving at 59 km/h, braking to zero, exiting, walking and pistol fire (15 to 14); the public hotel approach was walked and inspected with 28 reflection captures, no reflection error and no captured warnings/errors. The complete separate hotel driveway route remains unverified.
 
 ![Ordinary third-person morning hotel and car views](screenshots/howe-morning-gameplay.webp)
 Remaining realism gaps include repetitive structural detail, weak reflected

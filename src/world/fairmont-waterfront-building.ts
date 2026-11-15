@@ -5,6 +5,10 @@ import type { Materials } from "./materials";
 import { buildFairmontWaterfront } from "./fairmont-waterfront";
 import { createFairmontWaterfrontMaterials } from "./fairmont-waterfront-materials";
 import { FAIRMONT_WATERFRONT_ID } from "./fairmont-waterfront-site";
+import {
+  buildFairmontArrivalIsland,
+  createFairmontArrivalIsland,
+} from "./fairmont-arrival-island";
 
 /** Root integration calls this before the generic shell dispatch. */
 export function fairmontWaterfront(
@@ -19,6 +23,15 @@ export function fairmontWaterfront(
   const materials = createFairmontWaterfrontMaterials(library);
   if (!buildFairmontWaterfront(batch, building, materials, groundHeight))
     return false;
+  if (groundHeight)
+    buildFairmontArrivalIsland(
+      batch,
+      createFairmontArrivalIsland(groundHeight),
+      {
+        stone: library.concrete,
+        soil: materials.soil,
+      },
+    );
   reflections.push({
     name: "Fairmont Waterfront harbour exterior",
     position: [472, baseY + 35, -520],

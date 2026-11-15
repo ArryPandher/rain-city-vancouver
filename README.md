@@ -10,7 +10,7 @@ Real OpenStreetMap streets and footprints cover downtown, Stanley Park, East Van
 
 This is a substantial independent browser prototype. It is not a full AAA game, a surveyed city reconstruction, or a Rockstar product. Architecture, characters, traffic and landmark models remain stylized and approximate.
 
-The latest exterior pass restores the missing PwC Place tower, gives Fairmont Waterfront a light-admitting canopy roof, and batches terrain without reducing its detail. [Changes, gameplay evidence and remaining limitations](docs/PWC-CANOPY-TERRAIN.md). The previous pass added [mapped Robson garden stairs and the Fairmont hotel](docs/ROBSON-GARDEN-HOTEL.md).
+Current work concentrates on the complete Canada Place/Howe gameplay scene: deeper street frontages, consistent morning light, a planted Fairmont arrival edge and a coherent vehicle rim finish. [Changes, gameplay evidence and remaining limitations](docs/HOWE-ARRIVAL-COURT.md). The next architecture priority is the wrongly classified Granville Square Howe wing. The scene remains well below the requested AAA visual target.
 
 ## Play
 

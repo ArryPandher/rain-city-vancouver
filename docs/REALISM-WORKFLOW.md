@@ -2,7 +2,11 @@
 
 Keep the active goal and integration in the main chat. Use three focused agents for independent architecture, material/art and performance work. Arry approved this arrangement on November 14, 2026; a separate full game session is not required. Longer independent features can use isolated branches, while small coordinated changes use explicit file ownership in the existing build worktree.
 
-The target remains browser-only GTA VI/AAA-quality ordinary daylight walking, driving and shooting. A few excellent regions take priority over a broad mediocre city: Canada Place first, then Robson Square/Art Gallery, Granville theatre blocks and a Stanley Park seawall stretch. Tests and shipped code do not establish visual parity.
+The active goal was updated by Arry on November 15, 2026: build jaw-dropping, browser-only Vancouver gameplay scenes using GTA 6 as the realism reference. Focus on Canada Place/Howe Street first, Robson Square with the Art Gallery second, and the Ironworkers Memorial Bridge third. Prioritize exceptional daylight architecture, materials, lighting, vehicles and animation during ordinary third-person walking, driving and shooting. Finish one or two standout scenes before expanding. Tests and shipped code do not establish visual parity.
+
+The first scene is the complete playable Howe approach beside Canada Place, including the surrounding buildings visible while walking, driving and shooting. An isolated improved entrance is insufficient. The repeated heritage wall behind the current car comparison, vehicle reflections/finish, sparse street composition and frame pacing are still significant scene-wide defects. Earlier four-region references below describe historical scope; the current three-scene priority above governs new work.
+
+Arry subsequently made the visual bar explicit in the active goal: the scenes should appear like an AAA game with high quality and fidelity. This remains an unachieved acceptance requirement, not a description of the current build.
 
 ## Responsibilities
 

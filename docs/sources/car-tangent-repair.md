@@ -96,11 +96,66 @@ After recording the tangent-only comparison, the runtime clones of `Rim1` and
 `Rim2` disable their source emissive atlas, emissive colour and intensity. The
 source GLB specifies emissive factor `[1,1,1]` and atlas index 3 for both rims.
 `Rim2` also has metallic 1 and roughness 0.049 with no roughness texture. Its
-runtime roughness is now 0.24, an authored ordinary-metal finish rather than a
-measured alloy specification. The darker nonmetallic `Rim1` keeps its source
+runtime roughness at that checkpoint was 0.24, an authored ordinary-metal finish
+rather than a measured alloy specification. The darker nonmetallic `Rim1` kept its source
 roughness 0.4. Tyres, brakes, lamps, painted body, geometry and rolling behaviour
 are unchanged. Shared textures are not disposed or modified.
 
 All 11 actual-asset tangent/wheel/batching/LOD tests and the production build
 pass after this material-only calibration. Native rim appearance is documented
 in the integrated scene report; neither correction establishes AAA car quality.
+
+## Candidate coherent satin rim coating
+
+The native `car-rims-after.jpg` still shows bright star-like centres. A read-only
+audit of clean `cd58776` confirmed that this is source geometry plus material
+contrast: neither rim has a normal or bump map, and emission was already disabled.
+In the normalized near wheel, `Rim2` is a pointed inner ornament spanning radii
+0.0624–0.2003 m, while `Rim1` includes the full annular rim and long radial spokes
+out to 0.3411 m. The tyre radius remains 0.4318 m. An in-memory, material-ID-coloured
+projection of the actual geometry confirmed that the star shape is authored.
+The larger rim's nearly black finish makes the white metallic insert dominate
+the gameplay view.
+
+The next candidate changes only the two cloned rim finishes to the same satin
+powder-coated alloy interpretation. This is an authored coating choice, not a
+measured automotive material or a change to global lighting/exposure.
+
+| Runtime material value | Before: Rim1 | Before: Rim2 | Candidate: both |
+| --- | --- | --- | --- |
+| Base colour, sRGB hex | `#030303` | `#ffffff` | `#8b9299` |
+| Base colour, linear RGB | `[0.000992374261841178, 0.000992374261841178, 0.000992374261841178]` | `[1, 1, 1]` | `[0.25818285291079235, 0.2874408377161099, 0.31854677811435356]` |
+| Metalness | 0 | 1 | 0 |
+| Roughness | 0.4 | 0.24 | 0.42 |
+| Emissive colour / intensity / map | black / 0 / null | black / 0 / null | unchanged |
+
+The exact linear values above come from the loaded source/current Three colour
+objects; the hex values are their quantized display-space representation.
+Both retain their source AO texture and intensity 0.85. `Rim1` and `Rim2` remain
+separate material instances and names, with four wheel parts each. Giving them
+one shared material instance would create an eight-part group and make the
+existing exact-four wheel batching rule skip it.
+
+Measured cost is zero added triangles, vertex/index bytes, textures, materials
+or draws. The source wheel geometry remains 65,240 near / 18,588 traffic triangles;
+optional batching remains 24 meshes to six batches, including two rim batches.
+Packed wheel buffers remain 2,354,632 near / 881,840 traffic bytes shared across
+clones. This candidate changes existing material uniforms and adds no per-frame
+work. Tyres, brakes, lamps, body paint, wheel motion, source GLBs and all geometry
+remain unchanged.
+
+All 13 focused actual-asset tangent/wheel/batching/LOD tests and TypeScript pass.
+The two added real-GLB tests check coherent rim values, distinct material groups,
+six-batch eligibility, unchanged non-rim wheel properties/textures, unchanged body
+paint/lamp settings, and unmodified source material objects. Existing tests still
+cover every batched attribute/index and the wheel transforms. No full suite or
+build was run for this candidate by the implementation reviewer.
+
+The star topology is retained. The subsequent native comparison used the same
+summoned-car procedure and exact player/camera/light settings. Both rims now
+read as a complete wheel with a quieter inner insert; independent review accepts
+the improvement while noting a uniformly pale coating and weak brake depth.
+The first unmatched title-menu-car frame was excluded. Actual driving and
+braking preserve the rolling/contact presentation. Body clearcoat/reflections
+remain a separate issue and are not altered here. See the integrated
+[arrival-court checkpoint](../HOWE-ARRIVAL-COURT.md) for movement and timing limits.

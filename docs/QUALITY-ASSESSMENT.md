@@ -2,10 +2,12 @@
 
 2026-11-14. Reviewed against game release `5995f9d532a52e3f7aa3dc43e5c8b35ee2b77be9`.
 
-Later November 14 direction is recorded in [Daylight landmarks](DAYLIGHT-LANDMARKS.md):
-GTA 6–level, AAA world-class realism is the target for four named Vancouver
-regions, with ordinary daylight gameplay as the current review scope. The
-release-specific measurements below remain historical evidence.
+Current November 15 direction is recorded in [Realism workflow](REALISM-WORKFLOW.md):
+GTA 6 is the realism reference for Canada Place/Howe Street first, Robson Square
+and the Art Gallery second, then the Ironworkers Memorial Bridge. Finish one or
+two standout scenes before expanding, with ordinary daylight third-person
+walking, driving and shooting as the review scope. The release-specific
+measurements and earlier region order below remain historical evidence.
 
 ## User direction
 

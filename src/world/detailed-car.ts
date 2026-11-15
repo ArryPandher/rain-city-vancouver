@@ -140,8 +140,9 @@ export function buildDetailedCarTemplate(
     let material = wheelMaterials.get(source);
     if (!material) {
       material = source.clone();
-      // The concept asset uses an illuminated atlas on its decorative rims.
-      // Ground the street-car finish without changing tyres, brakes or lamps.
+      // The source pairs an almost-black main rim with a white metallic star
+      // insert. Match their satin coated-alloy finish, retaining separate
+      // material instances so each wheel batch still has exactly four parts.
       if (
         material instanceof T.MeshStandardMaterial &&
         /^(Rim1|Rim2)$/.test(material.name)
@@ -149,7 +150,9 @@ export function buildDetailedCarTemplate(
         material.emissive.set(0x000000);
         material.emissiveIntensity = 0;
         material.emissiveMap = null;
-        if (material.name === "Rim2") material.roughness = 0.24;
+        material.color.set(0x8b9299);
+        material.metalness = 0;
+        material.roughness = 0.42;
       }
       wheelMaterials.set(source, material);
     }
