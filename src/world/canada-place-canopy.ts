@@ -1,3 +1,4 @@
+import { CANADA_PLACE_ENTRANCE as entrance } from "./canada-place-entrance-data";
 import {
   createCanadaPlaceCanopyGlazingPair,
   createCanadaPlaceCanopyGlazingMesh,
@@ -257,6 +258,7 @@ export function addCanadaPlaceCanopy(
     for (let k = 1; k < sections.length; k++) {
       const a = sections[k - 1],
         b = sections[k];
+      if (k === 1 && l >= entrance.start - 1e-6) continue;
       quad(
         glass,
         [
@@ -275,6 +277,7 @@ export function addCanadaPlaceCanopy(
     for (let k = 1; k < sections.length; k++) {
       const a = sections[k - 1],
         b = sections[k];
+      if (k === 1 && u > entrance.start + 1e-6) continue;
       beam(
         at(u, a.y, a.outward + 0.045),
         at(u, b.y, b.outward + 0.045),
@@ -286,7 +289,7 @@ export function addCanadaPlaceCanopy(
     const s = sections[k];
     beam(
       at(0, s.y, s.outward + 0.05),
-      at(length, s.y, s.outward + 0.05),
+      at(k === 0 ? entrance.start : length, s.y, s.outward + 0.05),
       0.085,
     );
   }
@@ -330,7 +333,9 @@ export function addCanadaPlaceCanopy(
   for (const j of primary) {
     const u = Math.max(0.055, Math.min(length - 0.055, (length * j) / count));
     const side = along.clone().multiplyScalar(0.05);
-    const rings = sections.map((section) => {
+    const rings = (
+      u > entrance.start + 1e-6 ? sections.slice(1) : sections
+    ).map((section) => {
       const n = normal(section.theta),
         p = at(u, section.y, section.outward);
       const a = p.clone().addScaledVector(n, -webDepth[0]);
@@ -375,8 +380,8 @@ export function addCanadaPlaceCanopy(
     stone,
     [
       at(0, 7.65, 3),
-      at(length, 7.65, 3),
-      at(length, data.sill, 3),
+      at(entrance.start, 7.65, 3),
+      at(entrance.start, data.sill, 3),
       at(0, data.sill, 3),
     ],
     out,
@@ -385,8 +390,8 @@ export function addCanadaPlaceCanopy(
     lining,
     [
       at(0, data.sill, 0),
-      at(length, data.sill, 0),
-      at(length, data.sill, 3),
+      at(entrance.start, data.sill, 0),
+      at(entrance.start, data.sill, 3),
       at(0, data.sill, 3),
     ],
     up,
@@ -398,8 +403,8 @@ export function addCanadaPlaceCanopy(
       stone,
       [
         at(u, 7.65, 0),
-        at(u, 7.65, 3),
-        at(u, data.sill, 3),
+        at(u, 7.65, u === length ? entrance.back : 3),
+        at(u, data.sill, u === length ? entrance.back : 3),
         at(u, data.sill, 0),
       ],
       endNormal,
@@ -407,6 +412,7 @@ export function addCanadaPlaceCanopy(
     for (let k = 1; k < sections.length; k++) {
       const a = sections[k - 1],
         b = sections[k];
+      if (u === length && k === 1) continue;
       quad(
         endGlasses[endIndex],
         [
@@ -419,12 +425,180 @@ export function addCanadaPlaceCanopy(
       );
     }
     beam(at(u, data.sill, 0), at(u, data.crown, 0), 0.14);
-    beam(at(u, data.sill, 0), at(u, data.sill, 3), 0.12);
+    beam(
+      at(u, data.sill, 0),
+      at(u, data.sill, u === length ? entrance.back : 3),
+      0.12,
+    );
     for (const y of [10.6, 12.4, 13.7]) {
       const theta = Math.asin((y - data.spring) / (data.crown - data.spring)),
         o = y <= data.spring ? 3 : 3 * Math.cos(theta);
       beam(at(u, y, 0), at(u, y, o), 0.07);
     }
+  }
+  // Southern lower entrance: closed recessed circulation frontage, not a
+  // fictitious at-grade door pair. Roof attaches beneath the existing spring.
+  const E = entrance;
+  const roofY = (o: number) =>
+    E.roofBackY +
+    ((o - E.roofBack) / (E.roofFront - E.roofBack)) *
+      (E.roofFrontY - E.roofBackY);
+  const roofNormal = up
+    .clone()
+    .addScaledVector(
+      out,
+      (E.roofBackY - E.roofFrontY) / (E.roofFront - E.roofBack),
+    )
+    .normalize();
+  const entranceRoofGlass = glass.clone(); // separate paired mesh: correct roof sorting
+  const roofStations = Array.from(
+    { length: 8 },
+    (_, i) => E.start + ((E.end - E.start) * i) / 7,
+  );
+  for (let i = 1; i < roofStations.length; i++) {
+    const l = roofStations[i - 1],
+      r = roofStations[i];
+    quad(
+      entranceRoofGlass,
+      [
+        at(l, roofY(2.6), 2.6),
+        at(r, roofY(2.6), 2.6),
+        at(r, roofY(4), 4),
+        at(l, roofY(4), 4),
+      ],
+      roofNormal,
+    );
+    quad(
+      entranceRoofGlass,
+      [
+        at(l, roofY(2.6), 2.6),
+        at(r, roofY(2.6), 2.6),
+        at(r, roofY(4), 4),
+        at(l, roofY(4), 4),
+      ],
+      roofNormal.clone().negate(),
+    );
+    // Recessed lower panes share the accepted optical pair; no old pane behind.
+    quad(
+      glass,
+      [
+        at(l, E.sill, E.front),
+        at(r, E.sill, E.front),
+        at(r, roofY(E.front) - 0.06, E.front),
+        at(l, roofY(E.front) - 0.06, E.front),
+      ],
+      out,
+    );
+  }
+  for (const u of roofStations) {
+    beam(
+      at(u, roofY(2.6), 2.6),
+      at(u, roofY(4), 4),
+      u === E.start || u === E.end ? 0.12 : 0.065,
+    );
+    beam(at(u, E.base, E.front), at(u, roofY(E.front), E.front), 0.075);
+    // Short bearing into the existing spring frame; no post in public walk.
+    beam(at(u, roofY(3) - 0.055, 3), at(u, data.spring, 3), 0.07);
+  }
+  for (const o of [2.6, 4])
+    beam(at(E.start, roofY(o), o), at(E.end, roofY(o), o), 0.12);
+  beam(at(E.start, E.sill, E.front), at(E.end, E.sill, E.front), 0.075);
+  // Closed shallow lining volume; old8.65 floor retained only behind this back.
+  quad(
+    lining,
+    [
+      at(E.start, E.base, E.back),
+      at(E.end, E.base, E.back),
+      at(E.end, E.roofBackY, E.back),
+      at(E.start, E.roofBackY, E.back),
+    ],
+    out,
+  );
+  quad(
+    lining,
+    [
+      at(E.start, E.base, E.back),
+      at(E.end, E.base, E.back),
+      at(E.end, E.base, 3),
+      at(E.start, E.base, 3),
+    ],
+    up,
+  );
+  quad(
+    lining,
+    [
+      at(E.start, E.roofBackY, E.back),
+      at(E.end, E.roofBackY, E.back),
+      at(E.end, E.roofBackY, E.front),
+      at(E.start, E.roofBackY, E.front),
+    ],
+    up.clone().negate(),
+  );
+  quad(
+    lining,
+    [
+      at(E.start, data.sill, 0),
+      at(E.end, data.sill, 0),
+      at(E.end, data.sill, E.back),
+      at(E.start, data.sill, E.back),
+    ],
+    up,
+  );
+  quad(
+    stone,
+    [
+      at(E.start, E.base, E.front),
+      at(E.end, E.base, E.front),
+      at(E.end, E.sill, E.front),
+      at(E.start, E.sill, E.front),
+    ],
+    out,
+  );
+  // Seal the thin band between projecting roof and unchanged curved spring.
+  quad(
+    frame,
+    [
+      at(E.start, roofY(3), 3),
+      at(E.end, roofY(3), 3),
+      at(E.end, data.spring, 3),
+      at(E.start, data.spring, 3),
+    ],
+    out,
+  );
+  for (const u of [E.start, E.end]) {
+    const n = along.clone().multiplyScalar(u === E.start ? -1 : 1);
+    // Inward closure at ends joins original source-facing backing as well.
+    quad(
+      lining,
+      [
+        at(u, E.base, 0),
+        at(u, E.base, E.front),
+        at(u, E.roofBackY, E.front),
+        at(u, E.roofBackY, 0),
+      ],
+      n,
+    );
+    quad(
+      stone,
+      [
+        at(u, E.base, E.front),
+        at(u, E.base, 3),
+        at(u, E.sill, 3),
+        at(u, E.sill, E.front),
+      ],
+      n,
+    );
+    quad(
+      glass,
+      [
+        at(u, E.sill, E.front),
+        at(u, E.sill, 3),
+        at(u, roofY(3), 3),
+        at(u, roofY(E.front), E.front),
+      ],
+      n,
+    );
+    beam(at(u, E.base, E.front), at(u, roofY(E.front), E.front), 0.12);
   }
   // Continuous crown flashing engages the original slab edge; its underside is
   // visible and front-sided. No source opaque wall remains behind curved panes.
@@ -447,7 +621,9 @@ export function addCanadaPlaceCanopy(
     g.setIndex(q.ix);
     landmarkSurfaceUV(g, [4, 4]);
     const isGlass =
-      m === glass || endGlasses.includes(m as T.MeshStandardMaterial);
+      m === glass ||
+      m === entranceRoofGlass ||
+      endGlasses.includes(m as T.MeshStandardMaterial);
     const mesh = isGlass
       ? createCanadaPlaceCanopyGlazingMesh(g, glazingPair)
       : new T.Mesh(g, m);

@@ -1,3 +1,8 @@
+import {
+  CANADA_PLACE_ENTRANCE,
+  CANADA_PLACE_ENTRANCE_GROUND_WORLD,
+  canadaPlaceEntrancePoint,
+} from "./canada-place-entrance-data";
 import type { CanadaPlaceCapabilities } from "./canada-place-capabilities";
 import { geo, pointInPoly, segmentPoint } from "./data";
 import { CANADA_PLACE_GROUND_STAYS } from "./canada-place-ground-stays-data";
@@ -106,6 +111,55 @@ function containsCircle(x: number, z: number, p: number[], r: number) {
 export function inCanadaPlacePier(x: number, z: number, r = 0) {
   return valid(x, z, r) && containsCircle(x, z, CANADA_PLACE_PIER, r);
 }
+const ENTRANCE_ROOF_WORLD = [
+  [CANADA_PLACE_ENTRANCE.start, CANADA_PLACE_ENTRANCE.roofBack],
+  [CANADA_PLACE_ENTRANCE.end, CANADA_PLACE_ENTRANCE.roofBack],
+  [CANADA_PLACE_ENTRANCE.end, CANADA_PLACE_ENTRANCE.roofFront],
+  [CANADA_PLACE_ENTRANCE.start, CANADA_PLACE_ENTRANCE.roofFront],
+].flatMap(([u, o]) => {
+  const [lx, lz] = canadaPlaceEntrancePoint(u, o);
+  return [lx + CANADA_PLACE_ORIGIN[0], lz + CANADA_PLACE_ORIGIN[1]];
+});
+
+/** Match the southern closed frontage's visible recess, not its overhead roof.
+ * Original canopy edges retain their existing trim margin; only newly authored
+ * lower cheeks/front use the measured60mm frame allowance. */
+function canopySolidAt(x: number, z: number, r: number, y: number) {
+  const e = CANADA_PLACE_ENTRANCE;
+  // Finite overhead envelope includes the shallow sloped glass/frame thickness.
+  // A normal player/car at7.88 stays below it; a high camera cannot pass through.
+  if (
+    y + r >= Math.min(e.roofFrontY, e.roofBackY) - 0.06 + 0.08 &&
+    y - r <= Math.max(e.roofFrontY, e.roofBackY) + 0.06 + 0.08
+  ) {
+    if (
+      pointInPoly(x, z, ENTRANCE_ROOF_WORLD) ||
+      edgeDistance(x, z, ENTRANCE_ROOF_WORLD) <= r + 0.06
+    )
+      return true;
+  }
+
+  if (!Number.isFinite(y) || y >= canopy.spring + 0.08)
+    return (
+      pointInPoly(x, z, CANADA_PLACE_ENTRANCE_CANOPY) ||
+      edgeDistance(x, z, CANADA_PLACE_ENTRANCE_CANOPY) <= r + 0.55
+    );
+  const p = CANADA_PLACE_ENTRANCE_GROUND_WORLD;
+  if (pointInPoly(x, z, p)) return true;
+  for (let i = 0; i < p.length; i += 2) {
+    const j = (i + 2) % p.length,
+      edge = i / 2;
+    // Do not carry the old front edge's rounded550mm endpoint inflation into
+    // the new narrow recess beyond its north return.
+    const beyondOldFront =
+      edge === 4 &&
+      (x - p[i]) * (p[j] - p[i]) + (z - p[i + 1]) * (p[j + 1] - p[i + 1]) < 0;
+    const margin = (edge >= 1 && edge <= 3) || beyondOldFront ? 0.06 : 0.55;
+    if (segmentPoint(x, z, p[i], p[i + 1], p[j], p[j + 1]).d <= r + margin)
+      return true;
+  }
+  return false;
+}
 /** Closed hotel/exhibition/end-hall volume at and above public deck. The 0.55 m
  * margin includes source projecting facade trim; it is deliberately conservative. */
 export function solidAt(
@@ -116,14 +170,17 @@ export function solidAt(
   capabilities?: CanadaPlaceCapabilities,
 ) {
   if (!valid(x, z, r)) return true;
+  if (
+    (!capabilities || capabilities.entranceCanopy) &&
+    canopySolidAt(x, z, r, referenceY)
+  )
+    return true;
   const enabledMasses = CANADA_PLACE_SOLID_MASSES.filter(
     (p) =>
       (!capabilities ||
         capabilities.concourse ||
         p !== concourse.groundWorldFootprint) &&
-      (!capabilities ||
-        capabilities.entranceCanopy ||
-        p !== CANADA_PLACE_ENTRANCE_CANOPY),
+      p !== CANADA_PLACE_ENTRANCE_CANOPY,
   );
   const masses =
     referenceY >= concourse.groundGlassHeadY + 0.08

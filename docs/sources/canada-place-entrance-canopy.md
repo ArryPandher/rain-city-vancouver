@@ -107,3 +107,72 @@ Front, oblique and shifted first-person views now read as one glazed band: the r
 The actual source opening exposes the continuous700mm backing at five longitudinal stations and both rows; glass is the first exterior hit, and source caps, accepted conservatory and public route remain unaffected. Final geometry is858 unique triangles and60,060 unique CPU geometry-buffer bytes. Native attribution confirms six beauty groups/994 submitted triangles, four opaque shadow groups/722 triangles, and no hotel glass shadow draw. All68 pane polygons share one ordered optical pair and the existing capture; no per-pane meshes or new reflection capture.
 
 Local driving/braking/exit, the connected pier walk, moving first-person views, pistol fire to14/180 and holstering passed with empty captured warning/error lists. Baseline/final comparison uses approximately(472.2,7.88,−586.5), yaw0.503/pitch−0.515/FOV62. The concurrent road batching is documented separately in `static-chunk-batching.md`; final quiet20s pacing averaged37.85fps/p9535.1ms/max50ms at723×670/ratio1.35. This is a short same-area measurement, not sustained performance certification. Evidence: `artifacts/local/canada-ground-glass-final-{entry,whole,oblique,parallax}.jpg` and the final profile/sample JSON files.
+
+## Southern lower canopy and recessed closed frontage (2026-11-15)
+
+TourbyTransit's cached Canadian Trail view and Rabich's full-resolution June2022
+southern end show a flat/slightly sloping glazed projection beneath the curved
+end pane. The enlarged Tour view also suggests recessed/descending circulation;
+it does not prove an at-grade door pair, stair dimensions or a readable sign.
+The new assembly therefore remains a closed exterior, without invented doors,
+stairs, graphics or accessible interior.
+
+Its southern endpoint is the existing HOTEL16 end. The estimated northern
+endpoint is the existing primary rib32 of39, source station42.5626m: a9.3106m
+assembly ending at a structural bay, not the earlier arbitrary44m study cut.
+That length is a reconstruction estimate, not a surveyed terminator. The
+accepted curved envelope, upper hotel face and optical parameters are retained.
+
+The lower frontage recesses from outward3m to2.6m, with a150mm base beginning on
+source deck7.8m and a closed lining at2.3m. Original straight panes and continuous
+850mm plinth are removed over the interval; the original8.65m floor now ends
+behind the new backing, so it cannot form a shelf across the recess. Northern
+and southern returns close the volume. Original lower vertical web strips in
+the recessed span are removed instead of leaving columns in the public recess.
+
+A1.4m-deep glazed roof slopes from sourceY10.55 atout2.6 to10.40 atout4.0.
+Estimated120mm perimeter members,65mm intermediate ribs, short bearings into
+the spring frame and an explicit roof-to-spring closure make the projection
+structural. Its underside is roughly2.54m above deck. Oppositely wound roof
+faces let the existing FrontSide optical pair render from above and below;
+backface culling ensures only the appropriate face contributes. The roof has
+its own paired mesh for transparent sorting, using the existing shared pair
+and reflection probe. It is not a new ground obstacle or enlarged solid AABB.
+
+Geometry tests check the original GLB source removals, lower glass first-hit
+position at2.6m, absence of the8.65m shelf in the recess, lining closure, unchanged
+curved panes, double-sided roof visibility and end-frame contact. Route/collision
+integration is checked separately against the actual recessed ground polygon.
+All new dimensions are authored estimates. Native acceptance must include both
+end directions along the normal route, rather than only a frontal image.
+
+Measured generated budget:7 meshes /11 draw groups,11,894 unique triangles and
+13,316 submitted including the paired glass passes. Relative to the accepted
+conservatory's11,596 unique/12,988 submitted and9 groups, this is+298 unique,
++328 submitted and2 groups. No new textures or reflection captures. Ten focused
+canopy/source/depth/optics tests and TypeScript pass; native review is pending.
+
+### Native entrance acceptance
+
+Entry, reverse and close walking views show the connected lower projection,
+visible ribs/edge thickness and recessed frontage. Independent image review
+accepts this bounded change; the clearest improvement occurs while passing and
+looking back. Exact extent/circulation remain estimates, ribs are still rather
+blocky and lower glass remains uniform. This is not photographic or AAA parity.
+
+Native walking reached (465.57,7.88,-575.16) beneath the roof with the normal
+first-person camera. Repeated movement into the closed glazing stopped at the
+same coordinates; the player did not enter the closed volume. Bringing a car,
+reversing along the promenade past the assembly, braking and exiting passed.
+Pistol fire reduced ammunition to14/180 and holstering worked. Captured runtime
+warning/error list was empty.
+
+The heavier city-facing view at (470.737,7.88,-578.955), yaw-0.6523/pitch-0.15,
+first-person/FOV62 submitted1,290 calls and4,912,131 triangles in one diagnostic
+frame. A quiet20.0002s sample, panel collapsed with no other inspection/build,
+recorded550 frames/27.50meanFPS, median33.4ms/p9550.1/p9951.9/max66.7ms,
+29frames over50ms and none over100ms. Viewport723×670, ratio1.35, Balanced/day;
+the player remained stationary. This is a specific local view with dynamic
+traffic/people, not a matched optimization comparison or full-screen guarantee.
+City-facing performance remains work. Before images and final evidence are in
+`artifacts/local/canada-entrance-{before,candidate,final}-*`.

@@ -60,8 +60,8 @@ test("rendered frame includes separated interior structure without a second opaq
   const glass = meshes.filter((m) => m.name === "canada-canopy-glass");
   assert.equal(
     glass.length,
-    3,
-    "one curved surface and two closed end surfaces",
+    4,
+    "one curved surface, two end surfaces and one separate projecting roof",
   );
   for (const mesh of glass) {
     const materials = Array.isArray(mesh.material)

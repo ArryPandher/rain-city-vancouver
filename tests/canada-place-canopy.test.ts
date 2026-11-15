@@ -131,7 +131,7 @@ test("source-pinned entrance cuts preserve simultaneous paving and SAILS facade 
   assert.equal(removed.trim, 156);
   assert.equal(
     meshes.filter((m) => m.name === "canada-canopy-glass").length,
-    3,
+    4,
   );
   assert.equal(
     meshes.filter((m) => m.name === "canada-canopy-lining").length,
@@ -176,7 +176,10 @@ test("closed glazed ends and capped deck-contact plinth are tangible from outsid
       to = at(u, 10, 1.3);
     const hit = ray(root, from, to);
     assert.ok(hit);
-    assert.equal(hit.object.name, "canada-canopy-glass");
+    assert.equal(
+      hit.object.name,
+      u === 0 ? "canada-canopy-glass" : "canada-canopy-lining",
+    );
   }
   const foot = ray(root, at(L * 0.4, 8.1, 4), at(L * 0.4, 8.1, 3));
   assert.ok(foot);
@@ -230,5 +233,72 @@ test("public promenade retains original support and stays outside the new closed
       assert.ok(before && after);
       assert.ok(Math.abs(before.point.y - after.point.y) < 1e-7);
     }
+  }
+});
+
+test("southern entrance replaces the old pane and raised floor with a closed recessed frontage", async () => {
+  const { CANADA_PLACE_ENTRANCE: E } = await import(
+    "../src/world/canada-place-entrance-data"
+  );
+  const { root, meshes } = await fixture;
+  for (const u of [E.start + 0.57, E.start + 3.15, E.end - 0.51]) {
+    for (const y of [8.15, 9.25, 10.1]) {
+      const hit = ray(root, at(u, y, 4.2), at(u, y, 2.2));
+      assert.ok(hit);
+      assert.equal(hit.object.name, "canada-canopy-glass");
+      assert.ok(
+        hit.point.distanceTo(at(u, y, 2.6)) < 0.003,
+        "no old out3 pane or plinth in front",
+      );
+    }
+    const floor = ray(root, at(u, 9, 2.8), at(u, 7.7, 2.8));
+    assert.ok(floor);
+    assert.ok(
+      Math.abs(floor.point.y - 7.8) < 0.002,
+      "old8.65 shelf removed from visible recess",
+    );
+    const back = ray(root, at(u, 9.25, 2.5), at(u, 9.25, 2.1));
+    assert.ok(back);
+    assert.equal(back.object.name, "canada-canopy-lining");
+    assert.ok(back.point.distanceTo(at(u, 9.25, 2.3)) < 0.003);
+  }
+  // The curved roof is unchanged even over the replacement interval.
+  const theta = 0.6,
+    s = canadaPlaceCanopySection(theta),
+    u = E.start + 2.9;
+  const curved = ray(
+    root,
+    at(u, s.y + 0.05, s.outward + 1),
+    at(u, s.y, s.outward),
+  );
+  assert.ok(curved && curved.object.name === "canada-canopy-glass");
+  const tris = meshes.reduce((n, m) => n + m.geometry.getIndex()!.count / 3, 0);
+  assert.ok(tris < 14000);
+});
+
+test("sloping entrance roof has visible underside and connected frame at both terminations", async () => {
+  const { CANADA_PLACE_ENTRANCE: E } = await import(
+    "../src/world/canada-place-entrance-data"
+  );
+  const { root } = await fixture;
+  for (const u of [E.start + 0.5, E.end - 0.5]) {
+    const out = 3.5,
+      y = E.roofBackY + ((out - 2.6) / 1.4) * (E.roofFrontY - E.roofBackY);
+    for (const sign of [-1, 1]) {
+      const roof = ray(root, at(u, y + sign * 0.3, out), at(u, y, out));
+      assert.ok(roof && roof.object.name === "canada-canopy-glass");
+      assert.ok(
+        Math.abs(roof.point.y - y) < 0.002,
+        "same thin roof visible from above and below",
+      );
+    }
+  }
+  for (const u of [E.start, E.end]) {
+    const sign = u === E.start ? -1 : 1;
+    const closed = ray(root, at(u + sign * 0.25, 9.3, 2.4), at(u, 9.3, 2.4));
+    assert.ok(closed, "no open lower end into source hotel");
+    const edge = ray(root, at(u, 11, 3.5), at(u, 10.2, 3.5));
+    assert.ok(edge && edge.object.name === "canada-canopy-frame");
+    assert.ok(edge.point.y > 10.3, "edge beam preserves standing clearance");
   }
 });
