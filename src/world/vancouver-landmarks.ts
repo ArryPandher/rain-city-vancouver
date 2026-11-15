@@ -2,6 +2,7 @@ import { canadaPlaceCapabilities } from "./canada-place-capabilities";
 import { createCanadaPlaceDoorGlass } from "./canada-place-door-glass";
 import { addCanadaPlaceUpperGuard } from "./canada-place-upper-guard";
 import { addCanadaPlaceLettering } from "./canada-place-lettering";
+import { addCanadaPlaceHallStructure } from "./canada-place-hall-structure";
 import {
   addGalleryFacade,
   galleryFacadeCompatible,
@@ -199,11 +200,17 @@ export async function loadVancouverLandmarks(
       meshes: T.Mesh[],
       materialNames: string[],
     ) => {
-      const glass = meshes
-        .filter((mesh) =>
-          materialNames.includes((mesh.material as T.Material).name),
-        )
-        .map((mesh) => mesh.material as T.MeshStandardMaterial);
+      const glass = [
+        ...new Set(
+          meshes.flatMap((mesh) =>
+            Array.isArray(mesh.material) ? mesh.material : [mesh.material],
+          ),
+        ),
+      ].filter(
+        (material): material is T.MeshStandardMaterial =>
+          material instanceof T.MeshStandardMaterial &&
+          materialNames.includes(material.name),
+      );
       if (!glass.length) return;
       // Capture fixed harbour/city geometry once through the existing probe
       // system. Moving actors and the receiving glass are omitted by that system.
@@ -221,6 +228,7 @@ export async function loadVancouverLandmarks(
       const facade = addCanadaPlaceWestFacade(group, canadaMaterials);
       addCanadaPlaceUpperGuard(group);
       addCanadaPlaceLettering(group);
+      addCanadaPlaceHallStructure(group);
       localReflection(
         "Canada Place west concourse",
         canadaPlaceConcoursePoint(51.55, 18, 11.5),

@@ -6,7 +6,10 @@ import {
 } from "./canada-place-concourse-layout";
 import { CanadaPlaceGlazingDepth } from "./canada-place-glazing-depth";
 import { addCanadaPlaceDoorFrontage } from "./canada-place-door-frontage";
-import { createCanadaPlaceConcourseGlass } from "./canada-place-concourse-glass";
+import {
+  createCanadaPlaceConcourseReflectionCandidate,
+  createCanadaPlaceConcourseRgbMesh,
+} from "./canada-place-concourse-glass";
 import * as T from "three";
 import concourse from "./canada-place-concourse-data.json";
 import site from "./canada-place-deck-data.json";
@@ -198,12 +201,20 @@ export function addCanadaPlaceWestFacade(
   frame.color.setHex(0x77918a);
   frame.roughness = 0.38;
   frame.metalness = 0.25;
-  const glass = createCanadaPlaceConcourseGlass();
+  const glass = createCanadaPlaceConcourseReflectionCandidate();
   const endGlass = glass.clone();
   endGlass.name = "canada-west-closed-end-glass";
   endGlass.transparent = false;
   endGlass.opacity = 1;
   endGlass.depthWrite = true;
+  endGlass.blending = T.NormalBlending;
+  endGlass.premultipliedAlpha = false;
+  endGlass.blendEquation = T.AddEquation;
+  endGlass.blendSrc = T.SrcAlphaFactor;
+  endGlass.blendDst = T.OneMinusSrcAlphaFactor;
+  endGlass.blendEquationAlpha = null;
+  endGlass.blendSrcAlpha = null;
+  endGlass.blendDstAlpha = null;
   endGlass.userData.castShadow = true;
   const upperFrame = frame.clone();
   upperFrame.name = "canada-west-pale-upper-frame";
@@ -223,10 +234,16 @@ export function addCanadaPlaceWestFacade(
     }
   }
   const groups = new Map<
-    T.Material,
+    T.Material | number,
     { p: number[]; ix: number[]; n: Map<number, V> }
   >();
-  function quad(m: T.Material, v: V[], normal: V, smooth?: V[]) {
+  function quad(
+    m: T.Material,
+    v: V[],
+    normal: V,
+    smooth?: V[],
+    glassTier?: number,
+  ) {
     const n = new T.Vector3().crossVectors(
       new T.Vector3(...v[1]).sub(new T.Vector3(...v[0])),
       new T.Vector3(...v[2]).sub(new T.Vector3(...v[0])),
@@ -235,8 +252,9 @@ export function addCanadaPlaceWestFacade(
       v = [v[0], v[3], v[2], v[1]];
       if (smooth) smooth = [smooth[0], smooth[3], smooth[2], smooth[1]];
     }
-    let g = groups.get(m);
-    if (!g) groups.set(m, (g = { p: [], ix: [], n: new Map() }));
+    const key = glassTier ?? m;
+    let g = groups.get(key);
+    if (!g) groups.set(key, (g = { p: [], ix: [], n: new Map() }));
     const k = g.p.length / 3;
     g.p.push(...v.flat());
     if (smooth) smooth.forEach((normal, j) => g.n.set(k + j, normal));
@@ -335,7 +353,13 @@ export function addCanadaPlaceWestFacade(
           : undefined;
       const upperA = sectionAt(i - 1, k),
         upperB = sectionAt(i, k);
-      quad(m, [lowerA, lowerB, upperB, upperA], outward, smooth);
+      quad(
+        m,
+        [lowerA, lowerB, upperB, upperA],
+        outward,
+        smooth,
+        m === glass ? tier : undefined,
+      );
       if (m === glass && smooth)
         depth.addPane(
           [lowerA, lowerB, upperB, upperA],
@@ -502,9 +526,17 @@ export function addCanadaPlaceWestFacade(
     const normal = g.getAttribute("normal");
     for (const [i, n] of q.n) normal.setXYZ(i, ...n);
     landmarkSurfaceUV(g, [4, 4]);
-    const mesh = new T.Mesh(g, m);
-    mesh.name = m.name;
-    mesh.castShadow = m.userData.castShadow !== false;
+    const mesh =
+      typeof m === "number"
+        ? createCanadaPlaceConcourseRgbMesh(g)
+        : new T.Mesh(g, m);
+    if (typeof m === "number") {
+      mesh.userData.concourseTier = m;
+      g.dispose(); // RGB helper owns an unchanged geometry clone.
+    } else {
+      mesh.name = m.name;
+      mesh.castShadow = m.userData.castShadow !== false;
+    }
     mesh.receiveShadow = true;
     root.add(mesh);
     meshes.push(mesh);

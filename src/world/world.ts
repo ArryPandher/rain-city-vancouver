@@ -1,3 +1,4 @@
+import { batchStaticChunks } from "./static-chunk-batch";
 import { batchPhotographicFacades } from "./photographic-facade-batch";
 import { clipGalleryStairPath } from "./gallery-rear-entry";
 import { buildCanadaPlaceApproach } from "./canada-place-approach";
@@ -710,6 +711,9 @@ export class World {
       this.materials.photoFacades,
       this.facadeMultiDraw,
     );
+    batchStaticChunks(this.root, result.chunks, this.facadeMultiDraw, {
+      releaseOwnedPreRenderGeometry: true,
+    });
     this.chunks.push(...result.chunks);
     this.stats.buildings = result.count;
     this.architecturalDetails = result.architecturalDetails;
@@ -1114,7 +1118,11 @@ export class World {
         }
       }
     }
-    this.chunks.push(...b.finish());
+    const chunks = b.finish();
+    batchStaticChunks(this.root, chunks, this.facadeMultiDraw, {
+      releaseOwnedPreRenderGeometry: true,
+    });
+    this.chunks.push(...chunks);
   }
   mergeStatic(root: T.Group) {
     root.updateWorldMatrix(true, true);

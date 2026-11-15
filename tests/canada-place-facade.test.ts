@@ -129,27 +129,30 @@ function ray(root: T.Object3D, from: T.Vector3, to: T.Vector3) {
     from.distanceTo(to) + 0.015,
   ).intersectObject(root, true)[0];
 }
-test("source-pinned replacement is limited to reviewed west podium surfaces and ten bounded meshes sharing structural wall material", async (t) => {
+test("source-pinned replacement is limited to reviewed west podium surfaces and twelve bounded meshes sharing structural wall material", async (t) => {
   const { removed, additions, original } = await fixture;
   assert.equal(removed.concrete, 10);
   assert.equal(removed.glass, 100);
   assert.equal(removed.trim, 480);
-  assert.equal(additions.length, 10);
+  assert.equal(additions.length, 12);
   t.diagnostic(
     `${additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0)} facade triangles`,
   );
-  assert.ok(
-    additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0) < 64000,
+  assert.equal(
+    additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0),
+    45366,
+    "tier partition preserves the original indexed triangle count",
   );
   for (const m of additions) {
-    assert.equal(
-      (m.material as T.Material).side,
-      m.name === "canada-west-glazing-backing" ? T.DoubleSide : T.FrontSide,
-    );
-    assert.equal(
-      (m.material as T.Material).transparent,
-      m.name === "canada-west-glass",
-    );
+    for (const material of Array.isArray(m.material)
+      ? m.material
+      : [m.material]) {
+      assert.equal(
+        material.side,
+        m.name === "canada-west-glazing-backing" ? T.DoubleSide : T.FrontSide,
+      );
+      assert.equal(material.transparent, m.name === "canada-west-glass");
+    }
     for (const v of m.geometry.getAttribute("position").array)
       assert.ok(Number.isFinite(v));
   }
@@ -218,7 +221,7 @@ test("coherent closed envelope fits source pier and preserves the complete publi
       assert.ok(d > 0.95, `route clearance ${d}`);
     }
   }
-  assert.equal(additions.length, 10);
+  assert.equal(additions.length, 12);
 });
 
 test("simultaneous paving extraction preserves the exact promenade walking plane", async () => {
@@ -279,8 +282,13 @@ test("mineral sill replaces the bottom glass strip without coplanar overlap", as
     s = (stations[i].s + stations[i + 1].s) / 2;
   const target = canadaPlaceConcoursePoint(s, 12.4, 7.88),
     from = target.clone().add(new T.Vector3(stations[i].nx, 0, stations[i].nz));
-  const glass = additions.find((m) => m.name === "canada-west-glass")!,
-    wall = additions.find((m) => m.name === "canada-west-wall")!;
+  const glass = new T.Group();
+  glass.add(
+    ...additions
+      .filter((m) => m.name === "canada-west-glass")
+      .map((m) => m.clone()),
+  );
+  const wall = additions.find((m) => m.name === "canada-west-wall")!;
   assert.equal(
     ray(glass, from, target),
     undefined,
@@ -290,9 +298,30 @@ test("mineral sill replaces the bottom glass strip without coplanar overlap", as
 });
 test("glass normals join smoothly within each curve and keep tier-reset creases", async () => {
   const { additions } = await fixture,
-    mesh = additions.find((m) => m.name === "canada-west-glass")!,
-    p = mesh.geometry.getAttribute("position"),
-    n = mesh.geometry.getAttribute("normal");
+    meshes = additions.filter((m) => m.name === "canada-west-glass");
+  assert.deepEqual(
+    meshes.map((m) => m.userData.concourseTier).sort(),
+    [0, 1, 2],
+  );
+  for (const mesh of meshes) {
+    const tier = mesh.userData.concourseTier as number;
+    const p = mesh.geometry.getAttribute("position");
+    const low = CANADA_PLACE_CONCOURSE_PROFILE[1 + tier * 8][1];
+    const high = CANADA_PLACE_CONCOURSE_PROFILE[9 + tier * 8][1];
+    for (let j = 0; j < p.count; j++)
+      assert.ok(
+        p.getY(j) >= low - 1e-5 && p.getY(j) <= high + 1e-5,
+        "tier partition cannot mix overlapping vertical ranges",
+      );
+    assert.deepEqual(
+      mesh.geometry.groups,
+      [
+        { start: 0, count: mesh.geometry.getIndex()!.count, materialIndex: 0 },
+        { start: 0, count: mesh.geometry.getIndex()!.count, materialIndex: 1 },
+      ],
+      "both optical passes cover the identical indexed pane surface",
+    );
+  }
   const stations = CANADA_PLACE_CONCOURSE_STATIONS,
     i = Math.floor(stations.length / 2);
   const normalsAt = (k: number) => {
@@ -303,9 +332,15 @@ test("glass normals join smoothly within each curve and keep tier-reset creases"
         y,
       ),
       normals: T.Vector3[] = [];
-    for (let j = 0; j < p.count; j++)
-      if (new T.Vector3().fromBufferAttribute(p, j).distanceTo(target) < 0.0001)
-        normals.push(new T.Vector3().fromBufferAttribute(n, j));
+    for (const mesh of meshes) {
+      const p = mesh.geometry.getAttribute("position"),
+        n = mesh.geometry.getAttribute("normal");
+      for (let j = 0; j < p.count; j++)
+        if (
+          new T.Vector3().fromBufferAttribute(p, j).distanceTo(target) < 0.0001
+        )
+          normals.push(new T.Vector3().fromBufferAttribute(n, j));
+    }
     return normals;
   };
   const smooth = normalsAt(5);
@@ -431,12 +466,17 @@ test("recessed ground doors and closed soffit leave real space below unchanged c
 });
 test("transparent upper panes reveal closed concourse volume from normal and oblique views", async () => {
   const { root, additions } = await fixture;
-  const glass = additions.find((m) => m.name === "canada-west-glass")!,
-    backing = additions.find((m) => m.name === "canada-west-glazing-backing")!;
-  assert.equal((glass.material as T.Material).transparent, true);
-  assert.equal((glass.material as T.Material).depthWrite, false);
-  assert.equal(glass.castShadow, false);
-  const opaque = additions.filter((m) => m !== glass);
+  const glass = additions.filter((m) => m.name === "canada-west-glass");
+  assert.equal(glass.length, 3);
+  for (const mesh of glass) {
+    assert.ok(Array.isArray(mesh.material));
+    for (const material of mesh.material) {
+      assert.equal(material.transparent, true);
+      assert.equal(material.depthWrite, false);
+    }
+    assert.equal(mesh.castShadow, false);
+  }
+  const opaque = additions.filter((m) => !glass.includes(m));
   assert.ok(opaque.every((m) => !(m.material as T.Material).transparent));
   // Actual decoded GLB root remains present: if an original source wall wrongly
   // survived, this first-hit test would identify it before the new structure.
@@ -470,7 +510,7 @@ test("transparent upper panes reveal closed concourse volume from normal and obl
         from = p.clone().addScaledVector(normal, -0.015);
       const hits = new T.Raycaster(from, direction, 0, 30)
         .intersectObject(root, true)
-        .filter((h) => h.object !== glass);
+        .filter((h) => !glass.includes(h.object as T.Mesh));
       assert.ok(hits.length, `missing closed back tier${k}`);
       assert.ok(
         !(hits[0].object as T.Mesh<T.BufferGeometry, T.Material>).material

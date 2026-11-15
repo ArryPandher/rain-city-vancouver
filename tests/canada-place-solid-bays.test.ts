@@ -46,11 +46,13 @@ test("registered opaque bays replace all glazing/doors and round openings have r
     assert.equal(hits[0].object.name, "canada-west-round-infill");
     assert.ok(hits[0].distance > 1.25 && hits[0].distance < 1.32);
     for (const name of ["canada-west-glass", "canada-west-door-glass"]) {
-      const mesh = meshes.find((m) => m.name === name)!;
+      const selected = meshes.filter((m) => m.name === name);
+      assert.ok(selected.length);
       const p = canadaPlaceConcoursePoint(mid, 15, 10);
       assert.equal(
-        new T.Raycaster(p, normal(mid).negate(), 0, 8).intersectObject(mesh)
-          .length,
+        new T.Raycaster(p, normal(mid).negate(), 0, 8).intersectObjects(
+          selected,
+        ).length,
         0,
       );
     }

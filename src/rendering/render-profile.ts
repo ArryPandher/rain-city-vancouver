@@ -1,3 +1,4 @@
+import { staticBatchMemoryProfile } from "../world/static-chunk-batch";
 import * as T from "three";
 
 type Counts = {
@@ -141,6 +142,7 @@ export function profileRender(
       }
     }
     return {
+      staticBatchMemory: staticBatchMemoryProfile(scene),
       capabilities: {
         multiDraw: renderer.extensions.has("WEBGL_multi_draw"),
       },
