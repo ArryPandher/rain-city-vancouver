@@ -172,14 +172,11 @@ test("actual GLB opening exposes curved panes at multiple heights and both obliq
 test("closed glazed ends and capped deck-contact plinth are tangible from outside", async () => {
   const { root } = await fixture;
   for (const u of [0, L]) {
-    const from = at(u + (u === 0 ? -1 : 1), 10, 1.3),
-      to = at(u, 10, 1.3);
+    const from = at(u + (u === 0 ? -1 : 1), 10, 0.9),
+      to = at(u, 10, 0.9);
     const hit = ray(root, from, to);
     assert.ok(hit);
-    assert.equal(
-      hit.object.name,
-      u === 0 ? "canada-canopy-glass" : "canada-canopy-lining",
-    );
+    assert.equal(hit.object.name, "canada-canopy-glass");
   }
   const foot = ray(root, at(L * 0.4, 8.1, 4), at(L * 0.4, 8.1, 3));
   assert.ok(foot);
@@ -241,7 +238,7 @@ test("southern entrance replaces the old pane and raised floor with a closed rec
     "../src/world/canada-place-entrance-data"
   );
   const { root, meshes } = await fixture;
-  for (const u of [E.start + 0.57, E.start + 3.15, E.end - 0.51]) {
+  for (const u of [E.start + 0.57, E.start + 3.15, E.end - 1.01]) {
     for (const y of [8.15, 9.25, 10.1]) {
       const hit = ray(root, at(u, y, 4.2), at(u, y, 2.2));
       assert.ok(hit);
@@ -300,5 +297,46 @@ test("sloping entrance roof has visible underside and connected frame at both te
     const edge = ray(root, at(u, 11, 3.5), at(u, 10.2, 3.5));
     assert.ok(edge && edge.object.name === "canada-canopy-frame");
     assert.ok(edge.point.y > 10.3, "edge beam preserves standing clearance");
+  }
+});
+
+test("southern fixed end glazing has actual closed depth without the old raised shelf", async () => {
+  const { root } = await fixture;
+  for (const out of [0.65, 1.9])
+    for (const y of [8.15, 9.2, 10.25]) {
+      for (const shift of [-0.08, 0.08]) {
+        const from = at(L + 0.45, y, out + shift),
+          target = at(L - 0.7, y, out);
+        const hits = new T.Raycaster(
+          from,
+          target.clone().sub(from).normalize(),
+          0,
+          1.4,
+        ).intersectObject(root, true);
+        assert.ok(hits.length > 1);
+        assert.equal(hits[0].object.name, "canada-canopy-glass");
+        const opaque = hits.find(
+          (h) => !Array.isArray((h.object as T.Mesh).material),
+        );
+        assert.ok(opaque && opaque.object.name === "canada-canopy-lining");
+        assert.ok(
+          opaque.distance - hits[0].distance > 0.69,
+          "real depth, no grey cap or old shelf before backing",
+        );
+      }
+    }
+  // Cavity supports/closures remain tangible from inside; floor is deliberately
+  // below old8.65 while exterior collision stays closed at the original plane.
+  const floor = ray(root, at(L - 0.35, 9, 0.8), at(L - 0.35, 7.8, 0.8));
+  assert.ok(floor && Math.abs(floor.point.y - 7.95) < 0.001);
+  const ceiling = ray(root, at(L - 0.35, 10.2, 0.8), at(L - 0.35, 10.6, 0.8));
+  assert.ok(ceiling && Math.abs(ceiling.point.y - 10.49) < 0.001);
+  for (const out of [0.04, 2.6]) {
+    const side = ray(root, at(L - 0.35, 9, 1), at(L - 0.35, 9, out));
+    assert.ok(
+      side &&
+        side.object.name ===
+          (out < 1 ? "canada-canopy-lining" : "canada-canopy-glass"),
+    );
   }
 });

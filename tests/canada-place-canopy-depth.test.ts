@@ -22,15 +22,15 @@ function hits(root: T.Object3D, from: T.Vector3, to: T.Vector3) {
   ).intersectObject(root, true);
 }
 
-test("southern lower return has one opaque skin above deck, with foundation below", () => {
+test("southern lower return has one recessed opaque closure, with foundation below", () => {
   const { meshes } = fixture();
   const opaque = meshes.filter((mesh) => !Array.isArray(mesh.material));
   for (const [height, material] of [
     [8.31, "canada-canopy-lining"],
     [7.73, "canada-canopy-stone"],
   ] as const) {
-    const from = at(L + 0.4, height, 1.27);
-    const to = at(L - 0.2, height, 1.27);
+    const from = at(L + 0.4, height, 0.9);
+    const to = at(L - 0.9, height, 0.9);
     const intersections = new T.Raycaster(
       from,
       to.clone().sub(from).normalize(),
@@ -56,9 +56,9 @@ test("conservatory has closed backing across its full length behind transparent 
       assert.ok(inward.length, `back wall gap at ${u}, ${y}`);
       assert.equal(inward[0].object.name, "canada-canopy-lining");
     }
-    const floor = hits(root, at(u, 9, 1.1), at(u, 8.5, 1.1));
+    const floor = hits(root, at(u, 9, 1.1), at(u, 7.7, 1.1));
     assert.ok(floor.length, `floor gap at ${u}`);
-    assert.ok(Math.abs(floor[0].point.y - 8.65) < 1e-5);
+    assert.ok(Math.abs(floor[0].point.y - (u > L - 0.7 ? 7.95 : 8.65)) < 1e-5);
   }
 });
 

@@ -1,3 +1,4 @@
+import { sweepVehiclePedestrians } from "./game/vehicle-pedestrian-contact";
 import { FrameSample, type FrameSampleContext } from "./rendering/frame-sample";
 import * as T from "three";
 import { StaticShadowCache } from "./rendering/static-shadow-cache";
@@ -73,6 +74,11 @@ class Game {
   damage = 0;
   health = 100;
   runtimeErrors: string[] = [];
+  lastPedestrianContact: {
+    time: number;
+    attempted: { x: number; z: number; heading: number };
+    stopped: { x: number; z: number; heading: number };
+  } | null = null;
   footSpeed = 0;
   autoCameraTimer = 0;
   lastSafe = new T.Vector3();
@@ -414,7 +420,15 @@ class Game {
               mode: this.cameraMode,
             },
             player: this.player.toArray(),
+            activeVehicle: this.vehicle
+              ? {
+                  kind: this.vehicle.kind,
+                  ...this.vehicle.state,
+                  position: this.vehicle.model.group.position.toArray(),
+                }
+              : null,
             pedestrianActivity: this.actors.canadaPedestrianSummary(),
+            lastPedestrianContact: this.lastPedestrianContact,
             fallbackTreeBatching:
               getFallbackTreeBatchController(this.world.root)?.enabled ?? false,
             lighting: {
@@ -855,6 +869,7 @@ class Game {
       { x: p[0], z: p[1], heading, y: this.player.y },
       kind,
       this.actors.vehicles.map((v) => v.state),
+      this.actors.pedestrianBodies(),
     );
     if (!spot) {
       ui.toast(
@@ -1225,7 +1240,8 @@ class Game {
       const v = this.vehicle,
         s = v.state,
         ox = s.x,
-        oz = s.z;
+        oz = s.z,
+        previousHeading = s.heading;
       drive(
         s,
         { throttle, steering: steer, brake: this.keys.has("Space"), boost },
@@ -1258,6 +1274,32 @@ class Game {
             break;
           }
         }
+      }
+      const pedestrianContact = sweepVehiclePedestrians(
+        { x: ox, z: oz, y: this.player.y, heading: previousHeading },
+        {
+          x: s.x,
+          z: s.z,
+          y: this.world.collision.height(s.x, s.z, this.player.y),
+          heading: s.heading,
+        },
+        this.actors.pedestrianBodies(),
+        v.kind,
+      );
+      if (pedestrianContact.hit) {
+        this.lastPedestrianContact = {
+          time: this.time,
+          attempted: { x: s.x, z: s.z, heading: s.heading },
+          stopped: {
+            x: pedestrianContact.x,
+            z: pedestrianContact.z,
+            heading: pedestrianContact.heading,
+          },
+        };
+        s.x = pedestrianContact.x;
+        s.z = pedestrianContact.z;
+        s.heading = pedestrianContact.heading;
+        s.speed = s.vx = s.vz = 0;
       }
       if (result.hit) {
         const speed = Math.abs(s.speed);

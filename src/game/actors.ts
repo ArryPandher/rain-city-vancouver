@@ -378,6 +378,24 @@ export class Actors {
       p.character.group.rotation.y = at.heading;
     }
   }
+  /** Physical bodies include waiting/down actors, independently of render culling. */
+  pedestrianBodies() {
+    return this.peds.map((p) => {
+      const group = p.character.group,
+        down = p.down > 0;
+      // Actors.update rotates the 1.8m rig +90deg about Z: its upward axis
+      // becomes (-cos(heading), 0, sin(heading)), extending away from the feet.
+      const heading = group.rotation.y,
+        shift = down ? 0.9 : 0;
+      return {
+        x: group.position.x - Math.cos(heading) * shift,
+        z: group.position.z + Math.sin(heading) * shift,
+        y: group.position.y,
+        radius: down ? 1 : 0.4,
+        height: down ? 0.55 : 1.8,
+      };
+    });
+  }
   /** Read-only, requested diagnostics; stable object IDs and fixed world progress. */
   canadaPedestrianSummary() {
     return {

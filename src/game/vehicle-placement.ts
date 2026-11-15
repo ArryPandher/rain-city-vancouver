@@ -1,3 +1,8 @@
+import {
+  vehicleOverlapsPedestrians,
+  sweepVehiclePedestrians,
+  type PedestrianBody,
+} from "./vehicle-pedestrian-contact";
 /** Collision subset keeps placement usable without a renderer or actor meshes. */
 export type PlacementCollision = {
   safe(x: number, z: number, radius: number): [number, number];
@@ -12,6 +17,7 @@ export function summonedVehicleSpot(
   origin: VehiclePosition & { heading: number; y: number },
   kind: "car" | "bike",
   occupied: readonly VehiclePosition[],
+  pedestrians: readonly PedestrianBody[] = [],
 ): [number, number] | undefined {
   if (![origin.x, origin.z, origin.heading, origin.y].every(Number.isFinite))
     return;
@@ -38,6 +44,21 @@ export function summonedVehicleSpot(
           Math.cos(origin.heading) * distance -
           Math.sin(origin.heading) * lateral;
         if (occupied.some((p) => Math.hypot(p.x - x, p.z - z) <= 6)) continue;
+        const pose = { x, z, y: origin.y, heading: origin.heading };
+        if (
+          vehicleOverlapsPedestrians(pose, pedestrians, kind) ||
+          sweepVehiclePedestrians(
+            pose,
+            {
+              ...pose,
+              x: x + Math.sin(origin.heading) * departureLength,
+              z: z + Math.cos(origin.heading) * departureLength,
+            },
+            pedestrians,
+            kind,
+          ).hit
+        )
+          continue;
         const departure = Array.from(
           { length: departureLength * 2 + 1 },
           (_, i) => i * 0.5,

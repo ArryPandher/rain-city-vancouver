@@ -19,6 +19,10 @@ const dx = (data.b[0] - data.a[0]) / length,
   nx = -dz,
   nz = dx;
 export const CANADA_PLACE_CANOPY_LENGTH = length;
+/** Estimated closed fixed-glazed southern return; no public interior access. */
+export const CANADA_PLACE_RETURN_DEPTH = 0.7;
+const returnBack = length - CANADA_PLACE_RETURN_DEPTH;
+const returnHead = entrance.roofBackY - 0.06;
 export function canadaPlaceCanopyPoint(u: number, y: number, outward: number) {
   return new T.Vector3(
     data.a[0] + dx * u + nx * outward,
@@ -351,7 +355,11 @@ export function addCanadaPlaceCanopy(
     closedWeb(rings);
     // Inside post bears on the same floor and meets the curved web at crown.
     // Its plane remains inside the ellipse; no rectangular roof is introduced.
-    beam(at(u, data.sill, 0.28), at(u, data.crown - 0.28, 0.28), 0.14);
+    beam(
+      at(u, u > returnBack ? returnHead : data.sill, 0.28),
+      at(u, data.crown - 0.28, 0.28),
+      0.14,
+    );
     beam(at(u, data.crown - 0.28, 0.02), at(u, data.crown - 0.28, 0.35), 0.12);
   }
   for (const k of [1, 9]) {
@@ -376,10 +384,18 @@ export function addCanadaPlaceCanopy(
     const secondary = j % 4 !== 0 && j !== count;
     const width = secondary ? 0.09 : 0.11;
     if (secondary)
-      beam(at(u, data.sill, 0.28), at(u, data.crown - 0.28, 0.28), 0.09);
+      beam(
+        at(u, u > returnBack ? returnHead : data.sill, 0.28),
+        at(u, data.crown - 0.28, 0.28),
+        0.09,
+      );
     // Outer upright is below the actual ellipse (14.42m atout1.25).
     // It joins three crossmembers; it does not terminate against free glass.
-    beam(at(u, data.sill, 1.25), at(u, 14.2, 1.25), width);
+    beam(
+      at(u, u > returnBack ? returnHead : data.sill, 1.25),
+      at(u, 14.2, 1.25),
+      width,
+    );
     for (const y of [10.6, 12.4, 14.2])
       beam(at(u, y, 0.28), at(u, y, 1.25), width);
   }
@@ -456,11 +472,7 @@ export function addCanadaPlaceCanopy(
       );
     }
     beam(at(u, data.sill, 0), at(u, data.crown, 0), 0.14);
-    beam(
-      at(u, data.sill, 0),
-      at(u, data.sill, u === length ? entrance.back : 3),
-      0.12,
-    );
+    if (u !== length) beam(at(u, data.sill, 0), at(u, data.sill, 3), 0.12);
     for (const y of [10.6, 12.4, 13.7]) {
       const theta = Math.asin((y - data.spring) / (data.crown - data.spring)),
         o = y <= data.spring ? 3 : 3 * Math.cos(theta);
@@ -529,8 +541,8 @@ export function addCanadaPlaceCanopy(
     lining,
     [
       at(E.start, E.base, E.back),
-      at(E.end, E.base, E.back),
-      at(E.end, E.roofBackY, E.back),
+      at(returnBack, E.base, E.back),
+      at(returnBack, E.roofBackY, E.back),
       at(E.start, E.roofBackY, E.back),
     ],
     out,
@@ -559,8 +571,8 @@ export function addCanadaPlaceCanopy(
     lining,
     [
       at(E.start, data.sill, 0),
-      at(E.end, data.sill, 0),
-      at(E.end, data.sill, E.back),
+      at(returnBack, data.sill, 0),
+      at(returnBack, data.sill, E.back),
       at(E.start, data.sill, E.back),
     ],
     up,
@@ -589,16 +601,17 @@ export function addCanadaPlaceCanopy(
   for (const u of [E.start, E.end]) {
     const n = along.clone().multiplyScalar(u === E.start ? -1 : 1);
     // Inward closure at ends joins original source-facing backing as well.
-    quad(
-      lining,
-      [
-        at(u, E.base, 0),
-        at(u, E.base, E.front),
-        at(u, E.roofBackY, E.front),
-        at(u, E.roofBackY, 0),
-      ],
-      n,
-    );
+    if (u === E.start)
+      quad(
+        lining,
+        [
+          at(u, E.base, 0),
+          at(u, E.base, E.front),
+          at(u, E.roofBackY, E.front),
+          at(u, E.roofBackY, 0),
+        ],
+        n,
+      );
     quad(
       stone,
       [
@@ -621,6 +634,99 @@ export function addCanadaPlaceCanopy(
     );
     beam(at(u, E.base, E.front), at(u, roofY(E.front), E.front), 0.12);
   }
+  // Photographed lower end is framed glazing; preserve a closed exterior
+  // with a real700mm cavity instead of the former coplanar grey closure.
+  const southNormal = along.clone();
+  for (const [l, r] of [
+    [0, 1.3],
+    [1.3, E.front],
+  ])
+    quad(
+      endGlasses[1],
+      [
+        at(E.end, E.sill, l),
+        at(E.end, E.sill, r),
+        at(E.end, returnHead, r),
+        at(E.end, returnHead, l),
+      ],
+      southNormal,
+    );
+  quad(
+    stone,
+    [
+      at(E.end, E.base, 0),
+      at(E.end, E.base, E.front),
+      at(E.end, E.sill, E.front),
+      at(E.end, E.sill, 0),
+    ],
+    southNormal,
+  );
+  quad(
+    lining,
+    [
+      at(returnBack, E.sill, 0),
+      at(returnBack, E.sill, E.front),
+      at(returnBack, returnHead, E.front),
+      at(returnBack, returnHead, 0),
+    ],
+    southNormal,
+  );
+  // Closed base/head/side returns. Only the first90mm rebate is pale.
+  for (const [front, back, mat] of [
+    [E.end, E.end - 0.09, frame],
+    [E.end - 0.09, returnBack, lining],
+  ] as const) {
+    quad(
+      mat,
+      [
+        at(front, E.sill, 0),
+        at(front, E.sill, E.front),
+        at(back, E.sill, E.front),
+        at(back, E.sill, 0),
+      ],
+      up,
+    );
+    quad(
+      mat,
+      [
+        at(front, returnHead, 0),
+        at(front, returnHead, E.front),
+        at(back, returnHead, E.front),
+        at(back, returnHead, 0),
+      ],
+      up.clone().negate(),
+    );
+    for (const o of mat === frame ? [0.04, E.front - 0.04] : [0.04])
+      quad(
+        mat,
+        [
+          at(front, E.sill, o),
+          at(back, E.sill, o),
+          at(back, returnHead, o),
+          at(front, returnHead, o),
+        ],
+        out.clone().multiplyScalar(o < 0.1 ? 1 : -1),
+      );
+  }
+  for (const o of [0, 1.3, E.front])
+    beam(
+      at(E.end, E.sill, o),
+      at(E.end, returnHead, o),
+      o === 1.3 ? 0.075 : 0.12,
+    );
+  for (const y of [E.sill, returnHead])
+    beam(at(E.end, y, 0), at(E.end, y, E.front), 0.12);
+  // Opaque narrow header closes the gap into the existing upper end frame.
+  quad(
+    frame,
+    [
+      at(E.end, returnHead, 0),
+      at(E.end, returnHead, E.front),
+      at(E.end, data.spring, E.front),
+      at(E.end, data.spring, 0),
+    ],
+    southNormal,
+  );
   // Continuous crown flashing engages the original slab edge; its underside is
   // visible and front-sided. No source opaque wall remains behind curved panes.
   beam(at(0, data.crown, 0), at(length, data.crown, 0), 0.18, stone);

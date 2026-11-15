@@ -201,3 +201,37 @@ remains separate, alongside the parent's physical two-sided glass correction.
 Framing adds98 box members /1,176 triangles to the existing shared frame batch:
 zero additional draw groups, textures or reflection captures. The separate
 optical sheet deduplication is owned by the parent and changes its own counts.
+
+### Lower southern fixed-glazed return (2026-11-15)
+
+The formerly blank southern lining cap is replaced by two fixed glazed lights
+in the existing end optical mesh. The historical TourbyTransit lower-end view
+supports framed lower glazing and recess; Rabich independently registers the
+upper end/projection but crops most of the lower frontage. The current exact
+pane count and dimensions remain estimates. These are not labeled doors, and
+no handles, circulation function, staircase or accessible interior is invented.
+
+The unchanged outer end plane encloses a700mm-deep cavity along the conservatory,
+from sourceY7.95 to10.49. A restrained75mm central mullion and120mm perimeter join
+the existing roof/end framing. Pale rebates are90mm deep; deeper lining remains
+neutral. Its outer side joins the existing lower-frontage glazing, so the corner
+has real depth rather than an opaque sheet immediately behind either pane.
+
+The old southern cap and8.65m sill beam are removed; the raised floor and adjacent
+frontage backing stop at the new cavity rear. The cavity has an actual floor,
+head, inboard closure and rear wall. The final interior uprights bear on its
+closed head rather than floating at the old floor level. Northern closure,
+curved geometry, public ground footprint/collision, optical parameters and probe
+remain unchanged.
+
+Eleven focused source/canopy/depth tests and TypeScript pass. Actual integrated
+GLB rays at low/mid/head heights and both oblique directions hit glass first and
+opaque backing more than690mm later; other rays verify the7.95 floor,10.49 head,
+closed sides and absence of the old shelf. Generated total:7 meshes/11 draw
+groups,13,126 unique triangles and14,538 submitted with paired glass passes.
+No additional material batch, texture or reflection capture. Native end and
+oblique walking views passed independent review: continuous canopy connections,
+readable inset floor/rebates and no new open gap or coplanar patch. The panes
+still read as mostly uniform dark green surfaces, so this is a modest bounded
+improvement; tests and visual review do not establish photographic parity.
+The combined checkpoint passes400 tests and the production build.
