@@ -1,4 +1,21 @@
 import { galleryRearStepHeight } from "./gallery-rear-entry";
+import { canadaPlaceGuardSegments } from "./canada-place-guards";
+import {
+  createCanadaPlaceSite,
+  CANADA_PLACE_ROAD_IDS,
+  CANADA_PLACE_SERVICE_IDS,
+  type CanadaPlaceSite,
+} from "./canada-place-site";
+import {
+  CANADA_PLACE_DECK_Y,
+  CANADA_PLACE_PIER,
+  CANADA_PLACE_PIER_ID,
+  CANADA_PLACE_ENTRY_CONNECTOR,
+  CANADA_PLACE_DECK_COLLIDER_IDS,
+  supportedDeck,
+  solidAt,
+  inCanadaPlacePier,
+} from "./canada-place-deck";
 import { harbourTower } from "./harbour-towers-site";
 import { harbourGroundHeight } from "./harbour-green-site";
 import { FAIRMONT_ID, fairmontFootprint } from "./fairmont-site";
@@ -207,6 +224,7 @@ export class CollisionWorld {
   gallery = false;
   robsonGarden?: Building;
   convention?: ConventionSite;
+  canada?: CanadaPlaceSite;
   buildings = new SpatialHash<Building>();
   roads = new SpatialHash<Road>(100);
   forestObstacles = new SpatialHash<{ x: number; z: number; radius: number }>(
@@ -253,6 +271,34 @@ export class CollisionWorld {
         Math.max(...zs),
       );
     }
+    if (
+      data.buildings.some((b) => b.id === CANADA_PLACE_PIER_ID) &&
+      [...CANADA_PLACE_ROAD_IDS].every((id) =>
+        data.roads.some((r) => r.id === id),
+      )
+    ) {
+      const ring = (p: number[]): [number, number][] =>
+        Array.from({ length: p.length / 2 }, (_, i) => [
+          p[i * 2],
+          p[i * 2 + 1],
+        ]);
+      this.canada = createCanadaPlaceSite({
+        roads: data.roads,
+        buildings: data.buildings,
+        westernHeight: (x, z) => this.existingGroundHeight(x, z),
+        connectors: [ring(CANADA_PLACE_ENTRY_CONNECTOR)],
+        existingDeck: ring(CANADA_PLACE_PIER),
+      });
+      for (const rail of canadaPlaceGuardSegments(data, this.canada, (x, z) =>
+        this.existingGroundHeight(x, z),
+      ))
+        this.addBarrier(
+          ...rail.a,
+          ...rail.b,
+          0.06,
+          Math.max(rail.topA, rail.topB),
+        );
+    }
     for (const r of data.roads) {
       for (let i = 0; i < r.pts.length - 2; i += 2)
         this.roads.add(
@@ -265,6 +311,11 @@ export class CollisionWorld {
     }
   }
   groundHeight(x: number, z: number) {
+    if (this.canada && supportedDeck(x, z)) return CANADA_PLACE_DECK_Y;
+    return this.canada?.baselineHeight(x, z) ?? this.existingGroundHeight(x, z);
+  }
+  /** Pre-Canada surface sampler: the western tie must never recurse into itself. */
+  existingGroundHeight(x: number, z: number) {
     const gallery = this.gallery ? galleryRearStepHeight(x, z) : undefined;
     if (gallery !== undefined) return gallery;
     const harbour = this.harbour ? harbourGroundHeight(x, z) : undefined;
@@ -286,6 +337,8 @@ export class CollisionWorld {
       : (this.data.terrain?.height(x, z) ?? 0);
   }
   roadHeight(road: Road, x: number, z: number) {
+    if (this.canada && road.id && CANADA_PLACE_SERVICE_IDS.has(road.id))
+      return this.existingGroundHeight(x, z);
     return this.data.terrain?.contains(x, z) &&
       !/Lions Gate Bridge/.test(road.name ?? "")
       ? this.groundHeight(x, z)
@@ -310,6 +363,12 @@ export class CollisionWorld {
     return b ? this.bridgeHeight(b.bridge, b.t) : this.groundHeight(x, z);
   }
   water(x: number, z: number, referenceY = Infinity) {
+    if (
+      this.canada &&
+      referenceY >= CANADA_PLACE_DECK_Y - 0.5 &&
+      (supportedDeck(x, z) || this.canada.contains(x, z))
+    )
+      return false;
     if (this.harbour && harbourGroundHeight(x, z) !== undefined) return false;
     if (this.convention && jackGroundHeight(x, z) !== undefined) return false;
     if (conventionDeckHeight(this.convention, x, z) !== undefined) return false;
@@ -323,6 +382,17 @@ export class CollisionWorld {
     );
   }
   blocked(x: number, z: number, r = 0.4, referenceY = Infinity) {
+    // A retaining face is not a step: low actors cannot enter the raised
+    // support through its side and be snapped up by ground-following physics.
+    if (
+      this.canada?.contains(x, z) &&
+      Number.isFinite(referenceY) &&
+      this.groundHeight(x, z) > referenceY + 0.45
+    )
+      return true;
+    const canadaLevel = this.canada && referenceY >= CANADA_PLACE_DECK_Y - 0.5;
+    // Public deck eligibility never opens the closed hotel/exhibition volumes.
+    if (canadaLevel && inCanadaPlacePier(x, z) && solidAt(x, z, r)) return true;
     if (this.robsonGarden && robsonObstacle(x, z, r)) return true;
     const bridge = this.bridgeAt(x, z, referenceY);
     if (
@@ -340,6 +410,14 @@ export class CollisionWorld {
       )
         return true;
     for (const b of this.buildings.query(x, z, r)) {
+      if (
+        canadaLevel &&
+        CANADA_PLACE_DECK_COLLIDER_IDS.has(b.id) &&
+        !solidAt(x, z, r) &&
+        (supportedDeck(x, z, r) ||
+          (!inCanadaPlacePier(x, z) && this.canada!.contains(x, z)))
+      )
+        continue;
       if (b.id === CACTUS_ID && jackRoofAccess(x, z, referenceY)) continue;
       if (pointInPoly(x, z, b.pts)) return true;
       for (let i = 0; i < b.pts.length; i += 2) {
@@ -429,6 +507,27 @@ export class CollisionWorld {
           return [nx, nz] as [number, number];
       }
     return [x, z] as [number, number];
+  }
+  /** Choose a nearby door/rear exit on this level, including elevated roads. */
+  vehicleExit(x: number, z: number, heading: number, y: number) {
+    for (const [side, along] of [
+      [2.3, 0],
+      [-2.3, 0],
+      [0, -3.2],
+      [0, 3.2],
+      [2.3, -1.8],
+      [-2.3, -1.8],
+    ]) {
+      const xx = x + Math.cos(heading) * side + Math.sin(heading) * along;
+      const zz = z - Math.sin(heading) * side + Math.cos(heading) * along;
+      const h = this.height(xx, zz, y);
+      if (
+        Math.abs(h - y) <= 0.6 &&
+        !this.blocked(xx, zz, 0.4, y) &&
+        !this.water(xx, zz, y)
+      )
+        return [xx, zz] as [number, number];
+    }
   }
   move(
     x: number,

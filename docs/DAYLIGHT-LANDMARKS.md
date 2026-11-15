@@ -29,10 +29,13 @@ Canada Place–Coal Harbour route. Cambie Bridge, the Ironworkers Memorial Bridg
 Gastown and other mapped landmarks remain part of the wider game. The four
 regions above receive the concentrated fidelity work first.
 
-Current Canada Place access limitation: its upper public promenade is not yet
-walkable. The whole-pier collision and missing deck-height connection are
-documented in [the access audit](sources/canada-place-access.md); the new street
-arrival and roof rigging do not resolve that gap.
+The Canada Place front entry and western Canadian Trail now connect to an
+estimated elevated Howe/Canada Place approach. Native local walking has reached
+the sail-side promenade and returned through the same opening. The source hotel,
+exhibition halls and private terraces remain closed. See the
+[connection checkpoint](CANADA-PLACE-APPROACH.md) for geometry, tests and limits.
+The earlier [access audit](sources/canada-place-access.md) records the original
+whole-pier blocker. Photographic facade/paving correspondence remains unfinished.
 
 The [City seawall guide](https://vancouver.ca/parks-recreation-culture/seawall.aspx)
 establishes the continuous waterfront route. Destination Vancouver's

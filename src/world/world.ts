@@ -1,4 +1,6 @@
 import { clipGalleryStairPath } from "./gallery-rear-entry";
+import { buildCanadaPlaceApproach } from "./canada-place-approach";
+import { clipCanadaPlacePaths } from "./canada-place-paths";
 import { TreeDetailStream } from "./detail-stream";
 import {
   curbObstacles,
@@ -134,6 +136,16 @@ export class World {
     this.forestHabitat = new ForestHabitat(this.data, this.collision);
     this.terrain();
     this.roads();
+    if (this.collision.canada)
+      this.chunks.push(
+        ...buildCanadaPlaceApproach(
+          this.root,
+          this.data,
+          this.materials,
+          this.collision.canada,
+          (x, z) => this.collision.existingGroundHeight(x, z),
+        ),
+      );
     this.chunks.push(
       ...buildHarbourGreen(
         this.root,
@@ -538,6 +550,7 @@ export class World {
           x > 450 &&
           x < 1800;
       const onTerrain =
+        (this.collision.canada?.intersects(r.pts) ?? false) ||
         (this.data.terrain?.intersects(r.pts) ?? false) ||
         jackIntersects(r.pts) ||
         (this.collision.harbour && harbourIntersects(r.pts)) ||
@@ -561,7 +574,7 @@ export class World {
         _height = height,
         scale = 5,
       ) => {
-        const geometry = ribbon(
+        let geometry = ribbon(
           onTerrain ? subdividePath(points) : points,
           width,
           y,
@@ -569,18 +582,24 @@ export class World {
           scale,
           onTerrain && !bridgeRoute,
         );
+        if (
+          this.collision.canada &&
+          ["footway", "path", "pedestrian", "steps"].includes(r.kind)
+        )
+          geometry = clipCanadaPlacePaths(geometry, height, y);
         return this.collision.gallery &&
           ["footway", "path", "pedestrian", "steps"].includes(r.kind)
           ? clipGalleryStairPath(geometry, height, y)
           : geometry;
       };
-      if (hasHarbourCurbs(r)) {
+      const canadaCurbs = !!(r.id && this.collision.canada?.roadIds.has(r.id));
+      if (!canadaCurbs && hasHarbourCurbs(r)) {
         const edges = harbourCurbGeometry(r, curbCuts, height);
         b.add(edges.gutter, m.concrete, x, z, "harbour-gutter");
         b.add(edges.curb, m.stone, x, z, "harbour-curb-face");
         b.add(edges.apron, m.concrete, x, z, "harbour-curb-apron");
       }
-      if (street && !hasHarbourCurbs(r))
+      if (street && !canadaCurbs && !hasHarbourCurbs(r))
         for (let i = 0; i < r.pts.length - 2; i += 2) {
           const ax = r.pts[i],
             az = r.pts[i + 1],
@@ -1009,6 +1028,11 @@ export class World {
           len > 28
         ) {
           const cable = (points: T.Vector3[]) => {
+            // The Burrard tie is elevated; keep this affected span's wires
+            // above both its new grade and the existing western approach.
+            if (this.collision.canada?.intersects([ax, az, bx, bz]))
+              for (const p of points)
+                p.y += this.collision.groundHeight(p.x, p.z);
             const curve = new T.CatmullRomCurve3(points);
             b.add(
               new T.TubeGeometry(curve, 8, 0.018, 4, false),

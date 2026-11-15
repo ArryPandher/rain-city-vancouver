@@ -4,6 +4,7 @@ import {
   replaceGalleryWingFaces,
 } from "./gallery-facade";
 import { repairGalleryRearEntry } from "./gallery-rear-entry";
+import { openCanadaPlaceEntryRail } from "./canada-place-entry-rail";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
@@ -102,8 +103,10 @@ export async function loadVancouverLandmarks(
         if (py < 15 && py > -2)
           points.push([positions.getX(i) + x, positions.getZ(i) + z]);
       }
-      if (asset.id === "canada-place" && original.name === "steel")
+      if (asset.id === "canada-place" && original.name === "steel") {
+        openCanadaPlaceEntryRail(geometry);
         removeCanadaPlaceThinMasts(geometry);
+      }
       const profile = landmarkSurfaceProfile(asset.id, original.name);
       landmarkSurfaceUV(geometry, profile?.metres ?? [4, 4]);
       let mat = cache.get(original);

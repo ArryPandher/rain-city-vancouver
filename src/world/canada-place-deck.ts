@@ -1,0 +1,125 @@
+import { geo, pointInPoly, segmentPoint } from "./data";
+import source from "./canada-place-deck-data.json";
+
+/** Finished source-model surface, not a surveyed geodetic elevation. */
+export const CANADA_PLACE_DECK_Y = 7.88;
+export const CANADA_PLACE_PIER_ID = "w223635729";
+/** Only these mapped site envelopes can be superseded on validated public deck.
+ * Callers must ALSO require supportedDeck and an actor at deck/approach level. */
+export const CANADA_PLACE_DECK_COLLIDER_IDS = new Set(["w223635729"]);
+export const CANADA_PLACE_ORIGIN = geo(source.origin[1], source.origin[0]);
+export function canadaPlaceWorld(x: number, z: number): [number, number] {
+  return [x + CANADA_PLACE_ORIGIN[0], z + CANADA_PLACE_ORIGIN[1]];
+}
+const worldRing = (ring: number[][]) =>
+  ring.flatMap(([x, z]) => canadaPlaceWorld(x, z));
+export const CANADA_PLACE_PIER = worldRing(source.pier);
+export const CANADA_PLACE_HOTEL = worldRing(source.hotel);
+export const CANADA_PLACE_SAILS = source.sails.map(worldRing);
+export const CANADA_PLACE_TERMINAL = worldRing(source.terminal);
+// Same 48-sided mapped approximation as the source near GLB, plus clearances below.
+export const CANADA_PLACE_HALL = worldRing(
+  Array.from({ length: 48 }, (_, i) => {
+    const a = (i * Math.PI) / 24;
+    return [72 + 25 * Math.cos(a), -31 + 18 * Math.sin(a)];
+  }),
+);
+export const CANADA_PLACE_SOLID_MASSES = [
+  CANADA_PLACE_HOTEL,
+  ...CANADA_PLACE_SAILS,
+  CANADA_PLACE_TERMINAL,
+  CANADA_PLACE_HALL,
+];
+
+// A bounded interpretation of the official front plaza and western Canadian Trail.
+// These are eligibility masks, always intersected with actual PIER and solid exclusions.
+// They do not designate every exposed roof/deck as public.
+const front = worldRing([
+  [-248, 75],
+  [-225, 62],
+  [-201, 62],
+  [-183, 92],
+  [-199, 98],
+  [-241, 80],
+]);
+const a = source.pier[1],
+  b = source.pier[2],
+  len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+const ix = -(b[1] - a[1]) / len,
+  iz = (b[0] - a[0]) / len;
+const trail = worldRing([
+  a,
+  b,
+  [b[0] + ix * 24, b[1] + iz * 24],
+  [a[0] + ix * 24, a[1] + iz * 24],
+]);
+export const CANADA_PLACE_PUBLIC_MASKS = [front, trail];
+/** Estimated level street-to-plaza connector; OUTSIDE the source pier it needs
+ * approach-owned rendered support. Never use this ring as a water exemption alone. */
+export const CANADA_PLACE_ENTRY_CONNECTOR = [
+  425, -522, 435, -522, 435, -544, 425, -544,
+];
+export const CANADA_PLACE_DECK_ROUTE = [
+  [-214.7, 81.3],
+  [-220, 73],
+  [-209, 62],
+  [-190, 47],
+  [-155, 28],
+  [-115, 7],
+  [-75, -15],
+  [-30, -39],
+  [15, -63],
+  [42, -75],
+].map(([x, z]) => canadaPlaceWorld(x, z));
+
+function edgeDistance(x: number, z: number, p: number[]) {
+  let distance = Infinity;
+  for (let i = 0; i < p.length; i += 2) {
+    const j = (i + 2) % p.length;
+    distance = Math.min(
+      distance,
+      segmentPoint(x, z, p[i], p[i + 1], p[j], p[j + 1]).d,
+    );
+  }
+  return distance;
+}
+const valid = (x: number, z: number, r: number) =>
+  Number.isFinite(x) && Number.isFinite(z) && Number.isFinite(r) && r >= 0;
+function containsCircle(x: number, z: number, p: number[], r: number) {
+  return pointInPoly(x, z, p) && edgeDistance(x, z, p) >= r;
+}
+export function inCanadaPlacePier(x: number, z: number, r = 0) {
+  return valid(x, z, r) && containsCircle(x, z, CANADA_PLACE_PIER, r);
+}
+/** Closed hotel/exhibition/end-hall volume at and above public deck. The 0.55 m
+ * margin includes source projecting facade trim; it is deliberately conservative. */
+export function solidAt(x: number, z: number, r = 0) {
+  if (!valid(x, z, r)) return true;
+  return CANADA_PLACE_SOLID_MASSES.some(
+    (p) => pointInPoly(x, z, p) || edgeDistance(x, z, p) <= r + 0.55,
+  );
+}
+/** Backed entrance opening only; outside PIER the approach owns its support. */
+export function inCanadaPlaceEntryConnector(x: number, z: number, r = 0) {
+  return (
+    valid(x, z, r) && containsCircle(x, z, CANADA_PLACE_ENTRY_CONNECTOR, r)
+  );
+}
+/** Exposed public source surface only. Caller height-gates entry: this says
+ * nothing about traversing the lower solid pier, private terraces or sea.
+ * Only at the backed entry connector may the actor circle straddle the pier rim. */
+export function supportedDeck(x: number, z: number, r = 0) {
+  if (
+    !valid(x, z, r) ||
+    !pointInPoly(x, z, CANADA_PLACE_PIER) ||
+    solidAt(x, z, r)
+  )
+    return false;
+  const entryOpening = inCanadaPlaceEntryConnector(x, z, r);
+  if (!entryOpening && !containsCircle(x, z, CANADA_PLACE_PIER, r + 0.65))
+    return false;
+  return (
+    entryOpening ||
+    CANADA_PLACE_PUBLIC_MASKS.some((p) => containsCircle(x, z, p, r))
+  );
+}

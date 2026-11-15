@@ -17,6 +17,10 @@ import { UI } from "./ui/ui";
 import { Actors, Vehicle } from "./game/actors";
 import { makeCharacter, makeWeapon, Character } from "./game/character";
 import { drive, damp, angleDelta } from "./game/physics";
+import {
+  startupBikeSpot,
+  approachingVehicleContact,
+} from "./game/vehicle-placement";
 import { GameAudio } from "./game/audio";
 import { PointerInput } from "./game/pointer-input";
 import { shortenChaseBoom } from "./game/chase-camera";
@@ -336,8 +340,12 @@ class Game {
     );
     this.actors.populate(spawn.x, spawn.z);
     this.actors.update(0, this.player, this.vehicle);
-    const bikeSpot = this.world.collision.safe(spawn.x + 8, spawn.z + 4, 1);
-    this.actors.addVehicle("bike", ...bikeSpot, spawn.heading);
+    const bikeSpot = startupBikeSpot(
+      this.world.collision,
+      spawn,
+      this.actors.vehicles.map((v) => v.state),
+    );
+    if (bikeSpot) this.actors.addVehicle("bike", ...bikeSpot, spawn.heading);
     this.character.group.visible = false;
     this.world.onDetailReady = () => this.setQuality(this.quality);
     this.setQuality(localStorage.getItem("rain-city-quality") || "balanced");
@@ -682,16 +690,16 @@ class Game {
       ui.toast("Slow down before getting out.");
       return;
     }
-    const side = new T.Vector3(
-      Math.cos(v.state.heading) * 2.3,
-      0,
-      -Math.sin(v.state.heading) * 2.3,
+    const p = this.world.collision.vehicleExit(
+      v.state.x,
+      v.state.z,
+      v.state.heading,
+      this.player.y,
     );
-    let p = this.world.collision.safe(
-      v.state.x + side.x,
-      v.state.z + side.z,
-      0.4,
-    );
+    if (!p) {
+      ui.toast("Move to a clear, level spot to get out.");
+      return;
+    }
     this.player.set(
       p[0],
       this.world.collision.height(...p, this.player.y),
@@ -710,6 +718,7 @@ class Game {
     if (this.vehicle) {
       this.vehicle.state.speed = 0;
       this.exitVehicle();
+      if (this.vehicle) return;
     }
     const nearest = this.world.collision.nearestRoad(
       this.player.x,
@@ -843,6 +852,7 @@ class Game {
       if (this.vehicle) {
         this.vehicle.state.speed = 0;
         this.exitVehicle();
+        if (this.vehicle) return;
       }
       this.combat.targetCourse(this.player.x, this.player.z, this.mouseYaw);
       this.targetCourse = true;
@@ -1158,7 +1168,10 @@ class Game {
       for (const other of this.actors.vehicles) {
         if (other === v || !other.model.group.visible) continue;
         if (
-          Math.hypot(s.x - other.state.x, s.z - other.state.z) < 2.1 &&
+          approachingVehicleContact(
+            { ...s, y: v.model.group.position.y },
+            { ...other.state, y: other.model.group.position.y },
+          ) &&
           Math.abs(s.speed) > 2
         ) {
           s.speed *= -0.2;

@@ -505,6 +505,13 @@ export function architecture(
         const angle = Math.atan2(nx, nz),
           stores = Math.max(1, Math.round(len / 12)),
           storeWidth = len / stores;
+        // Raised public decking can meet an existing upper facade. Preserve the
+        // building datum; omit generic ground-floor entries buried by that deck.
+        const streetGrade = collision.canada?.baselineHeight(
+          cx + nx * 1.2,
+          cz + nz * 1.2,
+        );
+        if (streetGrade !== undefined && streetGrade > ground + 0.6) continue;
         const retail = hasStorefront(b.kind, near.road.name);
         if (!retail && isResidential(b.kind)) {
           const doorColumn = Math.floor(len / 6),
