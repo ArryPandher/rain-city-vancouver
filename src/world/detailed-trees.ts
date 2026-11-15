@@ -1,3 +1,4 @@
+import { yieldDetailFrame } from "./detail-stream";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { bakeGeometry } from "./geometry";
@@ -38,16 +39,20 @@ export class DetailedTrees {
   private lastY = Infinity;
   private lastBudget = -1;
   private lastView = new T.Quaternion();
+  private lastProjectionScale: number | undefined;
   lodState = { near: 0, medium: 0 };
   static async load(scene: T.Scene) {
     const loader = new GLTFLoader();
-    const models = await Promise.all(
-      ["", "-medium"].map((s) =>
-        loader.loadAsync(
-          `${BASE}models/vancouver-street-tree${s}.glb?v=${STREET_TREE_REVISION}`,
+    const models = [];
+    // Keep GLB decode requests bounded instead of launching both large LODs.
+    for (const suffix of ["", "-medium"]) {
+      models.push(
+        await loader.loadAsync(
+          `${BASE}models/vancouver-street-tree${suffix}.glb?v=${STREET_TREE_REVISION}`,
         ),
-      ),
-    );
+      );
+      await yieldDetailFrame();
+    }
     return DetailedTrees.fromModels(
       scene,
       models.map((m) => m.scene),
@@ -151,9 +156,14 @@ export class DetailedTrees {
     return result;
   }
   update(x: number, z: number, y = 0, camera?: T.Camera) {
+    const projectionScale =
+      camera instanceof T.PerspectiveCamera
+        ? camera.projectionMatrix.elements[5]
+        : undefined;
     if (
       Math.hypot(x - this.lastX, z - this.lastZ, y - this.lastY) < 3 &&
       this.lastBudget === this.budget &&
+      this.lastProjectionScale === projectionScale &&
       (!camera || this.lastView.angleTo(camera.quaternion) < 0.04)
     )
       return;
@@ -161,6 +171,7 @@ export class DetailedTrees {
     this.lastZ = z;
     this.lastY = y;
     this.lastBudget = this.budget;
+    this.lastProjectionScale = projectionScale;
     if (camera) this.lastView.copy(camera.quaternion);
     const dirty = new Set<T.InstancedMesh>();
     for (const tree of this.selected) {
@@ -184,6 +195,7 @@ export class DetailedTrees {
             ),
           )
         : undefined,
+      projectionScale,
     );
     this.selected = selected.map((p) => p.tree);
     this.previousNear = new Set(

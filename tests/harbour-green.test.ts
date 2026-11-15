@@ -127,7 +127,7 @@ test("fountain water stays walkable, stone piers are solid, and all four central
   assert.equal(refs.length, 1);
   assert.equal(m.animatedUniforms.length, 1);
   const jets = root.getObjectByName("Harbour Green fountain jets") as T.Points;
-  assert.equal(jets.geometry.getAttribute("position").count, 1400);
+  assert.equal(jets.geometry.getAttribute("position").count, 9120);
   for (const key of ["velocity", "life", "phase"])
     for (const v of jets.geometry.getAttribute(key).array)
       assert.ok(Number.isFinite(v));

@@ -1,3 +1,4 @@
+import { yieldDetailFrame } from "./detail-stream";
 import {
   CONIFER_ALPHA_CUTOFF,
   CONIFER_ASSET_REVISION,
@@ -107,13 +108,15 @@ export class ForestDetail {
       "fir_tree_01-b",
       "fir_tree_01-b-medium",
     ];
-    const models = await Promise.all(
-      ids.map((id) =>
-        loader.loadAsync(
+    const models = [];
+    for (const id of ids) {
+      models.push(
+        await loader.loadAsync(
           `${BASE}models/forest/${id}.glb${id === "fir_tree_01-b" ? `?v=${CONIFER_ASSET_REVISION}` : ""}`,
         ),
-      ),
-    );
+      );
+      await yieldDetailFrame();
+    }
     const volumes = await loadConiferVolumeMaterials().catch((error) => {
       console.warn(
         "Layered boughs unavailable; retaining geometric conifers",
@@ -123,6 +126,7 @@ export class ForestDetail {
     });
     const sourceBounds: T.Box3[] = [];
     for (let mi = 0; mi < models.length; mi++) {
+      await yieldDetailFrame();
       const root = models[mi].scene;
       root.updateMatrixWorld(true);
       const bounds = new T.Box3().setFromObject(root),
@@ -288,8 +292,14 @@ export class ForestDetail {
       }
     }
     const b = STANLEY_BOUNDS;
+    let visited = 0,
+      sliceStarted = performance.now();
     for (let x = b.minX; x < b.maxX; x += 5)
       for (let z = b.minZ; z < b.maxZ; z += 5) {
+        if (++visited % 128 === 0 && performance.now() - sliceStarted > 5) {
+          await yieldDetailFrame();
+          sliceStarted = performance.now();
+        }
         const seed = hash(`forest-floor:${x}:${z}`),
           random = seeded(seed);
         const xx = x + (random() - 0.5) * 4,

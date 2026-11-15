@@ -14,6 +14,15 @@ import type { CollisionWorld } from "./collision";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import { harbourLawnMaterial, type LawnEdge } from "./harbour-lawn-material";
 import { reconcileTrees } from "./tree-profile";
+import {
+  fountainWetStone,
+  fountainSpray,
+  FOUNTAIN_NOZZLES,
+} from "./harbour-fountain";
+import {
+  fountainStoneMaterials,
+  buildFountainStonePier,
+} from "./harbour-fountain-stone";
 import { ringTriangles, partitionTriangle } from "./triangle-partition";
 import { JACK_BOUNDARY, jackTriangleHeight } from "./jack-poole-site";
 import map from "./harbour-green-map.json";
@@ -97,8 +106,7 @@ export function buildHarbourGreen(
 ) {
   if (!collision.harbour) return [];
   const batch = new Batcher(parent, 64),
-    mesh = new ArchitecturalMesh(batch, -108, -775),
-    random = seeded(223936055);
+    mesh = new ArchitecturalMesh(batch, -108, -775);
   const material = (
     name: string,
     color: number,
@@ -137,11 +145,6 @@ export function buildHarbourGreen(
   paving.map = m.texture("seawall/pavers-color.webp", true);
   paving.normalMap = m.texture("seawall/pavers-normal.webp");
   paving.normalScale.set(0.2, 0.2);
-  const granite = material("granite fountain paving", 0xbdc4c0, 0.72);
-  granite.map = m.texture("harbour-green/granite_tile-color.webp", true);
-  granite.normalMap = m.texture("harbour-green/granite_tile-normal.webp");
-  granite.roughnessMap = m.texture("harbour-green/granite_tile-roughness.webp");
-  granite.normalScale.set(0.13, 0.13);
   const stone = material("pale cut stone", 0xb6bcb6, 0.88);
   stone.map = m.texture("cast-concrete/color.jpg", true);
   stone.normalMap = m.texture("cast-concrete/normal.jpg");
@@ -381,41 +384,10 @@ export function buildHarbourGreen(
       }
   }
   surface(HARBOUR_LANDING.pts, stone, () => HARBOUR_LANDING.height + 0.018);
-  surface(HARBOUR_POOL, granite, () => HARBOUR_POOL_LEVEL + 0.023);
   const time = { value: 0 };
   m.animatedUniforms.push(time);
-  const water = new T.MeshPhysicalMaterial({
-    name: "Harbour Green — shallow spray-pool water",
-    color: 0x93aaa3,
-    roughness: 0.24,
-    metalness: 0.05,
-    transparent: true,
-    opacity: 0.14,
-    depthWrite: false,
-    clearcoat: 1,
-    side: T.DoubleSide,
-  });
-  water.userData.castShadow = false;
-  water.onBeforeCompile = (s) => {
-    s.uniforms.hgTime = time;
-    s.vertexShader = s.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying vec2 hgPoint;")
-      .replace(
-        "#include <begin_vertex>",
-        "#include <begin_vertex>\nhgPoint=position.xz;",
-      );
-    s.fragmentShader = s.fragmentShader
-      .replace(
-        "#include <common>",
-        "#include <common>\nuniform float hgTime;varying vec2 hgPoint;",
-      )
-      .replace(
-        "#include <normal_fragment_maps>",
-        "#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(sin(hgPoint.x*8.+hgTime*2.)*.025,cos(hgPoint.y*9.-hgTime*1.4)*.025,0.));",
-      );
-  };
-  water.customProgramCacheKey = () => "harbour-green-water-v1";
-  surface(HARBOUR_POOL, water, () => HARBOUR_POOL_LEVEL + 0.038);
+  const water = fountainWetStone(m, time);
+  surface(HARBOUR_POOL, water, () => HARBOUR_POOL_LEVEL + 0.026);
   const fw = (u: number, y: number, v: number): Vertex3 => {
       const [x, z] = fountainWorld(u, v);
       return [x, y, z];
@@ -442,80 +414,20 @@ export function buildHarbourGreen(
     ] as Point[][])
       collision.addBarrier(...a, ...b, 0.04, y);
   };
+  const dressedStone = fountainStoneMaterials(m);
   for (const u of [-0.85, 14.6])
     for (const v of [0, 7.2, 14.4, 21.7]) {
       const base = fw(u, HARBOUR_POOL_LEVEL + 0.58, v);
-      mesh.box(base, 1.12, 1.16, 1.12, stone, angle);
-      mesh.box([base[0], base[1] + 0.65, base[2]], 1.3, 0.2, 1.3, stone, angle);
-      const cap = new T.ConeGeometry(0.93, 0.58, 4);
-      cap.rotateY(Math.PI / 4 + angle);
-      cap.translate(base[0], base[1] + 1.03, base[2]);
-      mesh.add(cap, stone);
+      buildFountainStonePier(mesh, u, v, dressedStone);
       obstacle(base[0], base[2], 0.55, base[1] + 1.32);
       collision.addForestTrunk(base[0], base[2], 0.62);
     }
-  // Ballistic droplets follow real parabolic arcs; the shallow pool is walkable.
-  const origins: number[] = [],
-    velocities: number[] = [],
-    phases: number[] = [],
-    lifetimes: number[] = [];
-  const nozzle = (
-    u: number,
-    v: number,
-    du: number,
-    dv: number,
-    vy: number,
-    life: number,
-  ) => {
-    const p = fw(u, HARBOUR_POOL_LEVEL + 0.1, v),
-      q = fw(u + du, 0, v + dv);
-    mesh.beam([p[0], p[1] - 0.1, p[2]], p, 0.045, metal, 8);
-    for (let i = 0; i < 140; i++) {
-      origins.push(
-        p[0] + (random() - 0.5) * 0.035,
-        p[1],
-        p[2] + (random() - 0.5) * 0.035,
-      );
-      velocities.push(
-        q[0] - p[0] + (random() - 0.5) * 0.09,
-        vy + (random() - 0.5) * 0.16,
-        q[2] - p[2] + (random() - 0.5) * 0.09,
-      );
-      phases.push(random());
-      lifetimes.push(life);
-    }
-  };
-  for (const u of [3.5, 10.2])
-    for (const v of [4, 11, 18]) nozzle(u, v, 0, 0, 5.0, 0.99);
-  for (const v of [6.5, 15.5]) {
-    nozzle(-0.3, v, 5.2, 0, 6.5, 1.32);
-    nozzle(14.1, v, -5.2, 0, 6.5, 1.32);
+  for (const nozzle of FOUNTAIN_NOZZLES) {
+    const p = fw(nozzle.u, HARBOUR_POOL_LEVEL + 0.08, nozzle.v);
+    mesh.beam([p[0], p[1] - 0.06, p[2]], p, 0.022, metal, 8);
   }
-  const droplets = new T.BufferGeometry();
-  droplets.setAttribute("position", new T.Float32BufferAttribute(origins, 3));
-  droplets.setAttribute(
-    "velocity",
-    new T.Float32BufferAttribute(velocities, 3),
-  );
-  droplets.setAttribute("phase", new T.Float32BufferAttribute(phases, 1));
-  droplets.setAttribute("life", new T.Float32BufferAttribute(lifetimes, 1));
-  const spray = new T.ShaderMaterial({
-    name: "Harbour Green — fountain droplets",
-    uniforms: { hgTime: time },
-    transparent: true,
-    depthWrite: false,
-    vertexShader:
-      "uniform float hgTime;attribute vec3 velocity;attribute float phase;attribute float life;varying float alpha;void main(){float t=fract(hgTime/life+phase)*life;vec3 p=position+velocity*t;p.y-=4.9*t*t;vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(130./-mv.z,1.,5.);alpha=smoothstep(0.,.08,t)*(1.-smoothstep(life-.16,life,t));}",
-    fragmentShader:
-      "varying float alpha;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;gl_FragColor=vec4(.82,.91,.94,(1.-smoothstep(.15,.5,d))*.67*alpha);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n}",
-  });
-  const jets = new T.Points(droplets, spray);
-  jets.name = "Harbour Green fountain jets";
-  droplets.computeBoundingBox();
-  droplets.boundingBox!.expandByScalar(10);
-  droplets.boundingSphere = new T.Sphere();
-  droplets.boundingBox!.getBoundingSphere(droplets.boundingSphere);
-  parent.add(jets);
+  const { core, jets } = fountainSpray(time, water);
+  parent.add(core, jets);
   refs.push({
     name: "Harbour Green fountain",
     position: [
@@ -525,7 +437,7 @@ export function buildHarbourGreen(
       })(),
     ] as Vertex3,
     materials: [water],
-    intensity: { day: 0.65, night: 0.22 },
+    intensity: { day: 1.05, night: 0.28 },
   });
   // Mapped benches face the water, with timber slats and curved iron armrests.
   for (const poi of map.pois) {

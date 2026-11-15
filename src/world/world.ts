@@ -1,3 +1,4 @@
+import { TreeDetailStream } from "./detail-stream";
 import {
   curbObstacles,
   harbourCurbGeometry,
@@ -123,6 +124,8 @@ export class World {
     this.sun.shadow.radius = 3.5;
     scene.fog = new T.FogExp2(0xc2cbd0, 0.00032);
   }
+  treeDetailStream?: TreeDetailStream;
+  onDetailReady = () => {};
   async build(report: (text: string, n: number) => void) {
     report("Loading Vancouver’s streets", 0.12);
     this.collision = new CollisionWorld(this.data);
@@ -194,24 +197,6 @@ export class World {
         "Layered broadleaf canopy unavailable; retaining mapped crowns",
         error,
       );
-    }
-    try {
-      this.detailedTrees = await DetailedTrees.load(this.scene);
-      this.detailedTrees.samples = this.treeSamples;
-    } catch (error) {
-      console.warn(
-        "Street tree detail unavailable; retaining mapped crowns",
-        error,
-      );
-    }
-    try {
-      this.forestDetail = await ForestDetail.load(
-        this.scene,
-        this.forestHabitat,
-      );
-      this.forestDetail.samples = this.coniferSamples;
-    } catch (error) {
-      console.warn("Forest detail unavailable; retaining distant trees", error);
     }
     await new Promise((r) => setTimeout(r, 20));
     try {
@@ -298,6 +283,30 @@ export class World {
       object.matrixWorldAutoUpdate = false;
     });
     this.setWeather("day");
+    this.treeDetailStream = new TreeDetailStream(
+      {
+        street: async () => {
+          const detail = await DetailedTrees.load(this.scene);
+          detail.samples = this.treeSamples;
+          this.detailedTrees = detail;
+          this.onDetailReady();
+        },
+        forest: async () => {
+          const detail = await ForestDetail.load(
+            this.scene,
+            this.forestHabitat,
+          );
+          detail.samples = this.coniferSamples;
+          this.forestDetail = detail;
+          this.onDetailReady();
+        },
+      },
+      (kind, error) =>
+        console.warn(
+          `${kind} detail unavailable; retaining existing trees`,
+          error,
+        ),
+    );
     report("Ready to explore", 1);
   }
   addEasternRoad() {
@@ -694,7 +703,7 @@ export class World {
     trees.push(...forestTrees);
     const chunkTrees = new Map<string, TreeProfile[]>();
     for (const t of trees) {
-      const k = Math.floor(t.x / 350) + "," + Math.floor(t.z / 350);
+      const k = Math.floor(t.x / 192) + "," + Math.floor(t.z / 192);
       let a = chunkTrees.get(k);
       if (!a) chunkTrees.set(k, (a = []));
       a.push(t);
@@ -867,7 +876,8 @@ export class World {
       for (const obj of [trunk, leaves, ...pines]) {
         obj.castShadow = obj.receiveShadow = true;
         obj.computeBoundingSphere();
-        obj.userData.center = key.split(",").map((v) => Number(v) * 350 + 175);
+        obj.userData.center = key.split(",").map((v) => Number(v) * 192 + 96);
+        obj.userData.treeCellRadius = Math.SQRT2 * 96;
         this.root.add(obj);
         this.chunks.push(obj);
       }
@@ -1142,6 +1152,11 @@ export class World {
   }
   setWeather(w: Weather) {
     this.weather = w;
+    // Startup reflection captures happen before update() follows the player.
+    // Establish the same directional offset immediately, around the current target.
+    this.sun.position
+      .copy(this.sun.target.position)
+      .add(new T.Vector3(-220, w === "day" ? 330 : 110, 170));
     this.northShore?.color.set(
       w === "night" ? 0x233953 : w === "overcast" ? 0x9eafbb : 0xddd6ce,
     );
@@ -1193,6 +1208,7 @@ export class World {
     camera?: T.Camera,
   ) {
     this.time += dt;
+    if (this.time > 1) this.treeDetailStream?.update(x, z);
     for (const uniform of this.materials.animatedUniforms)
       uniform.value = this.time;
     for (const beacon of this.materials.beacons) {

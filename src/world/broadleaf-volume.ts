@@ -34,7 +34,7 @@ export function activeTreeBounds(mesh: T.InstancedMesh) {
 }
 /** Cropped depth layers preserve source-space branch positions. The top view
  * covers elevated cameras without turning the canopy into a stack of edges. */
-export function broadleafVolumeGeometry() {
+export function broadleafVolumeGeometry(distant = false) {
   const parts: T.BufferGeometry[] = [];
   const centre = new T.Vector3()
     .fromArray(data.centre)
@@ -50,7 +50,22 @@ export function broadleafVolumeGeometry() {
         (data.bounds.min[axis] +
           ((data.bounds.max[axis] - data.bounds.min[axis]) * (i + 0.5)) / 8) /
         data.height;
-      for (const [left, top, rightPx, bottom] of data.cuts[row * 8 + i]) {
+      const cropBands = data.cuts[row * 8 + i];
+      // Each 512px cell contains only this source tree's one depth slice. Bands
+      // merely skip transparent pixels; one bounded quad keeps identical UVs,
+      // depth, normal atlas and alpha silhouette at distant screen sizes.
+      const crops =
+        distant && cropBands.length
+          ? [
+              [
+                Math.min(...cropBands.map((c) => c[0])),
+                Math.min(...cropBands.map((c) => c[1])),
+                Math.max(...cropBands.map((c) => c[2])),
+                Math.max(...cropBands.map((c) => c[3])),
+              ],
+            ]
+          : cropBands;
+      for (const [left, top, rightPx, bottom] of crops) {
         const geometry = new T.PlaneGeometry(
           ((rightPx - left) / 512) * span,
           ((bottom - top) / 512) * span,
@@ -283,13 +298,15 @@ export async function loadBroadleafVolumeMaterials() {
     },
   };
 }
-/** Group centres include a 350 m tile; far simplification starts only beyond
- * 600 m, with a 50 m return band to avoid repeated switching while driving. */
+/** Cell half-diagonals retain full fallback geometry inside at least230m.
+ * Hysteresis avoids repeated switching; near source-tree slots are untouched. */
 export function updateBroadleafDistance(mesh: T.Mesh, distance: number) {
   const high = mesh.userData.branchNearGeometry as T.BufferGeometry | undefined;
   if (!high) return;
   const low = mesh.userData.branchFarGeometry as T.BufferGeometry;
-  const far = distance > (mesh.geometry === low ? 550 : 600);
+  const radius =
+    (mesh.userData.treeCellRadius as number | undefined) ?? Math.SQRT2 * 48;
+  const far = distance - radius > (mesh.geometry === low ? 190 : 230);
   mesh.geometry = far ? low : high;
 }
 /** Replace only the visual fallback, preserving source records and collisions.
@@ -299,6 +316,7 @@ export function installBroadleafVolumes(
   materials: Awaited<ReturnType<typeof loadBroadleafVolumeMaterials>>,
 ) {
   const source = broadleafVolumeGeometry(),
+    distantSource = broadleafVolumeGeometry(true),
     meshes = new Map<T.InstancedMesh, T.InstancedBufferAttribute>();
   const trunks = new Map<T.InstancedMesh, T.InstancedBufferAttribute>();
   const matrix = new T.Matrix4(),
@@ -320,7 +338,16 @@ export function installBroadleafVolumes(
         1,
       );
       g.setAttribute("treeStemScale", stem);
+      const far = new T.BufferGeometry();
+      far.setIndex(distantSource.index);
+      for (const [name, a] of Object.entries(distantSource.attributes))
+        far.setAttribute(name, a);
+      far.boundingBox = distantSource.boundingBox!.clone();
+      far.boundingSphere = g.boundingSphere.clone();
+      far.setAttribute("treeStemScale", stem);
       t.crown.geometry = g;
+      t.crown.userData.branchNearGeometry = g;
+      t.crown.userData.branchFarGeometry = far;
       t.crown.material = materials.material;
       t.crown.customDepthMaterial = materials.depth;
       meshes.set(t.crown, stem);

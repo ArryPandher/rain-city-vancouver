@@ -37,7 +37,7 @@ for (const fail of [false, true])
     const root = new T.Group();
     const sun = new T.DirectionalLight();
     sun.position.set(100, 330, 250);
-    sun.target.position.set(40, 0, 50);
+    sun.target.position.set(40, 27, 50);
     const actor = new T.Group();
     const nearby = new T.Mesh(
       new T.BoxGeometry(),
@@ -66,6 +66,16 @@ for (const fail of [false, true])
       },
     } as unknown as T.WebGLRenderer;
     reflections.probes[0].camera.update = () => {
+      assert.deepEqual(
+        sun.position.clone().sub(sun.target.position).toArray(),
+        [60, 303, 200],
+        "probe preserves full sun-target direction at nonzero ground height",
+      );
+      assert.deepEqual(
+        sun.target.position.toArray(),
+        [10, 1, 15],
+        "capture pair is translated to the probe",
+      );
       assert.equal(actor.visible, false, "moving actor is omitted");
       assert.equal(surface.visible, false, "surface cannot reflect itself");
       assert.equal(
@@ -89,7 +99,7 @@ for (const fail of [false, true])
     assert.equal(nearby.visible, false);
     assert.equal(nearby.castShadow, false);
     assert.deepEqual(sun.position.toArray(), [100, 330, 250]);
-    assert.deepEqual(sun.target.position.toArray(), [40, 0, 50]);
+    assert.deepEqual(sun.target.position.toArray(), [40, 27, 50]);
     assert.equal(renderer.shadowMap.autoUpdate, true);
     assert.equal(renderer.shadowMap.needsUpdate, true);
     assert.equal(renderer.xr.enabled, true);

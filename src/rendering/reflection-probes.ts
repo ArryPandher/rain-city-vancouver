@@ -116,16 +116,11 @@ export class SceneReflections {
         )
           show(object, false);
       });
-      this.sun.position.set(
-        probe.spec.position[0] - 220,
-        oldSun.y,
-        probe.spec.position[2] + 170,
-      );
-      this.sun.target.position.set(
-        probe.spec.position[0],
-        0,
-        probe.spec.position[2],
-      );
+      // Translate the light/target pair together. Reusing absolute sun.y at a
+      // zero-height target changes direction when the viewer stands on a slope.
+      const direction = oldSun.clone().sub(oldTarget);
+      this.sun.target.position.set(...probe.spec.position);
+      this.sun.position.copy(this.sun.target.position).add(direction);
       this.scene.updateMatrixWorld(true);
       // Render the probe's sun shadow once across its six faces.
       renderer.shadowMap.autoUpdate = false;

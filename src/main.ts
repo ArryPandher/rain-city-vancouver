@@ -1,5 +1,7 @@
+import { FrameSample, type FrameSampleContext } from "./rendering/frame-sample";
 import * as T from "three";
 import { StaticShadowCache } from "./rendering/static-shadow-cache";
+import { profileRender } from "./rendering/render-profile";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
@@ -72,6 +74,9 @@ class Game {
   lastWorldUpdate = 0;
   lastMini = 0;
   frameCount = 0;
+  private frameSample?: FrameSample;
+  private frameSampleReport?: HTMLPreElement;
+  private frameSampleButton?: HTMLButtonElement;
   shadowCache = new StaticShadowCache();
   footstepDistance = 0;
   headlights: T.SpotLight[] = [];
@@ -333,6 +338,7 @@ class Game {
     const bikeSpot = this.world.collision.safe(spawn.x + 8, spawn.z + 4, 1);
     this.actors.addVehicle("bike", ...bikeSpot, spawn.heading);
     this.character.group.visible = false;
+    this.world.onDetailReady = () => this.setQuality(this.quality);
     this.setQuality(localStorage.getItem("rain-city-quality") || "balanced");
     const w = localStorage.getItem("rain-city-weather");
     if (w && ["day", "golden", "overcast", "night"].includes(w))
@@ -358,6 +364,66 @@ class Game {
       await this.renderer.compileAsync(this.scene, this.camera);
     } finally {
       this.renderer.setRenderTarget(previousTarget);
+    }
+    if (new URLSearchParams(location.search).has("debug")) {
+      const panel = document.createElement("details");
+      panel.id = "render-profile";
+      panel.style.cssText =
+        "position:fixed;left:12px;top:85px;z-index:1000;max-width:580px;max-height:70vh;overflow:auto;background:#101a20e8;color:#dce8eb;padding:8px;font:11px monospace;pointer-events:auto";
+      const title = document.createElement("summary");
+      title.textContent = "Render diagnostics";
+      const button = document.createElement("button");
+      button.textContent = "Profile one frame";
+      const report = document.createElement("pre");
+      report.style.cssText =
+        "white-space:pre-wrap;margin:8px 0;max-width:550px";
+      button.addEventListener("click", () => {
+        report.textContent = JSON.stringify(
+          {
+            ...profileRender(this.renderer, this.scene, this.camera, () =>
+              this.render(),
+            ),
+            treeDetail: this.world.treeDetailStream?.status,
+            streetTreeLOD: this.world.detailedTrees?.lodState,
+            camera: {
+              position: this.camera.position.toArray(),
+              fov: this.camera.fov,
+              yaw: this.mouseYaw,
+              pitch: this.pitch,
+              mode: this.cameraMode,
+            },
+            player: this.player.toArray(),
+          },
+          null,
+          2,
+        );
+      });
+      const sampleButton = document.createElement("button");
+      sampleButton.textContent = "Sample 20 seconds";
+      const sampleReport = document.createElement("pre");
+      sampleReport.id = "frame-sample-result";
+      sampleReport.style.cssText = report.style.cssText;
+      this.frameSampleButton = sampleButton;
+      this.frameSampleReport = sampleReport;
+      sampleButton.addEventListener("click", () => {
+        this.frameSample = new FrameSample(this.frameSampleContext());
+        const inactive = this.frameSampleInactive();
+        if (inactive) {
+          this.finishFrameSample(inactive);
+          return;
+        }
+        sampleButton.disabled = true;
+        sampleReport.textContent = JSON.stringify({
+          state: "sampling",
+          targetSeconds: 20,
+          start: this.frameSample.start,
+        });
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) this.finishFrameSample("document hidden");
+      });
+      panel.append(title, button, sampleButton, report, sampleReport);
+      document.body.append(panel);
     }
     this.ready = true;
     this.lastSafe.copy(this.player);
@@ -461,6 +527,7 @@ class Game {
   }
   pause() {
     if (!this.ready) return;
+    this.finishFrameSample("game paused");
     this.running = false;
     this.clearPointerInput();
     this.keys.clear();
@@ -1306,14 +1373,50 @@ class Game {
           .map((v) => v.toFixed(2))
           .join(", ")} · Heading ${this.heading.toFixed(3)}`;
   }
+  private frameSampleContext(): FrameSampleContext {
+    return {
+      viewport: {
+        width: this.renderer.domElement.clientWidth,
+        height: this.renderer.domElement.clientHeight,
+        pixelRatio: this.renderer.getPixelRatio(),
+      },
+      preset: this.quality,
+      weather: this.world.weather,
+      position: [this.player.x, this.player.y, this.player.z],
+    };
+  }
+  private frameSampleInactive() {
+    return document.hidden
+      ? "document hidden"
+      : ui.introOpen
+        ? "intro open"
+        : !this.running
+          ? "game paused"
+          : this.photo
+            ? "photo mode"
+            : undefined;
+  }
+  private finishFrameSample(reason?: string) {
+    if (!this.frameSample) return;
+    const result = this.frameSample.finish(this.frameSampleContext(), reason);
+    this.frameSample = undefined;
+    if (this.frameSampleReport)
+      this.frameSampleReport.textContent = JSON.stringify(result, null, 2);
+    if (this.frameSampleButton) this.frameSampleButton.disabled = false;
+  }
   frame(now: number) {
     requestAnimationFrame((t) => this.frame(t));
+    if (this.frameSample) {
+      const inactive = this.frameSampleInactive();
+      if (inactive) this.finishFrameSample(inactive);
+    }
     if (document.hidden) {
       this.last = now;
       return;
     }
-    const rawDt = (now - this.last) / 1000,
-      dt = Math.min(0.05, rawDt);
+    const rawDt = (now - this.last) / 1000;
+    if (this.frameSample?.add(rawDt)) this.finishFrameSample();
+    const dt = Math.min(0.05, rawDt);
     this.last = now;
     this.time += dt;
     this.fps = damp(this.fps, 1 / Math.max(0.001, rawDt), 1, dt);

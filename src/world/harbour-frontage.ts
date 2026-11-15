@@ -26,6 +26,12 @@ export const frontagePoint = (u: number, d: number): Point => [
 export const HARBOUR_FRONTAGE_BAYS = [-16.2, -12.5, -8.8, 8.8, 12.5, 16.2].map(
   (u) => ({ u, width: 3.7, front: 3.6, back: 7.1 }),
 );
+export const FRONTAGE_CANOPY = {
+  eaveDepth: -0.82,
+  ridgeDepth: 0.48,
+  eaveHeight: -0.48,
+  ridgeHeight: 0.13,
+};
 
 /** Reject a complete bay rather than silently placing scenery across a route. */
 export function frontageBayClear(
@@ -35,8 +41,8 @@ export function frontageBayClear(
   // World-space bounds of the entire expanded sample grid (not just bay centre).
   // A building can enclose the bay while every one of its vertices lies outside.
   const corners = [
-    frontagePoint(bay.u - bay.width / 2 - 0.2, bay.front - 0.35),
-    frontagePoint(bay.u + bay.width / 2 + 0.21, bay.front - 0.35),
+    frontagePoint(bay.u - bay.width / 2 - 0.2, bay.front - 1.02),
+    frontagePoint(bay.u + bay.width / 2 + 0.21, bay.front - 1.02),
     frontagePoint(bay.u + bay.width / 2 + 0.21, bay.back + 0.36),
     frontagePoint(bay.u - bay.width / 2 - 0.2, bay.back + 0.36),
   ];
@@ -76,7 +82,7 @@ export function frontageBayClear(
     u <= bay.u + bay.width / 2 + 0.21;
     u += 0.25
   )
-    for (let d = bay.front - 0.35; d <= bay.back + 0.36; d += 0.25) {
+    for (let d = bay.front - 1.02; d <= bay.back + 0.36; d += 0.25) {
       const p = frontagePoint(u, d);
       if (
         HARBOUR_FLIGHTS.some((f) => pointInPoly(...p, f.pts)) ||
@@ -128,6 +134,14 @@ export function buildHarbourFrontage(
     name: "Bute frontage shadowed soffit",
     color: 0x3e4740,
     roughness: 0.96,
+  });
+  // The historical photograph shows light grey sloping infill between dark ribs,
+  // not a horizontal open pergola. Opaque exterior panels avoid expensive glass.
+  const canopy = new T.MeshStandardMaterial({
+    name: "Bute frontage grey sloped canopy",
+    color: 0x84938f,
+    metalness: 0.18,
+    roughness: 0.55,
   });
   const angle = -Math.atan2(uz, ux);
   const p = (u: number, y: number, d: number): Vertex3 => {
@@ -192,14 +206,51 @@ export function buildHarbourFrontage(
         frame,
       );
     box(u, roof - 0.14, (front + back) / 2, width, 0.22, back - front, stone);
-    // Dark slatted canopy at the frontage creates the reference's repeated depth.
-    for (let off = -width / 2 + 0.2; off < width / 2; off += 0.46)
-      box(u + off, roof + 0.1, front + 0.5, 0.09, 0.19, 2.05, frame);
-    box(u, roof - 0.025, front - 0.48, width, 0.18, 0.14, frame);
+    // A visible low eave and rising panels reproduce the source's canopy profile.
+    const c = FRONTAGE_CANOPY,
+      run = c.ridgeDepth - c.eaveDepth,
+      rise = c.ridgeHeight - c.eaveHeight,
+      slope = Math.atan2(rise, run),
+      canopyLength = Math.hypot(run, rise);
+    const sloping = (
+      offset: number,
+      w: number,
+      thickness: number,
+      mat: T.Material,
+    ) => {
+      const g = new T.BoxGeometry(w, thickness, canopyLength);
+      g.rotateX(-slope);
+      g.rotateY(angle);
+      g.translate(
+        ...p(
+          u + offset,
+          roof + (c.eaveHeight + c.ridgeHeight) / 2,
+          front + (c.eaveDepth + c.ridgeDepth) / 2,
+        ),
+      );
+      mesh.add(g, mat);
+    };
+    sloping(0, width - 0.12, 0.055, canopy);
+    for (let off = -width / 2 + 0.08; off < width / 2; off += 0.46)
+      sloping(off, 0.07, 0.12, frame);
+    box(u, roof + c.eaveHeight, front + c.eaveDepth, width, 0.17, 0.16, frame);
+    box(
+      u,
+      roof + c.eaveHeight - 0.13,
+      front + c.eaveDepth + 0.03,
+      width,
+      0.06,
+      0.1,
+      stone,
+    );
     // Balustrade is visible above the low wings, with an open central stair gap.
     for (let off = -width / 2 + 0.16; off < width / 2; off += 0.46)
       box(u + off, roof + 0.64, front + 0.75, 0.085, 0.98, 0.085, stone);
     box(u, roof + 1.15, front + 0.75, width, 0.14, 0.2, stone);
+    for (const off of [-width / 2 + 0.12, width / 2 - 0.12]) {
+      box(u + off, roof + 0.63, front + 0.75, 0.24, 1.04, 0.26, stone);
+      box(u + off, roof + 1.19, front + 0.75, 0.31, 0.13, 0.33, stone);
+    }
     for (let i = 0; i < ring.length; i++) {
       const a = ring[i],
         b = ring[(i + 1) % ring.length];

@@ -31,6 +31,38 @@ const meshes = buildHarbourFrontage(
   collision,
 );
 root.updateMatrixWorld(true);
+test("canopy has a visible downhill eave and correctly facing sloped panels", () => {
+  const panels = meshes.filter(
+    (mesh) =>
+      (mesh.material as T.Material).name === "Bute frontage grey sloped canopy",
+  );
+  assert.ok(panels.length > 0);
+  const bay = HARBOUR_FRONTAGE_BAYS[0];
+  const height = (d: number) => {
+    const [x, z] = frontagePoint(bay.u, bay.front + d);
+    const hits = new T.Raycaster(
+      new T.Vector3(x, 20, z),
+      new T.Vector3(0, -1, 0),
+    ).intersectObjects(panels);
+    assert.ok(hits.length > 0, "Front-facing solid canopy panel");
+    return hits[0].point.y;
+  };
+  const front = height(-0.6),
+    back = height(0.25);
+  assert.ok(
+    back - front > 0.35 && back - front < 0.45,
+    "Grey panel rises inland instead of becoming a horizontal strip",
+  );
+  const low = frontagePoint(bay.u, bay.front - 0.65);
+  const ray = new T.Raycaster(
+    new T.Vector3(low[0], front - 1, low[1]),
+    new T.Vector3(0, 1, 0),
+  );
+  assert.ok(
+    ray.intersectObjects(panels).length > 0,
+    "Panel underside is closed with valid box winding",
+  );
+});
 test("candidate bounds retain enclosing buildings and nearby trunks outside the facade footprint", () => {
   const bay = HARBOUR_FRONTAGE_BAYS[0],
     p = frontagePoint(bay.u, 5);

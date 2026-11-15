@@ -182,9 +182,9 @@ test("volume installation preserves mapped dimensions and shares buffers; close-
     low.getAttribute("treeStemScale"),
     high.getAttribute("treeStemScale"),
   );
-  updateBroadleafDistance(trunk, 580);
+  updateBroadleafDistance(trunk, 280);
   assert.equal(trunk.geometry, low);
-  updateBroadleafDistance(trunk, 500);
+  updateBroadleafDistance(trunk, 240);
   assert.equal(trunk.geometry, high);
   const model = () => {
     const g = new T.Group();
@@ -209,4 +209,78 @@ test("volume installation preserves mapped dimensions and shares buffers; close-
         assert.ok(Math.abs(n - expected.elements[i]) < 1e-5),
       );
     }
+});
+
+test("distant canopy retains all source slice extents/UV ranges with at most48 triangles", () => {
+  const near = broadleafVolumeGeometry(),
+    far = broadleafVolumeGeometry(true);
+  assert.ok(far.index!.count / 3 <= 48);
+  assert.ok(far.index!.count < near.index!.count / 10);
+  assert.ok(near.boundingBox!.min.distanceTo(far.boundingBox!.min) < 1e-6);
+  assert.ok(near.boundingBox!.max.distanceTo(far.boundingBox!.max) < 1e-6);
+  for (const name of ["position", "normal", "uv", "sliceAxis"])
+    assert.ok(Array.from(far.getAttribute(name).array).every(Number.isFinite));
+  const uv = far.getAttribute("uv");
+  for (let i = 0; i < uv.count; i++) {
+    assert.ok(uv.getX(i) >= 0 && uv.getX(i) <= 1);
+    assert.ok(uv.getY(i) >= 0 && uv.getY(i) <= 1);
+  }
+  near.dispose();
+  far.dispose();
+});
+
+test("merged slice rectangles reveal no new opaque pixels outside original crop bands", async () => {
+  const sharp = (await import("sharp")).default;
+  const { data: rgba, info } = await sharp(
+    "public/textures/broadleaf/color.webp",
+  )
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  assert.equal(info.width, 4096);
+  assert.equal(info.height, 1536);
+  let newlyCovered = 0,
+    maxAlpha = 0;
+  for (let slice = 0; slice < 24; slice++) {
+    const bands = data.cuts[slice];
+    if (!bands.length) continue;
+    const left = Math.min(...bands.map((b) => b[0])),
+      right = Math.max(...bands.map((b) => b[2]));
+    const top = Math.min(...bands.map((b) => b[1])),
+      bottom = Math.max(...bands.map((b) => b[3]));
+    for (let y = top; y < bottom; y++) {
+      const band = bands.find((b) => y >= b[1] && y < b[3]);
+      for (let x = left; x < right; x++) {
+        if (band && x >= band[0] && x < band[2]) continue;
+        const alpha =
+          rgba[
+            ((Math.floor(slice / 8) * 512 + y) * 4096 + (slice % 8) * 512 + x) *
+              4 +
+              3
+          ];
+        maxAlpha = Math.max(maxAlpha, alpha);
+        newlyCovered++;
+      }
+    }
+  }
+  assert.ok(newlyCovered > 0);
+  // Source bake's crop threshold is4/255; the renderer/shadow cutoff is.18.
+  assert.ok(maxAlpha <= 4, `new coverage max alpha ${maxAlpha}`);
+});
+
+test("distant fallback switches conservatively outside the full192m cell", () => {
+  const high = new T.BoxGeometry(),
+    low = new T.BoxGeometry();
+  const mesh = new T.Mesh(high);
+  mesh.userData.branchNearGeometry = high;
+  mesh.userData.branchFarGeometry = low;
+  mesh.userData.treeCellRadius = Math.SQRT2 * 96;
+  updateBroadleafDistance(mesh, 350);
+  assert.equal(mesh.geometry, high);
+  updateBroadleafDistance(mesh, 380);
+  assert.equal(mesh.geometry, low);
+  updateBroadleafDistance(mesh, 340);
+  assert.equal(mesh.geometry, low);
+  updateBroadleafDistance(mesh, 320);
+  assert.equal(mesh.geometry, high);
 });

@@ -1,0 +1,77 @@
+{
+  "source": "https://api.openstreetmap.org/api/0.6/map?bbox=-123.126,49.2879,-123.1177,49.2915",
+  "license": "ODbL-1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors",
+  "origin": [49.283, -123.12],
+  "projection": "east/up/south; KX=cos(49.2935deg)*111320; KZ=110540",
+  "parts": [
+    {
+      "id": "w181355204",
+      "tags": {
+        "addr:city": "Vancouver",
+        "addr:housenumber": "1199",
+        "addr:province": "BC",
+        "addr:street": "West Hastings Street",
+        "building": "office",
+        "building:levels": "1",
+        "name": "Hastings Building",
+        "roof:colour": "#ccc7c0",
+        "roof:shape": "flat",
+        "start_date": "1968"
+      },
+      "pts": [
+        [-181.6, -644.32],
+        [-161.43, -635.38],
+        [-160.26, -638.05],
+        [-152.59, -656.15],
+        [-150.7, -660.61],
+        [-149.17, -664.22],
+        [-147.18, -668.7],
+        [-147.74, -669.16],
+        [-147.16, -671.98],
+        [-148.56, -674.1],
+        [-151.55, -675.22],
+        [-154.53, -674.5],
+        [-165.6, -663.0],
+        [-182.01, -646.43],
+        [-181.6, -644.32]
+      ]
+    },
+    {
+      "id": "w1102662953",
+      "tags": {
+        "building:levels": "15",
+        "building:material": "glass",
+        "building:part": "yes",
+        "roof:colour": "#a29e9b"
+      },
+      "pts": [
+        [-181.6, -644.32],
+        [-161.43, -635.38],
+        [-160.26, -638.05],
+        [-152.59, -656.15],
+        [-150.7, -660.61],
+        [-165.6, -663.0],
+        [-182.01, -646.43],
+        [-181.6, -644.32]
+      ]
+    },
+    {
+      "id": "w1102662954",
+      "tags": {
+        "building:material": "glass",
+        "building:part": "yes",
+        "roof:colour": "#87837a"
+      },
+      "pts": [
+        [-177.9, -646.27],
+        [-164.7, -659.47],
+        [-157.3, -658.03],
+        [-157.9, -656.95],
+        [-152.59, -656.15],
+        [-160.26, -638.05],
+        [-177.9, -646.27]
+      ]
+    }
+  ]
+}
