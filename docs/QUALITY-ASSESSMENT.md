@@ -2,6 +2,11 @@
 
 2026-11-14. Reviewed against game release `5995f9d532a52e3f7aa3dc43e5c8b35ee2b77be9`.
 
+Later November 14 direction is recorded in [Daylight landmarks](DAYLIGHT-LANDMARKS.md):
+GTA 6–level, AAA world-class realism is the target for four named Vancouver
+regions, with ordinary daylight gameplay as the current review scope. The
+release-specific measurements below remain historical evidence.
+
 ## User direction
 
 - Browser-only is essential. A native Unreal application is not the deliverable.
@@ -39,7 +44,7 @@ Arry reaffirmed that making a few of these regions convincing is the immediate g
 
 ## Region acceptance gates (proposed working targets)
 
-- A repeatable walking/driving/cycling route with fixed camera checkpoints, daytime and nighttime captures, and matching Vancouver reference photographs. Judge real scale, skyline, street identity and materials at normal gameplay height.
+- A repeatable walking/driving/cycling route with fixed camera checkpoints, daylight captures, and matching Vancouver reference photographs. Judge real scale, skyline, street identity and materials at normal gameplay height. Nighttime expansion is deferred under the updated goal.
 - Continuous moving gameplay is the acceptance artifact, supported by stills. No floating structures, visible ground gaps, abrupt dominant detail transitions, obvious texture stretching or scenery obstructing the intended route.
 - Establish one target laptop, resolution and quality preset. First require sustained 30 fps at 1080p on the agreed device, with 60 fps as a stretch target. Record frame-time distribution and stalls over a repeatable five-minute route; do not substitute a single fps counter or photo-mode sample.
 - Record peak memory, initial-load duration and repeat-route growth. Run one game instance. Check that reused scene assets and streaming/LOD choices fit a bounded resource budget.

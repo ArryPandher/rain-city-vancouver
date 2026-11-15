@@ -312,8 +312,8 @@ export const LANDMARKS: Landmark[] = [
     "Canada Place",
     "Coal Harbour",
     [49.2886, -123.1116],
-    [49.2871, -123.11415],
-    -0.38,
+    [49.28710123032386, -123.11329693981561],
+    2.4443631020289107,
     "Five white sails, the working harbour and the North Shore beyond.",
   ),
   lm(
@@ -341,7 +341,7 @@ export const LANDMARKS: Landmark[] = [
     [49.27955, -123.1224],
     [49.27934, -123.1228],
     -0.6,
-    "The neon spine of downtown. Take a late-night cruise.",
+    "The Vogue, the Orpheum and downtown's historic theatre street.",
   ),
   lm(
     "stanley",

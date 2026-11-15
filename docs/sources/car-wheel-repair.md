@@ -52,6 +52,9 @@ surface. The native sequence moved from (410.23, -436.43) to (397.29, -456.07),
 then reversed before exit. It reached a shopfront and stopped; this is a basic
 movement/contact check, not a handling benchmark. Caliper behavior and full
 rotation invariance are established by asset tests, not those still images.
-All 186 tests and the production build pass. Evidence is in ignored
-`artifacts/local/car-wheel-{contact,pedestrian-contact}.jpg` and `wheel-suite.txt`.
+All 186 tests and the production build passed at the wheel checkpoint. The saved
+side-view evidence is `artifacts/local/car-wheel-contact.jpg`, with
+`wheel-suite.txt`. The intended `car-wheel-pedestrian-contact.jpg` was saved after
+a development reload and contains a loading screen; it is excluded as visual
+evidence. The pedestrian view was observed in the browser before that reload.
 Steep grades and suspension still require wider gameplay review.

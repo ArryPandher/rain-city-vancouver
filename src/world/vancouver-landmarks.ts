@@ -1,9 +1,14 @@
+import { repairGalleryRearEntry } from "./gallery-rear-entry";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { BASE, Materials } from "./materials";
 import { Building, centroid, geo, pointInPoly } from "./data";
 import { bakeGeometry } from "./geometry";
+import {
+  addCanadaPlaceRigging,
+  removeCanadaPlaceThinMasts,
+} from "./canada-place-rigging";
 import {
   LandmarkSurfaces,
   landmarkSurfaceProfile,
@@ -78,13 +83,17 @@ export async function loadVancouverLandmarks(
     gltf.scene.traverse((object) => {
       if (!(object instanceof T.Mesh)) return;
       const geometry = bakeGeometry(object.geometry, object.matrixWorld);
+      const original = object.material as T.MeshStandardMaterial;
+      if (asset.id === "vancouver-art-gallery")
+        repairGalleryRearEntry(geometry, original.name);
       const positions = geometry.getAttribute("position");
       for (let i = 0; i < positions.count; i++) {
         const py = positions.getY(i);
         if (py < 15 && py > -2)
           points.push([positions.getX(i) + x, positions.getZ(i) + z]);
       }
-      const original = object.material as T.MeshStandardMaterial;
+      if (asset.id === "canada-place" && original.name === "steel")
+        removeCanadaPlaceThinMasts(geometry);
       const profile = landmarkSurfaceProfile(asset.id, original.name);
       landmarkSurfaceUV(geometry, profile?.metres ?? [4, 4]);
       let mat = cache.get(original);
@@ -102,6 +111,7 @@ export async function loadVancouverLandmarks(
         polygon: hull.flat(),
         box: new T.Box2().setFromPoints(hull.map((p) => new T.Vector2(...p))),
       });
+    if (asset.id === "canada-place") addCanadaPlaceRigging(group);
     parent.add(group);
   }
   return assets.length;

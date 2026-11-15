@@ -13,7 +13,7 @@ export const gridXZ = (u: number, v: number): [number, number] => [
 ];
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
 /** A continuous interpretation of the roof garden, with grade-level perimeter access. */
-export function robsonHeight(x: number, z: number, footprint: number[]) {
+export function robsonBaseHeight(x: number, z: number, footprint: number[]) {
   const [u, v] = gridUV(x, z);
   if (
     u < -300 ||
@@ -51,6 +51,29 @@ export function robsonHeight(x: number, z: number, footprint: number[]) {
     );
   }
   return 0.08 + Math.min(terrace, edge * 0.45);
+}
+/** Gallery-facing lower stair: authored within the existing northward grade
+ * transition. The parallel route at v=-22 remains a continuous ramp. */
+export const ROBSON_LOWER_STAIR = {
+  startU: -190,
+  endU: -178,
+  minV: -18,
+  maxV: -6,
+  high: 1.68,
+  low: 0.08,
+  steps: 10,
+};
+export function robsonHeight(x: number, z: number, footprint: number[]) {
+  const base = robsonBaseHeight(x, z, footprint);
+  if (base === undefined) return;
+  const [u, v] = gridUV(x, z),
+    s = ROBSON_LOWER_STAIR;
+  if (u < s.startU || u >= s.endU || v < s.minV || v > s.maxV) return base;
+  const step = Math.min(
+    s.steps - 1,
+    Math.floor(((u - s.startU) / (s.endU - s.startU)) * s.steps + 1e-9),
+  );
+  return s.high - (step * (s.high - s.low)) / s.steps;
 }
 export const ROBSON_PLANTERS = [
   { u: -278, v: -35, w: 13, d: 5 },

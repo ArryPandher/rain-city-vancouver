@@ -1,3 +1,4 @@
+import { clipGalleryStairPath } from "./gallery-rear-entry";
 import { TreeDetailStream } from "./detail-stream";
 import {
   curbObstacles,
@@ -559,8 +560,8 @@ export class World {
         y = 0,
         _height = height,
         scale = 5,
-      ) =>
-        ribbon(
+      ) => {
+        const geometry = ribbon(
           onTerrain ? subdividePath(points) : points,
           width,
           y,
@@ -568,6 +569,11 @@ export class World {
           scale,
           onTerrain && !bridgeRoute,
         );
+        return this.collision.gallery &&
+          ["footway", "path", "pedestrian", "steps"].includes(r.kind)
+          ? clipGalleryStairPath(geometry, height, y)
+          : geometry;
+      };
       if (hasHarbourCurbs(r)) {
         const edges = harbourCurbGeometry(r, curbCuts, height);
         b.add(edges.gutter, m.concrete, x, z, "harbour-gutter");

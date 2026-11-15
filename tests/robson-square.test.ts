@@ -8,6 +8,8 @@ import {
   ROBSON_GARDEN_ID,
   ROBSON_POOL,
   robsonHeight,
+  robsonBaseHeight,
+  ROBSON_LOWER_STAIR,
 } from "../src/world/robson-site";
 function map() {
   const d: CityData = JSON.parse(
@@ -63,7 +65,7 @@ test("Garden elevations rise continuously from the open approach and return to s
   assert.equal(c.height(...gridXZ(-225, -52)), 0);
 });
 
-test("Rendered garden triangles follow the walking height within ten centimetres", async () => {
+test("Rendered garden substrate follows the continuous ramp datum within ten centimetres", async () => {
   const T = await import("three");
   const { Batcher } = await import("../src/world/geometry");
   const { robsonSquare } = await import("../src/world/robson-square");
@@ -87,8 +89,66 @@ test("Rendered garden triangles follow the walking height within ten centimetres
       y = ids.reduce((s, j) => s + p.getY(j), 0) / 3;
     error = Math.max(
       error,
-      Math.abs(y - (robsonHeight(x, z, garden.pts) ?? 0.08)),
+      Math.abs(y - (robsonBaseHeight(x, z, garden.pts) ?? 0.08)),
     );
   }
   assert.ok(error < 0.1, `maximum surface mismatch: ${error} m`);
+});
+
+test("gallery-facing stair treads match collision and meet the retained ramp without holes", async () => {
+  const T = await import("three");
+  const { robsonLowerStairGeometry } = await import(
+    "../src/world/robson-stairs"
+  );
+  const d = map(),
+    garden = d.buildings.find((b) => b.id === ROBSON_GARDEN_ID)!,
+    collision = new CollisionWorld(d);
+  const geometry = robsonLowerStairGeometry(),
+    mesh = new T.Mesh(geometry, new T.MeshBasicMaterial());
+  mesh.updateMatrixWorld(true);
+  assert.equal(
+    geometry.getAttribute("position").count / 3,
+    60,
+    "bounded sixty-triangle flight",
+  );
+  const s = ROBSON_LOWER_STAIR;
+  for (let i = 0; i < s.steps; i++)
+    for (const fraction of [0.1, 0.5, 0.9])
+      for (const v of [-17, -12, -7]) {
+        const u = s.startU + ((i + fraction) * (s.endU - s.startU)) / s.steps,
+          [x, z] = gridXZ(u, v);
+        const hits = new T.Raycaster(
+          new T.Vector3(x, 10, z),
+          new T.Vector3(0, -1, 0),
+        ).intersectObject(mesh);
+        assert.ok(hits.length > 0, "upward-facing tread supports each sample");
+        const expected = s.high - (i * (s.high - s.low)) / s.steps;
+        assert.ok(Math.abs(hits[0].point.y - expected) < 1e-5);
+        assert.ok(
+          Math.abs(collision.groundHeight(x, z) - expected) < 1e-8,
+          `${u},${v}: ${collision.groundHeight(x, z)} vs ${expected}`,
+        );
+        const base = robsonBaseHeight(x, z, garden.pts)!;
+        assert.ok(
+          expected >= base - 1e-8 && expected - base <= 0.16001,
+          "no buried tread or oversized cheek wall",
+        );
+        assert.equal(collision.blocked(x, z, 0.35), false);
+      }
+  // This is the existing continuous side route, not a newly invented accessible-code claim.
+  for (let u = -194; u <= -174; u += 0.1) {
+    const [x, z] = gridXZ(u, -22);
+    assert.equal(
+      robsonHeight(x, z, garden.pts),
+      robsonBaseHeight(x, z, garden.pts),
+    );
+    assert.equal(collision.blocked(x, z, 0.35), false);
+  }
+  const start = gridXZ(-174, -22),
+    end = gridXZ(-194, -22);
+  assert.equal(
+    collision.move(...start, end[0] - start[0], end[1] - start[1], 0.35).hit,
+    false,
+  );
+  geometry.dispose();
 });

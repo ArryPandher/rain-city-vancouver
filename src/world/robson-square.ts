@@ -1,4 +1,5 @@
 import * as T from "three";
+import { robsonLowerStairGeometry } from "./robson-stairs";
 import { Building, centroid } from "./data";
 import { Batcher } from "./geometry";
 import type { Materials } from "./materials";
@@ -6,6 +7,7 @@ import {
   gridXZ,
   gridUV,
   robsonHeight,
+  robsonBaseHeight,
   ROBSON_GARDEN_ID,
   ROBSON_CANOPIES,
   ROBSON_PLANTERS,
@@ -118,7 +120,7 @@ export function robsonSquare(b: Building, batch: Batcher, m: Materials) {
     ),
     positions: number[] = [],
     uvs: number[] = [];
-  const elevation = (p: P) => robsonHeight(p[0], p[1], b.pts) ?? 0.08;
+  const elevation = (p: P) => robsonBaseHeight(p[0], p[1], b.pts) ?? 0.08;
   const subdivide = (a: P, bb: P, c: P, depth = 0) => {
     const lengths = [
         Math.hypot(a[0] - bb[0], a[1] - bb[1]),
@@ -160,7 +162,7 @@ export function robsonSquare(b: Building, batch: Batcher, m: Materials) {
         ? [a, c, bb]
         : [a, bb, c];
     for (const [x, z] of pts) {
-      positions.push(x, robsonHeight(x, z, b.pts) ?? 0.08, z);
+      positions.push(x, robsonBaseHeight(x, z, b.pts) ?? 0.08, z);
       uvs.push(x / 4, z / 4);
     }
   };
@@ -174,6 +176,7 @@ export function robsonSquare(b: Building, batch: Batcher, m: Materials) {
   g.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
   g.computeVertexNormals();
   add(g, m.concrete);
+  add(robsonLowerStairGeometry(), concrete);
   const planted = new T.MeshStandardMaterial({
     name: "Robson Square — evergreen planting",
     color: 0x405647,

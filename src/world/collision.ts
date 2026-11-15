@@ -1,3 +1,4 @@
+import { galleryRearStepHeight } from "./gallery-rear-entry";
 import { harbourTower } from "./harbour-towers-site";
 import { harbourGroundHeight } from "./harbour-green-site";
 import { FAIRMONT_ID, fairmontFootprint } from "./fairmont-site";
@@ -203,6 +204,7 @@ export class CollisionWorld {
     );
   }
   harbour = false;
+  gallery = false;
   robsonGarden?: Building;
   convention?: ConventionSite;
   buildings = new SpatialHash<Building>();
@@ -220,6 +222,7 @@ export class CollisionWorld {
     );
   }
   constructor(public data: CityData) {
+    this.gallery = data.buildings.some((b) => b.id === "w69701736");
     this.harbour = data.areas.some((a) => a.name === "Harbour Green Park");
     for (const source of data.buildings) {
       let b = source;
@@ -262,6 +265,8 @@ export class CollisionWorld {
     }
   }
   groundHeight(x: number, z: number) {
+    const gallery = this.gallery ? galleryRearStepHeight(x, z) : undefined;
+    if (gallery !== undefined) return gallery;
     const harbour = this.harbour ? harbourGroundHeight(x, z) : undefined;
     if (harbour !== undefined) return harbour;
     const plaza = this.convention && jackGroundHeight(x, z);
