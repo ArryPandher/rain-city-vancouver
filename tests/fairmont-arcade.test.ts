@@ -4,7 +4,13 @@ import fs from "node:fs";
 import * as T from "three";
 import { Batcher } from "../src/world/geometry";
 import { facadeFrame } from "../src/world/architectural-mesh";
-import { KX, ORIGIN, pointInPoly, segmentPoint } from "../src/world/data";
+import {
+  KX,
+  ORIGIN,
+  centroid,
+  pointInPoly,
+  segmentPoint,
+} from "../src/world/data";
 import { CollisionWorld } from "../src/world/collision";
 import { FAIRMONT_LOBBY_CAVITY as cavity } from "../src/world/fairmont-arcade";
 import { buildFairmontWaterfront } from "../src/world/fairmont-waterfront";
@@ -49,7 +55,11 @@ function activeCollision() {
   return collision;
 }
 const collision = activeCollision(),
-  grade = (x: number, z: number) => collision.baselineGroundHeight(x, z),
+  datum = collision.baselineGroundHeight(...centroid(ring.flat())),
+  // Inspect geometry in the building's local vertical frame. Runtime applies
+  // this same centroid baseline to both its batch and collision contract.
+  grade = (x: number, z: number) =>
+    collision.baselineGroundHeight(x, z) - datum,
   site = createFairmontArcadeSite(grade),
   root = new T.Group(),
   batch = new Batcher(root),
@@ -194,12 +204,12 @@ test("floor triangles exactly match active-grade contact and remain within the e
       assert.ok(Number.isFinite(expected));
       const down = ray(
         new T.Vector3(xx, ceiling - 0.1, zz),
-        new T.Vector3(xx, -0.1, zz),
+        new T.Vector3(xx, expected - 0.1, zz),
       );
       assert.ok(down.length);
       assert.ok(
         Math.abs(down[0].point.y - expected) < 0.001,
-        `visible floor ${down[0].point.y} agrees with ${expected}`,
+        `visible floor ${down[0].point.y} agrees with ${expected} at ${xx},${zz}; material ${Object.entries(materials).find(([, m]) => m === (down[0].object as T.Mesh).material)?.[0]}`,
       );
       const up = ray(
         new T.Vector3(xx, expected + 0.2, zz),
@@ -297,7 +307,10 @@ test("planar roof and straight frame members fit the apron reference without mov
     low = Math.min(low, y);
     high = Math.max(high, y);
   }
-  assert.ok(high - low > 3, "roof retains its fitted longitudinal slope");
+  assert.ok(
+    high - low < 1 && Math.abs(site.canopyPlane.slope) < 0.02,
+    "roof retains the fitted near-level shared-ground section",
+  );
   assert.ok(
     high + 0.06 < rowAnchor + 0.32,
     "source-height fascia stays below the retained first room glazing",
@@ -530,13 +543,18 @@ test("visual cavity is closed above, below, behind and at its ends while collisi
     new T.Vector3(xz[0], cavity.divisionTop - 0.15, xz[2]),
     new T.Vector3(xz[0], cavity.divisionTop + 0.05, xz[2]),
   );
-  assert.ok(
-    division.some(
-      (h) =>
-        Math.abs(h.point.y - (cavity.divisionTop - cavity.divisionThickness)) <
-          0.001 && (h.object as T.Mesh).material === materials.lobbyLining,
-    ),
-  );
+  if (
+    floor < cavity.divisionTop - cavity.divisionThickness &&
+    ceiling > cavity.divisionTop
+  )
+    assert.ok(
+      division.some(
+        (h) =>
+          Math.abs(
+            h.point.y - (cavity.divisionTop - cavity.divisionThickness),
+          ) < 0.001 && (h.object as T.Mesh).material === materials.lobbyLining,
+      ),
+    );
   for (const [s, end] of [
     [site.sections[0], 0],
     [site.sections.at(-1)!, 1],
@@ -558,7 +576,7 @@ test("visual cavity is closed above, below, behind and at its ends while collisi
   }
   const behind = f.p(t * f.length, floor, depth + 0.35);
   assert.equal(
-    collision.blocked(behind[0], behind[2], 0.2, floor + 0.15),
+    collision.blocked(behind[0], behind[2], 0.2, datum + floor + 0.15),
     true,
     "visual scenery does not open the hotel interior",
   );
@@ -610,6 +628,47 @@ test("new cavity lining stays within source footprint and behind glazing without
   assert.equal(materials.lobbyLining.emissive.getHex(), 0);
   assert.equal(materials.lobbyLining.metalness, 0);
   assert.ok(materials.lobbyLining.roughness > 0.8);
+});
+
+test("retained horizontal cap stays lined whenever the cavity actually crosses its level", () => {
+  // The near-level runtime canopy is now below the local 8m division. Keep
+  // coverage of the conditional closure with an explicit section crossing it.
+  const callback = () => 3,
+    local = createFairmontArcadeSite(callback),
+    group = new T.Group(),
+    builder = new Batcher(group);
+  buildFairmontWaterfront(
+    builder,
+    { id: ID, pts: ring.flat() },
+    materials,
+    callback,
+  );
+  const built = builder.finish(),
+    section = local.sections[1],
+    f = facadeFrame(section.a, section.b),
+    t = 0.18,
+    p = section.back(t, cavity.divisionTop - 0.15);
+  p[0] -= f.outward[0] * 0.85;
+  p[2] -= f.outward[1] * 0.85;
+  assert.ok(
+    section.heightAt(t) < cavity.divisionTop - cavity.divisionThickness,
+  );
+  assert.ok(section.ceilingAt(t, true) > cavity.divisionTop);
+  group.updateMatrixWorld(true);
+  const hits = new T.Raycaster(
+    new T.Vector3(...p),
+    new T.Vector3(0, 1, 0),
+    0,
+    0.2,
+  ).intersectObject(group, true);
+  assert.ok(
+    hits.some(
+      (hit) =>
+        Math.abs(hit.point.y - cavity.divisionTop + cavity.divisionThickness) <
+          0.001 && (hit.object as T.Mesh).material === materials.lobbyLining,
+    ),
+  );
+  built.forEach((mesh) => mesh.geometry.dispose());
 });
 
 test("broad structural-bay centres have closed extra recesses without changing front glazing", () => {

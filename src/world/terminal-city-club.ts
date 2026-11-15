@@ -19,8 +19,8 @@ export function buildTerminalCityClub(
   m: TerminalCityMaterials,
 ): boolean {
   if (b.id !== TERMINAL_CITY_CLUB_ID) return false;
-  const saved = batch.offsetY;
-  batch.offsetY = 0;
+  // The adjoining parcel receives its own caller-supplied building datum.
+  // Historical roof differences remain relative, not absolute City elevations.
   const mesh = new ArchitecturalMesh(batch, 390, -416);
   function quad(mat: T.Material, p: Vertex3[], normal: Vertex3) {
     const a = new T.Vector3(...p[0]);
@@ -164,6 +164,5 @@ export function buildTerminalCityClub(
     }
   }
   mesh.finish();
-  batch.offsetY = saved;
   return true;
 }

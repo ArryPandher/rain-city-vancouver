@@ -89,7 +89,11 @@ export function buildFairmontArcade(
       rearCeilingR = section.ceilingAt(r, true);
     quad(m.panel, panel.corners, [0, 1, 0]);
     // Below-floor vertical closure follows grade without a raised curb/step.
-    quad(m.panel, [[a[0], 0, a[2]], [b[0], 0, b[2]], b, a], normal);
+    quad(
+      m.panel,
+      [[a[0], a[1] - 0.18, a[2]], [b[0], b[1] - 0.18, b[2]], b, a],
+      normal,
+    );
     quad(
       m.panel,
       [
@@ -443,13 +447,19 @@ export function buildFairmontArcade(
     [site.sections.at(-1)!, 1, -1],
   ] as const) {
     const f = facadeFrame(section.a, section.b),
-      p = f.p(t * f.length, 0),
+      floor = section.heightAt(t) - 0.18,
+      p = f.p(t * f.length, floor),
       b: Point = t ? section.backB : section.backA,
       ceiling = section.ceilingAt(t),
       rearCeiling = section.ceilingAt(t, true);
     quad(
       m.panel,
-      [p, [b[0], 0, b[1]], [b[0], rearCeiling, b[1]], [p[0], ceiling, p[2]]],
+      [
+        p,
+        [b[0], floor, b[1]],
+        [b[0], rearCeiling, b[1]],
+        [p[0], ceiling, p[2]],
+      ],
       [-f.outward[1] * direction, 0, f.outward[0] * direction],
     );
   }
@@ -462,7 +472,7 @@ export function buildFairmontArcade(
       const x = pier.point[0] + position.getX(i),
         z = pier.point[1] + position.getZ(i),
         floor = site.floorAt(x, z) ?? site.floorAt(...pier.point)!,
-        bottom = Math.max(0, floor - 0.14),
+        bottom = floor - 0.14,
         top = site.canopyTopAt(x, z) - 0.64 + 0.12,
         t = position.getY(i) + 0.5;
       position.setXYZ(i, x, bottom + (top - bottom) * t, z);

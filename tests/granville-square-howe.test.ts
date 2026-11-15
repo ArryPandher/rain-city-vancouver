@@ -376,14 +376,14 @@ test("materials reuse isolated CC0 samplers and do not add photographic facades 
   assert.ok(m.glass.clearcoatRoughness >= 0.1);
 });
 
-test("datum stays horizontal despite the legacy zero outside the Howe support ribbon", () => {
+test("shared forecourt supports the wing while its building datum stays horizontal", () => {
   const collision = new CollisionWorld(activeMap()),
     f = facadeFrame(ring[3], ring[4]);
   const outside = f.p(f.length / 2, 0, -0.4);
-  assert.equal(
-    collision.baselineGroundHeight(outside[0], outside[2]),
-    0,
-    "legacy unsupported ground is not a surveyed street datum",
+  assert.ok(
+    Math.abs(collision.baselineGroundHeight(outside[0], outside[2]) - 7.93) <
+      0.5,
+    "the shared station terrace replaces the unsupported zero near adopted H15.6",
   );
   assert.ok(collision.baselineGroundHeight(484.88676475, -454.8268214) > 4.5);
   const shiftedRoot = new T.Group(),

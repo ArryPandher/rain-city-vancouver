@@ -93,7 +93,10 @@ test("both Howe loops clear actual buildings, guards and every roadway including
       samples++;
     }
   }
-  assert.ok(maximumY - minimumY > 6, "feet must track the Howe grade");
+  assert.ok(
+    maximumY - minimumY > 0.1 && maximumY - minimumY < 1,
+    "feet follow the near-level H16 to H15.4 section rather than the former six-metre rise",
+  );
   t.diagnostic(
     `${samples} samples; foot height ${minimumY.toFixed(2)}–${maximumY.toFixed(2)}m; loops ${circuits.map((c) => c.length.toFixed(2)).join("/")}m`,
   );

@@ -152,7 +152,21 @@ export function buildFairmontWaterfront(
       ),
       m.roof,
     );
-  cap(ring, 0, m.dark);
+  // A centroid datum can sit above the lower arcade. The old full y0 sheet
+  // would then cover its negative local floor, so the open recess owns that area.
+  for (const polygon of polygonClipping.difference(
+    [ring],
+    ...arcade.openPolygons.map((p) => [p]),
+  ))
+    mesh.add(
+      flatPolygon(
+        polygon[0].flat(),
+        polygon.slice(1).map((p) => p.flat()),
+        0,
+        1,
+      ),
+      m.dark,
+    );
   for (let i = 0; i < ring.length; i++) {
     const f = facadeFrame(ring[i], ring[(i + 1) % ring.length]);
     const replacement = FAIRMONT_ARCADE_FRONTAGES.find(

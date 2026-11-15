@@ -22,7 +22,7 @@ const mats = Object.fromEntries(
 ) as unknown as TerminalCityMaterials;
 const root = new T.Group(),
   batch = new Batcher(root);
-batch.offsetY = 7.73;
+batch.offsetY = 0;
 buildTerminalCity(batch, { id: "w143683933", pts: ring.flat() }, mats);
 const meshes = batch.finish();
 root.updateMatrixWorld(true);
@@ -36,14 +36,14 @@ function ray(u: number, v: number, y: number, du: number, dv: number, dy = 0) {
     Math.hypot(du, dv, dy),
   ).intersectObject(root, true);
 }
-test("exact identity gate, original ground datum and bounded six-material batches", () => {
+test("exact identity gate, relative authored heights and bounded six-material batches", () => {
   const other = new Batcher(new T.Group());
   assert.equal(
     buildTerminalCity(other, { id: "w143683980", pts: ring.flat() }, mats),
     false,
   );
   assert.equal(other.groups.size, 0);
-  assert.equal(batch.offsetY, 7.73);
+  assert.equal(batch.offsetY, 0);
   assert.equal(terminalCityLevel(4), 21.94);
   assert.equal(terminalCityLevel(30), 94.94);
   assert.equal(meshes.length, 6);
@@ -146,7 +146,7 @@ import {
 test("adjoining club keeps all six historical roof heights, source bounds and closed ground", () => {
   const root = new T.Group(),
     batch = new Batcher(root);
-  batch.offsetY = 7.73;
+  batch.offsetY = 0;
   assert.equal(
     buildTerminalCityClub(batch, { id: "w360437747", pts: [] }, mats),
     false,
@@ -160,7 +160,7 @@ test("adjoining club keeps all six historical roof heights, source bounds and cl
     ),
     true,
   );
-  assert.equal(batch.offsetY, 7.73);
+  assert.equal(batch.offsetY, 0);
   const meshes = batch.finish();
   root.updateMatrixWorld(true);
   assert.equal(meshes.length, 6);

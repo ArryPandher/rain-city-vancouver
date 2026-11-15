@@ -1,5 +1,6 @@
 import * as T from "three";
 import clipping from "polygon-clipping";
+import { HOWE_STATION } from "./howe-station-site";
 import { CANADA_PLACE_PIER } from "./canada-place-deck";
 import { flatPolygon } from "./geometry";
 import type { Point } from "./data";
@@ -7,11 +8,13 @@ const pier: Point[] = Array.from(
   { length: CANADA_PLACE_PIER.length / 2 },
   (_, i) => [CANADA_PLACE_PIER[i * 2], CANADA_PLACE_PIER[i * 2 + 1]],
 );
+const cutouts = [pier, HOWE_STATION.surfaceCutout];
+const allPoints = cutouts.flat();
 const bounds = [
-  Math.min(...pier.map((p) => p[0])),
-  Math.max(...pier.map((p) => p[0])),
-  Math.min(...pier.map((p) => p[1])),
-  Math.max(...pier.map((p) => p[1])),
+  Math.min(...allPoints.map((p) => p[0])),
+  Math.max(...allPoints.map((p) => p[0])),
+  Math.min(...allPoints.map((p) => p[1])),
+  Math.max(...allPoints.map((p) => p[1])),
 ];
 /** Cut generic pedestrian ribbons at the actual source pier outline. Preserve
  * UV interpolation and re-sample outside terrain, including newly cut vertices. */
@@ -40,7 +43,7 @@ export function clipCanadaPlacePaths(
     const [a, b, c] = triangle,
       den = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1]);
     if (Math.abs(den) < 1e-9) continue;
-    const pieces = clipping.difference([triangle], [pier]);
+    const pieces = clipping.difference([triangle], ...cutouts.map((p) => [p]));
     for (const poly of pieces) {
       const g = flatPolygon(
           poly[0].slice(0, -1).flat(),

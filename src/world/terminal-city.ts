@@ -27,8 +27,7 @@ export function buildTerminalCity(
   m: TerminalCityMaterials,
 ): boolean {
   if (b.id !== TERMINAL_CITY_ID) return false;
-  const saved = batch.offsetY;
-  batch.offsetY = 0;
+  // Keep the caller's parcel datum; all authored elevations remain relative.
   const mesh = new ArchitecturalMesh(batch, 355, -401);
   function quad(mat: T.Material, p: Vertex3[], n: Vertex3) {
     const a = new T.Vector3(...p[0]);
@@ -266,6 +265,5 @@ export function buildTerminalCity(
     mesh.beam([p[0], 94.94, p[1]], [p[0], 98.68, p[1]], 0.12, m.metal, 8);
   }
   mesh.finish();
-  batch.offsetY = saved;
   return true;
 }

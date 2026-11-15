@@ -1,3 +1,6 @@
+import { createHoweSceneTerrain } from "./howe-scene-terrain";
+import { HOWE_FORECOURT, HOWE_STATION } from "./howe-station-site";
+import type { Terrain } from "./terrain";
 import {
   createExteriorRecessCollision,
   type ExteriorRecessCollision,
@@ -47,7 +50,13 @@ import { harbourTower } from "./harbour-towers-site";
 import { harbourGroundHeight } from "./harbour-green-site";
 import { FAIRMONT_ID, fairmontFootprint } from "./fairmont-site";
 import { ROGERS_ID, rogersFootprint } from "./rogers-site";
-import { jackGroundHeight, jackRoofAccess, CACTUS_ID } from "./jack-poole-site";
+import {
+  JACK_BOUNDARY,
+  jackBaseHeight,
+  jackGroundHeight,
+  jackRoofAccess,
+  CACTUS_ID,
+} from "./jack-poole-site";
 import {
   ROBSON_GARDEN_ID,
   robsonWalkableBuilding,
@@ -261,6 +270,8 @@ export class CollisionWorld {
   robsonGarden?: Building;
   convention?: ConventionSite;
   canada?: CanadaPlaceSite;
+  howeTerrain?: Terrain;
+  howeTerrainCutouts: number[][] = [];
   fairmontArrivalIsland?: FairmontArrivalIsland;
   private canadaWalking?: ReturnType<typeof createCanadaWalkingSurface>;
   private exteriorRecesses = new Map<string, ExteriorRecessCollision>();
@@ -324,13 +335,66 @@ export class CollisionWorld {
           p[i * 2],
           p[i * 2 + 1],
         ]);
+      const initial = createCanadaPlaceSite({
+        roads: data.roads,
+        buildings: data.buildings,
+        westernHeight: (x, z) => this.legacyGroundHeight(x, z),
+        connectors: [ring(CANADA_PLACE_ENTRY_CONNECTOR)],
+        existingDeck: ring(CANADA_PLACE_PIER),
+      });
+      const approach = this.convention
+        ? [
+            [150, -78],
+            [214, -78],
+            [214, -27],
+            [150, -27],
+          ].map((p) => this.convention!.world(p[0], p[1]))
+        : undefined;
+      this.howeTerrain = createHoweSceneTerrain({
+        oldHeight: (x, z) =>
+          initial.baselineHeight(x, z) ?? this.legacyGroundHeight(x, z),
+        waterfrontPath: initial.waterfrontPath,
+        waterfrontHeight: initial.supportHeight,
+        protectedApproach: approach,
+        protectedEdges: this.convention
+          ? [{ ring: ring(JACK_BOUNDARY), height: jackBaseHeight }]
+          : [],
+        protectedHeight: (x, z) => {
+          const [e, n] = this.convention!.local(x, z);
+          return (
+            this.convention!.deckHeight *
+            Math.max(0, Math.min(1, (n + 78) / 49)) *
+            Math.max(0, Math.min(1, (e - 150) / 13, (214 - e) / 17))
+          );
+        },
+      });
+      this.howeTerrainCutouts = [
+        HOWE_STATION.surfaceCutout.flat(),
+        ...(this.convention ? [JACK_BOUNDARY] : []),
+        ...(approach ? [approach.flat()] : []),
+        ...(this.convention ? [this.convention.platformWorld] : []),
+        CANADA_PLACE_PIER,
+      ];
       this.canada = createCanadaPlaceSite({
         roads: data.roads,
         buildings: data.buildings,
         westernHeight: (x, z) => this.existingGroundHeight(x, z),
-        connectors: [ring(CANADA_PLACE_ENTRY_CONNECTOR)],
+        sharedHeight: (x, z) =>
+          this.howeTerrain?.contains(x, z)
+            ? this.existingGroundHeight(x, z)
+            : undefined,
+        connectors: [ring(CANADA_PLACE_ENTRY_CONNECTOR), HOWE_FORECOURT],
+        cutouts: [HOWE_STATION.surfaceCutout],
         existingDeck: ring(CANADA_PLACE_PIER),
       });
+      // The rendered gable/side glazing encloses an unplayable station volume.
+      for (let i = 0; i < HOWE_STATION.footprint.length; i++)
+        this.addBarrier(
+          ...HOWE_STATION.footprint[i],
+          ...HOWE_STATION.footprint[(i + 1) % HOWE_STATION.footprint.length],
+          0.08,
+          HOWE_STATION.maxY,
+        );
       for (const rail of canadaPlaceGuardSegments(data, this.canada, (x, z) =>
         this.existingGroundHeight(x, z),
       ))
@@ -406,6 +470,8 @@ export class CollisionWorld {
   }
   /** On-foot contact includes the finish; the baseline remains the construction datum. */
   walkingHeight(x: number, z: number, referenceY = Infinity): number {
+    if (this.canada && pointInPoly(x, z, HOWE_STATION.landing.flat()))
+      return HOWE_STATION.landingHeight;
     const base = this.height(x, z, referenceY);
     if (
       !this.canada ||
@@ -437,8 +503,19 @@ export class CollisionWorld {
       return CANADA_PLACE_DECK_Y;
     return this.canada?.baselineHeight(x, z) ?? this.existingGroundHeight(x, z);
   }
-  /** Pre-Canada surface sampler: the western tie must never recurse into itself. */
+  /** Shared neighborhood field, preserving the separately authored VCC approach. */
   existingGroundHeight(x: number, z: number) {
+    if (
+      this.howeTerrain?.contains(x, z) &&
+      !(this.convention && jackGroundHeight(x, z) !== undefined) &&
+      conventionDeckHeight(this.convention, x, z) === undefined &&
+      conventionApproachHeight(this.convention, x, z) === undefined
+    )
+      return this.howeTerrain.height(x, z);
+    return this.legacyGroundHeight(x, z);
+  }
+  /** Pre-neighborhood sampler: grid construction must never recurse into itself. */
+  legacyGroundHeight(x: number, z: number) {
     const gallery = this.gallery ? galleryRearStepHeight(x, z) : undefined;
     if (gallery !== undefined) return gallery;
     const harbour = this.harbour ? harbourGroundHeight(x, z) : undefined;
@@ -525,6 +602,12 @@ export class CollisionWorld {
     referenceY: number,
     camera: boolean,
   ) {
+    if (
+      this.canada &&
+      referenceY - (camera ? r : 0) < HOWE_STATION.maxY &&
+      pointInPoly(x, z, HOWE_STATION.footprint.flat())
+    )
+      return true;
     if (this.fairmontArrivalIsland?.blocked(x, z, r, referenceY, camera))
       return true;
     // A retaining face is not a step: low actors cannot enter the raised

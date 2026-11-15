@@ -20,7 +20,7 @@ export function createTerminalCityAssembly(
   reflections: ReflectionProbeSpec[],
 ) {
   let materials: TerminalCityMaterials | undefined;
-  let registered = false;
+  let probe: ReflectionProbeSpec | undefined;
   return (building: Building, batch: Batcher) => {
     if (
       building.id !== TERMINAL_CITY_ID &&
@@ -28,21 +28,28 @@ export function createTerminalCityAssembly(
     )
       return false;
     materials ??= createTerminalCityMaterials(library);
+    // Never cache the first parcel's datum: architecture resets offsetY for
+    // each mapped building, and tower/club grades need not be identical.
+    const baseY = batch.offsetY;
     const built =
       building.id === TERMINAL_CITY_ID
         ? buildTerminalCity(batch, building, materials)
         : buildTerminalCityClub(batch, building, materials);
-    if (built && !registered) {
-      reflections.push({
+    if (built && !probe) {
+      probe = {
         name: "Terminal City Hornby exterior",
         // Outside the mapped building footprints, overlooking the long facade.
         // One shared static approximation; not an interior or ray-traced view.
-        position: [309, 45, -399],
+        position: [309, baseY + 45, -399],
         materials: [materials.glass, materials.spandrel],
         intensity: { day: 0.9, night: 0.9 },
-      });
-      registered = true;
+      };
+      reflections.push(probe);
     }
+    // Prefer the main tower's datum independent of parcel build order. A
+    // standalone club assembly uses its own datum until the tower is present.
+    if (built && probe && building.id === TERMINAL_CITY_ID)
+      probe.position[1] = baseY + 45;
     return built;
   };
 }

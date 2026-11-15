@@ -14,13 +14,14 @@ export function waterfrontCentre(
   reflections: ReflectionProbeSpec[],
 ) {
   if (building.id !== WATERFRONT_CENTRE_ID) return false;
-  const materials = createWaterfrontCentreMaterials(library);
+  const materials = createWaterfrontCentreMaterials(library),
+    baseY = batch.offsetY;
   if (!buildWaterfrontCentre(batch, building, materials)) return false;
   reflections.push({
     name: "Waterfront Centre northeast exterior",
     // Outside the mapped north/east corner, above the raised public approach.
     // A bounded approximation for the broad harbour-facing reflections.
-    position: [393, 36, -555],
+    position: [393, baseY + 36, -555],
     materials: [materials.glass, materials.spandrel],
     intensity: { day: 0.9, night: 0.9 },
   });

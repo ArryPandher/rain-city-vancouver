@@ -24,8 +24,8 @@ export function buildWaterfrontCentre(
   m: WaterfrontCentreMaterials,
 ): boolean {
   if (b.id !== ID) return false;
-  const previous = batch.offsetY;
-  batch.offsetY = 0;
+  // Authored elevations are relative to the caller's building datum. Batcher
+  // adds that datum once to both immediate pieces and accumulated facade quads.
   const mesh = new ArchitecturalMesh(batch, ...centre);
   const quad = (mat: T.Material, p: Vertex3[], normal: Vertex3) => {
     const a = new T.Vector3(...p[0]),
@@ -461,6 +461,5 @@ export function buildWaterfrontCentre(
   gg.setIndex(glassIX);
   mesh.add(gg, m.glass);
   mesh.finish();
-  batch.offsetY = previous;
   return true;
 }

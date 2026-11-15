@@ -4,6 +4,8 @@ import fs from "node:fs";
 import clipping from "polygon-clipping";
 import {
   createCanadaPlaceSite,
+  CANADA_PLACE_HOWE_START_HEIGHT,
+  CANADA_PLACE_BASE_HEIGHT,
   CANADA_PLACE_SERVICE_IDS,
 } from "../src/world/canada-place-site";
 import { FAIRMONT_APRON_DRIVEWAY_ID as ID } from "../src/world/fairmont-apron-site";
@@ -76,8 +78,10 @@ test("mapped hotel driveway has both real junction heights and continuous bounde
     assert.equal(site.baselineHeight(...p), old.baselineHeight(...p));
   assert.ok(Math.abs(site.baselineHeight(...apron.driveway[0])! - 7.73) < 1e-8);
   assert.ok(
-    Math.abs(site.baselineHeight(...apron.driveway.at(-1)!)! - 3.6931586683) <
-      1e-8,
+    Math.abs(
+      site.baselineHeight(...apron.driveway.at(-1)!)! -
+        CANADA_PLACE_HOWE_START_HEIGHT,
+    ) < 1e-8,
   );
 });
 
@@ -107,7 +111,9 @@ test("apron reaches hotel wall, respects buildings and changes only bounded prev
       const p = f.p(t * f.length, 0, -0.045),
         h = site.baselineHeight(p[0], p[2]);
       assert.ok(
-        h !== undefined && h > 3 && h < 7.8,
+        h !== undefined &&
+          h >= CANADA_PLACE_BASE_HEIGHT &&
+          h <= CANADA_PLACE_HOWE_START_HEIGHT,
         "actual hotel contact is raised and supported",
       );
     }

@@ -3,7 +3,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import * as T from "three";
 import { CollisionWorld } from "../src/world/collision";
-import { ORIGIN, KX, pointInPoly, type CityData } from "../src/world/data";
+import {
+  ORIGIN,
+  KX,
+  centroid,
+  pointInPoly,
+  type CityData,
+} from "../src/world/data";
 import { Batcher } from "../src/world/geometry";
 import { buildPwcPlace, type PwcPlaceMaterials } from "../src/world/pwc-place";
 import { createPwcLobbySite } from "../src/world/pwc-lobby-site";
@@ -31,7 +37,13 @@ function data() {
 }
 const map = data(),
   ground = new CollisionWorld(map),
-  site = createPwcLobbySite(ground.baselineGroundHeight.bind(ground));
+  buildingDatum = ground.baselineGroundHeight(
+    ...centroid(PWC_PLACE_RING.flat()),
+  ),
+  site = createPwcLobbySite(
+    ground.baselineGroundHeight.bind(ground),
+    buildingDatum,
+  );
 const previousMap = data();
 // Retain the identical footprint as a generic building to disable ONLY PwC's
 // new apron/recess factories in this comparison world.
@@ -39,12 +51,12 @@ previousMap.buildings.find((b) => b.id === PWC_PLACE_ID)!.id =
   "prior-pwc-footprint";
 const previous = new CollisionWorld(previousMap);
 
-test("source-bounded forecourt removes the observed retaining rail while preserving every old Howe grade", () => {
+test("source-bounded forecourt stays open on the shared field and preserves the Howe road profile", () => {
   const apron = ground.canada!.pwcApron!;
   assert.ok(apron);
   assert.ok(apron.contains(465.85, -411.87));
-  assert.equal(previous.blocked(465.85, -411.87, 0.4, 1.06), true);
-  assert.equal(ground.blocked(465.85, -411.87, 0.4, 1.06), false);
+  const walkingY = ground.baselineGroundHeight(465.85, -411.87) + 0.15;
+  assert.equal(ground.blocked(465.85, -411.87, 0.4, walkingY), false);
   for (const road of map.roads.filter((r) =>
     ["w232195213", "w1255990033", "w1550614843"].includes(r.id!),
   )) {
@@ -88,7 +100,7 @@ test("new forecourt remains continuously graded and meets the sloped threshold w
   for (let x = apron.bounds.minX; x < apron.bounds.maxX; x += 0.3)
     for (let z = apron.bounds.minZ; z < apron.bounds.maxZ; z += 0.3) {
       if (!apron.contains(x, z)) continue;
-      const y = apron.height(x, z);
+      const y = ground.canada!.supportHeight(x, z);
       for (const [dx, dz] of [
         [0.05, 0],
         [0, 0.05],
@@ -96,7 +108,7 @@ test("new forecourt remains continuously graded and meets the sloped threshold w
         if (!apron.contains(x + dx, z + dz)) continue;
         maxSlope = Math.max(
           maxSlope,
-          Math.abs(apron.height(x + dx, z + dz) - y) / 0.05,
+          Math.abs(ground.canada!.supportHeight(x + dx, z + dz) - y) / 0.05,
         );
       }
     }
@@ -107,18 +119,20 @@ test("new forecourt remains continuously graded and meets the sloped threshold w
     for (let u = s.mouth + 0.1; u < s.frame.length - s.mouth; u += 0.2) {
       const out = s.frame.p(u, 0, -0.045),
         inside = s.frame.p(u, 0, 0.1);
-      const floor = site.floorAt(inside[0], inside[2])!;
+      const floor = buildingDatum + site.floorAt(inside[0], inside[2])!;
       assert.ok(
         Math.abs(floor - ground.baselineGroundHeight(out[0], out[2]) - 0.18) <
           0.001,
       );
       assert.ok(
-        Math.abs(floor - (apron.height(out[0], out[2]) + 0.15) - 0.03) < 0.001,
+        Math.abs(
+          floor - (ground.canada!.supportHeight(out[0], out[2]) + 0.15) - 0.03,
+        ) < 0.001,
       );
       low = Math.min(low, floor);
       high = Math.max(high, floor);
     }
-  assert.ok(high < 3.7 && high - low > 2);
+  assert.ok(low > 7.8 && high < 8.7 && high - low > 0.1 && high - low < 1);
   t.diagnostic(
     `forecourt max sampled grade component ${(maxSlope * 100).toFixed(2)}%; lobby floor ${low.toFixed(2)}–${high.toFixed(2)}m`,
   );
@@ -126,7 +140,7 @@ test("new forecourt remains continuously graded and meets the sloped threshold w
 
 function assembled(
   callback = ground.baselineGroundHeight.bind(ground),
-  datum = 0,
+  datum = buildingDatum,
 ) {
   const root = new T.Group(),
     batch = new Batcher(root);
@@ -166,7 +180,7 @@ test("shared floor triangles match the complete graded mesh and columns/windows 
     ]) {
       const x = v.reduce((s, p) => s + p[0], 0) / 3,
         z = v.reduce((s, p) => s + p[2], 0) / 3,
-        y = site.floorAt(x, z)!;
+        y = buildingDatum + site.floorAt(x, z)!;
       if (
         site.columns.some((p) => Math.hypot(p.x - x, p.z - z) < p.radius + 0.08)
       )
@@ -181,8 +195,9 @@ test("shared floor triangles match the complete graded mesh and columns/windows 
     }
   }
   for (const column of site.columns) {
-    const y = site.floorAt(column.x, column.z)!;
-    assert.ok(column.bottom < y && y - column.bottom < 0.09);
+    const localY = site.floorAt(column.x, column.z)!,
+      y = buildingDatum + localY;
+    assert.ok(column.bottom < localY && localY - column.bottom < 0.09);
     const f = site.sections.find((s) => s.edge === column.edge)!.frame;
     const out = new T.Vector3(f.outward[0], 0, f.outward[1]);
     ray.set(
@@ -198,7 +213,7 @@ test("shared floor triangles match the complete graded mesh and columns/windows 
         s.entry && u > s.entry.left && u < s.entry.right
           ? s.entry.depth
           : s.depth;
-      const y = s.heightAt(u) + 0.3;
+      const y = buildingDatum + s.heightAt(u) + 0.3;
       ray.set(
         new T.Vector3(...s.frame.p(u, y, -0.1)),
         new T.Vector3(-s.frame.outward[0], 0, -s.frame.outward[1]),
@@ -215,7 +230,7 @@ test("shared floor triangles match the complete graded mesh and columns/windows 
         ),
       ),
     ),
-    83,
+    Math.fround(buildingDatum + 83),
   );
 });
 
@@ -225,8 +240,11 @@ test("the observed street approach reaches each open recess, with rear glazing s
     openings: site.openPolygons,
     closures: site.closures,
     columns: site.columns.map((p) => ({ point: [p.x, p.z], radius: p.radius })),
-    floorAt: site.floorAt,
-    ceiling: site.ceiling,
+    floorAt: (x, z) => {
+      const y = site.floorAt(x, z);
+      return y === undefined ? undefined : buildingDatum + y;
+    },
+    ceiling: buildingDatum + site.ceiling,
   });
   for (const s of site.sections) {
     const u = s.edge === 0 ? 8.43 : 5.8,
@@ -235,14 +253,18 @@ test("the observed street approach reaches each open recess, with rear glazing s
     for (let i = 0; i <= 100; i++) {
       const x = from[0] + ((target[0] - from[0]) * i) / 100,
         z = from[2] + ((target[2] - from[2]) * i) / 100;
-      const y = site.floorAt(x, z) ?? ground.baselineGroundHeight(x, z) + 0.15;
+      const localFloor = site.floorAt(x, z),
+        y =
+          localFloor === undefined
+            ? ground.baselineGroundHeight(x, z) + 0.15
+            : buildingDatum + localFloor;
       if (pointInPoly(x, z, PWC_PLACE_RING.flat()))
         assert.equal(collision.blocked(x, z, 0.35, y, false), false);
       else assert.equal(ground.blocked(x, z, 0.35, y), false);
     }
     const back = s.frame.p(
       u,
-      s.heightAt(u),
+      buildingDatum + s.heightAt(u),
       s.edge === 0 ? s.entry!.depth : s.depth,
     );
     assert.equal(

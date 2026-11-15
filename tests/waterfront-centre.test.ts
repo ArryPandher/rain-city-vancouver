@@ -30,12 +30,12 @@ function fixture() {
       "foliage",
     ].map((name) => [name, new T.MeshStandardMaterial({ name })]),
   ) as unknown as WaterfrontCentreMaterials;
-  batch.offsetY = 7.73;
+  batch.offsetY = 0;
   assert.equal(
     buildWaterfrontCentre(batch, { id: "w143683980", pts: ring.flat() }, mats),
     true,
   );
-  assert.equal(batch.offsetY, 7.73);
+  assert.equal(batch.offsetY, 0);
   const meshes = batch.finish();
   root.updateMatrixWorld(true);
   return { root, meshes, mats };

@@ -146,7 +146,7 @@ export function createPwcLobbySite(
     ].sort((a, b) => a - b);
     const heights = stations.map((u) => {
       const p = f.p(u, 0, -0.045);
-      return Math.max(0, groundHeight(p[0], p[2]) - datum) + PWC_LOBBY_FLOOR;
+      return groundHeight(p[0], p[2]) - datum + PWC_LOBBY_FLOOR;
     });
     const heightAt = (u: number) => {
       u = Math.max(0, Math.min(f.length, u));

@@ -1,0 +1,111 @@
+{
+  "source": "City 2002 1m contours and Central Waterfront Hub Framework Fig18; see docs/sources/howe-shared-ground-and-station.md",
+  "finishedDatumOffset": -7.52,
+  "controls": [
+    {
+      "id": "canada-howe-framework",
+      "point": [496.277, -492.21, 7.88],
+      "evidence": "existing planning elevation, Framework Figure 18; manually registered to mapped junction"
+    },
+    {
+      "id": "granville-cordova-framework",
+      "point": [518.7, -328, 4.78],
+      "evidence": "existing planning elevation, Framework Figure 18; manually registered to mapped junction"
+    },
+    {
+      "id": "howe-south-of-cordova",
+      "point": [439.926, -395.694, 8.48],
+      "evidence": "2002 contour / current mapped Howe centreline intersection"
+    },
+    {
+      "id": "howe-north-near-pwc",
+      "point": [481.41, -447.094, 8.48],
+      "evidence": "2002 contour / current mapped Howe centreline intersection"
+    },
+    {
+      "id": "cordova-west-42m",
+      "point": [416.043, -431.408, 8.48],
+      "evidence": "2002 contour / West Cordova w50162807 intersection"
+    },
+    {
+      "id": "cordova-west-127m",
+      "point": [346.309, -479.703, 9.48],
+      "evidence": "2002 contour / West Cordova w50162807 intersection"
+    },
+    {
+      "id": "cordova-west-137m",
+      "point": [338.327, -484.527, 9.48],
+      "evidence": "2002 contour / West Cordova w50162807 intersection"
+    },
+    {
+      "id": "cordova-west-148m",
+      "point": [328.545, -490.406, 8.48],
+      "evidence": "2002 contour / West Cordova w50162807 intersection"
+    },
+    {
+      "id": "cordova-west-159m",
+      "point": [318.841, -496.252, 7.48],
+      "evidence": "2002 contour / West Cordova w1255588460 intersection"
+    },
+    {
+      "id": "cordova-west-175m",
+      "point": [305.039, -504.269, 6.48],
+      "evidence": "2002 contour / West Cordova w1255588460 intersection"
+    },
+    {
+      "id": "cordova-east-60m",
+      "point": [480.131, -357.633, 7.48],
+      "evidence": "2002 contour / West Cordova w340383391 intersection"
+    },
+    {
+      "id": "cordova-east-83m",
+      "point": [496.629, -341.21, 6.48],
+      "evidence": "2002 contour / West Cordova w340383391 intersection"
+    },
+    {
+      "id": "cordova-east-160m",
+      "point": [558.673, -288.871, 6.48],
+      "evidence": "2002 contour / West Cordova w29595922 intersection"
+    },
+    {
+      "id": "cordova-east-173m",
+      "point": [567.475, -280.213, 6.48],
+      "evidence": "2002 contour / West Cordova w29595922 intersection"
+    },
+    {
+      "id": "howe-south-46m",
+      "point": [411.298, -366.225, 9.48],
+      "evidence": "2002 contour / Howe w50162809 intersection"
+    },
+    {
+      "id": "howe-south-57m",
+      "point": [403.322, -358.187, 10.48],
+      "evidence": "2002 contour / Howe w50162809 intersection"
+    },
+    {
+      "id": "howe-south-75m",
+      "point": [390.667, -345.437, 11.48],
+      "evidence": "2002 contour / Howe w50162809 intersection"
+    },
+    {
+      "id": "howe-south-of-hastings",
+      "point": [343.215, -297.743, 12.48],
+      "evidence": "2002 contour / Howe w29746880 intersection"
+    },
+    {
+      "id": "howe-cordova-junction",
+      "point": [443.72382, -400.02215, 8.48],
+      "evidence": "16m contour only 5.65 m away; nearby actual road crossing 5.75 m south. Inferred junction finish, not surveyed."
+    },
+    {
+      "id": "station-entry-landing",
+      "point": [479.74852, -428.51936, 8.08],
+      "evidence": "15m contour 6.55 m east;16m contour 18.41 m north; adopt a smooth neighbourhood/photo-fit landing joined to Howe; do not interpolate across the descending station."
+    },
+    {
+      "id": "howe-hastings-junction",
+      "point": [372, -326.6, 11.98],
+      "evidence": "between 19 m crossing on Howe to north and 20 m to south; source-guided smooth fit."
+    }
+  ]
+}

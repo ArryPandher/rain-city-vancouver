@@ -1,3 +1,6 @@
+import { HOWE_STATION_SPEC } from "./howe-station-site";
+import { buildHoweStationPavilion } from "./howe-station-pavilion";
+import { createHoweStationPavilionMaterials } from "./howe-station-pavilion-materials";
 import { batchFallbackTrees } from "./fallback-tree-batch";
 import { batchTerrainTiles } from "./terrain-batch";
 import { ShadowCasterVolume } from "../rendering/shadow-caster-volume";
@@ -169,6 +172,19 @@ export class World {
           (x, z) => this.collision.existingGroundHeight(x, z),
         ),
       );
+    if (this.collision.canada) {
+      const stationBatch = new Batcher(this.root, 160);
+      buildHoweStationPavilion(
+        stationBatch,
+        {
+          ...HOWE_STATION_SPEC,
+          groundHeight: (x, z) =>
+            this.collision.baselineGroundHeight(x, z) + 0.15,
+        },
+        createHoweStationPavilionMaterials(this.materials),
+      );
+      this.chunks.push(...stationBatch.finish());
+    }
     this.chunks.push(
       ...buildHarbourGreen(
         this.root,
@@ -478,8 +494,22 @@ export class World {
       try {
         batchTerrainTiles(this.root, ground, this.facadeMultiDraw);
       } catch (error) {
-        console.warn("Terrain batching unavailable; keeping original tiles", error);
+        console.warn(
+          "Terrain batching unavailable; keeping original tiles",
+          error,
+        );
       }
+      this.chunks.push(...ground);
+    }
+    if (this.collision.howeTerrain) {
+      const ground = terrainMeshes(
+        this.collision.howeTerrain,
+        [],
+        m.concrete,
+        this.data.ocean,
+        this.collision.howeTerrainCutouts,
+      );
+      this.root.add(...ground);
       this.chunks.push(...ground);
     }
     const cityBase = mesh(
@@ -593,6 +623,7 @@ export class World {
       const onTerrain =
         moundRoad ||
         (this.collision.canada?.intersects(r.pts) ?? false) ||
+        (this.collision.howeTerrain?.intersects(r.pts) ?? false) ||
         (this.data.terrain?.intersects(r.pts) ?? false) ||
         jackIntersects(r.pts) ||
         (this.collision.harbour && harbourIntersects(r.pts)) ||
@@ -1106,7 +1137,10 @@ export class World {
           const cable = (points: T.Vector3[]) => {
             // The Burrard tie is elevated; keep this affected span's wires
             // above both its new grade and the existing western approach.
-            if (this.collision.canada?.intersects([ax, az, bx, bz]))
+            if (
+              this.collision.canada?.intersects([ax, az, bx, bz]) ||
+              this.collision.howeTerrain?.intersects([ax, az, bx, bz])
+            )
               for (const p of points)
                 p.y += this.collision.groundHeight(p.x, p.z);
             const curve = new T.CatmullRomCurve3(points);

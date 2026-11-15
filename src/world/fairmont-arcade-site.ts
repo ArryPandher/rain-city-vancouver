@@ -144,7 +144,7 @@ function triangleHeight(
 /** Pure geometry/collision contract. Arcade floor samples are cached 45 mm
  * outside the old hotel wall; canopy samples also cover the public projection.
  * Pass the baseline exterior sampler, never an arcade floor override.
- * Returned Y values are relative to datum (zero for the current hotel). */
+ * Returned Y values are relative to datum and may be negative on the lower side. */
 export function createFairmontArcadeSite(
   groundHeight: (x: number, z: number) => number,
   datum = 0,
@@ -155,10 +155,7 @@ export function createFairmontArcadeSite(
       count = Math.max(1, Math.ceil(f.length / 0.5)),
       heights = Array.from({ length: count + 1 }, (_, i) => {
         const p = f.p((i * f.length) / count, 0, -0.045);
-        return (
-          Math.max(0, groundHeight(p[0], p[2]) - datum) +
-          FAIRMONT_ARCADE_FLOOR_OFFSET
-        );
+        return groundHeight(p[0], p[2]) - datum + FAIRMONT_ARCADE_FLOOR_OFFSET;
       });
     const heightAt = (t: number) => {
       const u = Math.max(0, Math.min(count, t * count)),
@@ -223,9 +220,7 @@ export function createFairmontArcadeSite(
     }
     if (nearest.d < 0.05 || pointInPoly(x, z, ring.flat()))
       return nearest.height + FAIRMONT_WATERFRONT_CANOPY_TOP;
-    return (
-      Math.max(0, groundHeight(x, z) - datum) + FAIRMONT_WATERFRONT_CANOPY_TOP
-    );
+    return groundHeight(x, z) - datum + FAIRMONT_WATERFRONT_CANOPY_TOP;
   };
 
   // Structural roof: least-squares slope along the source plan's long axis.

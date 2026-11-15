@@ -12,13 +12,12 @@ import {
   type Road,
 } from "./data";
 
-/** Authored local integration estimates, not surveyed/geodetic elevations.
- * See docs/sources/canada-place-grade-plan.md. */
+/** Source-guided local registration, not a surveyed global datum.
+ * See docs/sources/howe-shared-ground-and-station.md. */
 export const CANADA_PLACE_DECK_HEIGHT = 7.88;
 export const CANADA_PLACE_WALK_OFFSET = 0.15;
 export const CANADA_PLACE_BASE_HEIGHT =
   CANADA_PLACE_DECK_HEIGHT - CANADA_PLACE_WALK_OFFSET;
-export const CANADA_PLACE_EASE_LENGTH = 15;
 export const CANADA_PLACE_HOWE_IDS = [
   "w232195213",
   "w1255990033",
@@ -32,8 +31,8 @@ export const CANADA_PLACE_ROAD_IDS = new Set<string>([
   ...CANADA_PLACE_HOWE_IDS,
   ...CANADA_PLACE_WATERFRONT_IDS,
 ]);
-/** Mapped service/driveway stubs with no surveyed layer/elevation. Preserve the
- * old render datum consistently; do not invent abrupt ramps across the site. */
+/** Mapped service/driveway stubs use the shared neighborhood construction
+ * surface, avoiding a separate unsupported road elevation. */
 export const CANADA_PLACE_SERVICE_IDS = new Set([
   "w143682532",
   "w143682533",
@@ -50,18 +49,23 @@ export type CanadaPlaceSiteOptions = {
   connectors?: Point[][];
   /** Existing modeled pier: do not render a second support surface over it. */
   existingDeck?: Point[];
+  /** Shared neighborhood construction surface, before finish offsets. */
+  sharedHeight?: (x: number, z: number) => number | undefined;
+  /** Openings in the exterior support, including the visible station stairs. */
+  cutouts?: Point[][];
 };
 
-/** Integrate a constant grade with linear 15m slope easements at both ends. */
+/** Source-guided H16 to H15.4 street section, not the former 7.73m ramp.
+ * Runtime uses the shared neighborhood grid so junctions/building bases agree. */
+export const CANADA_PLACE_HOWE_START_HEIGHT =
+  16 - 7.52 - CANADA_PLACE_WALK_OFFSET;
 export function canadaPlaceHoweProfile(station: number, length: number) {
-  if (length <= 0) return 0;
-  const s = Math.max(0, Math.min(length, station));
-  const ease = Math.min(CANADA_PLACE_EASE_LENGTH, length / 2);
-  const grade = CANADA_PLACE_BASE_HEIGHT / (length - ease);
-  if (s < ease) return (grade * s * s) / (2 * ease);
-  if (s > length - ease)
-    return CANADA_PLACE_BASE_HEIGHT - (grade * (length - s) ** 2) / (2 * ease);
-  return grade * (s - ease / 2);
+  if (length <= 0) return CANADA_PLACE_HOWE_START_HEIGHT;
+  const t = smooth((station / length - 0.54) / 0.46);
+  return (
+    CANADA_PLACE_HOWE_START_HEIGHT +
+    (CANADA_PLACE_BASE_HEIGHT - CANADA_PLACE_HOWE_START_HEIGHT) * t
+  );
 }
 const smooth = (t: number) => {
   const u = Math.max(0, Math.min(1, t));
@@ -218,6 +222,8 @@ export function createCanadaPlaceSite(options: CanadaPlaceSiteOptions) {
       : CANADA_PLACE_BASE_HEIGHT;
   /** Unmasked sampler for rendering boundary vertices (pointInPoly excludes some edges). */
   const primaryHeight = (x: number, z: number) => {
+    const shared = options.sharedHeight?.(x, z);
+    if (shared !== undefined) return shared;
     const h = nearest(howePath, x, z, true);
     const w = waterfrontPath.length ? nearest(waterfrontPath, x, z) : undefined;
     const howeHeight = canadaPlaceHoweProfile(h.station, howeLength);
@@ -263,20 +269,34 @@ export function createCanadaPlaceSite(options: CanadaPlaceSiteOptions) {
     );
     roadIds.add(FAIRMONT_APRON_DRIVEWAY_ID);
   }
+  if (options.cutouts?.length)
+    clipped = polygonClipping.difference(
+      clipped,
+      ...options.cutouts.map((p) => [p]),
+    );
   const supportPolygons: CanadaPlaceSupportPolygon[] = clipped.map((p) => ({
     outer: p[0].slice(0, -1) as Point[],
     holes: p.slice(1).map((h) => h.slice(0, -1) as Point[]),
   }));
+  const supportFlat = supportPolygons.map((p) => ({
+    outer: p.outer.flat(),
+    holes: p.holes.map((h) => h.flat()),
+  }));
   const contains = (x: number, z: number) =>
-    primaryContains(x, z) ||
-    !!fairmontApron?.contains(x, z) ||
-    !!pwcApron?.contains(x, z);
+    Number.isFinite(x) &&
+    Number.isFinite(z) &&
+    supportFlat.some(
+      (p) =>
+        pointInPoly(x, z, p.outer) &&
+        !p.holes.some((h) => pointInPoly(x, z, h)),
+    );
   const supportHeight = (x: number, z: number) =>
-    fairmontApron?.covers(x, z)
+    options.sharedHeight?.(x, z) ??
+    (fairmontApron?.covers(x, z)
       ? fairmontApron.height(x, z)
       : pwcApron?.covers(x, z)
         ? pwcApron.height(x, z)
-        : primaryHeight(x, z);
+        : primaryHeight(x, z));
   const baselineHeight = (x: number, z: number) =>
     contains(x, z) ? supportHeight(x, z) : undefined;
   const bounds = supportPolygons

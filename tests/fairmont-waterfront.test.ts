@@ -157,7 +157,10 @@ test("complete hotel geometry has finite outward faces, metric panel UVs and bou
       assert.ok(Array.from(uv.array).some((v) => Math.abs(v) > 3));
   }
   assert.ok(Math.abs(max - H) < 0.00001);
-  assert.equal(min, 0);
+  assert.ok(
+    Math.abs(min + 0.015) < 1e-6,
+    "arcade foundation closes 15mm below the flat baseline",
+  );
   assert.ok(
     triangles > 12000 && triangles < 55000,
     `hotel triangles ${triangles}`,
@@ -392,7 +395,10 @@ test("caller ground offsets all hotel geometry and its reflection capture togeth
       max = Math.max(max, p.getY(i));
     }
   }
-  assert.ok(Math.abs(min - 3.4) < 0.00001);
+  assert.ok(
+    Math.abs(min - (3.4 - 0.015)) < 0.00001,
+    "buried closure receives caller datum exactly once",
+  );
   assert.ok(Math.abs(max - H - 3.4) < 0.00001);
 });
 

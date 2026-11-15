@@ -193,15 +193,30 @@ test("deck clearance does not open the solid lower pier or enclosed landmark mas
     "open harbour remains water",
   );
 });
-test("site integration leaves neighboring building bases and empty worlds unchanged", () => {
+test("building bases share the bounded neighborhood field while distant and empty worlds stay unchanged", () => {
   for (const id of ["w363651936", "w138256216", "w208599553", "w143683980"]) {
     const b = data.buildings.find((b) => b.id === id)!;
     assert.equal(
       collision.groundHeight(...centroid(b.pts)),
-      0,
-      `unrelated building base lifted: ${id}`,
+      collision.howeTerrain!.height(...centroid(b.pts)),
+      `building base must share the neighborhood field: ${id}`,
     );
   }
+  let outside = 0;
+  for (const b of data.buildings) {
+    const p = centroid(b.pts);
+    if (
+      collision.howeTerrain!.contains(...p) ||
+      collision.canada!.contains(...p)
+    )
+      continue;
+    assert.equal(
+      collision.baselineGroundHeight(...p),
+      collision.legacyGroundHeight(...p),
+    );
+    outside++;
+  }
+  assert.ok(outside > 100, "the bounded field preserves unrelated city bases");
   const empty = new CollisionWorld({
     ...data,
     buildings: [],
@@ -243,9 +258,9 @@ test("western integration matches existing ground across its entire road end", (
     );
   }
 });
-test("retaining side entry cannot lift a ground-level actor onto the raised street", () => {
-  // Remaining eastern retaining edge of the mapped Canada Place turn
-  // (w1550614843), beyond both new hotel/office apron footprints.
+test("the former east retaining edge is continuous but low references still cannot snap onto support", () => {
+  // The same mapped Canada Place turn (w1550614843) remains the Canada helper's
+  // boundary, but the shared neighborhood field now supports both sides.
   const edgeA: Point = [507.53452121505586, -492.9905231928914],
     edgeB: Point = [510.53452121505586, -488.0905231928914],
     from: Point = [509.5462319975016, -490.85381550867453],
@@ -260,7 +275,7 @@ test("retaining side entry cannot lift a ground-level actor onto the raised stre
         );
       }),
     ),
-    "fixture is an actual remaining support boundary",
+    "fixture is an actual Canada helper boundary",
   );
   for (const point of [from, to]) {
     assert.equal(collision.canada!.fairmontApron?.covers(...point), false);
@@ -268,17 +283,24 @@ test("retaining side entry cannot lift a ground-level actor onto the raised stre
   }
   assert.equal(collision.canada!.contains(...from), false);
   assert.equal(collision.canada!.contains(...to), true);
-  assert.equal(collision.groundHeight(...from), 0);
+  const fromY = collision.groundHeight(...from),
+    toY = collision.groundHeight(...to);
+  assert.ok(
+    Math.abs(fromY - toY) < 0.05,
+    "shared terrain removes the old seven-metre drop",
+  );
   assert.ok(collision.groundHeight(...to) > 7);
+  assert.equal(collision.blocked(...to, 0.36, toY - 0.451), true);
+  assert.equal(collision.blocked(...to, 0.36, toY - 0.449), false);
   const moved = collision.move(
     ...from,
     to[0] - from[0],
     to[1] - from[1],
     0.36,
-    0,
+    fromY,
   );
-  assert.equal(moved.hit, true);
-  assert.ok(collision.groundHeight(moved.x, moved.z) < 0.5);
+  assert.equal(moved.hit, false);
+  assert.ok(Math.hypot(moved.x - to[0], moved.z - to[1]) < 1e-8);
   for (const radius of [0.36, 1.16]) {
     const road = data.roads.find((r) => r.id === CANADA_PLACE_HOWE_IDS[0])!;
     const path = samples(flatPoints(road.pts), 0.2);
@@ -301,18 +323,17 @@ test("retaining side entry cannot lift a ground-level actor onto the raised stre
     }
   }
 });
-test("vehicle exit chooses supported height instead of the seven-metre roadside drop", () => {
-  // Same remaining eastern Canada Place edge as the retaining-entry test;
-  // the former hotel-side drop is now correctly supported by the new apron.
+test("vehicle exit uses the shared east-side grade and still refuses a genuine large drop", () => {
+  // The real former retaining edge is supported by the shared field. Verify
+  // its ordinary exit independently of the isolated large-drop safety case.
   const x = 507.75524425894145,
     z = -489.7572924034336,
     heading = 0.549374484771553,
-    y = 7.525253297933688;
+    y = collision.groundHeight(x, z);
   const preferred: Point = [
     x + Math.cos(heading) * 2.3,
     z - Math.sin(heading) * 2.3,
   ];
-  assert.ok(Math.abs(collision.groundHeight(x, z) - y) < 1e-8);
   assert.equal(
     collision.blocked(x, z, 1.16, y),
     false,
@@ -322,21 +343,21 @@ test("vehicle exit chooses supported height instead of the seven-metre roadside 
     assert.equal(collision.canada!.fairmontApron?.covers(...point), false);
     assert.equal(collision.canada!.pwcApron?.covers(...point), false);
   }
-  assert.ok(collision.groundHeight(...preferred) < 1);
+  assert.ok(Math.abs(collision.groundHeight(...preferred) - y) < 0.05);
   assert.equal(
-    collision.blocked(...preferred, 0.4, 0),
+    collision.blocked(...preferred, 0.4, collision.groundHeight(...preferred)),
     false,
-    "drop rejection is not an unrelated wall",
+    "the preferred landing remains clear",
   );
   assert.equal(
-    collision.water(...preferred, 0),
+    collision.water(...preferred, y),
     false,
-    "drop rejection is not an unrelated water mask",
+    "the preferred landing remains on land",
   );
   const exit = collision.vehicleExit(x, z, heading, y);
-  assert.ok(exit, "opposite door should have a supported landing");
+  assert.ok(exit, "the preferred door should have a supported landing");
   assert.ok(Math.abs(collision.groundHeight(...exit) - y) < 0.6);
-  assert.ok(Math.hypot(exit[0] - preferred[0], exit[1] - preferred[1]) > 1);
+  assert.ok(Math.hypot(exit[0] - preferred[0], exit[1] - preferred[1]) < 1e-8);
   assert.equal(collision.blocked(...exit, 0.4, y), false);
   const flat = new CollisionWorld({
     ...data,
@@ -346,6 +367,15 @@ test("vehicle exit chooses supported height instead of the seven-metre roadside 
     ocean: [],
   });
   assert.deepEqual(flat.vehicleExit(0, 0, 0, 0), [2.3, 0]);
+  // Explicit terrain-step fixture: no walls/water can mask the height rule.
+  // It does not claim that the removed Howe trench exists in the current map.
+  flat.groundHeight = (x) => (x >= 1.5 ? 0 : CANADA_PLACE_DECK_Y);
+  const safeExit = flat.vehicleExit(0, 0, 0, CANADA_PLACE_DECK_Y);
+  assert.ok(safeExit);
+  assert.ok(
+    Math.abs(flat.groundHeight(...safeExit) - CANADA_PLACE_DECK_Y) < 0.6,
+  );
+  assert.ok(Math.hypot(safeExit[0] - 2.3, safeExit[1]) > 1);
   const room = new CollisionWorld({
     ...data,
     roads: [],

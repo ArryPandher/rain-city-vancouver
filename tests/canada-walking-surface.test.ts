@@ -73,10 +73,11 @@ function visibleFloor(x: number, z: number) {
   return ray.intersectObjects(meshes, false)[0]?.point.y;
 }
 
-test("native arrival court feet meet finished paving while construction and car datum stay unchanged", () => {
+test("native arrival court feet meet finished paving above the shared construction datum", () => {
   const [x, z] = [492.2032484809166, -473.6827770690959];
   const base = collision.height(x, z);
-  assert.ok(Math.abs(base - 6.351586342781256) < 1e-6);
+  assert.ok(base > 7.7 && base < 8.4, "source-guided arrival neighborhood");
+  assert.equal(base, collision.howeTerrain!.height(x, z));
   const finish = collision.walkingHeight(x, z);
   assert.ok(Math.abs(finish - base - 0.15) < 1e-6);
   assert.ok(Math.abs(finish - visibleFloor(x, z)!) < 0.03);

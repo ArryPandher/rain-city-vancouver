@@ -62,22 +62,38 @@ function at(path: Point[], distance: number): Point {
   }
   return path.at(-1)!;
 }
-test("mapped Howe grade has shared junctions, finished deck datum and bounded smooth slope", () => {
+test("mapped Howe grade keeps the H16 to H15.4 near-level section, shared junctions and smooth slope", () => {
   assert.ok(Math.abs(site.howeLength - 115.8) < 0.2);
-  assert.equal(site.baselineHeight(443.7, -400), 0);
+  // docs/sources/howe-shared-ground-and-station.md registers finished H−7.52,
+  // with 0.15m paving above this baseline. These are approximate source levels,
+  // not the superseded zero-to-deck ramp. Runtime also shares its terrain field
+  // with the adjoining streets; this fixture tests the standalone site profile.
+  const southBaseline = 8.33;
+  assert.ok(Math.abs(site.baselineHeight(443.7, -400)! - southBaseline) < 1e-9);
+  assert.ok(
+    Math.abs(canadaPlaceHoweProfile(0, site.howeLength) - southBaseline) < 1e-9,
+  );
+  assert.ok(
+    Math.abs(
+      canadaPlaceHoweProfile(site.howeLength, site.howeLength) -
+        CANADA_PLACE_BASE_HEIGHT,
+    ) < 1e-9,
+  );
   assert.ok(
     Math.abs(
       site.baselineHeight(496.3, -492.2)! + 0.15 - CANADA_PLACE_DECK_HEIGHT,
     ) < 1e-9,
   );
-  let previous = 0;
+  let previous = southBaseline;
   for (let s = 0.1; s <= site.howeLength; s += 0.1) {
     const h = canadaPlaceHoweProfile(s, site.howeLength);
-    assert.ok(h >= previous);
-    assert.ok((h - previous) / 0.1 < 0.078);
+    assert.ok(h <= previous + 1e-12, `unexpected uphill reversal at ${s}m`);
+    assert.ok(h >= CANADA_PLACE_BASE_HEIGHT - 1e-12);
+    assert.ok(Math.abs(h - previous) / 0.1 < 0.02, `grade exceeds 2% at ${s}m`);
     previous = h;
   }
-  for (const s of [15, site.howeLength - 15]) {
+  // Check the actual constant-to-eased-profile joins, including both clamps.
+  for (const s of [0, site.howeLength * 0.54, site.howeLength]) {
     const l =
       (canadaPlaceHoweProfile(s, site.howeLength) -
         canadaPlaceHoweProfile(s - 0.01, site.howeLength)) /

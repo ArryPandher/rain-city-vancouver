@@ -36,7 +36,7 @@ test("Waterfront dispatch replaces only its mapped office and registers one exte
   assert.equal(
     batch.offsetY,
     7.73,
-    "does not leak its absolute datum into the next building",
+    "preserves the caller datum for the next building",
   );
   assert.deepEqual(
     building,
@@ -47,7 +47,7 @@ test("Waterfront dispatch replaces only its mapped office and registers one exte
   assert.equal(reflections[0].materials.length, 2);
   const [x, y, z] = reflections[0].position;
   assert.equal(pointInPoly(x, z, WATERFRONT_CENTRE_RING.flat()), false);
-  assert.ok(y > 7.88 && y < 91.75);
+  assert.equal(y, 7.73 + 36);
   const meshes = batch.finish();
   assert.ok(meshes.length > 0);
   assert.ok(

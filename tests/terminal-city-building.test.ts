@@ -42,9 +42,10 @@ for (const clubFirst of [false, true]) {
     assert.equal(reflections.length, 0);
     const original = structuredClone(buildings);
     for (const building of buildings) {
-      batch.offsetY = 7.73;
+      const datum = building.id === TERMINAL_CITY_ID ? 7.73 : 6.2;
+      batch.offsetY = datum;
       assert.equal(build(building, batch), true);
-      assert.equal(batch.offsetY, 7.73);
+      assert.equal(batch.offsetY, datum);
     }
     assert.deepEqual(
       buildings,
@@ -58,10 +59,30 @@ for (const clubFirst of [false, true]) {
     );
     assert.equal(reflections.length, 1);
     const [x, y, z] = reflections[0].position;
-    assert.ok(y > 21.95 && y < 99);
+    assert.equal(
+      y,
+      7.73 + 45,
+      "shared probe uses tower datum in either parcel order",
+    );
     for (const building of buildings)
       assert.equal(pointInPoly(x, z, building.pts), false);
     const meshes = batch.finish();
+    root.updateMatrixWorld(true);
+    const clubRoof = new T.Raycaster(
+      new T.Vector3(393, 50, -414),
+      new T.Vector3(0, -1, 0),
+      0,
+      50,
+    ).intersectObject(root, true)[0];
+    assert.ok(
+      Math.abs(clubRoof.point.y - (6.2 + 21.95)) < 0.001,
+      "club keeps its own datum in the shared batch",
+    );
+    const bounds = new T.Box3().setFromObject(root);
+    assert.ok(
+      Math.abs(bounds.max.y - (7.73 + 99)) < 0.001,
+      "tower datum is applied once regardless of club order",
+    );
     const materials = new Set(meshes.flatMap((mesh) => [mesh.material].flat()));
     assert.equal(materials.size, 6);
     assert.ok(

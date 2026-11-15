@@ -1,3 +1,4 @@
+import { buildHoweBuildingFoundation } from "./howe-building-foundations";
 import { CACTUS_ID } from "./jack-poole-site";
 import * as T from "three";
 import { CityData, centroid, hash, seeded, Road, segmentPoint } from "./data";
@@ -145,6 +146,23 @@ export function architecture(
     const ground = collision.groundHeight(...centroid(b.pts));
     shell.offsetY = detail.offsetY = interiors.offsetY = ground;
     if (specialBuilding(b) || b.id === CACTUS_ID) continue;
+    const [baseX, baseZ] = centroid(b.pts);
+    if (collision.howeTerrain?.contains(baseX, baseZ) && ground > 0.2)
+      buildHoweBuildingFoundation(
+        shell,
+        Array.from({ length: b.pts.length / 2 }, (_, i) => [
+          b.pts[i * 2],
+          b.pts[i * 2 + 1],
+        ]),
+        ground,
+        collision.baselineGroundHeight.bind(collision),
+        m.concrete,
+        (x, z) =>
+          Math.abs(
+            collision.groundHeight(x, z) - collision.baselineGroundHeight(x, z),
+          ) > 0.001,
+      );
+
     if (
       lawCourts(b, shell, m) ||
       robsonSquare(b, shell, m) ||

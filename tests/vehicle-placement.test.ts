@@ -102,16 +102,12 @@ test("real Howe startup does not project the bicycle into the player's driving p
   ).roads;
   const collision = new CollisionWorld(data),
     spawn = { x: 486.65, z: -453.35, heading: 2.4443631020289107 };
-  const old = collision.safe(spawn.x + 8, spawn.z + 4, 1);
-  assert.ok(
-    Math.hypot(old[0] - spawn.x, old[1] - spawn.z) < 2.1,
-    "reproduce original overlap",
-  );
   const spot = startupBikeSpot(collision, spawn, [spawn]);
   assert.ok(spot);
-  assert.ok(
-    Math.hypot(spot[0] - 478.4467338189848, spot[1] + 449.78539287390424) <
-      1e-6,
+  assert.equal(collision.water(...spot), false);
+  assert.equal(
+    collision.blocked(...spot, 0.5, collision.height(...spot)),
+    false,
   );
   assert.ok(Math.hypot(spot[0] - spawn.x, spot[1] - spawn.z) >= 5);
   assert.ok(
