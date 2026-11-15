@@ -14,7 +14,16 @@ import {
   addCanadaPlaceWestFacade,
   canadaPlaceFacadeCompatible,
   replaceCanadaPlaceWestFaces,
+  canadaPlaceConcoursePoint,
 } from "./canada-place-facade";
+import {
+  addCanadaPlaceCanopy,
+  canadaPlaceCanopyCompatible,
+  replaceCanadaPlaceCanopyFaces,
+  canadaPlaceCanopyPoint,
+  CANADA_PLACE_CANOPY_LENGTH,
+} from "./canada-place-canopy";
+import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
@@ -77,6 +86,7 @@ function convexHull(points: [number, number][]) {
 export async function loadVancouverLandmarks(
   parent: T.Group,
   materials: Materials,
+  reflections: ReflectionProbeSpec[] = [],
 ) {
   const response = await fetch(`${BASE}data/vancouver-landmarks.json`);
   if (!response.ok) throw new Error("Vancouver landmark catalog unavailable");
@@ -100,6 +110,8 @@ export async function loadVancouverLandmarks(
       galleryFacadeCompatible(gltf.scene);
     const refineCanada =
       asset.id === "canada-place" && canadaPlaceFacadeCompatible(gltf.scene);
+    const refineCanadaCanopy =
+      asset.id === "canada-place" && canadaPlaceCanopyCompatible(gltf.scene);
     const cache = new Map<T.Material, T.MeshStandardMaterial>();
     const galleryMaterials = new Map<string, T.MeshStandardMaterial>();
     const canadaMaterials = new Map<string, T.MeshStandardMaterial>();
@@ -114,6 +126,8 @@ export async function loadVancouverLandmarks(
       if (asset.id === "vancouver-art-gallery")
         repairGalleryRearEntry(geometry, original.name);
       if (refineGallery) replaceGalleryWingFaces(geometry, original.name);
+      if (refineCanadaCanopy)
+        replaceCanadaPlaceCanopyFaces(geometry, original.name);
       if (refineCanada) replaceCanadaPlaceWestFaces(geometry, original.name);
       const positions = geometry.getAttribute("position");
       for (let i = 0; i < positions.count; i++) {
@@ -170,7 +184,43 @@ export async function loadVancouverLandmarks(
         box: new T.Box2().setFromPoints(hull.map((p) => new T.Vector2(...p))),
       });
     if (asset.id === "canada-place") addCanadaPlaceRigging(group);
-    if (refineCanada) addCanadaPlaceWestFacade(group, canadaMaterials);
+    const localReflection = (
+      name: string,
+      point: T.Vector3,
+      meshes: T.Mesh[],
+      materialName: string,
+    ) => {
+      const glass = meshes.find(
+        (mesh) => (mesh.material as T.Material).name === materialName,
+      )?.material as T.MeshStandardMaterial | undefined;
+      if (!glass) return;
+      // Capture fixed harbour/city geometry once through the existing probe
+      // system. Moving actors and the receiving glass are omitted by that system.
+      glass.envMapIntensity = 0.8;
+      reflections.push({
+        name,
+        position: [point.x + x, point.y + 0.08, point.z + z],
+        materials: [glass],
+      });
+    };
+    if (refineCanada) {
+      const facade = addCanadaPlaceWestFacade(group, canadaMaterials);
+      localReflection(
+        "Canada Place west concourse",
+        canadaPlaceConcoursePoint(51.55, 18, 11.5),
+        facade,
+        "canada-west-glass",
+      );
+    }
+    if (refineCanadaCanopy) {
+      const canopy = addCanadaPlaceCanopy(group, canadaMaterials);
+      localReflection(
+        "Canada Place entrance conservatory",
+        canadaPlaceCanopyPoint(CANADA_PLACE_CANOPY_LENGTH / 2, 10.8, 6),
+        canopy,
+        "canada-canopy-glass",
+      );
+    }
     if (refineGallery) addGalleryFacade(group, galleryMaterials);
     parent.add(group);
   }

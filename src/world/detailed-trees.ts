@@ -196,6 +196,7 @@ export class DetailedTrees {
           )
         : undefined,
       projectionScale,
+      new Set(this.selected),
     );
     this.selected = selected.map((p) => p.tree);
     this.previousNear = new Set(

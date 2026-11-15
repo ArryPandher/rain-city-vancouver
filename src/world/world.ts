@@ -187,7 +187,11 @@ export class World {
     report("Raising the downtown skyline", 0.3);
     const accurateLandmarks = new T.Group();
     this.root.add(accurateLandmarks);
-    await loadVancouverLandmarks(accurateLandmarks, this.materials);
+    await loadVancouverLandmarks(
+      accurateLandmarks,
+      this.materials,
+      this.reflections,
+    );
     this.mergeStatic(accurateLandmarks);
     this.buildings();
     try {

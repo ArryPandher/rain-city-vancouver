@@ -1,0 +1,39 @@
+{
+  "asset": "Granite Tile",
+  "author": "Charlotte Baglioni / Poly Haven",
+  "source": "https://polyhaven.com/a/granite_tile",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "downloadBudgetBytes": 1943714,
+  "targetLinearColorMean": 0.8238738892992181,
+  "changes": "One joint-free tile face cropped from original 1K maps and mirrored with normal R/G signs corrected. Original granular albedo modulation retained within ±20% and matched to previous floor mean; roughness recalibrated to 0.75–0.85. 512px WebP maps. Generic mineral reference, not a Vancouver paving scan.",
+  "sources": [
+    {
+      "kind": "color",
+      "id": "diff",
+      "md5": "5dfd6dbdb5c0b22ca04505c6209cea9f",
+      "bytes": 676597,
+      "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/granite_tile/granite_tile_diff_1k.jpg",
+      "file": "textures/canada-place-paving/color.webp",
+      "outputBytes": 99632
+    },
+    {
+      "kind": "normal",
+      "id": "nor_gl",
+      "md5": "e9053333e3db348d10466a781456ec58",
+      "bytes": 592362,
+      "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/granite_tile/granite_tile_nor_gl_1k.jpg",
+      "file": "textures/canada-place-paving/normal.webp",
+      "outputBytes": 47298
+    },
+    {
+      "kind": "roughness",
+      "id": "rough",
+      "md5": "fd4d40cbc28323260038eedb43bc6ff8",
+      "bytes": 674755,
+      "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/granite_tile/granite_tile_rough_1k.jpg",
+      "file": "textures/canada-place-paving/roughness.webp",
+      "outputBytes": 23182
+    }
+  ]
+}

@@ -1,4 +1,27 @@
 import * as T from "three";
+import { BASE } from "./materials";
+export type CanadaPlacePavingMaps = {
+  color: T.Texture;
+  normal: T.Texture;
+  roughness: T.Texture;
+};
+let pavingMaps: CanadaPlacePavingMaps | undefined;
+function loadPavingMaps(): CanadaPlacePavingMaps {
+  if (pavingMaps) return pavingMaps;
+  const loader = new T.TextureLoader(),
+    load = (kind: string) => {
+      const t = loader.load(`${BASE}textures/canada-place-paving/${kind}.webp`);
+      t.wrapS = t.wrapT = T.RepeatWrapping;
+      t.anisotropy = 8;
+      if (kind === "color") t.colorSpace = T.SRGBColorSpace;
+      return t;
+    };
+  return (pavingMaps = {
+    color: load("color"),
+    normal: load("normal"),
+    roughness: load("roughness"),
+  });
+}
 
 /** Reviewed, baked source-local concrete primitive, committed GLB SHA-256:
  * 1b7eab323b7bb3aa242438c2518910a3d88fae170bef74d31408bcb8c5096cbe.
@@ -85,16 +108,22 @@ export function extractCanadaPlacePaving(
   return top;
 }
 
-/** One material, sharing the existing licensed mineral maps. Archival west-trail
+/** One material with dedicated source-calibrated CC0 mineral maps. Archival west-trail
  * reference supports grey orthogonal paving, not the newer North Point pattern.
  * Dimensions/banding are explicit estimates; relief only changes shading. */
-export function canadaPlacePavingMaterial(mineral: T.MeshStandardMaterial) {
+export function canadaPlacePavingMaterial(
+  mineral: T.MeshStandardMaterial,
+  maps = loadPavingMaps(),
+) {
   const material = mineral.clone();
   material.name = "Canada Place promenade paving";
   material.color.setHex(0x666c66);
-  material.roughness = 0.9;
+  material.map = maps.color;
+  material.normalMap = maps.normal;
+  material.roughnessMap = maps.roughness;
+  material.roughness = 1;
   material.metalness = 0;
-  material.normalScale.set(0.15, 0.15);
+  material.normalScale.set(0.45, 0.45);
   material.envMapIntensity = 0.65;
   material.userData.canadaPlacePaving = {
     slabMetres: [1.5, 0.75],
@@ -117,6 +146,10 @@ vPavingMetres=vec2(dot(position.xz,vec2(.878,-.478)),dot(position.xz,vec2(.478,.
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
+        "#include <roughnessmap_fragment>",
+        "#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor,.75,.85);",
+      )
+      .replace(
         "#include <common>",
         `#include <common>
 varying vec2 vPavingMetres;
@@ -129,6 +162,18 @@ vec3 pavingDetail(vec2 metres){
  float bandDistance=abs(mod(metres.x+3.0,6.0)-3.0);
  float band=1.0-smoothstep(.08,.08+footprint,bandDistance);
  return vec3(seam,mix(.94,1.06,variation)*mix(1.0,1.22,band),-seam*.002);
+}
+// Analytic gradient of the 2mm joint recess. Do not differentiate the
+// fwidth-filtered colour seam: higher-order GLSL derivatives are undefined.
+vec2 pavingReliefGradient(vec2 metres){
+ vec2 fraction=fract(metres/vec2(1.5,.75));
+ vec2 edge=min(fraction,1.0-fraction)*vec2(1.5,.75);
+ float distanceToJoint=min(edge.x,edge.y);
+ float t=clamp((distanceToJoint-.004)/.008,0.0,1.0);
+ float slope=.002*6.0*t*(1.0-t)/.008;
+ vec2 direction=sign(vec2(.5)-fraction);
+ vec2 gradient=edge.x<edge.y?vec2(direction.x,0.0):vec2(0.0,direction.y);
+ return gradient*slope;
 }`,
       )
       .replace(
@@ -143,10 +188,12 @@ diffuseColor.rgb*=paving.y*(1.0-paving.x*.28);`,
 vec3 pavingDx=dFdx(-vViewPosition),pavingDy=dFdy(-vViewPosition);
 vec3 pavingR1=cross(pavingDy,normal),pavingR2=cross(normal,pavingDx);
 float pavingDet=dot(pavingDx,pavingR1);
-vec3 pavingGradient=sign(pavingDet)*(dFdx(paving.z)*pavingR1+dFdy(paving.z)*pavingR2);
+vec2 pavingSlope=pavingReliefGradient(vPavingMetres);
+float pavingFilter=min(1.0,.016/max(length(fwidth(vPavingMetres)),.0001));
+vec3 pavingGradient=sign(pavingDet)*pavingFilter*(dot(pavingSlope,dFdx(vPavingMetres))*pavingR1+dot(pavingSlope,dFdy(vPavingMetres))*pavingR2);
 if(abs(pavingDet)>1e-8)normal=normalize(abs(pavingDet)*normal-pavingGradient);`,
       );
   };
-  material.customProgramCacheKey = () => "canada-place-paving-v1";
+  material.customProgramCacheKey = () => "canada-place-paving-v2";
   return material;
 }

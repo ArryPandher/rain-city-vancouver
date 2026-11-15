@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import crypto from "node:crypto";
+import sharp from "sharp";
 import * as T from "three";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
@@ -136,17 +137,22 @@ test("changed concrete geometry fails closed without mutation", async () => {
   assert.deepEqual(Array.from(g.getIndex()!.array), index);
 });
 
-test("paving shares licensed maps without modifying source material or vertex placement shader", () => {
+test("paving uses dedicated licensed maps without modifying source material or vertex placement shader", () => {
   const original = new T.MeshStandardMaterial({
     color: 0xffffff,
     map: new T.Texture(),
     normalMap: new T.Texture(),
     roughnessMap: new T.Texture(),
   });
-  const material = canadaPlacePavingMaterial(original);
-  assert.equal(material.map, original.map);
-  assert.equal(material.normalMap, original.normalMap);
-  assert.equal(material.roughnessMap, original.roughnessMap);
+  const maps = {
+    color: new T.Texture(),
+    normal: new T.Texture(),
+    roughness: new T.Texture(),
+  };
+  const material = canadaPlacePavingMaterial(original, maps);
+  assert.equal(material.map, maps.color);
+  assert.equal(material.normalMap, maps.normal);
+  assert.equal(material.roughnessMap, maps.roughness);
   assert.equal(original.color.getHex(), 0xffffff);
   assert.equal(material.metalness, 0);
   assert.ok(material.roughness > 0.8);
@@ -167,5 +173,54 @@ test("paving shares licensed maps without modifying source material or vertex pl
   assert.ok(
     !shader.fragmentShader.includes("landmarkBlock"),
     "vertical facade courses are not layered into floor material",
+  );
+});
+
+test("dedicated compressed maps preserve mean reflectance while restoring measured mineral detail", async (t) => {
+  const linear = (v: number) =>
+    v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  const channel = async (path: string) => {
+    const { data, info } = await sharp(path)
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return Array.from(
+      { length: info.width * info.height },
+      (_, i) => data[i * info.channels] / 255,
+    );
+  };
+  const mean = (a: number[]) => a.reduce((s, v) => s + v, 0) / a.length;
+  const old = (
+      await channel("public/textures/landmarks/mineral-color.webp")
+    ).map(linear),
+    next = (
+      await channel("public/textures/canada-place-paving/color.webp")
+    ).map(linear);
+  const oldMean = mean(old),
+    newMean = mean(next);
+  // Compute deviations directly so the large arrays do not repeat mean per texel.
+  const deviation = (a: number[], m: number) =>
+    Math.sqrt(a.reduce((s, v) => s + (v - m) ** 2, 0) / a.length);
+  assert.ok(
+    Math.abs(newMean - oldMean) < 0.01,
+    `mean reflectance ${oldMean} -> ${newMean}`,
+  );
+  assert.ok(deviation(next, newMean) > deviation(old, oldMean) * 4);
+  const rough = await channel(
+    "public/textures/canada-place-paving/roughness.webp",
+  );
+  assert.ok(mean(rough) > 0.78 && mean(rough) < 0.82);
+  assert.ok(rough.every((v) => v > 0.72 && v < 0.88));
+  const source = JSON.parse(
+    fs.readFileSync("public/textures/canada-place-paving/SOURCES.json", "utf8"),
+  );
+  assert.equal(source.license, "CC0-1.0");
+  assert.ok(
+    source.sources.reduce(
+      (s: number, x: { outputBytes: number }) => s + x.outputBytes,
+      0,
+    ) < 200000,
+  );
+  t.diagnostic(
+    `linear mean ${oldMean.toFixed(4)} -> ${newMean.toFixed(4)}; grain std ${deviation(old, oldMean).toFixed(4)} -> ${deviation(next, newMean).toFixed(4)}; roughness mean ${mean(rough).toFixed(4)}`,
   );
 });

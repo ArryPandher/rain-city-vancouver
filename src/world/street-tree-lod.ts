@@ -38,6 +38,22 @@ export function nearStreetTree(
       (previous ? 0.38 : 0.45)
   );
 }
+/** Use the existing source-depth canopy when individual leaf cards are no
+ * longer resolvable. The tree, calibrated trunk and source silhouette remain;
+ * this only controls the costly all-leaf detail slots. */
+export function individualStreetLeaves(
+  tree: TreeInstance,
+  distance: number,
+  previous: boolean,
+  projectionScale?: number,
+) {
+  if (projectionScale === undefined) return true;
+  return (
+    distance < (previous ? 34 : 30) ||
+    projectedCrownHeight(tree, distance, projectionScale) >
+      (previous ? 0.1 : 0.12)
+  );
+}
 export function selectStreetTrees(
   samples: TreeInstance[],
   x: number,
@@ -47,6 +63,7 @@ export function selectStreetTrees(
   previousNear: ReadonlySet<TreeInstance>,
   frustum?: T.Frustum,
   projectionScale?: number,
+  previousDetailed: ReadonlySet<TreeInstance> = previousNear,
 ) {
   const sphere = new T.Sphere();
   const candidates = samples
@@ -62,7 +79,16 @@ export function selectStreetTrees(
           ),
         ),
     }))
-    .filter((p) => p.distance < 140)
+    .filter(
+      (p) =>
+        p.distance < 140 &&
+        individualStreetLeaves(
+          p.tree,
+          p.distance,
+          previousDetailed.has(p.tree),
+          projectionScale,
+        ),
+    )
     .sort(
       (a, b) =>
         Number(b.visible) - Number(a.visible) || a.distance - b.distance,

@@ -224,6 +224,41 @@ test("street tree slots share vertex data, keep independent culling and restore 
   assert.deepEqual(d.lodState, { near: 0, medium: 0 });
 });
 
+test("screen-size transition restores source canopy and trunk before hiding the detailed slot", () => {
+  const root = new T.Group();
+  const geometry = new T.BoxGeometry(1, 4, 1);
+  geometry.translate(0, 2, 0);
+  root.add(
+    new T.Mesh(geometry, new T.MeshStandardMaterial({ name: "test leaves" })),
+  );
+  const detail = DetailedTrees.fromModels(new T.Scene(), [root, root.clone()]);
+  const tree = samples()[0];
+  tree.height = 8;
+  detail.samples = [tree];
+  const camera = new T.PerspectiveCamera(60);
+  detail.update(20, 0, 0, camera);
+  assert.equal(detail.lodState.near + detail.lodState.medium, 1);
+  const matrix = new T.Matrix4();
+  tree.crown.getMatrixAt(tree.crownIndex, matrix);
+  assert.equal(matrix.determinant(), 0);
+  detail.update(80, 0, 0, camera);
+  assert.deepEqual(detail.lodState, { near: 0, medium: 0 });
+  tree.crown.getMatrixAt(tree.crownIndex, matrix);
+  assert.deepEqual(matrix.elements, tree.crownMatrix.elements);
+  tree.trunk.getMatrixAt(tree.trunkIndex, matrix);
+  assert.deepEqual(matrix.elements, tree.trunkMatrix.elements);
+  camera.fov = 20;
+  camera.updateProjectionMatrix();
+  detail.update(80, 0, 0, camera);
+  assert.equal(
+    detail.lodState.near + detail.lodState.medium,
+    1,
+    "zoom restores resolvable leaves without moving",
+  );
+  tree.crown.getMatrixAt(tree.crownIndex, matrix);
+  assert.equal(matrix.determinant(), 0);
+});
+
 test("visible street canopies take priority over nearer trees behind the camera", () => {
   const s = samples().slice(0, 2);
   s[0].x = -25;

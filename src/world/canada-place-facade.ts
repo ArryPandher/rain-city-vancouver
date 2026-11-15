@@ -1,4 +1,5 @@
 import * as T from "three";
+import concourse from "./canada-place-concourse-data.json";
 import site from "./canada-place-deck-data.json";
 import { landmarkSurfaceUV } from "./landmark-surfaces";
 
@@ -137,49 +138,29 @@ export function replaceCanadaPlaceWestFaces(
   return removed;
 }
 type V = [number, number, number];
-export type CanadaPlaceFacadeOpening = {
-  face: number;
-  l: number;
-  r: number;
-  b: number;
-  t: number;
-  depth: number;
-};
-export const CANADA_PLACE_FACADE_OPENINGS: CanadaPlaceFacadeOpening[] =
-  CANADA_PLACE_WEST_FACES.flatMap((f) => {
-    const step = f.length / f.bays;
-    return Array.from({ length: f.bays }, (_, i) => [
-      {
-        face: f.index,
-        l: i * step + 0.19,
-        r: (i + 1) * step - 0.19,
-        b: 8.65,
-        t: 12.15,
-        depth: 0.34,
-      },
-      {
-        face: f.index,
-        l: i * step + 0.19,
-        r: (i + 1) * step - 0.19,
-        b: 15,
-        t: 16.7,
-        depth: 0.34,
-      },
-    ]).flat();
-  });
-export function canadaPlaceFacadePoint(
-  face: number,
-  u: number,
+export const CANADA_PLACE_CONCOURSE_FOOTPRINTS = [concourse.worldFootprint];
+export const CANADA_PLACE_CONCOURSE_PROFILE = concourse.profile;
+export const CANADA_PLACE_CONCOURSE_STATIONS = concourse.stations;
+export function canadaPlaceConcoursePoint(
+  station: number,
+  outward: number,
   y: number,
-  depth = 0,
 ): T.Vector3 {
-  const f = CANADA_PLACE_WEST_FACES[face];
-  return new T.Vector3(
-    f.a[0] + f.dx * u - f.nx * depth,
-    y,
-    f.a[1] + f.dz * u - f.nz * depth,
-  );
+  const points = concourse.stations;
+  let i = 1;
+  while (i < points.length - 1 && points[i].s < station) i++;
+  const a = points[i - 1],
+    b = points[i],
+    t = Math.max(0, Math.min(1, (station - a.s) / (b.s - a.s)));
+  const x = a.x + (b.x - a.x) * t,
+    z = a.z + (b.z - a.z) * t,
+    nx = a.nx + (b.nx - a.nx) * t,
+    nz = a.nz + (b.nz - a.nz) * t;
+  return new T.Vector3(x + nx * outward, y, z + nz * outward);
 }
+/** The full west strip is a continuous three-step section. Highest glazing is
+ * concentrated in one broad central stretch; end fascias are opaque. Exact
+ * transition stations/sections are estimates from the documented photos. */
 /** Three shared material batches, opaque-backed reflective panes; no interiors,
  * probes, random room lights or changes to the rest of the landmark materials. */
 export function addCanadaPlaceWestFacade(
@@ -215,154 +196,168 @@ export function addCanadaPlaceWestFacade(
     m.opacity = 1;
     m.depthWrite = true;
   }
-  const groups = new Map<T.Material, { p: number[]; ix: number[] }>();
-  function quad(m: T.Material, v: V[], normal: V) {
+  const groups = new Map<
+    T.Material,
+    { p: number[]; ix: number[]; n: Map<number, V> }
+  >();
+  function quad(m: T.Material, v: V[], normal: V, smooth?: V[]) {
     const n = new T.Vector3().crossVectors(
       new T.Vector3(...v[1]).sub(new T.Vector3(...v[0])),
       new T.Vector3(...v[2]).sub(new T.Vector3(...v[0])),
     );
-    if (n.dot(new T.Vector3(...normal)) < 0) v = [v[0], v[3], v[2], v[1]];
+    if (n.dot(new T.Vector3(...normal)) < 0) {
+      v = [v[0], v[3], v[2], v[1]];
+      if (smooth) smooth = [smooth[0], smooth[3], smooth[2], smooth[1]];
+    }
     let g = groups.get(m);
-    if (!g) groups.set(m, (g = { p: [], ix: [] }));
+    if (!g) groups.set(m, (g = { p: [], ix: [], n: new Map() }));
     const k = g.p.length / 3;
     g.p.push(...v.flat());
+    if (smooth) smooth.forEach((normal, j) => g.n.set(k + j, normal));
     g.ix.push(k, k + 1, k + 2, k, k + 2, k + 3);
   }
-  for (const f of CANADA_PLACE_WEST_FACES) {
-    const at = (u: number, y: number, d = 0) =>
-      canadaPlaceFacadePoint(f.index, u, y, d).toArray() as V;
-    const front = (
-      m: T.Material,
-      l: number,
-      r: number,
-      b: number,
-      t: number,
-      d = 0,
-    ) =>
-      quad(
-        m,
-        [at(l, b, d), at(r, b, d), at(r, t, d), at(l, t, d)],
-        [f.nx, 0, f.nz],
-      );
-    const box = (
-      m: T.Material,
-      l: number,
-      r: number,
-      b: number,
-      t: number,
-      frontD: number,
-      backD: number,
-    ) => {
-      front(m, l, r, b, t, frontD);
-      quad(
-        m,
-        [at(l, b, frontD), at(l, t, frontD), at(l, t, backD), at(l, b, backD)],
-        [-f.dx, 0, -f.dz],
-      );
-      quad(
-        m,
-        [at(r, b, frontD), at(r, t, frontD), at(r, t, backD), at(r, b, backD)],
-        [f.dx, 0, f.dz],
-      );
-      quad(
-        m,
-        [at(l, t, frontD), at(r, t, frontD), at(r, t, backD), at(l, t, backD)],
-        [0, 1, 0],
-      );
-      quad(
-        m,
-        [at(l, b, frontD), at(r, b, frontD), at(r, b, backD), at(l, b, backD)],
-        [0, -1, 0],
-      );
-    };
-    const holes = CANADA_PLACE_FACADE_OPENINGS.filter(
-      (h) => h.face === f.index,
+  const stations = concourse.stations,
+    profile = concourse.profile;
+  const at = (i: number, k: number): V =>
+    canadaPlaceConcoursePoint(
+      stations[i].s,
+      profile[k][0] * stations[i].scale,
+      profile[k][1],
+    ).toArray() as V;
+  const beam = (a: V, b: V, width = 0.065) => {
+    const p = new T.Vector3(...a),
+      q = new T.Vector3(...b),
+      v = q.clone().sub(p);
+    if (v.length() < 0.0001) return;
+    const geom = new T.BoxGeometry(width, v.length(), width);
+    geom.applyQuaternion(
+      new T.Quaternion().setFromUnitVectors(
+        new T.Vector3(0, 1, 0),
+        v.normalize(),
+      ),
     );
-    const xs = [
-      ...new Set([0, f.length, ...holes.flatMap((h) => [h.l, h.r])]),
-    ].sort((a, b) => a - b);
-    const ys = [
-      ...new Set([7.65, 17.65, ...holes.flatMap((h) => [h.b, h.t])]),
-    ].sort((a, b) => a - b);
-    for (let i = 1; i < xs.length; i++)
-      for (let j = 1; j < ys.length; j++) {
-        const l = xs[i - 1],
-          r = xs[i],
-          b = ys[j - 1],
-          t = ys[j];
-        if (
-          !holes.some(
-            (h) =>
-              (l + r) / 2 > h.l &&
-              (l + r) / 2 < h.r &&
-              (b + t) / 2 > h.b &&
-              (b + t) / 2 < h.t,
-          )
-        )
-          front(wall, l, r, b, t);
+    geom.translate(...p.add(q).multiplyScalar(0.5).toArray());
+    let g = groups.get(frame);
+    if (!g) groups.set(frame, (g = { p: [], ix: [], n: new Map() }));
+    const offset = g.p.length / 3,
+      ix = geom.getIndex()!;
+    g.p.push(...Array.from(geom.getAttribute("position").array));
+    for (let i = 0; i < ix.count; i++) g.ix.push(offset + ix.getX(i));
+    geom.dispose();
+  };
+  const scaleAt = (s: number) => {
+    let i = 1;
+    while (i < stations.length - 1 && stations[i].s < s) i++;
+    const a = stations[i - 1],
+      b = stations[i],
+      t = Math.max(0, Math.min(1, (s - a.s) / (b.s - a.s)));
+    return a.scale + (b.scale - a.scale) * t;
+  };
+  // Separate analytic normals per quarter-round: smooth within a pane ribbon,
+  // but never across the physical tier reset, end cap or upper terrace crease.
+  const curveNormal = (i: number, k: number, tier: number): V => {
+    const st = stations[i],
+      theta = (((k - (1 + tier * 8)) / 8) * Math.PI) / 2,
+      [out, y] = profile[k];
+    const lo = Math.max(0, st.s - 0.01),
+      hi = Math.min(concourse.length, st.s + 0.01);
+    const along = canadaPlaceConcoursePoint(hi, out * scaleAt(hi), y).sub(
+      canadaPlaceConcoursePoint(lo, out * scaleAt(lo), y),
+    );
+    const tangent = new T.Vector3(
+      st.nx * (((-2.3 * 14.4) / 14.8) * Math.sin(theta) * st.scale),
+      2.3 * Math.cos(theta),
+      st.nz * (((-2.3 * 14.4) / 14.8) * Math.sin(theta) * st.scale),
+    );
+    return tangent.cross(along).normalize().toArray() as V;
+  };
+  for (let i = 1; i < stations.length; i++) {
+    const middle = (stations[i - 1].s + stations[i].s) / 2;
+    for (let k = 1; k < profile.length; k++) {
+      const [oa, ya] = profile[k - 1],
+        [ob, yb] = profile[k];
+      const roof = k === profile.length - 2,
+        back = k === profile.length - 1;
+      const upperFascia =
+        k > 17 &&
+        (middle < concourse.upperGlazing[0] ||
+          middle > concourse.upperGlazing[1]);
+      const m = roof || back || upperFascia ? wall : glass;
+      const nx = (stations[i].nx + stations[i - 1].nx) / 2,
+        nz = (stations[i].nz + stations[i - 1].nz) / 2;
+      const outward: V = back
+        ? [-nx, 0, -nz]
+        : [nx * (yb - ya), oa - ob, nz * (yb - ya)];
+      const lowerA = at(i - 1, k - 1),
+        lowerB = at(i, k - 1);
+      // The sill owns the lowest 170 mm; no coplanar glazing behind it.
+      if (k === 1) {
+        lowerA[1] = 7.97;
+        lowerB[1] = 7.97;
       }
-    for (const h of holes) {
-      const { l, r, b, t, depth } = h;
-      front(glass, l, r, b, t, depth);
-      // Reveal normals point INTO the aperture, observable from the trail.
-      quad(
-        wall,
-        [at(l, b), at(l, t), at(l, t, depth), at(l, b, depth)],
-        [f.dx, 0, f.dz],
-      );
-      quad(
-        wall,
-        [at(r, b), at(r, t), at(r, t, depth), at(r, b, depth)],
-        [-f.dx, 0, -f.dz],
-      );
-      quad(
-        wall,
-        [at(l, t), at(r, t), at(r, t, depth), at(l, t, depth)],
-        [0, -1, 0],
-      );
-      quad(
-        wall,
-        [at(l, b), at(r, b), at(r, b, depth), at(l, b, depth)],
-        [0, 1, 0],
-      );
-      // Slender perimeter and secondary lights at approximately1.35m centres.
-      const lights = Math.max(1, Math.round((r - l) / 1.35));
-      for (let i = 0; i <= lights; i++) {
-        const u = l + ((r - l) * i) / lights;
-        box(
-          frame,
-          Math.max(l, u - 0.035),
-          Math.min(r, u + 0.035),
-          b,
-          t,
-          depth - 0.075,
-          depth - 0.005,
-        );
-      }
-      for (const y of [b, t])
-        box(
-          frame,
-          l,
-          r,
-          Math.max(b, y - 0.035),
-          Math.min(t, y + 0.035),
-          depth - 0.075,
-          depth - 0.005,
-        );
-      box(
-        frame,
-        l,
-        r,
-        (b + t) / 2 - 0.025,
-        (b + t) / 2 + 0.025,
-        depth - 0.06,
-        depth - 0.005,
-      );
-      box(wall, l - 0.06, r + 0.06, b - 0.09, b, -0.075, 0.05);
+      const tier = Math.floor((k - 2) / 8);
+      const smooth =
+        m === glass && k >= 2 && k <= 25
+          ? [
+              curveNormal(i - 1, k - 1, tier),
+              curveNormal(i, k - 1, tier),
+              curveNormal(i, k, tier),
+              curveNormal(i - 1, k, tier),
+            ]
+          : undefined;
+      quad(m, [lowerA, lowerB, at(i, k), at(i - 1, k)], outward, smooth);
+      // Horizontal glazing rails follow the curved profile and station offsets.
+      if (!back && (k <= 2 || (k - 1) % 4 === 0 || roof))
+        beam(at(i - 1, k - 1), at(i, k - 1), roof ? 0.11 : 0.045);
     }
-    // A restrained continuous head and slab-edge spandrel, replacing .6m bars.
-    box(wall, 0, f.length, 14.25, 14.45, -0.07, 0.06);
-    box(wall, 0, f.length, 17.38, 17.55, -0.08, 0.05);
+    // Grounded mineral sill at the outer doors, rather than a floating glass edge.
+    const a = at(i - 1, 0),
+      b = at(i, 0),
+      c = [...b] as V,
+      d = [...a] as V;
+    c[1] += 0.17;
+    d[1] += 0.17;
+    quad(wall, [a, b, c, d], [stations[i].nx, 0, stations[i].nz]);
+    const headA = canadaPlaceConcoursePoint(
+      stations[i - 1].s,
+      14.4 * stations[i - 1].scale,
+      10.03,
+    ).toArray() as V;
+    const headB = canadaPlaceConcoursePoint(
+      stations[i].s,
+      14.4 * stations[i].scale,
+      10.03,
+    ).toArray() as V;
+    beam(headA, headB, 0.07);
+  }
+  for (let i = 0; i < stations.length; i++) {
+    for (let k = 1; k < profile.length - 1; k++)
+      beam(
+        at(i, k - 1),
+        at(i, k),
+        i === 0 || i === stations.length - 1 ? 0.1 : 0.055,
+      );
+  }
+  // One clearly closed paired-door reading in the central concourse; no
+  // guessed operating entrance, signage or interior access is introduced.
+  const doorStation = concourse.length / 2;
+  for (const delta of [-0.14, 0.14]) {
+    const a = canadaPlaceConcoursePoint(doorStation + delta, 14.45, 8.78);
+    const b = canadaPlaceConcoursePoint(doorStation + delta, 14.45, 9.23);
+    beam(a.toArray() as V, b.toArray() as V, 0.032);
+  }
+  // Closed glazed ends expose the tiered section, with tapered plan depth and
+  // opaque upper fascia instead of a fifteen-metre blank end wall.
+  const contour = profile.map(([o, y]) => new T.Vector2(o, y));
+  const triangles = T.ShapeUtils.triangulateShape(contour, []);
+  for (const i of [0, stations.length - 1]) {
+    const near = stations[i === 0 ? 1 : i - 1],
+      here = stations[i];
+    const direction: V = [here.x - near.x, 0, here.z - near.z];
+    for (const tri of triangles) {
+      const v = tri.map((k) => at(i, k));
+      quad(glass, [v[0], v[1], v[2], v[2]], direction);
+    }
   }
   const meshes: T.Mesh[] = [];
   for (const [m, q] of groups) {
@@ -370,6 +365,8 @@ export function addCanadaPlaceWestFacade(
     g.setAttribute("position", new T.Float32BufferAttribute(q.p, 3));
     g.setIndex(q.ix);
     g.computeVertexNormals();
+    const normal = g.getAttribute("normal");
+    for (const [i, n] of q.n) normal.setXYZ(i, ...n);
     landmarkSurfaceUV(g, [4, 4]);
     const mesh = new T.Mesh(g, m);
     mesh.name = m.name;

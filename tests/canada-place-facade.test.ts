@@ -1,3 +1,5 @@
+import { pointInPoly, segmentPoint } from "../src/world/data";
+import { CANADA_PLACE_PIER } from "../src/world/canada-place-deck";
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -14,8 +16,10 @@ import {
 import {
   CANADA_PLACE_FACADE_SOURCE,
   CANADA_PLACE_WEST_FACES,
-  CANADA_PLACE_FACADE_OPENINGS,
-  canadaPlaceFacadePoint,
+  CANADA_PLACE_CONCOURSE_PROFILE,
+  CANADA_PLACE_CONCOURSE_STATIONS,
+  CANADA_PLACE_CONCOURSE_FOOTPRINTS,
+  canadaPlaceConcoursePoint,
   canadaPlaceFacadeCompatible,
   replaceCanadaPlaceWestFaces,
   addCanadaPlaceWestFacade,
@@ -124,14 +128,17 @@ function ray(root: T.Object3D, from: T.Vector3, to: T.Vector3) {
     from.distanceTo(to) + 0.015,
   ).intersectObject(root, true)[0];
 }
-test("source-pinned replacement is limited to reviewed west podium surfaces and three small batches", async () => {
+test("source-pinned replacement is limited to reviewed west podium surfaces and three small batches", async (t) => {
   const { removed, additions, original } = await fixture;
   assert.equal(removed.concrete, 10);
   assert.equal(removed.glass, 100);
   assert.equal(removed.trim, 480);
   assert.equal(additions.length, 3);
+  t.diagnostic(
+    `${additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0)} facade triangles`,
+  );
   assert.ok(
-    additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0) < 7000,
+    additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0) < 35000,
   );
   for (const m of additions) {
     assert.equal((m.material as T.Material).side, T.FrontSide);
@@ -149,50 +156,62 @@ test("source-pinned replacement is limited to reviewed west podium surfaces and 
   assert.equal(canadaPlaceFacadeCompatible(original), false);
   mesh.geometry.setIndex(originalIndex);
 });
-test("actual GLB west openings have recessed first-hit panes instead of opaque front walls", async () => {
-  const { root } = await fixture;
-  for (const h of CANADA_PLACE_FACADE_OPENINGS) {
-    const lights = Math.max(1, Math.round((h.r - h.l) / 1.35)),
-      u = h.l + ((h.r - h.l) / lights) * 0.4,
-      y = h.b + (h.t - h.b) * 0.27;
-    const from = canadaPlaceFacadePoint(h.face, u, y, -1.5),
-      to = canadaPlaceFacadePoint(h.face, u, y, h.depth);
-    const hit = ray(root, from, to);
-    assert.ok(hit, `pane missing face${h.face}`);
+test("three curved glass tiers follow the section with real changes in surface normal", async () => {
+  const { root } = await fixture,
+    stations = CANADA_PLACE_CONCOURSE_STATIONS;
+  const i = Math.floor(stations.length / 2),
+    s = (stations[i].s + stations[i + 1].s) / 2;
+  const profile = CANADA_PLACE_CONCOURSE_PROFILE;
+  for (const k of [3, 7, 11, 15, 19, 23]) {
+    const a = profile[k - 1],
+      b = profile[k],
+      p = canadaPlaceConcoursePoint(s, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+    const normal = new T.Vector3(
+      stations[i].nx * (b[1] - a[1]),
+      a[0] - b[0],
+      stations[i].nz * (b[1] - a[1]),
+    ).normalize();
+    const from = p.clone().addScaledVector(normal, 3),
+      hit = ray(root, from, p);
+    assert.ok(hit, `missing curve ${k}`);
     assert.equal(hit.object.name, "canada-west-glass");
-    assert.ok(Math.abs(hit.distance - (1.5 + h.depth)) < 0.004);
+    assert.ok(hit.point.distanceTo(p) < 0.015);
+    assert.ok(hit.face!.normal.y > 0.1 && hit.face!.normal.y < 0.99);
   }
 });
-test("front-sided jamb, head and sill reveals produce real oblique parallax", async () => {
-  const { root } = await fixture;
-  for (const f of CANADA_PLACE_WEST_FACES) {
-    const h = CANADA_PLACE_FACADE_OPENINGS.find((h) => h.face === f.index)!;
-    const y = (h.b + h.t) / 2 - 0.4;
-    const casts = [
-      [
-        canadaPlaceFacadePoint(f.index, h.l + 0.3, y, -0.8),
-        canadaPlaceFacadePoint(f.index, h.l, y, 0.17),
-      ],
-      [
-        canadaPlaceFacadePoint(f.index, h.r - 0.3, y, -0.8),
-        canadaPlaceFacadePoint(f.index, h.r, y, 0.17),
-      ],
-      [
-        canadaPlaceFacadePoint(f.index, h.l + 0.5, h.t - 0.3, -0.8),
-        canadaPlaceFacadePoint(f.index, h.l + 0.5, h.t, 0.17),
-      ],
-      [
-        canadaPlaceFacadePoint(f.index, h.l + 0.5, h.b + 0.3, -0.8),
-        canadaPlaceFacadePoint(f.index, h.l + 0.5, h.b, 0.17),
-      ],
-    ];
-    for (const [from, to] of casts) {
-      const hit = ray(root, from, to);
-      assert.ok(hit, `reveal missing face${f.index}`);
-      assert.equal(hit.object.name, "canada-west-wall");
-      assert.ok(hit.distance < from.distanceTo(to) + 0.01);
+test("coherent closed envelope fits source pier and preserves the complete public route", async () => {
+  const { additions } = await fixture,
+    footprint = CANADA_PLACE_CONCOURSE_FOOTPRINTS[0];
+  for (let i = 0; i < footprint.length; i += 2)
+    assert.ok(
+      pointInPoly(footprint[i], footprint[i + 1], CANADA_PLACE_PIER),
+      "envelope must have source deck support",
+    );
+  for (let i = 1; i < CANADA_PLACE_DECK_ROUTE.length; i++) {
+    const a = CANADA_PLACE_DECK_ROUTE[i - 1],
+      b = CANADA_PLACE_DECK_ROUTE[i],
+      n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 0.25);
+    for (let j = 0; j <= n; j++) {
+      const x = a[0] + ((b[0] - a[0]) * j) / n,
+        z = a[1] + ((b[1] - a[1]) * j) / n;
+      assert.equal(pointInPoly(x, z, footprint), false);
+      let d = Infinity;
+      for (let k = 0; k < footprint.length; k += 2)
+        d = Math.min(
+          d,
+          segmentPoint(
+            x,
+            z,
+            footprint[k],
+            footprint[k + 1],
+            footprint[(k + 2) % footprint.length],
+            footprint[(k + 3) % footprint.length],
+          ).d,
+        );
+      assert.ok(d > 0.95, `route clearance ${d}`);
     }
   }
+  assert.equal(additions.length, 3);
 });
 
 test("simultaneous paving extraction preserves the exact promenade walking plane", async () => {
@@ -237,25 +256,55 @@ test("facade preflight rejects the unrelated gallery asset", async () => {
     }
   assert.equal(canadaPlaceFacadeCompatible(root), false);
 });
-test("upper glazing retains the source's shallow band instead of repeating the lower storey", () => {
-  for (const f of CANADA_PLACE_WEST_FACES) {
-    const openings = CANADA_PLACE_FACADE_OPENINGS.filter(
-      (h) => h.face === f.index,
-    );
-    const lower = openings.filter((h) => h.b < 14),
-      upper = openings.filter((h) => h.b >= 14);
-    assert.equal(lower.length, f.bays);
-    assert.equal(upper.length, f.bays);
-    for (const h of lower) {
-      assert.equal(h.b, 8.65);
-      assert.equal(h.t, 12.15);
-      assert.equal(h.depth, 0.34);
-    }
-    for (const h of upper) {
-      assert.equal(h.b, 15);
-      assert.equal(h.t, 16.7);
-      assert.ok(h.t - h.b < 1.71);
-      assert.equal(h.depth, 0.34);
-    }
-  }
+test("upper glazing is one continuous central region with reduced closed end profiles", () => {
+  const stations = CANADA_PLACE_CONCOURSE_STATIONS;
+  assert.equal(stations[0].scale, 0.65);
+  assert.ok(Math.abs(stations.at(-1)!.scale - 0.65) < 1e-8);
+  assert.ok(stations.some((s) => s.scale === 1));
+  for (let i = 1; i < stations.length; i++)
+    assert.ok(stations[i].s > stations[i - 1].s);
+});
+
+test("mineral sill replaces the bottom glass strip without coplanar overlap", async () => {
+  const { additions } = await fixture,
+    stations = CANADA_PLACE_CONCOURSE_STATIONS,
+    i = Math.floor(stations.length / 2),
+    s = (stations[i].s + stations[i + 1].s) / 2;
+  const target = canadaPlaceConcoursePoint(s, 14.4, 7.88),
+    from = target.clone().add(new T.Vector3(stations[i].nx, 0, stations[i].nz));
+  const glass = additions.find((m) => m.name === "canada-west-glass")!,
+    wall = additions.find((m) => m.name === "canada-west-wall")!;
+  assert.equal(
+    ray(glass, from, target),
+    undefined,
+    "no glass remains behind sill",
+  );
+  assert.ok(ray(wall, from, target), "mineral sill closes front at deck");
+});
+test("glass normals join smoothly within each curve and keep tier-reset creases", async () => {
+  const { additions } = await fixture,
+    mesh = additions.find((m) => m.name === "canada-west-glass")!,
+    p = mesh.geometry.getAttribute("position"),
+    n = mesh.geometry.getAttribute("normal");
+  const stations = CANADA_PLACE_CONCOURSE_STATIONS,
+    i = Math.floor(stations.length / 2);
+  const normalsAt = (k: number) => {
+    const [out, y] = CANADA_PLACE_CONCOURSE_PROFILE[k],
+      target = canadaPlaceConcoursePoint(
+        stations[i].s,
+        out * stations[i].scale,
+        y,
+      ),
+      normals: T.Vector3[] = [];
+    for (let j = 0; j < p.count; j++)
+      if (new T.Vector3().fromBufferAttribute(p, j).distanceTo(target) < 0.0001)
+        normals.push(new T.Vector3().fromBufferAttribute(n, j));
+    return normals;
+  };
+  const smooth = normalsAt(5);
+  assert.ok(smooth.length >= 4);
+  for (const normal of smooth) assert.ok(normal.distanceTo(smooth[0]) < 1e-6);
+  const crease = normalsAt(9);
+  assert.ok(crease.some((n) => n.y > 0.99));
+  assert.ok(crease.some((n) => Math.abs(n.y) < 0.01));
 });

@@ -1,5 +1,7 @@
 import { geo, pointInPoly, segmentPoint } from "./data";
 import source from "./canada-place-deck-data.json";
+import canopy from "./canada-place-canopy-data.json";
+import concourse from "./canada-place-concourse-data.json";
 
 /** Finished source-model surface, not a surveyed geodetic elevation. */
 export const CANADA_PLACE_DECK_Y = 7.88;
@@ -15,6 +17,7 @@ const worldRing = (ring: number[][]) =>
   ring.flatMap(([x, z]) => canadaPlaceWorld(x, z));
 export const CANADA_PLACE_PIER = worldRing(source.pier);
 export const CANADA_PLACE_HOTEL = worldRing(source.hotel);
+export const CANADA_PLACE_ENTRANCE_CANOPY = worldRing(canopy.footprint);
 export const CANADA_PLACE_SAILS = source.sails.map(worldRing);
 export const CANADA_PLACE_TERMINAL = worldRing(source.terminal);
 // Same 48-sided mapped approximation as the source near GLB, plus clearances below.
@@ -26,6 +29,8 @@ export const CANADA_PLACE_HALL = worldRing(
 );
 export const CANADA_PLACE_SOLID_MASSES = [
   CANADA_PLACE_HOTEL,
+  CANADA_PLACE_ENTRANCE_CANOPY,
+  concourse.worldFootprint,
   ...CANADA_PLACE_SAILS,
   CANADA_PLACE_TERMINAL,
   CANADA_PLACE_HALL,

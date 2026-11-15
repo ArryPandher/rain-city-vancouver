@@ -1143,5 +1143,26 @@
     "bytes": 814532,
     "sha256": "30a43f0451b7514a53cd1d69e998b74d46a40eb03ff80b6e183386b74acba9ea",
     "changes": "Woody geometry reduced further to 312 triangles for tree groups beyond 600 m; original root anchor restored after simplification, with shared materials and stem calibration."
+  },
+  {
+    "file": "textures/canada-place-paving/color.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/granite_tile/granite_tile_diff_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "One joint-free tile face cropped from original 1K maps and mirrored with normal R/G signs corrected. Original granular albedo modulation retained within ±20% and matched to previous floor mean; roughness recalibrated to 0.75–0.85. 512px WebP maps. Generic mineral reference, not a Vancouver paving scan."
+  },
+  {
+    "file": "textures/canada-place-paving/normal.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/granite_tile/granite_tile_nor_gl_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "One joint-free tile face cropped from original 1K maps and mirrored with normal R/G signs corrected. Original granular albedo modulation retained within ±20% and matched to previous floor mean; roughness recalibrated to 0.75–0.85. 512px WebP maps. Generic mineral reference, not a Vancouver paving scan."
+  },
+  {
+    "file": "textures/canada-place-paving/roughness.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/granite_tile/granite_tile_rough_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Charlotte Baglioni / Poly Haven",
+    "changes": "One joint-free tile face cropped from original 1K maps and mirrored with normal R/G signs corrected. Original granular albedo modulation retained within ±20% and matched to previous floor mean; roughness recalibrated to 0.75–0.85. 512px WebP maps. Generic mineral reference, not a Vancouver paving scan."
   }
 ]

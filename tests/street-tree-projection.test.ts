@@ -5,6 +5,7 @@ import {
   nearStreetTree,
   projectedCrownHeight,
   selectStreetTrees,
+  individualStreetLeaves,
 } from "../src/world/street-tree-lod";
 import type { TreeInstance } from "../src/world/detailed-trees";
 const tree = (height: number) =>
@@ -14,6 +15,55 @@ test("same distance preserves large-screen crown detail and uses source cards fo
   assert.equal(nearStreetTree(tree(10.7), 20, false, projection), false);
   assert.equal(nearStreetTree(tree(20), 20, false, projection), true);
   assert.ok(projectedCrownHeight(tree(10.7), 20, projection) < 0.45);
+});
+test("small distant crowns use the retained depth canopy while nearby or enlarged crowns keep individual leaves", () => {
+  assert.equal(individualStreetLeaves(tree(8), 80, false, projection), false);
+  assert.equal(individualStreetLeaves(tree(8), 29, false, projection), true);
+  assert.equal(individualStreetLeaves(tree(24), 80, false, projection), true);
+  const t = { ...tree(8), x: 65 };
+  const wide = selectStreetTrees(
+    [t],
+    0,
+    0,
+    4,
+    24,
+    new Set(),
+    undefined,
+    projection,
+  );
+  const zoom = selectStreetTrees(
+    [t],
+    0,
+    0,
+    4,
+    24,
+    new Set(),
+    undefined,
+    new T.PerspectiveCamera(25).projectionMatrix.elements[5],
+  );
+  assert.equal(wide.length, 0);
+  assert.equal(zoom.length, 1);
+});
+test("detail-to-depth-canopy transition has a stable overlap band", () => {
+  const t = tree(8),
+    distance = (t.height * 0.7 * projection) / (2 * 0.11);
+  assert.equal(individualStreetLeaves(t, distance, false, projection), false);
+  assert.equal(individualStreetLeaves(t, distance, true, projection), true);
+  const at = { ...t, x: distance };
+  assert.equal(
+    selectStreetTrees(
+      [at],
+      0,
+      0,
+      4,
+      24,
+      new Set(),
+      undefined,
+      projection,
+      new Set([at]),
+    ).length,
+    1,
+  );
 });
 test("close leaf detail is retained and size/distance hysteresis suppresses walking toggles", () => {
   assert.equal(nearStreetTree(tree(3), 9.9, false, projection), true);

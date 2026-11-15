@@ -1,0 +1,19 @@
+{
+  "source": "https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/canada-place/geometry.js",
+  "license": "CC-BY-4.0",
+  "origin": [-123.11112, 49.28863],
+  "a": [-138.04960662441343, 28.531185489873696],
+  "b": [-183.74182639442907, 53.088265158662885],
+  "projection": 3,
+  "base": 7.8,
+  "sill": 8.65,
+  "spring": 10.6,
+  "crown": 14.8,
+  "footprint": [
+    [-138.04960662441343, 28.531185489873696],
+    [-183.74182639442907, 53.088265158662885],
+    [-185.16204407605167, 50.445731954177745],
+    [-139.46982430603603, 25.888652285388556]
+  ],
+  "note": "Authored approximate entrance conservatory on HOTEL edge15\u201316. Not full west-hall stepped concourse."
+}
