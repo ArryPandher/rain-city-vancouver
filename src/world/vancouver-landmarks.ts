@@ -34,6 +34,11 @@ import {
   canadaPlaceCanopyPoint,
   CANADA_PLACE_CANOPY_LENGTH,
 } from "./canada-place-canopy";
+import { createCanadaPlaceHotelJunction } from "./canada-place-hotel";
+import {
+  canadaPlaceHotelCompatible,
+  replaceCanadaPlaceHotelFaces,
+} from "./canada-place-hotel-source";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import { addCanadaPlaceGroundStays } from "./canada-place-ground-stays";
 import { canadaPlacePlinthMaterial } from "./canada-place-plinth-material";
@@ -126,6 +131,8 @@ export async function loadVancouverLandmarks(
       asset.id === "canada-place" && canadaPlaceFacadeCompatible(gltf.scene);
     const refineCanadaCanopy =
       asset.id === "canada-place" && canadaPlaceCanopyCompatible(gltf.scene);
+    const refineCanadaHotel =
+      refineCanadaCanopy && canadaPlaceHotelCompatible(gltf.scene);
     const cache = new Map<T.Material, T.MeshStandardMaterial>();
     const galleryMaterials = new Map<string, T.MeshStandardMaterial>();
     const canadaMaterials = new Map<string, T.MeshStandardMaterial>();
@@ -140,6 +147,8 @@ export async function loadVancouverLandmarks(
       if (asset.id === "vancouver-art-gallery")
         repairGalleryRearEntry(geometry, original.name);
       if (refineGallery) replaceGalleryWingFaces(geometry, original.name);
+      if (refineCanadaHotel)
+        replaceCanadaPlaceHotelFaces(geometry, original.name);
       if (refineCanadaCanopy)
         replaceCanadaPlaceCanopyFaces(geometry, original.name);
       if (refineCanada) replaceCanadaPlaceWestFaces(geometry, original.name);
@@ -252,11 +261,18 @@ export async function loadVancouverLandmarks(
     if (refineCanadaCanopy) {
       addCanadaPlacePromenadeFixtures(group, CANADA_PLACE_PROMENADE_FIXTURES);
       const canopy = addCanadaPlaceCanopy(group, canadaMaterials);
+      if (refineCanadaHotel) {
+        const hotel = createCanadaPlaceHotelJunction(canadaMaterials);
+        group.add(hotel);
+        hotel.traverse((object) => {
+          if (object instanceof T.Mesh) canopy.push(object);
+        });
+      }
       localReflection(
         "Canada Place entrance conservatory",
         canadaPlaceCanopyPoint(CANADA_PLACE_CANOPY_LENGTH / 2, 10.8, 6),
         canopy,
-        ["canada-canopy-glass"],
+        ["canada-canopy-glass", "canada-hotel-glass"],
       );
     }
     if (refineGallery) addGalleryFacade(group, galleryMaterials);
