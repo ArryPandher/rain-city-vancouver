@@ -1,3 +1,4 @@
+import { batchFallbackTrees } from "./fallback-tree-batch";
 import { ShadowCasterVolume } from "../rendering/shadow-caster-volume";
 import { DAYLIGHT_SKY_ROTATION, sunOffset } from "./daylight";
 import { batchStaticChunks } from "./static-chunk-batch";
@@ -116,6 +117,7 @@ export class World {
     public scene: T.Scene,
     public data: CityData,
     private readonly facadeMultiDraw = false,
+    private readonly fallbackTreeExperiment = false,
   ) {
     this.collision = new CollisionWorld(data);
     scene.add(this.root);
@@ -219,6 +221,8 @@ export class World {
         this.treeSamples,
         await loadBroadleafVolumeMaterials(),
       );
+      if (this.fallbackTreeExperiment)
+        batchFallbackTrees(this.root, this.treeSamples, this.facadeMultiDraw);
     } catch (error) {
       console.warn(
         "Layered broadleaf canopy unavailable; retaining mapped crowns",

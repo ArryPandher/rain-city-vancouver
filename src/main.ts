@@ -2,6 +2,8 @@ import { FrameSample, type FrameSampleContext } from "./rendering/frame-sample";
 import * as T from "three";
 import { StaticShadowCache } from "./rendering/static-shadow-cache";
 import { profileRender } from "./rendering/render-profile";
+import { getFallbackTreeBatchController } from "./world/fallback-tree-batch";
+import { CANADA_PLACE_CANOPY_OPTICS } from "./world/canada-place-canopy-glass";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
@@ -285,6 +287,8 @@ class Game {
       this.scene,
       data,
       this.renderer.extensions.has("WEBGL_multi_draw"),
+      new URLSearchParams(location.search).has("debug") &&
+        new URLSearchParams(location.search).has("tree-batch-experiment"),
     );
     await this.world.build((s, n) => ui.loading(s, n * 0.82));
     this.reflections = new SceneReflections(
@@ -411,6 +415,8 @@ class Game {
             },
             player: this.player.toArray(),
             pedestrianActivity: this.actors.canadaPedestrianSummary(),
+            fallbackTreeBatching:
+              getFallbackTreeBatchController(this.world.root)?.enabled ?? false,
             lighting: {
               weather: this.world.weather,
               sunDirection: this.world.sun.position
@@ -486,11 +492,60 @@ class Game {
           probeButton.disabled = false;
         }
       });
+      const comparisons = document.createElement("div");
+      comparisons.style.cssText =
+        "display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center";
+      const treeController = getFallbackTreeBatchController(this.world.root);
+      if (treeController) {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = treeController.enabled;
+        checkbox.addEventListener("change", () => {
+          this.finishFrameSample("tree rendering backend changed");
+          treeController.setEnabled(checkbox.checked);
+          this.renderer.shadowMap.needsUpdate = true;
+          this.reflections?.invalidate();
+        });
+        label.append(checkbox, " Batch fallback trees");
+        comparisons.append(label);
+      }
+      for (const [axis, channel] of ["red", "green", "blue"].entries()) {
+        const label = document.createElement("label");
+        label.textContent = `Conservatory ${channel} throughput `;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.max = "1";
+        input.step = "0.01";
+        input.value = String(CANADA_PLACE_CANOPY_OPTICS.linearThroughput[axis]);
+        input.style.width = "52px";
+        input.addEventListener("change", () => {
+          if (!input.validity.valid || !Number.isFinite(input.valueAsNumber))
+            return;
+          this.finishFrameSample("glass calibration changed");
+          this.world.root.traverse((object) => {
+            if (!(object instanceof T.Mesh)) return;
+            for (const material of [object.material].flat())
+              if (
+                material instanceof T.ShaderMaterial &&
+                material.name === "canada-canopy-glass-attenuation"
+              )
+                material.uniforms.sheetThroughput.value.setComponent(
+                  axis,
+                  input.valueAsNumber,
+                );
+          });
+        });
+        label.append(input);
+        comparisons.append(label);
+      }
       panel.append(
         title,
         button,
         sampleButton,
         probeButton,
+        comparisons,
         report,
         sampleReport,
         probeReport,

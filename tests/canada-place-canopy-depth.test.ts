@@ -22,6 +22,30 @@ function hits(root: T.Object3D, from: T.Vector3, to: T.Vector3) {
   ).intersectObject(root, true);
 }
 
+test("southern lower return has one opaque skin above deck, with foundation below", () => {
+  const { meshes } = fixture();
+  const opaque = meshes.filter((mesh) => !Array.isArray(mesh.material));
+  for (const [height, material] of [
+    [8.31, "canada-canopy-lining"],
+    [7.73, "canada-canopy-stone"],
+  ] as const) {
+    const from = at(L + 0.4, height, 1.27);
+    const to = at(L - 0.2, height, 1.27);
+    const intersections = new T.Raycaster(
+      from,
+      to.clone().sub(from).normalize(),
+      0,
+      from.distanceTo(to),
+    ).intersectObjects(opaque);
+    assert.equal(
+      intersections.length,
+      1,
+      "no coplanar old-plinth and new-return overlap",
+    );
+    assert.equal(intersections[0].object.name, material);
+  }
+});
+
 test("conservatory has closed backing across its full length behind transparent panes", () => {
   const { root } = fixture();
   // Independent interior stations avoid frame stations and sample both ends,
@@ -76,4 +100,49 @@ test("rendered frame includes separated interior structure without a second opaq
       "paired optics do not occlude their backing",
     );
   }
+});
+
+test("secondary upright planes have physical multi-depth connections, with empty glazing space between", () => {
+  const { meshes } = fixture(),
+    frame = meshes.find((m) => m.name === "canada-canopy-frame")!;
+  const count = Math.ceil(L / 1.35);
+  // Secondary stations sampled at opposite ends and middle. These rays hit
+  // actual opaque framing well behind the outer glass, not unused vertices.
+  for (const j of [2, 18, 34]) {
+    const u = (L * j) / count;
+    for (const out of [0.28, 1.25]) {
+      const h = hits(frame, at(u - 0.2, 11.1, out), at(u + 0.2, 11.1, out));
+      assert.ok(h.length, `upright absent at station${j},depth${out}`);
+    }
+    for (const y of [10.6, 12.4, 14.2]) {
+      const h = hits(frame, at(u, y + 0.2, 0.75), at(u, y - 0.2, 0.75));
+      assert.ok(h.length, "crossmember joins the two upright planes");
+    }
+    const foot = hits(frame, at(u, 8.4, 1.25), at(u, 8.8, 1.25));
+    assert.ok(
+      foot.length && Math.abs(foot[0].point.y - 8.65) < 0.002,
+      "upright bears on retained inboard floor",
+    );
+    const open = hits(frame, at(u - 0.2, 11.5, 1.8), at(u + 0.2, 11.5, 1.8));
+    assert.equal(
+      open.length,
+      0,
+      "no fabricated opaque infill or extra outside aisle column",
+    );
+  }
+  // At mid-spacing, rails continue between stations at distinct elevations.
+  for (const y of [10.6, 12.4, 14.2]) {
+    const h = hits(
+      frame,
+      at((L * 17) / count, y + 0.2, 1.25),
+      at((L * 17) / count, y - 0.2, 1.25),
+    );
+    assert.ok(
+      h.length,
+      "secondary plane tied longitudinally into primary frames",
+    );
+  }
+  assert.ok(
+    meshes.reduce((n, m) => n + m.geometry.index!.count / 3, 0) < 14000,
+  );
 });

@@ -141,8 +141,20 @@ export function profileRender(
         group[field] += row[field];
       }
     }
+    const fallbackTreeMemory = new Set<object>();
+    const fallbackTreeBatches: { name: string; pass: object }[] = [];
+    scene.traverse((object) => {
+      if (!object.userData.fallbackTreeMemory) return;
+      fallbackTreeMemory.add(object.userData.fallbackTreeMemory);
+      fallbackTreeBatches.push({
+        name: object.name,
+        pass: { ...object.userData.fallbackTreePass },
+      });
+    });
     return {
       staticBatchMemory: staticBatchMemoryProfile(scene),
+      fallbackTreeMemory: [...fallbackTreeMemory],
+      fallbackTreeBatches,
       capabilities: {
         multiDraw: renderer.extensions.has("WEBGL_multi_draw"),
       },

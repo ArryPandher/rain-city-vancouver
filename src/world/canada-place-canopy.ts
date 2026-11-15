@@ -149,15 +149,16 @@ export function addCanadaPlaceCanopy(
   const glazingPair = createCanadaPlaceCanopyGlazingPair();
   const lining = new T.MeshStandardMaterial({
     name: "canada-canopy-lining",
-    color: 0x7c877e,
+    color: 0x666860,
     roughness: 0.86,
     metalness: 0,
     side: T.FrontSide,
   });
   const frame = new T.MeshStandardMaterial({
-    color: 0x93aca1,
-    roughness: 0.36,
-    metalness: 0.28,
+    // Pale painted framing, with the green cast supplied by the glazing.
+    color: 0xd1d2c7,
+    roughness: 0.42,
+    metalness: 0,
   });
   stone.name = "canada-canopy-stone";
   glass.name = "canada-canopy-glass";
@@ -363,6 +364,33 @@ export function addCanadaPlaceCanopy(
     );
     beam(a, b, 0.09);
   }
+  // Rabich's southern end view resolves overlapping upright/crossmember
+  // planes, not a staircase. Narrow secondary planes follow alternate existing
+  // outer ribs; primary140mm posts remain distinct. All depths are estimates.
+  const interiorStations = Array.from(
+    { length: count + 1 },
+    (_, j) => j,
+  ).filter((j) => j % 2 === 0 || j === count);
+  for (const j of interiorStations) {
+    const u = Math.max(0.075, Math.min(length - 0.075, (length * j) / count));
+    const secondary = j % 4 !== 0 && j !== count;
+    const width = secondary ? 0.09 : 0.11;
+    if (secondary)
+      beam(at(u, data.sill, 0.28), at(u, data.crown - 0.28, 0.28), 0.09);
+    // Outer upright is below the actual ellipse (14.42m atout1.25).
+    // It joins three crossmembers; it does not terminate against free glass.
+    beam(at(u, data.sill, 1.25), at(u, 14.2, 1.25), width);
+    for (const y of [10.6, 12.4, 14.2])
+      beam(at(u, y, 0.28), at(u, y, 1.25), width);
+  }
+  // Continuous rails tie every secondary plane back to the primary structure.
+  for (const y of [10.6, 12.4, 14.2])
+    beam(at(0.075, y, 1.25), at(length - 0.075, y, 1.25), 0.08);
+  beam(
+    at(0.075, data.crown - 0.28, 0.28),
+    at(length - 0.075, data.crown - 0.28, 0.28),
+    0.09,
+  );
   // Exterior-visible closed backing, on the original wall line, with no
   // ceiling plane across the convex glazing. Floor is the existing sill slab.
   quad(
@@ -399,13 +427,16 @@ export function addCanadaPlaceCanopy(
   // Both end walls are real glazed polygons, closed to the original HOTEL wall.
   for (const [endIndex, u] of [0, length].entries()) {
     const endNormal = along.clone().multiplyScalar(u === 0 ? -1 : 1);
+    // The southern recess return already closes everything above deck level.
+    // Retaining the former high plinth here creates two coplanar opaque faces.
+    const endPlinthTop = u === length ? entrance.base : data.sill;
     quad(
       stone,
       [
         at(u, 7.65, 0),
         at(u, 7.65, u === length ? entrance.back : 3),
-        at(u, data.sill, u === length ? entrance.back : 3),
-        at(u, data.sill, 0),
+        at(u, endPlinthTop, u === length ? entrance.back : 3),
+        at(u, endPlinthTop, 0),
       ],
       endNormal,
     );
@@ -467,16 +498,6 @@ export function addCanadaPlaceCanopy(
         at(l, roofY(4), 4),
       ],
       roofNormal,
-    );
-    quad(
-      entranceRoofGlass,
-      [
-        at(l, roofY(2.6), 2.6),
-        at(r, roofY(2.6), 2.6),
-        at(r, roofY(4), 4),
-        at(l, roofY(4), 4),
-      ],
-      roofNormal.clone().negate(),
     );
     // Recessed lower panes share the accepted optical pair; no old pane behind.
     quad(

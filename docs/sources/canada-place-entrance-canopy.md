@@ -176,3 +176,28 @@ the player remained stationary. This is a specific local view with dynamic
 traffic/people, not a matched optimization comparison or full-screen guarantee.
 City-facing performance remains work. Before images and final evidence are in
 `artifacts/local/canada-entrance-{before,candidate,final}-*`.
+
+### Interior-visible secondary framing (2026-11-15)
+
+The full Rabich southern-end crop (`canada-soffit-end-crop.jpg`) shows overlapping
+uprights and horizontal members behind the end glazing; the previous model's
+widely spaced arches left most of that view empty. Added open secondary frames
+on alternate existing outer-rib stations (~2.66m spacing), between the original
+~5.32m primary planes. Secondary90mm posts remain narrower than the existing
+140mm primary uprights. These dimensions and station count are estimates.
+
+Two interior upright planes at outward.28m/1.25m meet the retained inboard8.65m
+floor. Crossmembers at10.6/12.4/14.2m and continuous longitudinal rails connect
+the secondary frames back to the primary structure; the inner crown rail is at
+14.52m. Outer posts stop below the actual ellipse and meet the upper horizontal
+tie rather than being left as floating tips against glass. No staircase,
+diagonal bracing function, furniture or pane-box infill is inferred from the
+photo. All new members remain behind the southern recess backing and inside
+the accepted envelope. Nine focused canopy/depth tests and TypeScript pass;
+actual mesh rays verify upright depth, crossmember connections, longitudinal
+rails, retained-floor contact and open space between frames. Native judgment
+remains separate, alongside the parent's physical two-sided glass correction.
+
+Framing adds98 box members /1,176 triangles to the existing shared frame batch:
+zero additional draw groups, textures or reflection captures. The separate
+optical sheet deduplication is owned by the parent and changes its own counts.
