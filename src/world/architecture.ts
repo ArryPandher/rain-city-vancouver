@@ -18,6 +18,7 @@ import { ericksonPlace } from "./erickson-place";
 import { conventionCentre } from "./convention-centre";
 import { fairmontPacificRim } from "./fairmont-pacific-rim";
 import { waterfrontCentre } from "./waterfront-centre-building";
+import { createTerminalCityAssembly } from "./terminal-city-building";
 import { rogersTower } from "./rogers-tower";
 import { harbourGreenTower } from "./harbour-towers";
 import { hastingsBuilding } from "./hastings-building";
@@ -68,6 +69,7 @@ export function architecture(
   let count = 0;
   const architecturalDetails: ArchitecturalDetail[] = [];
   const reflections: ReflectionProbeSpec[] = [];
+  const terminalCity = createTerminalCityAssembly(m, reflections);
   const shopNames = [
     ["PACIFIC COFFEE", "THE CORNER CAFÉ", "WEST COAST COFFEE"],
     ["WATER STREET LIVING", "HARBOUR HOME", "COASTAL INTERIORS"],
@@ -151,6 +153,7 @@ export function architecture(
       continue;
     }
     if (
+      terminalCity(b, shell) ||
       waterfrontCentre(b, shell, m, reflections) ||
       ericksonPlace(b, shell, m, reflections) ||
       fairmontPacificRim(b, shell, m, collision, reflections) ||
