@@ -1,3 +1,4 @@
+import { addCanadaPlaceDoorFrontage } from "./canada-place-door-frontage";
 import * as T from "three";
 import concourse from "./canada-place-concourse-data.json";
 import site from "./canada-place-deck-data.json";
@@ -289,7 +290,7 @@ export function addCanadaPlaceWestFacade(
     const fasciaSection =
       middle < concourse.upperGlazing[0] || middle > concourse.upperGlazing[1];
     const sectionAt = (j: number, k: number) => at(j, k, fasciaSection);
-    for (let k = 1; k < profile.length; k++) {
+    for (let k = 2; k < profile.length; k++) {
       const [rawA, ya] = profile[k - 1],
         [rawB, yb] = profile[k];
       const oa =
@@ -309,11 +310,6 @@ export function addCanadaPlaceWestFacade(
         : [nx * (yb - ya), oa - ob, nz * (yb - ya)];
       const lowerA = sectionAt(i - 1, k - 1),
         lowerB = sectionAt(i, k - 1);
-      // The sill owns the lowest 170 mm; no coplanar glazing behind it.
-      if (k === 1) {
-        lowerA[1] = 7.97;
-        lowerB[1] = 7.97;
-      }
       const tier = Math.floor((k - 2) / 8);
       const smooth =
         m === glass && k >= 2 && k <= 25
@@ -326,20 +322,6 @@ export function addCanadaPlaceWestFacade(
           : undefined;
       const upperA = sectionAt(i - 1, k),
         upperB = sectionAt(i, k);
-      if (k === 1) {
-        const a = canadaPlaceConcoursePoint(
-          stations[i - 1].s,
-          concourse.groundOutward * stations[i - 1].scale,
-          concourse.groundGlassHeadY,
-        );
-        const b = canadaPlaceConcoursePoint(
-          stations[i].s,
-          concourse.groundOutward * stations[i].scale,
-          concourse.groundGlassHeadY,
-        );
-        upperA.splice(0, 3, ...a.toArray());
-        upperB.splice(0, 3, ...b.toArray());
-      }
       quad(m, [lowerA, lowerB, upperB, upperA], outward, smooth);
       // Horizontal glazing rails follow the curved profile and station offsets.
       if (
@@ -368,33 +350,16 @@ export function addCanadaPlaceWestFacade(
     c[1] += 0.17;
     d[1] += 0.17;
     quad(wall, [a, b, c, d], [stations[i].nx, 0, stations[i].nz]);
-    const headA = canadaPlaceConcoursePoint(
-      stations[i - 1].s,
-      concourse.groundOutward * stations[i - 1].scale,
-      10.03,
-    ).toArray() as V;
-    const headB = canadaPlaceConcoursePoint(
-      stations[i].s,
-      concourse.groundOutward * stations[i].scale,
-      10.03,
-    ).toArray() as V;
-    beam(headA, headB, 0.07);
   }
   for (let i = 0; i < stations.length; i++) {
     const fascia =
       stations[i].s < concourse.upperGlazing[0] ||
       stations[i].s > concourse.upperGlazing[1];
-    for (let k = 1; k < profile.length - 1; k++) {
+    for (let k = 2; k < profile.length - 1; k++) {
       if (fascia && k > 17 && k < 26) continue;
       beam(
         at(i, k - 1, fascia),
-        k === 1
-          ? (canadaPlaceConcoursePoint(
-              stations[i].s,
-              concourse.groundOutward * stations[i].scale,
-              concourse.groundGlassHeadY,
-            ).toArray() as V)
-          : at(i, k, fascia),
+        at(i, k, fascia),
         i === 0 || i === stations.length - 1 ? 0.1 : 0.055,
       );
     }
@@ -422,22 +387,6 @@ export function addCanadaPlaceWestFacade(
       );
       quad(wall, [v[0], v[1], v[2], v[2]], n);
     }
-  }
-  // One clearly closed paired-door reading in the central concourse; no
-  // guessed operating entrance, signage or interior access is introduced.
-  const doorStation = concourse.length / 2;
-  for (const delta of [-0.14, 0.14]) {
-    const a = canadaPlaceConcoursePoint(
-      doorStation + delta,
-      concourse.groundOutward + 0.05,
-      8.78,
-    );
-    const b = canadaPlaceConcoursePoint(
-      doorStation + delta,
-      concourse.groundOutward + 0.05,
-      9.23,
-    );
-    beam(a.toArray() as V, b.toArray() as V, 0.032);
   }
   // Closed glazed ends expose the tiered section, with tapered plan depth and
   // opaque upper fascia instead of a fifteen-metre blank end wall.
@@ -483,5 +432,16 @@ export function addCanadaPlaceWestFacade(
     root.add(mesh);
     meshes.push(mesh);
   }
-  return meshes;
+  const doors = addCanadaPlaceDoorFrontage(
+    root,
+    { glass: source.get("door-glass") ?? glass, frame },
+    (s, y, offset) =>
+      canadaPlaceConcoursePoint(
+        s,
+        concourse.groundOutward * scaleAt(s) + offset,
+        y,
+      ),
+    stations.map((st) => st.s),
+  );
+  return [...meshes, ...doors];
 }

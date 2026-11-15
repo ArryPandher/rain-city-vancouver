@@ -258,3 +258,35 @@ test("optional calibrated concrete shader survives material clone and UVs are fi
     Array.from(body.geometry.getAttribute("uv").array).every(Number.isFinite),
   );
 });
+test("rounded concrete shoulder has shared smooth normals and a horizontal crown", () => {
+  const p = concrete.geometry.getAttribute("position"),
+    n = concrete.geometry.getAttribute("normal"),
+    ix = concrete.geometry.getIndex()!;
+  const uses = new Map<number, number>();
+  for (let i = 0; i < ix.count; i++)
+    uses.set(ix.getX(i), (uses.get(ix.getX(i)) ?? 0) + 1);
+  const shoulderHeights = new Set<number>();
+  let curvedShared = 0,
+    crowns = 0;
+  for (let i = 0; i < p.count; i++) {
+    if (p.getY(i) > 9.721 && p.getY(i) < 10.249) {
+      shoulderHeights.add(Math.round(p.getY(i) * 10000));
+      if ((uses.get(i) ?? 0) > 3 && n.getY(i) > 0.2 && n.getY(i) < 0.999)
+        curvedShared++;
+    }
+    if (Math.abs(p.getY(i) - 10.25) < 1e-5) {
+      assert.ok(n.getY(i) > 0.9999);
+      crowns++;
+    }
+  }
+  assert.equal(
+    shoulderHeights.size,
+    4,
+    "four intermediate samples resolve one continuous quadratic roll",
+  );
+  assert.ok(
+    curvedShared > 100,
+    "shoulder strips share smooth normals rather than isolated faceted quads",
+  );
+  assert.equal(crowns, 120);
+});

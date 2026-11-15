@@ -129,17 +129,17 @@ function ray(root: T.Object3D, from: T.Vector3, to: T.Vector3) {
     from.distanceTo(to) + 0.015,
   ).intersectObject(root, true)[0];
 }
-test("source-pinned replacement is limited to reviewed west podium surfaces and three small batches", async (t) => {
+test("source-pinned replacement is limited to reviewed west podium surfaces and six shared material batches", async (t) => {
   const { removed, additions, original } = await fixture;
   assert.equal(removed.concrete, 10);
   assert.equal(removed.glass, 100);
   assert.equal(removed.trim, 480);
-  assert.equal(additions.length, 3);
+  assert.equal(additions.length, 6);
   t.diagnostic(
     `${additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0)} facade triangles`,
   );
   assert.ok(
-    additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0) < 35000,
+    additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0) < 60000,
   );
   for (const m of additions) {
     assert.equal((m.material as T.Material).side, T.FrontSide);
@@ -212,7 +212,7 @@ test("coherent closed envelope fits source pier and preserves the complete publi
       assert.ok(d > 0.95, `route clearance ${d}`);
     }
   }
-  assert.equal(additions.length, 3);
+  assert.equal(additions.length, 6);
 });
 
 test("simultaneous paving extraction preserves the exact promenade walking plane", async () => {
@@ -369,11 +369,21 @@ test("recessed ground doors and closed soffit leave real space below unchanged c
       scale = (a.scale + b.scale) / 2;
     const face = canadaPlaceConcoursePoint(s, 12.4 * scale, 9.4);
     const from = canadaPlaceConcoursePoint(s, 15 * scale, 9.4);
-    const hit = ray(root, from, face);
+    const hit = ray(
+      root,
+      from,
+      canadaPlaceConcoursePoint(s, 12.4 * scale - 0.15, 9.4),
+    );
     assert.ok(hit, "door front remains closed");
-    assert.equal(hit.object.name, "canada-west-glass");
     assert.ok(
-      hit.point.distanceTo(face) < 0.02,
+      [
+        "canada-west-door-glass",
+        "canada-west-door-frame",
+        "canada-west-door-gasket",
+      ].includes(hit.object.name),
+    );
+    assert.ok(
+      hit.point.distanceTo(face) < 0.15,
       "door plane recessed from outer curve",
     );
     const under = canadaPlaceConcoursePoint(s, 13.4 * scale, 10.2);

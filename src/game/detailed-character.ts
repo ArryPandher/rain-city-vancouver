@@ -3,6 +3,7 @@ import { GLTFLoader, type GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
 import type { Character } from "./character";
 import { animationPose } from "./animation-pose";
+import { installCharacterBounds } from "./character-bounds";
 
 const templates: { male?: GLTF; female?: GLTF } = {};
 export async function loadDetailedCharacter() {
@@ -76,6 +77,14 @@ export function makeDetailedCharacter(variant = 0): Character | undefined {
   const template =
     (female ? templates.female : templates.male) ?? templates.male;
   if (!template) return;
+  return makeDetailedCharacterFromTemplate(template, variant);
+}
+
+export function makeDetailedCharacterFromTemplate(
+  template: GLTF,
+  variant = 0,
+): Character {
+  const female = variant > 0 && variant % 3 === 0;
   const group = new T.Group();
   group.name = variant
     ? `Vancouver pedestrian ${variant}`
@@ -90,8 +99,7 @@ export function makeDetailedCharacter(variant = 0): Character | undefined {
     const mesh = o as T.Mesh;
     if (!mesh.isMesh) return;
     mesh.castShadow = mesh.receiveShadow = true;
-    // A skinned mesh's rest-pose bounds do not follow its animated limbs.
-    mesh.frustumCulled = false;
+    // Animated bounds are installed after the character scale is established.
     const materials = (
       Array.isArray(mesh.material) ? mesh.material : [mesh.material]
     ).map((source) => {
@@ -330,5 +338,6 @@ export function makeDetailedCharacter(variant = 0): Character | undefined {
     rightHand.rotation.set(-Math.PI / 2, 0, 0);
   };
   update(0, 0, false);
+  installCharacterBounds(group, height);
   return { group, hips, head, arms, legs, rightHand, update };
 }

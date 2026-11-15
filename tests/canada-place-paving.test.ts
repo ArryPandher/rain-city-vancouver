@@ -224,3 +224,84 @@ test("dedicated compressed maps preserve mean reflectance while restoring measur
     `linear mean ${oldMean.toFixed(4)} -> ${newMean.toFixed(4)}; grain std ${deviation(old, oldMean).toFixed(4)} -> ${deviation(next, newMean).toFixed(4)}; roughness mean ${mean(rough).toFixed(4)}`,
   );
 });
+test("anchor contact follows each exact chamfer, fading completely within140mm", async () => {
+  const { CANADA_PLACE_GROUND_STAYS } = await import(
+    "../src/world/canada-place-ground-stays-data"
+  );
+  const {
+    canadaPlaceAnchorContact: contact,
+    CANADA_PLACE_CONTACT_STRENGTH: strength,
+  } = await import("../src/world/canada-place-paving");
+  for (const a of CANADA_PLACE_GROUND_STAYS) {
+    for (const [offset, expected] of [
+      [0, strength],
+      [0.07, strength * 0.5],
+      [0.14, 0],
+      [0.3, 0],
+    ]) {
+      const p = a.point(0, 1.2 + offset, 7.8);
+      assert.ok(
+        Math.abs(contact(p[0], p[2]) - expected) < 1e-9,
+        `bay${a.bay} offset${offset}`,
+      );
+    }
+    const clippedCorner = a.point(0.95, 1.2, 7.8);
+    assert.ok(
+      contact(clippedCorner[0], clippedCorner[2]) < 1e-9,
+      "contact uses chamfer rather than bounding rectangle",
+    );
+    const underEdge = a.point(0, 1.2, 7.8);
+    assert.equal(
+      contact(
+        underEdge[0] + CANADA_PLACE_ORIGIN[0],
+        underEdge[2] + CANADA_PLACE_ORIGIN[1],
+      ),
+      0,
+      "world coordinates cannot be substituted for baked source UV",
+    );
+  }
+  assert.equal(contact(0, 0), 0);
+});
+test("contact uniforms preserve baked UV coordinates and affect only indirect lighting", async () => {
+  const { CANADA_PLACE_GROUND_STAYS } = await import(
+    "../src/world/canada-place-ground-stays-data"
+  );
+  const material = canadaPlacePavingMaterial(new T.MeshStandardMaterial(), {
+    color: new T.Texture(),
+    normal: new T.Texture(),
+    roughness: new T.Texture(),
+  });
+  const shader = {
+    uniforms: {} as Record<string, { value: T.Vector2[] }>,
+    vertexShader: T.ShaderLib.standard.vertexShader,
+    fragmentShader: T.ShaderLib.standard.fragmentShader,
+  };
+  material.onBeforeCompile(shader as any, {} as T.WebGLRenderer);
+  assert.ok(
+    shader.vertexShader.includes("vAnchorPavingPoint=vec2(uv.x,-uv.y)"),
+  );
+  assert.deepEqual(
+    shader.uniforms.anchorContactVertices.value.flatMap((p) => p.toArray()),
+    CANADA_PLACE_GROUND_STAYS.flatMap((a) => a.localFootprint),
+  );
+  assert.equal(shader.uniforms.anchorContactCenters.value.length, 5);
+  assert.ok(
+    shader.fragmentShader.includes(
+      "reflectedLight.indirectDiffuse*=anchorIndirect",
+    ),
+  );
+  assert.ok(
+    shader.fragmentShader.includes(
+      "reflectedLight.indirectSpecular*=anchorIndirect",
+    ),
+  );
+  assert.ok(
+    !shader.fragmentShader.includes(
+      "reflectedLight.directDiffuse*=anchorIndirect",
+    ),
+  );
+  assert.ok(
+    shader.fragmentShader.indexOf("float anchorIndirect=") >
+      shader.fragmentShader.indexOf("#include <aomap_fragment>"),
+  );
+});

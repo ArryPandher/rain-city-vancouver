@@ -1,4 +1,5 @@
 import { canadaPlaceCapabilities } from "./canada-place-capabilities";
+import { createCanadaPlaceDoorGlass } from "./canada-place-door-glass";
 import {
   addGalleryFacade,
   galleryFacadeCompatible,
@@ -194,28 +195,33 @@ export async function loadVancouverLandmarks(
       name: string,
       point: T.Vector3,
       meshes: T.Mesh[],
-      materialName: string,
+      materialNames: string[],
     ) => {
-      const glass = meshes.find(
-        (mesh) => (mesh.material as T.Material).name === materialName,
-      )?.material as T.MeshStandardMaterial | undefined;
-      if (!glass) return;
+      const glass = meshes
+        .filter((mesh) =>
+          materialNames.includes((mesh.material as T.Material).name),
+        )
+        .map((mesh) => mesh.material as T.MeshStandardMaterial);
+      if (!glass.length) return;
       // Capture fixed harbour/city geometry once through the existing probe
       // system. Moving actors and the receiving glass are omitted by that system.
-      glass.envMapIntensity = 0.8;
+      for (const material of glass)
+        if (material.name !== "canada-west-door-glass")
+          material.envMapIntensity = 0.8;
       reflections.push({
         name,
         position: [point.x + x, point.y + 0.08, point.z + z],
-        materials: [glass],
+        materials: glass,
       });
     };
     if (refineCanada) {
+      canadaMaterials.set("door-glass", createCanadaPlaceDoorGlass());
       const facade = addCanadaPlaceWestFacade(group, canadaMaterials);
       localReflection(
         "Canada Place west concourse",
         canadaPlaceConcoursePoint(51.55, 18, 11.5),
         facade,
-        "canada-west-glass",
+        ["canada-west-glass", "canada-west-door-glass"],
       );
     }
     if (refineCanadaCanopy) {
@@ -224,7 +230,7 @@ export async function loadVancouverLandmarks(
         "Canada Place entrance conservatory",
         canadaPlaceCanopyPoint(CANADA_PLACE_CANOPY_LENGTH / 2, 10.8, 6),
         canopy,
-        "canada-canopy-glass",
+        ["canada-canopy-glass"],
       );
     }
     if (refineGallery) addGalleryFacade(group, galleryMaterials);

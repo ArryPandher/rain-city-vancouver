@@ -1,5 +1,34 @@
 import * as T from "three";
 import { BASE } from "./materials";
+import { CANADA_PLACE_GROUND_STAYS } from "./canada-place-ground-stays-data";
+export const CANADA_PLACE_CONTACT_WIDTH = 0.14;
+export const CANADA_PLACE_CONTACT_STRENGTH = 0.38;
+/** Distance to the exact chamfered perimeter; beneath the opaque body is hidden. */
+export function canadaPlaceAnchorContact(x: number, z: number) {
+  let distance = Infinity;
+  for (const anchor of CANADA_PLACE_GROUND_STAYS) {
+    if (Math.hypot(x - anchor.center[0], z - anchor.center[1]) > 1.8) continue;
+    const p = anchor.localFootprint;
+    for (let i = 0; i < p.length; i += 2) {
+      const j = (i + 2) % p.length,
+        dx = p[j] - p[i],
+        dz = p[j + 1] - p[i + 1];
+      const t = Math.max(
+        0,
+        Math.min(
+          1,
+          ((x - p[i]) * dx + (z - p[i + 1]) * dz) / (dx * dx + dz * dz),
+        ),
+      );
+      distance = Math.min(
+        distance,
+        Math.hypot(x - p[i] - t * dx, z - p[i + 1] - t * dz),
+      );
+    }
+  }
+  const t = Math.min(1, distance / CANADA_PLACE_CONTACT_WIDTH);
+  return CANADA_PLACE_CONTACT_STRENGTH * (1 - t * t * (3 - 2 * t));
+}
 export type CanadaPlacePavingMaps = {
   color: T.Texture;
   normal: T.Texture;
@@ -133,14 +162,28 @@ export function canadaPlacePavingMaterial(
     bandWidthMetres: 0.16,
   };
   material.onBeforeCompile = (shader) => {
+    shader.uniforms.anchorContactCenters = {
+      value: CANADA_PLACE_GROUND_STAYS.map((a) => new T.Vector2(...a.center)),
+    };
+    shader.uniforms.anchorContactVertices = {
+      value: CANADA_PLACE_GROUND_STAYS.flatMap((a) =>
+        Array.from(
+          { length: 8 },
+          (_, i) =>
+            new T.Vector2(a.localFootprint[i * 2], a.localFootprint[i * 2 + 1]),
+        ),
+      ),
+    };
     shader.vertexShader = shader.vertexShader
       .replace(
         "#include <common>",
-        "#include <common>\nvarying vec2 vPavingMetres;",
+        "#include <common>\nvarying vec2 vPavingMetres;\nvarying vec2 vAnchorPavingPoint;",
       )
       .replace(
         "#include <begin_vertex>",
         `#include <begin_vertex>
+// Raw baked UV survives later world-position batching and texture repeats.
+vAnchorPavingPoint=vec2(uv.x,-uv.y);
 // Longitudinal axis of mapped west pier; all values remain local metres.
 vPavingMetres=vec2(dot(position.xz,vec2(.878,-.478)),dot(position.xz,vec2(.478,.878)));`,
       );
@@ -153,6 +196,26 @@ vPavingMetres=vec2(dot(position.xz,vec2(.878,-.478)),dot(position.xz,vec2(.478,.
         "#include <common>",
         `#include <common>
 varying vec2 vPavingMetres;
+varying vec2 vAnchorPavingPoint;
+uniform vec2 anchorContactCenters[5];
+uniform vec2 anchorContactVertices[40];
+float anchorContact(vec2 p){
+ float distanceToBase=1.0;
+ for(int a=0;a<5;a++){
+  vec2 delta=p-anchorContactCenters[a];
+  // Most promenade pixels skip all edge work; no additional draw or texture.
+  if(dot(delta,delta)<3.24){
+   for(int e=0;e<8;e++){
+    vec2 start=anchorContactVertices[a*8+e];
+    vec2 end=anchorContactVertices[a*8+(e+1)%8];
+    vec2 edge=end-start;
+    float t=clamp(dot(p-start,edge)/dot(edge,edge),0.0,1.0);
+    distanceToBase=min(distanceToBase,length(p-start-t*edge));
+   }
+  }
+ }
+ return 1.0-${CANADA_PLACE_CONTACT_STRENGTH.toFixed(2)}*(1.0-smoothstep(0.0,${CANADA_PLACE_CONTACT_WIDTH.toFixed(2)},distanceToBase));
+}
 vec3 pavingDetail(vec2 metres){
  vec2 cell=metres/vec2(1.5,.75);
  vec2 edge=min(fract(cell),1.0-fract(cell))*vec2(1.5,.75);
@@ -183,6 +246,14 @@ vec3 paving=pavingDetail(vPavingMetres);
 diffuseColor.rgb*=paving.y*(1.0-paving.x*.28);`,
       )
       .replace(
+        "#include <aomap_fragment>",
+        `#include <aomap_fragment>
+// Local indirect-light occlusion only: retain direct sun, albedo and all geometry.
+float anchorIndirect=anchorContact(vAnchorPavingPoint);
+reflectedLight.indirectDiffuse*=anchorIndirect;
+reflectedLight.indirectSpecular*=anchorIndirect;`,
+      )
+      .replace(
         "#include <normal_fragment_maps>",
         `#include <normal_fragment_maps>
 vec3 pavingDx=dFdx(-vViewPosition),pavingDy=dFdy(-vViewPosition);
@@ -194,6 +265,7 @@ vec3 pavingGradient=sign(pavingDet)*pavingFilter*(dot(pavingSlope,dFdx(vPavingMe
 if(abs(pavingDet)>1e-8)normal=normalize(abs(pavingDet)*normal-pavingGradient);`,
       );
   };
-  material.customProgramCacheKey = () => "canada-place-paving-v2";
+  material.customProgramCacheKey = () =>
+    "canada-place-paving-v3-anchor-contact";
   return material;
 }
