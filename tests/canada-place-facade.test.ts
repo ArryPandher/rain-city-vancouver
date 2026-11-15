@@ -129,21 +129,27 @@ function ray(root: T.Object3D, from: T.Vector3, to: T.Vector3) {
     from.distanceTo(to) + 0.015,
   ).intersectObject(root, true)[0];
 }
-test("source-pinned replacement is limited to reviewed west podium surfaces and six shared material batches", async (t) => {
+test("source-pinned replacement is limited to reviewed west podium surfaces and eight shared material batches", async (t) => {
   const { removed, additions, original } = await fixture;
   assert.equal(removed.concrete, 10);
   assert.equal(removed.glass, 100);
   assert.equal(removed.trim, 480);
-  assert.equal(additions.length, 6);
+  assert.equal(additions.length, 8);
   t.diagnostic(
     `${additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0)} facade triangles`,
   );
   assert.ok(
-    additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0) < 60000,
+    additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0) < 64000,
   );
   for (const m of additions) {
-    assert.equal((m.material as T.Material).side, T.FrontSide);
-    assert.equal((m.material as T.Material).transparent, false);
+    assert.equal(
+      (m.material as T.Material).side,
+      m.name === "canada-west-glazing-backing" ? T.DoubleSide : T.FrontSide,
+    );
+    assert.equal(
+      (m.material as T.Material).transparent,
+      m.name === "canada-west-glass",
+    );
     for (const v of m.geometry.getAttribute("position").array)
       assert.ok(Number.isFinite(v));
   }
@@ -212,7 +218,7 @@ test("coherent closed envelope fits source pier and preserves the complete publi
       assert.ok(d > 0.95, `route clearance ${d}`);
     }
   }
-  assert.equal(additions.length, 6);
+  assert.equal(additions.length, 8);
 });
 
 test("simultaneous paving extraction preserves the exact promenade walking plane", async () => {
@@ -420,5 +426,51 @@ test("recessed ground doors and closed soffit leave real space below unchanged c
       undefined,
       "end does not close public recess with phantom glass",
     );
+  }
+});
+test("transparent upper panes first reveal closed shallow backing from normal and oblique views", async () => {
+  const { root, additions } = await fixture;
+  const glass = additions.find((m) => m.name === "canada-west-glass")!,
+    backing = additions.find((m) => m.name === "canada-west-glazing-backing")!;
+  assert.equal((glass.material as T.Material).transparent, true);
+  assert.equal((glass.material as T.Material).depthWrite, false);
+  assert.equal(glass.castShadow, false);
+  const opaque = additions.filter((m) => m !== glass);
+  assert.ok(opaque.every((m) => !(m.material as T.Material).transparent));
+  // Actual decoded GLB root remains present: if an original source wall wrongly
+  // survived, this first-hit test would identify it before the new structure.
+  const station =
+      CANADA_PLACE_CONCOURSE_STATIONS[
+        Math.floor(CANADA_PLACE_CONCOURSE_STATIONS.length / 2)
+      ],
+    profile = CANADA_PLACE_CONCOURSE_PROFILE;
+  for (const k of [3, 6, 11, 14, 19, 22]) {
+    const a = profile[k - 1],
+      b = profile[k],
+      p = canadaPlaceConcoursePoint(
+        station.s + 0.35,
+        (a[0] + b[0]) / 2,
+        (a[1] + b[1]) / 2,
+      );
+    const normal = new T.Vector3(
+      station.nx * (b[1] - a[1]),
+      a[0] - b[0],
+      station.nz * (b[1] - a[1]),
+    ).normalize();
+    const tangent = new T.Vector3(-station.nz, 0, station.nx);
+    for (const angle of [-0.55, 0, 0.55]) {
+      const direction = normal
+          .clone()
+          .negate()
+          .addScaledVector(tangent, angle)
+          .normalize(),
+        from = p.clone().addScaledVector(normal, -0.015);
+      const hits = new T.Raycaster(from, direction, 0, 1)
+        .intersectObject(root, true)
+        .filter((h) => h.object !== glass);
+      assert.ok(hits.length, `missing closed back tier${k}`);
+      assert.equal(hits[0].object, backing);
+      assert.ok(hits[0].distance > 0.1 && hits[0].distance < 0.75);
+    }
   }
 });

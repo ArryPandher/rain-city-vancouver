@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as T from "three";
+import { Batcher } from "../src/world/geometry";
 import { createCanadaPlaceConcourseGlass } from "../src/world/canada-place-concourse-glass";
 
 test("upper glazing uses dielectric Fresnel rather than the old metallic reflection floor", () => {
@@ -43,8 +44,8 @@ test("upper proxy needs no transmission pass and accepts the existing shared pro
   assert.equal(b.envMap, null, "each scene owns its own material");
   assert.equal(a.transmission, 0);
   assert.equal(a.clearcoat, 0, "no second coat doubles the highlight");
-  assert.equal(a.transparent, false);
-  assert.equal(a.depthWrite, true);
+  assert.equal(a.transparent, true);
+  assert.equal(a.depthWrite, false);
   assert.equal(a.map, null);
   assert.equal(a.normalMap, null);
   assert.equal(a.emissive.getHex(), 0);
@@ -56,4 +57,41 @@ test("upper proxy needs no transmission pass and accepts the existing shared pro
   a.dispose();
   b.dispose();
   sharedProbe.dispose();
+});
+
+test("thin-sheet shader and static batch preserve closed-backing visibility and shadow semantics", () => {
+  const material = createCanadaPlaceConcourseGlass();
+  const shader = { ...T.ShaderLib.physical, uniforms: {} };
+  material.onBeforeCompile(shader as never, {} as T.WebGLRenderer);
+  assert.ok(shader.fragmentShader.includes("concourseFacing"));
+  assert.ok(
+    shader.fragmentShader.includes(
+      "diffuseColor.a=mix(opacity,0.96,concourseGrazing)",
+    ),
+  );
+  assert.equal(
+    (shader.fragmentShader.match(/float concourseFacing/g) ?? []).length,
+    1,
+  );
+  assert.ok(shader.fragmentShader.includes("#include <opaque_fragment>"));
+  // Normal view must reveal actual backing; grazing reduces that visibility.
+  const coverage = (cosine: number) =>
+    material.opacity + (0.96 - material.opacity) * (1 - cosine) ** 5;
+  assert.ok(1 - coverage(1) > 0.5);
+  assert.ok(1 - coverage(0.05) < 0.2);
+  const batch = new Batcher(new T.Group(), 400);
+  batch.add(new T.PlaneGeometry(2, 2), material, 0, 0);
+  const [mesh] = batch.finish();
+  assert.equal(mesh.material, material);
+  assert.equal(mesh.castShadow, false);
+  assert.equal(mesh.userData.allowShadow, false);
+  assert.equal(mesh.receiveShadow, true);
+  assert.equal((mesh.material as T.Material).depthWrite, false);
+  assert.equal(
+    (mesh.material as T.Material).onBeforeCompile,
+    material.onBeforeCompile,
+  );
+  assert.match(material.customProgramCacheKey(), /thin-sheet/);
+  mesh.geometry.dispose();
+  material.dispose();
 });

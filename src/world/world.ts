@@ -1,3 +1,4 @@
+import { batchPhotographicFacades } from "./photographic-facade-batch";
 import { clipGalleryStairPath } from "./gallery-rear-entry";
 import { buildCanadaPlaceApproach } from "./canada-place-approach";
 import { clipCanadaPlacePaths } from "./canada-place-paths";
@@ -110,6 +111,7 @@ export class World {
   constructor(
     public scene: T.Scene,
     public data: CityData,
+    private readonly facadeMultiDraw = false,
   ) {
     this.collision = new CollisionWorld(data);
     scene.add(this.root);
@@ -701,6 +703,12 @@ export class World {
       this.data,
       this.materials,
       this.collision,
+    );
+    batchPhotographicFacades(
+      this.root,
+      result.chunks,
+      this.materials.photoFacades,
+      this.facadeMultiDraw,
     );
     this.chunks.push(...result.chunks);
     this.stats.buildings = result.count;

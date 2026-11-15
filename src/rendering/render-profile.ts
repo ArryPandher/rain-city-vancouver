@@ -148,6 +148,9 @@ export function profileRender(
       note: "One diagnostic frame; CPU submission includes instrumentation. Triangle/call counts are actual draws, not GPU timings. Reflection draws before a renderer counter reset may appear in attribution but not final frame counters.",
       frame: counts(renderer),
       totals,
+      // Keep low-call materials measurable after batching moves them below
+      // both top-list cutoffs. This is emitted only for a requested profile.
+      materials: [...materials.values()],
       topMaterials: [...materials.values()]
         .sort((a, b) => b.triangles - a.triangles)
         .slice(0, 30),

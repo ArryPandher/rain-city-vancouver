@@ -1,3 +1,4 @@
+import { CanadaPlaceGlazingDepth } from "./canada-place-glazing-depth";
 import { addCanadaPlaceDoorFrontage } from "./canada-place-door-frontage";
 import { createCanadaPlaceConcourseGlass } from "./canada-place-concourse-glass";
 import * as T from "three";
@@ -192,6 +193,16 @@ export function addCanadaPlaceWestFacade(
   frame.roughness = 0.38;
   frame.metalness = 0.25;
   const glass = createCanadaPlaceConcourseGlass();
+  const endGlass = glass.clone();
+  endGlass.name = "canada-west-closed-end-glass";
+  endGlass.transparent = false;
+  endGlass.opacity = 1;
+  endGlass.depthWrite = true;
+  endGlass.userData.castShadow = true;
+  const upperFrame = frame.clone();
+  upperFrame.name = "canada-west-pale-upper-frame";
+  upperFrame.color.setHex(0xa8b4a3);
+  const depth = new CanadaPlaceGlazingDepth();
   for (const [name, m] of [
     ["canada-west-wall", wall],
     ["canada-west-frame", frame],
@@ -199,9 +210,11 @@ export function addCanadaPlaceWestFacade(
   ] as const) {
     m.name = name;
     m.side = T.FrontSide;
-    m.transparent = false;
-    m.opacity = 1;
-    m.depthWrite = true;
+    if (m !== glass) {
+      m.transparent = false;
+      m.opacity = 1;
+      m.depthWrite = true;
+    }
   }
   const groups = new Map<
     T.Material,
@@ -248,8 +261,8 @@ export function addCanadaPlaceWestFacade(
       ),
     );
     geom.translate(...p.add(q).multiplyScalar(0.5).toArray());
-    let g = groups.get(frame);
-    if (!g) groups.set(frame, (g = { p: [], ix: [], n: new Map() }));
+    let g = groups.get(upperFrame);
+    if (!g) groups.set(upperFrame, (g = { p: [], ix: [], n: new Map() }));
     const offset = g.p.length / 3,
       ix = geom.getIndex()!;
     g.p.push(...Array.from(geom.getAttribute("position").array));
@@ -320,11 +333,18 @@ export function addCanadaPlaceWestFacade(
       const upperA = sectionAt(i - 1, k),
         upperB = sectionAt(i, k);
       quad(m, [lowerA, lowerB, upperB, upperA], outward, smooth);
+      if (m === glass && smooth)
+        depth.addPane(
+          [lowerA, lowerB, upperB, upperA],
+          smooth,
+          (k - 2) % 8 === 0,
+          (k - 1) % 8 === 0,
+        );
       // Horizontal glazing rails follow the curved profile and station offsets.
       if (
         !back &&
         (!upperFascia || roof) &&
-        (k <= 2 || (k - 1) % 4 === 0 || roof)
+        (k <= 2 || (k - 1) % 2 === 0 || roof)
       )
         beam(sectionAt(i - 1, k - 1), sectionAt(i, k - 1), roof ? 0.11 : 0.045);
     }
@@ -411,7 +431,7 @@ export function addCanadaPlaceWestFacade(
             endProfile[k][1],
           ).toArray() as V,
       );
-      quad(glass, [v[0], v[1], v[2], v[2]], direction);
+      quad(endGlass, [v[0], v[1], v[2], v[2]], direction);
     }
   }
   const meshes: T.Mesh[] = [];
@@ -425,13 +445,15 @@ export function addCanadaPlaceWestFacade(
     landmarkSurfaceUV(g, [4, 4]);
     const mesh = new T.Mesh(g, m);
     mesh.name = m.name;
-    mesh.castShadow = mesh.receiveShadow = true;
+    mesh.castShadow = m.userData.castShadow !== false;
+    mesh.receiveShadow = true;
     root.add(mesh);
     meshes.push(mesh);
   }
+  meshes.push(depth.finish(root));
   const doors = addCanadaPlaceDoorFrontage(
     root,
-    { glass: source.get("door-glass") ?? glass, frame },
+    { glass: source.get("door-glass") ?? endGlass, frame },
     (s, y, offset) =>
       canadaPlaceConcoursePoint(
         s,

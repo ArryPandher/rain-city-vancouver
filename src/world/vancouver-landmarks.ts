@@ -223,7 +223,11 @@ export async function loadVancouverLandmarks(
         "Canada Place west concourse",
         canadaPlaceConcoursePoint(51.55, 18, 11.5),
         facade,
-        ["canada-west-glass", "canada-west-door-glass"],
+        [
+          "canada-west-glass",
+          "canada-west-closed-end-glass",
+          "canada-west-door-glass",
+        ],
       );
     }
     if (refineCanadaCanopy) {

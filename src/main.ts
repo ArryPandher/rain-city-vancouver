@@ -281,7 +281,11 @@ class Game {
         console.warn("Detailed character unavailable; using built-in model", e),
       ),
     ]);
-    this.world = new World(this.scene, data);
+    this.world = new World(
+      this.scene,
+      data,
+      this.renderer.extensions.has("WEBGL_multi_draw"),
+    );
     await this.world.build((s, n) => ui.loading(s, n * 0.82));
     this.reflections = new SceneReflections(
       this.scene,
