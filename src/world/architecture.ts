@@ -1,7 +1,7 @@
 import { CACTUS_ID } from "./jack-poole-site";
 import * as T from "three";
 import { CityData, centroid, hash, seeded, Road, segmentPoint } from "./data";
-import { Materials, label } from "./materials";
+import { Materials, label, bakeCurtainFacadeTint } from "./materials";
 import { Batcher, walls, flatPolygon } from "./geometry";
 import { specialBuilding } from "./vancouver-landmarks";
 import { CollisionWorld } from "./collision";
@@ -194,6 +194,12 @@ export function architecture(
         [0xe7ded0, 0xc5d1cb, 0xbfcbce, 0xd5cabb, 0xc8b6a7][hash(b.id) % 5],
       );
     if (b.wallColor) color.set(b.wallColor);
+    const tintFacade = (geometry: T.BufferGeometry) => {
+      tint(geometry, color);
+      return style < 3 && mat === m.facades[style]
+        ? bakeCurtainFacadeTint(geometry, style)
+        : geometry;
+    };
     const xs = b.pts.filter((_, i) => !(i % 2)),
       zs = b.pts.filter((_, i) => i % 2),
       w = Math.max(...xs) - Math.min(...xs),
@@ -216,8 +222,8 @@ export function architecture(
         shell.add(flatPolygon(b.pts, [], podium, 5), m.roof, x, z);
         const towerGeo = walls(outline, h - podium);
         towerGeo.translate(0, podium, 0);
-        shell.add(tint(towerGeo, color), mat, x, z);
-      } else shell.add(tint(walls(outline, h), color), mat, x, z);
+        shell.add(tintFacade(towerGeo), mat, x, z);
+      } else shell.add(tintFacade(walls(outline, h)), mat, x, z);
       if (pitched) {
         shell.add(pitched.roof, pitchedMaterial, x, z);
         if (pitched.gables.getAttribute("position").count)

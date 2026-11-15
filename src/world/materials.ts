@@ -1,6 +1,28 @@
 import * as T from "three";
 import { seeded } from "./data";
 export const BASE = import.meta.env?.BASE_URL ?? "/";
+const CURTAIN_TINTS = [0xc1d6d7, 0xc2ccc1, 0xbccbd6] as const;
+
+/** Move only the linear material tint into existing vertex color/AO values. */
+export function bakeCurtainFacadeTint(
+  geometry: T.BufferGeometry,
+  style: number,
+) {
+  const colors = geometry.getAttribute("color");
+  if (!colors || style < 0 || style >= CURTAIN_TINTS.length)
+    throw new Error("Curtain tint requires vertex colors and a curtain style");
+  const tint = new T.Color(CURTAIN_TINTS[style]);
+  for (let i = 0; i < colors.count; i++)
+    colors.setXYZ(
+      i,
+      colors.getX(i) * tint.r,
+      colors.getY(i) * tint.g,
+      colors.getZ(i) * tint.b,
+    );
+  colors.needsUpdate = true;
+  return geometry;
+}
+
 export class Materials {
   animatedUniforms: { value: number }[] = [];
   beacons: {
@@ -41,6 +63,7 @@ export class Materials {
   }[] = [];
   practicalLights: { light: T.PointLight; day: number; night: number }[] = [];
   curtainMaps?: Record<string, T.Texture>;
+  private sharedCurtainFacade?: T.MeshPhysicalMaterial;
   roof = new T.MeshStandardMaterial({ color: 0x647276, roughness: 0.8 });
   constructor() {
     this.asphalt = this.pbr("asphalt_02", 0x92999b, 0.48);
@@ -49,7 +72,7 @@ export class Materials {
     this.concrete = this.pbr("concrete_pavement", 0xb4b0a7, 0.84);
     this.grass = this.pbr("aerial_grass_rock", 0x688052, 0.97);
     for (let i = 0; i < 12; i++)
-      this.facades.push(i < 3 ? this.curtainFacade(i) : this.facade(i));
+      this.facades.push(i < 3 ? this.curtainFacade() : this.facade(i));
     const photos: [string, number, number][] = [
       ["palms-arches", 10, 4.5],
       ["palms-sash", 10, 3.8],
@@ -221,7 +244,8 @@ export class Materials {
     }
     return material;
   }
-  curtainFacade(style: number) {
+  curtainFacade() {
+    if (this.sharedCurtainFacade) return this.sharedCurtainFacade;
     if (!this.curtainMaps) {
       this.curtainMaps = {};
       for (const key of [
@@ -240,9 +264,10 @@ export class Materials {
       }
     }
     const maps = this.curtainMaps;
-    return new T.MeshPhysicalMaterial({
+    return (this.sharedCurtainFacade = new T.MeshPhysicalMaterial({
       name: "Detailed curtain wall",
-      color: [0xc1d6d7, 0xc2ccc1, 0xbccbd6][style],
+      color: 0xffffff,
+      vertexColors: true,
       map: maps.color,
       normalMap: maps.normalgl,
       normalScale: new T.Vector2(0.3, 0.3),
@@ -256,7 +281,7 @@ export class Materials {
       emissiveMap: maps.emission,
       emissive: 0xfff1d8,
       emissiveIntensity: 0.02,
-    });
+    }));
   }
   setNight(n: number) {
     this.facades.forEach(

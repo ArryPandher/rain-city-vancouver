@@ -141,6 +141,9 @@ export function profileRender(
       }
     }
     return {
+      capabilities: {
+        multiDraw: renderer.extensions.has("WEBGL_multi_draw"),
+      },
       submissionMs: Math.round((performance.now() - started) * 10) / 10,
       note: "One diagnostic frame; CPU submission includes instrumentation. Triangle/call counts are actual draws, not GPU timings. Reflection draws before a renderer counter reset may appear in attribution but not final frame counters.",
       frame: counts(renderer),

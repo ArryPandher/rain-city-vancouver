@@ -23,36 +23,41 @@ export function summonedVehicleSpot(
           [1.35, 0.9],
         ]
       : [[0, 0.45]];
-  for (const distance of [0, 4, -4, 8, -8, 12, -12, 20, -20, 30]) {
-    for (const lateral of [0, 0.75, -0.75, 1.5, -1.5, 3, -3]) {
-      const x =
-        origin.x +
-        Math.sin(origin.heading) * distance +
-        Math.cos(origin.heading) * lateral;
-      const z =
-        origin.z +
-        Math.cos(origin.heading) * distance -
-        Math.sin(origin.heading) * lateral;
-      if (occupied.some((p) => Math.hypot(p.x - x, p.z - z) <= 6)) continue;
-      // Leave a short supported departure corridor, not merely a parked pose
-      // whose nose touches an obstacle as soon as the player presses throttle.
-      const departure =
-        kind === "car" ? [0, 0.5, 1, 1.5, 2, 2.5, 3] : [0, 0.5, 1];
-      const clear = departure.every((forward) =>
-        samples.every(([offset, radius]) => {
-          const along = offset + forward;
-          const xx = x + Math.sin(origin.heading) * along;
-          const zz = z + Math.cos(origin.heading) * along;
-          const y = collision.height(xx, zz, origin.y);
-          return (
-            Number.isFinite(y) &&
-            Math.abs(y - origin.y) <= 0.6 &&
-            !collision.blocked(xx, zz, radius, origin.y) &&
-            !collision.water(xx, zz, origin.y)
-          );
-        }),
-      );
-      if (clear) return [x, z];
+  // Prefer room to leave the spawn area before accepting a tight corner.
+  // Every candidate is tried at the longer distance first, so a nearby
+  // laterally offset dead end cannot beat a usable parallel departure.
+  for (const departureLength of kind === "car" ? [12, 3] : [1]) {
+    for (const distance of [0, 4, -4, 8, -8, 12, -12, 20, -20, 30]) {
+      for (const lateral of [0, 0.75, -0.75, 1.5, -1.5, 3, -3]) {
+        const x =
+          origin.x +
+          Math.sin(origin.heading) * distance +
+          Math.cos(origin.heading) * lateral;
+        const z =
+          origin.z +
+          Math.cos(origin.heading) * distance -
+          Math.sin(origin.heading) * lateral;
+        if (occupied.some((p) => Math.hypot(p.x - x, p.z - z) <= 6)) continue;
+        const departure = Array.from(
+          { length: departureLength * 2 + 1 },
+          (_, i) => i * 0.5,
+        );
+        const clear = departure.every((forward) =>
+          samples.every(([offset, radius]) => {
+            const along = offset + forward;
+            const xx = x + Math.sin(origin.heading) * along;
+            const zz = z + Math.cos(origin.heading) * along;
+            const y = collision.height(xx, zz, origin.y);
+            return (
+              Number.isFinite(y) &&
+              Math.abs(y - origin.y) <= 0.6 &&
+              !collision.blocked(xx, zz, radius, origin.y) &&
+              !collision.water(xx, zz, origin.y)
+            );
+          }),
+        );
+        if (clear) return [x, z];
+      }
     }
   }
 }

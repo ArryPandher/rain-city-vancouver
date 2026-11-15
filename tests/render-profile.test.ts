@@ -11,8 +11,9 @@ function fixture() {
   mesh.computeBoundingSphere();
   scene.add(mesh);
   const renderer = {
+    extensions: { has: () => false },
     info: { render: { calls: 0, triangles: 0, lines: 0, points: 0 } },
-  } as T.WebGLRenderer;
+  } as unknown as T.WebGLRenderer;
   return { scene, camera, material, mesh, renderer };
 }
 test("attributes actual beauty and shadow submissions including instancing and multiple draws", () => {

@@ -1,4 +1,5 @@
 import { addCanadaPlaceDoorFrontage } from "./canada-place-door-frontage";
+import { createCanadaPlaceConcourseGlass } from "./canada-place-concourse-glass";
 import * as T from "three";
 import concourse from "./canada-place-concourse-data.json";
 import site from "./canada-place-deck-data.json";
@@ -171,8 +172,8 @@ export function canadaPlaceConcoursePoint(
 /** The full west strip is a continuous three-step section. Highest glazing is
  * concentrated in one broad central stretch; end fascias are upright solid sections. Exact
  * transition stations/sections are estimates from the documented photos. */
-/** Three shared material batches, opaque-backed reflective panes; no interiors,
- * probes, random room lights or changes to the rest of the landmark materials. */
+/** Three upper material batches plus the ground-door assembly. The landmark
+ * loader attaches the existing local reflection capture to the receiving panes. */
 export function addCanadaPlaceWestFacade(
   root: T.Group,
   source: Map<string, T.MeshStandardMaterial>,
@@ -190,11 +191,7 @@ export function addCanadaPlaceWestFacade(
   frame.color.setHex(0x77918a);
   frame.roughness = 0.38;
   frame.metalness = 0.25;
-  const glass = (source.get("glass") ?? new T.MeshStandardMaterial()).clone();
-  glass.color.setHex(0x91aaa2);
-  glass.roughness = 0.14;
-  glass.metalness = 0.58;
-  glass.envMapIntensity = 1.65;
+  const glass = createCanadaPlaceConcourseGlass();
   for (const [name, m] of [
     ["canada-west-wall", wall],
     ["canada-west-frame", frame],
