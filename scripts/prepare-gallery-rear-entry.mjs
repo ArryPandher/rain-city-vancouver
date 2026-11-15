@@ -28,7 +28,10 @@ for(const node of doc.getRoot().listNodes()) for(const primitive of node.getMesh
     const keep=name==='foundation'?lo.x> -7.77&&hi.x<3.97&&lo.y>-.01&&hi.y<3.22&&lo.z>12.08&&hi.z<16.32:
       name==='trim'?lo.y>3.18&&hi.y<13.92&&lo.z>11.55&&hi.z<12.80&&((lo.x> -9.45&&hi.x< -8.15)||(lo.x>4.30&&hi.x<5.60)):
       lo.x> -11.02&&hi.x<7.22&&lo.y>13.53&&hi.y<16.91&&lo.z>11.24&&hi.z<12.76;
-    if(keep){selected.push(...ids);components.push({vertices:ids.length,min:lo.toArray().map(x=>+x.toFixed(3)),max:hi.toArray().map(x=>+x.toFixed(3))});}
+    // The core's six sill reveals and six meeting rails overlap the old broad
+    // entry bounds, but belong to its stationary upper windows, not the pediment.
+    const coreWindowQuad=name==='stone'&&ids.length===4&&lo.z>11.61&&hi.z<11.91&&lo.y>14.49&&hi.y<16.06&&hi.y-lo.y<.12;
+    if(keep&&!coreWindowQuad){selected.push(...ids);components.push({vertices:ids.length,min:lo.toArray().map(x=>+x.toFixed(3)),max:hi.toArray().map(x=>+x.toFixed(3))});}
   }
   selected.sort((a,b)=>a-b);const ranges=[];for(const i of selected){const last=ranges.at(-1);if(last&&last[1]+1===i)last[1]=i;else ranges.push([i,i]);}
   result.materials[name]={positionCount:raw.count,indexCount:index.length,selectedVertices:selected.length,ranges,components};

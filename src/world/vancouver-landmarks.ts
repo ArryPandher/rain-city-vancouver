@@ -15,6 +15,13 @@ import {
   replaceGalleryWingFaces,
 } from "./gallery-facade";
 import { repairGalleryRearEntry } from "./gallery-rear-entry";
+import {
+  addGalleryRoofs,
+  galleryRoofCompatible,
+  replaceGalleryRoofFaces,
+} from "./gallery-roof";
+import { galleryWingCopperMaterial } from "./gallery-roof-material";
+import { addGalleryBanners } from "./gallery-banners";
 import { openCanadaPlaceEntryRail } from "./canada-place-entry-rail";
 import { refineCanadaPlaceWestRailing } from "./canada-place-west-railing";
 import {
@@ -127,6 +134,8 @@ export async function loadVancouverLandmarks(
     const refineGallery =
       asset.id === "vancouver-art-gallery" &&
       galleryFacadeCompatible(gltf.scene);
+    const refineGalleryRoof =
+      asset.id === "vancouver-art-gallery" && galleryRoofCompatible(gltf.scene);
     const refineCanada =
       asset.id === "canada-place" && canadaPlaceFacadeCompatible(gltf.scene);
     const refineCanadaCanopy =
@@ -147,6 +156,7 @@ export async function loadVancouverLandmarks(
       if (asset.id === "vancouver-art-gallery")
         repairGalleryRearEntry(geometry, original.name);
       if (refineGallery) replaceGalleryWingFaces(geometry, original.name);
+      if (refineGalleryRoof) replaceGalleryRoofFaces(geometry, original.name);
       if (refineCanadaHotel)
         replaceCanadaPlaceHotelFaces(geometry, original.name);
       if (refineCanadaCanopy)
@@ -280,7 +290,16 @@ export async function loadVancouverLandmarks(
         ["canada-canopy-glass", "canada-hotel-glass"],
       );
     }
-    if (refineGallery) addGalleryFacade(group, galleryMaterials);
+    if (refineGallery) {
+      addGalleryFacade(group, galleryMaterials);
+      addGalleryBanners(group);
+    }
+    if (refineGalleryRoof) {
+      const copper = galleryMaterials.get("copper");
+      if (copper)
+        galleryMaterials.set("wing-copper", galleryWingCopperMaterial(copper));
+      addGalleryRoofs(group, galleryMaterials);
+    }
     parent.add(group);
     if (asset.id === "canada-place")
       canadaPlace = canadaPlaceCapabilities(

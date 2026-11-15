@@ -60,6 +60,21 @@ test("actual quantized gallery repair moves only reviewed rear-entry vertices, p
         "topology and triangle count unchanged",
       );
       const after = g.getAttribute("position");
+      if (name === "stone")
+        for (const start of [
+          12864, 12872, 12888, 12896, 12912, 12920, 12936, 12944, 12960, 12968,
+          12984, 12992,
+        ])
+          for (let id = start; id < start + 4; id++) {
+            assert.equal(
+              selected.has(id),
+              false,
+              "core window sill/meeting rail must not travel with entrance",
+            );
+            assert.equal(after.getX(id), before[id * 3]);
+            assert.equal(after.getZ(id), before[id * 3 + 2]);
+          }
+
       for (let i = 0; i < after.count; i++) {
         assert.equal(
           after.getY(i),
@@ -103,7 +118,7 @@ test("actual quantized gallery repair moves only reviewed rear-entry vertices, p
         list.push(mesh);
       }
     }
-  assert.equal(moved, 930);
+  assert.equal(moved, 882);
   assert.equal(triangles, 25193);
   const point = (x: number, y: number, z: number) =>
     new T.Vector3(
@@ -111,6 +126,34 @@ test("actual quantized gallery repair moves only reviewed rear-entry vertices, p
       y + 0.08,
       origin[1] + Math.sin(data.angle) * x + Math.cos(data.angle) * z,
     );
+  for (const x of [2.77656, 5.59157]) {
+    const a = point(x, 16, 25),
+      b = point(x, 16, 22.8);
+    assert.equal(
+      new T.Raycaster(
+        a,
+        b.clone().sub(a).normalize(),
+        0,
+        a.distanceTo(b),
+      ).intersectObjects(meshes).length,
+      0,
+      "native sky-bar region is empty after restoring core rails",
+    );
+    const c = point(x, 16, 12.1),
+      d = point(x, 16, 11.5),
+      hit = new T.Raycaster(
+        c,
+        d.clone().sub(c).normalize(),
+        0,
+        c.distanceTo(d),
+      ).intersectObjects(meshes)[0];
+    assert.ok(hit);
+    assert.equal(
+      hit.object.name,
+      "stone",
+      "restored rail remains at its source core window",
+    );
+  }
   const camera = new T.Vector3(-146.56, 3.8, 127.88);
   const target = point(-8.8, 8, 12.7 + data.translationV),
     direction = target.clone().sub(camera).normalize();

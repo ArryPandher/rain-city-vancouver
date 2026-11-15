@@ -64,9 +64,15 @@ export function landmarkSurfaceProfile(
             : 0.15,
       metalness: 0,
       color:
-        id === "waterfront-station-vancouver" && name === "stone"
-          ? 0xc3b9a3
-          : undefined,
+        id === "vancouver-art-gallery"
+          ? name === "foundation"
+            ? 0x777a75
+            : name === "trim"
+              ? 0xa9a799
+              : 0x9d9c93
+          : id === "waterfront-station-vancouver" && name === "stone"
+            ? 0xc3b9a3
+            : undefined,
       joints:
         id === "vancouver-art-gallery"
           ? name === "foundation"

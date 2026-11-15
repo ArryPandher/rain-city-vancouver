@@ -3,6 +3,7 @@ import {
   type CanadaPlaceCapabilities,
 } from "./canada-place-capabilities";
 import { galleryRearStepHeight } from "./gallery-rear-entry";
+import { robsonMoundHeight } from "./robson-mound-site";
 import { canadaPlacePromenadeFixtureAt } from "./canada-place-promenade-fixtures-data";
 import { canadaPlaceGuardSegments } from "./canada-place-guards";
 import {
@@ -346,6 +347,8 @@ export class CollisionWorld {
     if (lookout !== undefined) return lookout;
     const forecourt = this.data.terrain && prospectForecourtHeight(x, z);
     if (forecourt !== undefined) return forecourt;
+    const mound = this.robsonGarden && robsonMoundHeight(x, z);
+    if (mound !== undefined) return mound;
     return this.robsonGarden
       ? (robsonHeight(x, z, this.robsonGarden.pts) ??
           this.data.terrain?.height(x, z) ??

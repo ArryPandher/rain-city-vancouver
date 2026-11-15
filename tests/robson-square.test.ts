@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { CollisionWorld } from "../src/world/collision";
+import { robsonMoundHeight } from "../src/world/robson-mound-site";
 import { ORIGIN, KX, type CityData, type Building } from "../src/world/data";
 import {
   gridXZ,
@@ -61,7 +62,12 @@ test("Garden elevations rise continuously from the open approach and return to s
     assert.equal(height, robsonHeight(x, z, garden.pts) ?? 0);
   }
   assert.ok(highest > 3);
-  assert.equal(c.height(...gridXZ(-145, -22)), 0);
+  // The lower V=-22 route above is unchanged. Further north this point lies
+  // inside the separately mapped Robson/Hornby mound, not the flat plaza.
+  assert.equal(
+    c.height(...gridXZ(-145, -22)),
+    robsonMoundHeight(...gridXZ(-145, -22)),
+  );
   assert.equal(c.height(...gridXZ(-225, -52)), 0);
 });
 

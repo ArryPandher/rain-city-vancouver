@@ -52,3 +52,61 @@ Balanced/day, mixing walking with standing. It is not a before/after comparison,
 the final nine-bay benchmark, or the five-minute 1080p performance gate. The
 gallery's overall massing, stone colour, carving and surrounding scene remain
 approximate and visibly below the GTA VI reference.
+
+## Original rear-entrance identity banners — candidate
+
+2026-11-15. `gallery-banners.ts` adds three restrained muted-red fabric panels
+between the four registered engaged shafts. The same Vanderhill 2006 photograph
+above supports tall warm-red banners in this entrance composition; this is an
+original identity-only interpretation, not a recreation of its historical
+exhibition graphics or a claim about today's programme. The only text is
+“VANCOUVER ART GALLERY”, in plain system sans-serif, with no artwork or logo.
+
+Call `addGalleryBanners(group)` on the same source-local landmark group **after
+successful gallery facade preflight**. It is idempotent. No source faces, deck,
+stairs, collision, lights or reflection probes change. Its group uses the same
+`-entry.angle` rotation as the repaired facade. Three panel centres are the
+midpoints of the four shaft centres (-8.8, -4.2166667, 0.3666667, 4.95) in local u.
+Each panel is an estimated 2.35 m wide, from source y=5.45 to 12.65 m. The panel
+plane follows the two exact mapped rear edges, rather than using constant v=23.6
+(which would bury part of the left panel). A 45 mm stand-off and at most 20 mm
+static drape keep the entire cloth outside the wall, behind the outer shaft
+faces. Short top/hem brackets penetrate the wall by 22.5 mm and physically meet
+both crossbars; the lower bar weights the cloth. These are modest estimated
+mountings, not a surveyed installation. The cloth is rough, with no emission or
+baked lighting, no animated wind and no per-frame work.
+
+One lazy shared 512×1024 sRGB CanvasTexture is generated locally; no downloaded
+reference image is used at runtime. Two material batches add 1,368 triangles
+(1,152 cloth and 216 mounting hardware). The texture is approximately 2.67 MiB
+including a complete RGBA mip chain; this excludes driver overhead. There are no
+new external assets. Existing geometry/texture sharing elsewhere is unchanged.
+
+Checks: TypeScript passes. A focused Node geometry inspection using a canvas
+stub verified both actual generated meshes, idempotence, finite bounds and
+44.999–65.001 mm cloth-to-mapped-wall clearance. Cloth local bounds are
+u=-7.68333..3.83333, y=5.45000..12.65000, v=23.58613..23.84088.
+Minimum horizontal clearance from the shaft radius at the panel sides exceeds
+0.71 m. Hardware extends to y=5.40..12.70, above the 3.2 m entrance landing and
+below the 13.22 m shaft heads. These checks do not verify rendered text, daylight
+colour or readability; parent native review remains the adoption gate.
+
+### Native banner correction
+
+The first native image (`gallery-crown-after.jpg`) exposed a real integration
+mistake: 55–65 mm architraves and 160 mm sills projected through the initial
+45–65 mm cloth stand-off. The banner plane now clears the existing masonry at
+190–210 mm, with mounting brackets lengthened to remain attached. No source or
+replacement facade triangles are removed. This supersedes the previous claim
+that every panel sits behind the shaft fronts: at the left end the source wall
+already lies close to the shaft front, so the cloth must project modestly beyond
+that plane to clear the retained sill. The panels remain laterally separate
+from all four shafts and above the landing. This is an authored mounting
+accommodation, not a surveyed historic bracket depth.
+
+Typography is now centred vertically, increased from 45 px to 100 px, with
+moderate weight and two original name lines spanning most of the panel height.
+The shared texture size, physical cloth extent and draw/triangle counts remain
+unchanged. White lines above the pediment in the screenshot cannot be generated
+by this helper: all its vertices remain below source y=12.70 m. Those require
+separate source investigation. Native colour/readability acceptance is pending.

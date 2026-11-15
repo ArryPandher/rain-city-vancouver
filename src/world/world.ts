@@ -67,6 +67,8 @@ import {
   sidewalkSides,
 } from "./road-profile";
 import { ROBSON_PLANTERS, gridXZ } from "./robson-site";
+import { buildRobsonMound, fitRobsonMoundPath } from "./robson-mound";
+import { robsonMoundIntersects } from "./robson-mound-site";
 import { reconcileTrees, treeProfile, type TreeProfile } from "./tree-profile";
 import { ForestHabitat } from "./forest-habitat";
 import { ForestDetail, forestGround } from "./forest";
@@ -146,6 +148,10 @@ export class World {
     addProspectGeology(this.data, this.collision);
     this.forestHabitat = new ForestHabitat(this.data, this.collision);
     this.terrain();
+    if (this.collision.robsonGarden)
+      this.chunks.push(
+        ...buildRobsonMound(this.root, this.materials, this.data.roads),
+      );
     this.roads();
     if (this.collision.canada)
       this.chunks.push(
@@ -571,7 +577,10 @@ export class World {
           /^(Water Street|Alexander Street)$/.test(r.name ?? "") &&
           x > 450 &&
           x < 1800;
+      const moundRoad =
+        !!this.collision.robsonGarden && robsonMoundIntersects(r.pts);
       const onTerrain =
+        moundRoad ||
         (this.collision.canada?.intersects(r.pts) ?? false) ||
         (this.data.terrain?.intersects(r.pts) ?? false) ||
         jackIntersects(r.pts) ||
@@ -604,6 +613,7 @@ export class World {
           scale,
           onTerrain && !bridgeRoute,
         );
+        if (moundRoad) geometry = fitRobsonMoundPath(geometry, height, y);
         if (
           this.collision.canada &&
           ["footway", "path", "pedestrian", "steps"].includes(r.kind)
