@@ -3,6 +3,43 @@ import assert from "node:assert/strict";
 import * as T from "three";
 import { SceneReflections } from "../src/rendering/reflection-probes";
 
+test("focal captures use fixed 256 faces while ordinary probes retain 128 and weather reuses targets", () => {
+  const reflections = new SceneReflections(
+    new T.Scene(),
+    new T.Group(),
+    [],
+    new T.DirectionalLight(),
+    [
+      { name: "ordinary", position: [0, 2, 0], materials: [] },
+      {
+        name: "focal windows",
+        position: [4, 12, 0],
+        materials: [],
+        resolution: 256,
+      },
+    ],
+  );
+  const targets = reflections.probes.map((probe) => probe.target);
+  assert.deepEqual(
+    targets.map((target) => [target.width, target.height]),
+    [
+      [128, 128],
+      [256, 256],
+    ],
+  );
+  for (let i = 0; i < 3; i++) reflections.invalidate();
+  assert.deepEqual(
+    reflections.probes.map((probe) => probe.target),
+    targets,
+  );
+  const disposed: string[] = [];
+  targets.forEach((target, i) =>
+    target.addEventListener("dispose", () => disposed.push(String(i))),
+  );
+  reflections.dispose();
+  assert.deepEqual(disposed, ["0", "1"]);
+});
+
 test("authored reflection intensities follow night and restore daylight without changing other probes", () => {
   const dayGlass = new T.MeshPhysicalMaterial({ envMapIntensity: 1.05 });
   const unchanged = new T.MeshPhysicalMaterial({ envMapIntensity: 0.4 });

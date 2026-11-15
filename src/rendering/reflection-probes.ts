@@ -6,6 +6,8 @@ export interface ReflectionProbeSpec {
   position: [number, number, number];
   materials: T.MeshStandardMaterial[];
   intensity?: { day: number; night: number };
+  /** Fixed at construction. Only close-view architectural probes opt in. */
+  resolution?: 128 | 256;
 }
 export interface SceneReflectionProbe {
   spec: ReflectionProbeSpec;
@@ -35,7 +37,7 @@ export class SceneReflections {
     specs: ReflectionProbeSpec[],
   ) {
     this.probes = specs.map((spec) => {
-      const target = new T.WebGLCubeRenderTarget(128, {
+      const target = new T.WebGLCubeRenderTarget(spec.resolution ?? 128, {
         type: T.HalfFloatType,
         generateMipmaps: true,
         minFilter: T.LinearMipmapLinearFilter,

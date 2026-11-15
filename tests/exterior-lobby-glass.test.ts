@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import * as T from "three";
 import { createExteriorLobbyGlass } from "../src/world/exterior-lobby-glass";
 
-function compiled(throughput = 0.82, interfaces: 1 | 2 = 1) {
+function compiled(throughput = 0.82, interfaces: 1 | 2 = 1, ior = 1.5) {
   const material = createExteriorLobbyGlass(
       "test exterior glass",
       throughput,
@@ -14,6 +14,7 @@ function compiled(throughput = 0.82, interfaces: 1 | 2 = 1) {
       vertexShader: T.ShaderLib.physical.vertexShader,
       fragmentShader: T.ShaderLib.physical.fragmentShader,
     };
+  material.ior = ior;
   material.onBeforeCompile(
     shader as unknown as Parameters<T.Material["onBeforeCompile"]>[0],
     {} as T.WebGLRenderer,
@@ -40,8 +41,9 @@ function fragment(
   facing: number,
   specular: number[],
   interfaces: 1 | 2 = 1,
+  ior = 1.5,
 ) {
-  const { material, shader } = compiled(throughput, interfaces),
+  const { material, shader } = compiled(throughput, interfaces, ior),
     patch = shader.fragmentShader.match(
       /float lobbyFacing[\s\S]*?(?=#include <opaque_fragment>)/,
     )?.[0];
@@ -99,6 +101,31 @@ function composite(
 }
 const near = (actual: number, expected: number) =>
   assert.ok(Math.abs(actual - expected) < 1e-10, `${actual} != ${expected}`);
+
+test("effective architectural Fresnel fit keeps reflection and cavity transmission energy bounded", () => {
+  const ior = 2.3,
+    f0 = ((ior - 1) / (ior + 1)) ** 2;
+  for (let i = 0; i <= 100; i++) {
+    const facing = i / 100,
+      f = f0 + (1 - f0) * (1 - facing) ** 5;
+    const sample = fragment(0.8, facing, [f, f, f], 2, ior);
+    const transmitted = 1 - sample.alpha;
+    assert.ok(
+      transmitted >= -1e-12 && sample.rgb[0] + transmitted <= 1 + 1e-10,
+    );
+    if (i === 100) {
+      assert.ok(sample.rgb[0] > 0.22 && sample.rgb[0] < 0.24);
+      assert.ok(
+        transmitted > 0.57 && transmitted < 0.59,
+        "closed backing remains visible",
+      );
+    }
+    if (i === 0) {
+      near(sample.rgb[0], 1);
+      near(transmitted, 0);
+    }
+  }
+});
 
 test("one-pass thin slab sums both interfaces without duplicating reflected energy at grazing angles", () => {
   const normal = fragment(1, 1, [0.04, 0.04, 0.04], 2);

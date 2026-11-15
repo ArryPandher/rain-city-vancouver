@@ -118,3 +118,7 @@ and [warehouse corner](../screenshots/howe-warehouse-corner.webp). Final public
 release and CI evidence are recorded in the project log after deployment. The full GTA 6/AAA scene target remains unachieved;
 this replacement addresses one conspicuous architectural error in the main
 Canada Place/Howe gameplay view.
+
+## Subsequent glazing and weathering pass — 2026-11-15
+
+The warehouse's existing static reflection target now uses fixed256px faces while ordinary scene probes remain128px. Its opaque window material and geometry are unchanged. Source-guided masks add bounded base/sill/cap weathering to masonry without textures, changed normals or displacement; ground exposure follows the actual shared sidewalk. The native street view and day→night→day reflection refresh passed with no captured warnings/errors. See [shared optics, cost and limitations](howe-glazing-and-weathering.md). These changes do not establish photographic or AAA fidelity.

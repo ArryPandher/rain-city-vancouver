@@ -183,8 +183,20 @@ export function architecture(
     if (
       terminalCity(b, shell) ||
       granvilleSquareHowe(b, shell, m) ||
-      customsWarehouse(b, shell, m, reflections) ||
-      pacificCoast(b, shell, m, reflections) ||
+      customsWarehouse(
+        b,
+        shell,
+        m,
+        reflections,
+        collision.groundHeight.bind(collision),
+      ) ||
+      pacificCoast(
+        b,
+        shell,
+        m,
+        reflections,
+        collision.groundHeight.bind(collision),
+      ) ||
       fairmontWaterfront(
         b,
         shell,

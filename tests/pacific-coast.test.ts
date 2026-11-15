@@ -23,6 +23,8 @@ const materials = {
   glass: new T.MeshStandardMaterial(),
   frame: new T.MeshStandardMaterial(),
   roof: new T.MeshStandardMaterial(),
+  lining: new T.MeshStandardMaterial(),
+  blind: new T.MeshStandardMaterial(),
 };
 const root = new T.Group(),
   batch = new Batcher(root);
@@ -195,7 +197,7 @@ test("simple current parapet and flat roof close the footprint; only the small s
   for (const p of plantRing) assert.ok(pointInPoly(...p, ring.flat()));
 });
 
-test("seven batches have finite outward geometry, continuous metric facade UVs and bounded projection/cost", () => {
+test("nine batches have finite outward geometry, continuous metric facade UVs and bounded projection/cost", () => {
   let triangles = 0;
   for (const mesh of meshes) {
     const g = mesh.geometry,
@@ -235,8 +237,11 @@ test("seven batches have finite outward geometry, continuous metric facade UVs a
       );
     }
   }
-  assert.equal(meshes.length, 7);
-  assert.ok(triangles < 18000);
+  assert.equal(meshes.length, 9);
+  assert.ok(
+    triangles <= 10742 + 5200,
+    `${triangles} triangles: bounded cavity/blind addition`,
+  );
   const g = meshes.find((m) => m.material === materials.brick)!.geometry,
     p = g.getAttribute("position"),
     uv = g.getAttribute("uv");
@@ -285,5 +290,120 @@ test("modern proportions retain the taller street base and uninterrupted top fri
       materials.glass,
       "stringcourse does not cut through the revised top window",
     );
+  }
+});
+
+test("glazing is backed by a closed shallow cavity rather than an opaque frame wall", () => {
+  for (const edge of [0, 1]) {
+    const f = facadeFrame(ring[edge], ring[edge + 1]);
+    for (const b of pacificCoastBays(edge))
+      for (const row of s.rows) {
+        const u = b.left + (b.right - b.left) * 0.28,
+          y = row.sill + 0.38;
+        const through = ray(
+          vec(f.p(u, y, s.windowRecess + 0.03)),
+          vec(f.p(u, y, s.windowRecess + 1.0)),
+        );
+        assert.equal(
+          mat(through[0]),
+          materials.lining,
+          "the lower uncovered pane looks into an actual closed recess",
+        );
+        near(through[0].distance, 0.83);
+        const before = ray(
+          vec(f.p(u, y, s.windowRecess - 0.01)),
+          vec(f.p(u, y, s.windowRecess + 0.1)),
+        );
+        assert.equal(
+          before.length,
+          0,
+          "no opaque frame plane immediately behind the clear pane",
+        );
+        const insideDepth = s.windowRecess + 0.72;
+        const floor = ray(
+          vec(f.p(u, row.sill + 0.3, insideDepth)),
+          vec(f.p(u, row.sill - 0.1, insideDepth)),
+        )[0];
+        const ceiling = ray(
+          vec(f.p(u, row.head - 0.3, insideDepth)),
+          vec(f.p(u, row.head + 0.1, insideDepth)),
+        )[0];
+        const wall = ray(
+          vec(f.p(b.left + 0.25, y, insideDepth)),
+          vec(f.p(b.left - 0.1, y, insideDepth)),
+        )[0];
+        for (const hit of [floor, ceiling, wall])
+          assert.equal(mat(hit), materials.lining);
+        near(floor.point.y, row.sill + 0.075);
+        near(ceiling.point.y, row.head - 0.075);
+        assert.ok(floor.face!.normal.y > 0.99);
+        assert.ok(ceiling.face!.normal.y < -0.99);
+      }
+  }
+  // Entrance threshold geometry stays fixed while the backing moves inside.
+  const f = facadeFrame(ring[1], ring[2]),
+    b = pacificCoastBays(1)[2],
+    lo = thresholds[2];
+  const hit = ray(
+    vec(f.p(b.left + 0.6, lo + 0.4, s.baseRecess + 0.03)),
+    vec(f.p(b.left + 0.6, lo + 0.4, s.baseRecess + 1.0)),
+  )[0];
+  assert.equal(mat(hit), materials.lining);
+  near(hit.distance, 0.83);
+});
+
+test("upper sashes contain varied partial blinds wholly behind the original panes, with open lower views", () => {
+  const blindMesh = meshes.find((mesh) => mesh.material === materials.blind)!;
+  const p = blindMesh.geometry.getAttribute("position");
+  let variations = new Set<string>(),
+    open = 0,
+    partial = 0;
+  for (const edge of [0, 1]) {
+    const f = facadeFrame(ring[edge], ring[edge + 1]);
+    for (const b of pacificCoastBays(edge))
+      for (const row of s.rows) {
+        for (const ratio of [0.28, 0.72]) {
+          const u = b.left + (b.right - b.left) * ratio;
+          let count = 0;
+          for (const fraction of [0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85]) {
+            const y = row.sill + (row.head - row.sill) * fraction;
+            const hits = ray(
+              vec(f.p(u, y, s.windowRecess + 0.04)),
+              vec(f.p(u, y, s.windowRecess + 0.4)),
+            ).filter((hit) => mat(hit) === materials.blind);
+            if (hits.length) count++;
+          }
+          if (count === 0) open++;
+          else partial++;
+          variations.add(String(count));
+        }
+      }
+  }
+  assert.ok(
+    open >= 15 && partial >= 30,
+    `${open} open, ${partial} partly lowered`,
+  );
+  assert.ok(
+    variations.size >= 3,
+    "several observed coverage levels rather than uniform repeated backing",
+  );
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i),
+      z = p.getZ(i),
+      y = p.getY(i);
+    const edge =
+      Math.abs(
+        (x - ring[0][0]) * facadeFrame(ring[0], ring[1]).outward[0] +
+          (z - ring[0][1]) * facadeFrame(ring[0], ring[1]).outward[1],
+      ) < 1
+        ? 0
+        : 1;
+    const f = facadeFrame(ring[edge], ring[edge + 1]);
+    const depth = -(
+      (x - ring[edge][0]) * f.outward[0] +
+      (z - ring[edge][1]) * f.outward[1]
+    );
+    assert.ok(depth > s.windowRecess + 0.13 && depth < s.windowRecess + 0.3);
+    assert.ok(s.rows.some((row) => y > row.sill + 0.5 && y < row.head - 0.07));
   }
 });

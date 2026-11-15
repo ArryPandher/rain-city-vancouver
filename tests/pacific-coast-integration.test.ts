@@ -36,7 +36,16 @@ const batch = new Batcher(root);
 batch.offsetY = datum;
 const reflections: ReflectionProbeSpec[] = [];
 const library = { texture: () => new T.Texture<HTMLImageElement>() };
-assert.equal(pacificCoast(building, batch, library, reflections), true);
+assert.equal(
+  pacificCoast(
+    building,
+    batch,
+    library,
+    reflections,
+    collision.groundHeight.bind(collision),
+  ),
+  true,
+);
 batch.finish();
 root.updateMatrixWorld(true);
 
@@ -106,10 +115,8 @@ test("the dedicated facade dispatch has one external static reflection and does 
   assert.equal(otherBatch.groups.size, 0);
   assert.equal(otherProbes.length, 0);
   const source = fs.readFileSync("src/world/architecture.ts", "utf8");
-  assert.ok(
-    source.indexOf("pacificCoast(b, shell, m, reflections)") <
-      source.indexOf("heritage ="),
-  );
+  const dispatch = source.indexOf("pacificCoast(");
+  assert.ok(dispatch >= 0 && dispatch < source.indexOf("heritage ="));
 });
 
 test("Howe entrance thresholds meet the actual rising sidewalk", () => {

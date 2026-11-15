@@ -495,6 +495,11 @@ class Game {
               sharedSkyEnvironment:
                 this.scene.background === this.scene.environment,
               reflectionCaptures: this.reflections?.captures,
+              reflectionProbeSizes: this.reflections?.probes.map((probe) => ({
+                name: probe.spec.name,
+                size: probe.target.width,
+                valid: probe.valid,
+              })),
               reflectionError: this.reflections?.lastError,
             },
           },

@@ -16,7 +16,15 @@ import {
   PACIFIC_COAST_ENTRANCE_THRESHOLDS as thresholds,
 } from "./pacific-coast-site";
 export type PacificCoastGeometryMaterials = Record<
-  "stone" | "base" | "brick" | "trim" | "glass" | "frame" | "roof",
+  | "stone"
+  | "base"
+  | "brick"
+  | "trim"
+  | "glass"
+  | "frame"
+  | "roof"
+  | "lining"
+  | "blind",
   T.Material
 >;
 type Frame = ReturnType<typeof facadeFrame>;
@@ -179,8 +187,87 @@ export function buildPacificCoast(
     side(f, revealMaterial, b, lo, hi, 0, depth, false);
     horizontal(f, revealMaterial, a, b, lo, 0, depth);
     horizontal(f, revealMaterial, a, b, hi, 0, depth, false);
-    face(f, m.frame, a, b, lo, hi, depth);
+    // A frame is an opening, not a dark opaque rectangle immediately behind
+    // the pane. Its perimeter preserves the previous visible coordinates.
+    face(f, m.frame, a, a + trim, lo + trim, hi - trim, depth);
+    face(f, m.frame, b - trim, b, lo + trim, hi - trim, depth);
+    face(f, m.frame, a, b, lo, lo + trim, depth);
+    face(f, m.frame, a, b, hi - trim, hi, depth);
     face(f, m.glass, a + trim, b - trim, lo + trim, hi - trim, depth - 0.018);
+
+    // One shallow, genuinely closed cavity supplies parallax, occlusion and
+    // shaded returns behind the original exterior glazing. No furniture,
+    // occupiable room, emissive fill or photographic room panorama is implied.
+    const back = depth + 0.86,
+      left = a + trim,
+      right = b - trim,
+      bottom = lo + trim,
+      top = hi - trim;
+    face(f, m.lining, left, right, bottom, top, back);
+    side(f, m.lining, left, bottom, top, depth, back, true);
+    side(f, m.lining, right, bottom, top, depth, back, false);
+    horizontal(f, m.lining, left, right, bottom, depth, back);
+    horizontal(f, m.lining, left, right, top, depth, back, false);
+
+    if (!base) {
+      const location = f.p((a + b) / 2, lo);
+      const seed =
+        ((Math.round(location[0] * 10) * 73856093) ^
+          (Math.round(location[2] * 10) * 19349663) ^
+          (Math.round(lo * 100) * 83492791)) >>>
+        0;
+      const coverage = [0, 0, 0.22, 0.36, 0.58, 0, 0.22, 0.44];
+      const mid = (a + b) / 2;
+      for (const [index, span] of [
+        [left + 0.025, mid - 0.07],
+        [mid + 0.07, right - 0.025],
+      ].entries()) {
+        // Vary individual upper sashes deterministically. Source photos show
+        // mixed pane appearance; exact blind positions are an interpretation.
+        let hash = (seed ^ Math.imul(index + 1, 0x9e3779b9)) >>> 0;
+        hash = Math.imul(hash ^ (hash >>> 16), 0x85ebca6b) >>> 0;
+        const amount = coverage[(hash ^ (hash >>> 13)) & 7];
+        const [l, r] = span,
+          head = top - 0.025,
+          blindDepth = depth + 0.19;
+        solid(
+          f,
+          m.blind,
+          l,
+          r,
+          head - 0.075,
+          head,
+          blindDepth - 0.025,
+          blindDepth + 0.04,
+        );
+        if (!amount) continue;
+        const end = head - (top - bottom) * amount;
+        for (let y = head - 0.075; y > end + 0.012; y -= 0.065) {
+          const low = Math.max(end, y - 0.052);
+          quad(
+            m.blind,
+            [
+              f.p(l, y, blindDepth),
+              f.p(r, y, blindDepth),
+              f.p(r, low, blindDepth + 0.034),
+              f.p(l, low, blindDepth + 0.034),
+            ],
+            [f.outward[0] * 0.85, 0.54, f.outward[1] * 0.85],
+            [l, y, r, y, r, low, l, low],
+          );
+        }
+        solid(
+          f,
+          m.blind,
+          l,
+          r,
+          end - 0.018,
+          end + 0.018,
+          blindDepth - 0.012,
+          blindDepth + 0.05,
+        );
+      }
+    }
     const bar = (aa: number, bb: number, ll: number, hh: number) =>
       solid(f, m.frame, aa, bb, ll, hh, depth - 0.065, depth - 0.008);
     const mid = (a + b) / 2;

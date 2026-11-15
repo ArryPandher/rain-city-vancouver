@@ -1,5 +1,6 @@
 import * as T from "three";
 import type { Materials } from "./materials";
+import { createExteriorLobbyGlass } from "./exterior-lobby-glass";
 
 /** Approximate 225 × 75 mm brick modules, not surveyed building dimensions.
  * All geometry uses continuous facade-along / height coordinates in metres. */
@@ -42,6 +43,18 @@ export function createPacificCoastMaterials(
     roughnessMap: texture(surface, "roughness", metres),
   });
   const mineral = maps("mineral", PACIFIC_COAST_MINERAL_REPEAT_METRES);
+  // A dielectric sheet over closed window recesses. The lining supplies actual
+  // visible depth; reflected radiance is no longer mixed with opaque paint.
+  const glass = createExteriorLobbyGlass(
+    "325 Howe recessed paired window glazing",
+    0.8,
+    2,
+  );
+  // Effective Fresnel fit for the reflective glazing seen in the reference,
+  // not a measurement of its coating/index. The slab uses the same IOR for
+  // reflected BRDF and transmitted energy, retaining a closed recess behind it.
+  glass.ior = 2.3;
+  glass.roughness = 0.045;
   return {
     stone: new T.MeshStandardMaterial({
       name: "325 Howe pale warm mineral piers and Cordova spandrels",
@@ -78,18 +91,18 @@ export function createPacificCoastMaterials(
       metalness: 0,
       roughness: 0.89,
     }),
-    // An opaque optical proxy behind real reveal geometry. The reflection /
-    // diffuse blend is calibrated against the street photo: the first low-F0
-    // candidate read as dark paint. "Metalness" here controls that proxy blend;
-    // it does not mean the real glass is metallic or claim measured optics.
-    glass: new T.MeshPhysicalMaterial({
-      name: "325 Howe recessed paired window glazing",
-      color: 0xa2a9a5,
-      metalness: 0.7,
-      roughness: 0.045,
-      clearcoat: 0,
-      ior: 1.5,
-      envMapIntensity: 0.9,
+    glass,
+    lining: new T.MeshStandardMaterial({
+      name: "325 Howe closed window recess lining",
+      color: 0x333936,
+      metalness: 0,
+      roughness: 0.98,
+    }),
+    blind: new T.MeshStandardMaterial({
+      name: "325 Howe off-white window blinds",
+      color: 0x959b8e,
+      metalness: 0,
+      roughness: 0.91,
     }),
     frame: new T.MeshStandardMaterial({
       name: "325 Howe pale grey painted window frames",
