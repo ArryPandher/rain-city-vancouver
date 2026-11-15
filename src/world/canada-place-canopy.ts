@@ -1,3 +1,7 @@
+import {
+  createCanadaPlaceCanopyGlazingPair,
+  createCanadaPlaceCanopyGlazingMesh,
+} from "./canada-place-canopy-glass";
 import * as T from "three";
 import data from "./canada-place-canopy-data.json";
 import { geo } from "./data";
@@ -124,7 +128,7 @@ export function canadaPlaceCanopyCompatible(root: T.Object3D) {
   });
   return valid && found.size === 3;
 }
-/** One anchored entrance conservatory. Local model datum, three static batches;
+/** One anchored entrance conservatory. Local model datum, shared static materials;
  * estimated3m projection requires the exported footprint as a new closed solid. */
 export function addCanadaPlaceCanopy(
   root: T.Group,
@@ -139,6 +143,15 @@ export function addCanadaPlaceCanopy(
     roughness: 0.2,
     metalness: 0.32,
     envMapIntensity: 1.25,
+  });
+  const endGlasses = [glass.clone(), glass.clone()];
+  const glazingPair = createCanadaPlaceCanopyGlazingPair();
+  const lining = new T.MeshStandardMaterial({
+    name: "canada-canopy-lining",
+    color: 0x7c877e,
+    roughness: 0.86,
+    metalness: 0,
+    side: T.FrontSide,
   });
   const frame = new T.MeshStandardMaterial({
     color: 0x93aca1,
@@ -277,6 +290,86 @@ export function addCanadaPlaceCanopy(
       0.085,
     );
   }
+  // Rabich2022 shows genuine inward curved webs and inboard uprights through
+  // the southern glazed end. Repeat on existing primary ribs, not each pane.
+  // 230mm web depth and post sections are explicit authored estimates.
+  const webDepth = [0.05, 0.28];
+  const primary = Array.from({ length: count + 1 }, (_, j) => j).filter(
+    (j) => j % 4 === 0 || j === count,
+  );
+  function closedWeb(rings: T.Vector3[][]) {
+    for (let i = 1; i < rings.length; i++) {
+      const a = rings[i - 1],
+        b = rings[i];
+      const center = [...a, ...b]
+        .reduce((v, p) => v.add(p), new T.Vector3())
+        .multiplyScalar(0.125);
+      for (let j = 0; j < 4; j++) {
+        const k = (j + 1) % 4,
+          v = [a[j], a[k], b[k], b[j]];
+        const n = v
+          .reduce((v, p) => v.add(p), new T.Vector3())
+          .multiplyScalar(0.25)
+          .sub(center)
+          .normalize();
+        quad(frame, v, n);
+      }
+    }
+    for (const end of [0, rings.length - 1]) {
+      const here = rings[end],
+        near = rings[end === 0 ? 1 : end - 1];
+      const center = here
+        .reduce((v, p) => v.add(p), new T.Vector3())
+        .multiplyScalar(0.25);
+      const other = near
+        .reduce((v, p) => v.add(p), new T.Vector3())
+        .multiplyScalar(0.25);
+      quad(frame, here, center.sub(other).normalize());
+    }
+  }
+  for (const j of primary) {
+    const u = Math.max(0.055, Math.min(length - 0.055, (length * j) / count));
+    const side = along.clone().multiplyScalar(0.05);
+    const rings = sections.map((section) => {
+      const n = normal(section.theta),
+        p = at(u, section.y, section.outward);
+      const a = p.clone().addScaledVector(n, -webDepth[0]);
+      const b = p.clone().addScaledVector(n, -webDepth[1]);
+      return [
+        a.clone().sub(side),
+        a.clone().add(side),
+        b.clone().add(side),
+        b.clone().sub(side),
+      ];
+    });
+    closedWeb(rings);
+    // Inside post bears on the same floor and meets the curved web at crown.
+    // Its plane remains inside the ellipse; no rectangular roof is introduced.
+    beam(at(u, data.sill, 0.28), at(u, data.crown - 0.28, 0.28), 0.14);
+    beam(at(u, data.crown - 0.28, 0.02), at(u, data.crown - 0.28, 0.35), 0.12);
+  }
+  for (const k of [1, 9]) {
+    const section = sections[k],
+      n = normal(section.theta);
+    const a = at(0.055, section.y, section.outward).addScaledVector(n, -0.23);
+    const b = at(length - 0.055, section.y, section.outward).addScaledVector(
+      n,
+      -0.23,
+    );
+    beam(a, b, 0.09);
+  }
+  // Exterior-visible closed backing, on the original wall line, with no
+  // ceiling plane across the convex glazing. Floor is the existing sill slab.
+  quad(
+    lining,
+    [
+      at(0, data.sill, 0),
+      at(length, data.sill, 0),
+      at(length, data.crown, 0),
+      at(0, data.crown, 0),
+    ],
+    out,
+  );
   // Solid plinth and its capped threshold contact the unchanged source deck.
   quad(
     stone,
@@ -289,7 +382,7 @@ export function addCanadaPlaceCanopy(
     out,
   );
   quad(
-    stone,
+    lining,
     [
       at(0, data.sill, 0),
       at(length, data.sill, 0),
@@ -299,7 +392,7 @@ export function addCanadaPlaceCanopy(
     up,
   );
   // Both end walls are real glazed polygons, closed to the original HOTEL wall.
-  for (const u of [0, length]) {
+  for (const [endIndex, u] of [0, length].entries()) {
     const endNormal = along.clone().multiplyScalar(u === 0 ? -1 : 1);
     quad(
       stone,
@@ -315,7 +408,7 @@ export function addCanadaPlaceCanopy(
       const a = sections[k - 1],
         b = sections[k];
       quad(
-        glass,
+        endGlasses[endIndex],
         [
           at(u, a.y, 0),
           at(u, a.y, a.outward),
@@ -353,11 +446,21 @@ export function addCanadaPlaceCanopy(
     g.setAttribute("normal", new T.Float32BufferAttribute(q.n, 3));
     g.setIndex(q.ix);
     landmarkSurfaceUV(g, [4, 4]);
-    const mesh = new T.Mesh(g, m);
-    mesh.name = m.name;
-    mesh.castShadow = mesh.receiveShadow = true;
+    const isGlass =
+      m === glass || endGlasses.includes(m as T.MeshStandardMaterial);
+    const mesh = isGlass
+      ? createCanadaPlaceCanopyGlazingMesh(g, glazingPair)
+      : new T.Mesh(g, m);
+    if (isGlass) g.dispose();
+    else {
+      mesh.name = m.name;
+      mesh.castShadow = true;
+    }
+    mesh.receiveShadow = true;
     root.add(mesh);
     meshes.push(mesh);
   }
+  glass.dispose();
+  endGlasses.forEach((m) => m.dispose());
   return meshes;
 }

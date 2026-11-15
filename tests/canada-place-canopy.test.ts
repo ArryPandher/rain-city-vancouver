@@ -65,7 +65,32 @@ async function scene() {
         mesh.name = "paving";
         root.add(mesh);
       }
+      const beforeCanopy = Array.from(g.getIndex()!.array);
       removed[name] = replaceCanadaPlaceCanopyFaces(g, name);
+      const afterCanopy = Array.from(g.getIndex()!.array);
+      assert.equal(beforeCanopy.length - afterCanopy.length, removed[name] * 3);
+      // Whole triangles must be an ordered subsequence, not a reconstructed or
+      // reordered surface that merely has the expected number of triangles.
+      let keptTriangle = 0;
+      for (let i = 0; i < beforeCanopy.length; i += 3) {
+        if (
+          beforeCanopy
+            .slice(i, i + 3)
+            .every((v, j) => v === afterCanopy[keptTriangle + j])
+        )
+          keptTriangle += 3;
+      }
+      assert.equal(
+        keptTriangle,
+        afterCanopy.length,
+        `${name}: exact retained triangle order`,
+      );
+      assert.equal(
+        replaceCanadaPlaceCanopyFaces(g, name),
+        0,
+        `${name}: idempotent removal`,
+      );
+      assert.deepEqual(Array.from(g.getIndex()!.array), afterCanopy);
       assert.deepEqual(
         Array.from(g.getAttribute("position").array),
         before,
@@ -104,7 +129,14 @@ test("source-pinned entrance cuts preserve simultaneous paving and SAILS facade 
   assert.equal(removed.concrete, 2);
   assert.equal(removed.glass, 24);
   assert.equal(removed.trim, 156);
-  assert.equal(meshes.length, 3);
+  assert.equal(
+    meshes.filter((m) => m.name === "canada-canopy-glass").length,
+    3,
+  );
+  assert.equal(
+    meshes.filter((m) => m.name === "canada-canopy-lining").length,
+    1,
+  );
   assert.ok(
     meshes.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0) < 14000,
   );
@@ -113,7 +145,13 @@ test("source-pinned entrance cuts preserve simultaneous paving and SAILS facade 
       assert.ok(Number.isFinite(v));
     for (const v of m.geometry.getAttribute("normal").array)
       assert.ok(Number.isFinite(v));
-    assert.equal((m.material as T.Material).side, T.FrontSide);
+    const materials = Array.isArray(m.material) ? m.material : [m.material];
+    assert.ok(materials.length > 0);
+    for (const material of materials) {
+      if (m.name !== "canada-canopy-glass")
+        assert.equal(material.side, T.FrontSide);
+      else assert.equal(material.transparent, true);
+    }
   }
 });
 test("actual GLB opening exposes curved panes at multiple heights and both oblique directions", async () => {
@@ -145,10 +183,24 @@ test("closed glazed ends and capped deck-contact plinth are tangible from outsid
   assert.equal(foot.object.name, "canada-canopy-stone");
   const top = ray(root, at(L * 0.4, 9, 2), at(L * 0.4, 8.65, 2));
   assert.ok(top);
-  assert.equal(top.object.name, "canada-canopy-stone");
+  assert.equal(top.object.name, "canada-canopy-lining");
+  assert.ok(Math.abs(top.point.y - 8.65) < 1e-5);
 });
 test("public promenade retains original support and stays outside the new closed footprint", async () => {
   const { root, original } = await fixture;
+  assert.deepEqual(
+    CANADA_PLACE_CANOPY_WORLD_FOOTPRINT,
+    [
+      [-138.04960662441343, 28.531185489873696],
+      [-183.74182639442907, 53.088265158662885],
+      [-185.16204407605167, 50.445731954177745],
+      [-139.46982430603603, 25.888652285388556],
+    ].flatMap(([x, z]) => [
+      x + CANADA_PLACE_ORIGIN[0],
+      z + CANADA_PLACE_ORIGIN[1],
+    ]),
+    "optics/depth changes must retain the reviewed closed footprint exactly",
+  );
   for (let i = 1; i < CANADA_PLACE_DECK_ROUTE.length; i++) {
     const a = CANADA_PLACE_DECK_ROUTE[i - 1],
       b = CANADA_PLACE_DECK_ROUTE[i],
