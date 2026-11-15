@@ -1,3 +1,4 @@
+import { canadaPlaceRoofOutwardAt } from "./canada-place-concourse-layout";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import concourse from "./canada-place-concourse-data.json";
@@ -16,9 +17,7 @@ export function canadaPlaceUpperGuardPath(): GuardPoint[] {
   path.push(point(0, 0));
   for (let i = 1; i < stations.length; i++) {
     const middle = (stations[i - 1].s + stations[i].s) / 2;
-    const fascia =
-      middle < concourse.upperGlazing[0] || middle > concourse.upperGlazing[1];
-    const out = concourse.profile[fascia ? 17 : 25][0];
+    const out = canadaPlaceRoofOutwardAt(middle);
     for (const p of [point(i - 1, out), point(i, out)])
       if (Math.hypot(p[0] - path.at(-1)![0], p[1] - path.at(-1)![1]) > 0.0001)
         path.push(p);

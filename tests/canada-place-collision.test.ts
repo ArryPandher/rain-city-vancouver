@@ -434,7 +434,11 @@ test("continuous outside-anchor route admits actual player bike and car collisio
   );
 });
 test("under-concourse ground recess stays open but its overhead envelope remains closed", () => {
-  const p = concourse.stations[Math.floor(concourse.stations.length / 2)],
+  // Use the physical mid-hall station; inserting facade boundaries must not
+  // move this fixture onto a neighbouring ground-stay collider.
+  const p = concourse.stations.find(
+      (st) => Math.abs(st.s - concourse.length / 2) < 1e-6,
+    )!,
     x = p.x + p.nx * 13.6 + GROUND_STAY_ORIGIN[0],
     z = p.z + p.nz * 13.6 + GROUND_STAY_ORIGIN[1];
   assert.equal(solidAt(x, z, 0.36, CANADA_PLACE_DECK_Y), false);
@@ -499,7 +503,9 @@ test("loaded geometry capabilities gate refinements per collision instance and f
 });
 
 test("rejected concourse refinement does not create an invisible canopy volume", () => {
-  const st = concourse.stations[Math.floor(concourse.stations.length / 2)];
+  const st = concourse.stations.find(
+    (p) => Math.abs(p.s - concourse.length / 2) < 1e-6,
+  )!;
   const x = st.x + st.nx * 13.6 + GROUND_STAY_ORIGIN[0];
   const z = st.z + st.nz * 13.6 + GROUND_STAY_ORIGIN[1];
   const c = new CollisionWorld(data);

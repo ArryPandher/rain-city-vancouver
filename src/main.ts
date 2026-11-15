@@ -296,7 +296,10 @@ class Game {
     );
     ui.loading("Preparing your ride and character", 0.89);
     await actorAssets;
-    this.actors = new Actors(this.world);
+    this.actors = new Actors(
+      this.world,
+      this.renderer.extensions.has("WEBGL_multi_draw"),
+    );
     this.character = makeCharacter(this.world.materials);
     this.scene.add(this.character.group, this.camera);
     for (let i = 0; i < 3; i++) {
@@ -1067,7 +1070,7 @@ class Game {
       shortenChaseBoom(
         focus,
         desired,
-        (p) => this.world.collision.blocked(p.x, p.z, 0.25, p.y) && p.y < 45,
+        (p) => this.world.collision.cameraBlocked(p.x, p.z, 0.25, p.y) && p.y < 45,
       );
       desired.y = Math.max(
         this.world.collision.height(desired.x, desired.z, this.player.y) + 0.5,

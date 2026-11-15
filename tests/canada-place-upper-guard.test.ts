@@ -13,7 +13,7 @@ test("guard follows actual roof steps and returns to both source wall ends", () 
     b = data.stations.at(-1)!;
   assert.deepEqual(path[0], [a.x, a.z]);
   assert.deepEqual(path.at(-1), [b.x, b.z]);
-  for (const s of data.upperGlazing) {
+  for (const s of [33, 43, 65, 70, 83, 87]) {
     const station = data.stations.find((p) => p.s === s)!;
     for (const k of [17, 25])
       assert.ok(
@@ -51,14 +51,27 @@ test("coping continuously meets existing roof and closed end cap geometry", () =
   for (let i = 1; i < path.length; i++) {
     const a = path[i - 1],
       b = path[i];
-    const hits = new T.Raycaster(
-      new T.Vector3((a[0] + b[0]) / 2, 17.8, (a[1] + b[1]) / 2),
-      new T.Vector3(0, -1, 0),
+    const perpendicular = new T.Vector3(
+      -(b[1] - a[1]),
       0,
-      0.2,
-    ).intersectObject(root, true);
+      b[0] - a[0],
+    ).normalize();
+    // Coping is280mm wide and centered on the roof rim. Float32 edge rounding
+    // can put its exact centre ray just outside; sample within its actual width.
+    const hits = [0, 0.03, -0.03, 0.08, -0.08].flatMap((offset) =>
+      new T.Raycaster(
+        new T.Vector3(
+          (a[0] + b[0]) / 2,
+          17.8,
+          (a[1] + b[1]) / 2,
+        ).addScaledVector(perpendicular, offset),
+        new T.Vector3(0, -1, 0),
+        0,
+        0.2,
+      ).intersectObject(root, true),
+    );
     assert.ok(hits.length, `unsupported upper edge${i}`);
-    assert.ok(hits[0].point.y >= 17.649);
+    assert.ok(hits.some((hit) => hit.point.y >= 17.649));
   }
 });
 test("one bounded mesh keeps ground untouched, outward rail geometry and closed coping", () => {

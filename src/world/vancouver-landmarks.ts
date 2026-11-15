@@ -1,6 +1,7 @@
 import { canadaPlaceCapabilities } from "./canada-place-capabilities";
 import { createCanadaPlaceDoorGlass } from "./canada-place-door-glass";
 import { addCanadaPlaceUpperGuard } from "./canada-place-upper-guard";
+import { addCanadaPlaceLettering } from "./canada-place-lettering";
 import {
   addGalleryFacade,
   galleryFacadeCompatible,
@@ -219,6 +220,7 @@ export async function loadVancouverLandmarks(
       canadaMaterials.set("door-glass", createCanadaPlaceDoorGlass());
       const facade = addCanadaPlaceWestFacade(group, canadaMaterials);
       addCanadaPlaceUpperGuard(group);
+      addCanadaPlaceLettering(group);
       localReflection(
         "Canada Place west concourse",
         canadaPlaceConcoursePoint(51.55, 18, 11.5),

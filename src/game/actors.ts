@@ -1,3 +1,4 @@
+import { batchCarWheels, syncCarWheelBatches } from "../world/wheel-batching";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { detailedCar } from "../world/detailed-car";
@@ -80,7 +81,10 @@ export class Actors {
   peds: Pedestrian[] = [];
   random = seeded(518);
   timer = 0;
-  constructor(public world: World) {}
+  constructor(
+    public world: World,
+    private readonly wheelMultiDraw = false,
+  ) {}
   addVehicle(
     kind: "car" | "bike",
     x: number,
@@ -96,6 +100,7 @@ export class Actors {
         : detailedCar(color, ai) || makeCar(this.world.materials, color);
     mergeGroup(model.body as T.Group);
     model.wheels.forEach(mergeGroup);
+    if (kind === "car") batchCarWheels(model.group, this.wheelMultiDraw);
     model.group.position.set(
       x,
       this.world.collision.height(x, z, referenceY) +
@@ -518,6 +523,7 @@ export class Actors {
       if (v.model.crank) v.model.crank.rotation.x = -phase;
       v.model.pedals?.forEach((p) => (p.rotation.x = phase));
     }
+    syncCarWheelBatches(g);
   }
   nearest(x: number, z: number, r = 7) {
     let nearest: Vehicle | null = null,

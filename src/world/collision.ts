@@ -397,6 +397,20 @@ export class CollisionWorld {
     );
   }
   blocked(x: number, z: number, r = 0.4, referenceY = Infinity) {
+    return this.blockedAt(x, z, r, referenceY, false);
+  }
+  /** Camera spheres may occupy air above the source pier railing. Walking
+   * support masks must not become infinite walls for a third-person boom. */
+  cameraBlocked(x: number, z: number, r: number, referenceY: number) {
+    return this.blockedAt(x, z, r, referenceY, true);
+  }
+  private blockedAt(
+    x: number,
+    z: number,
+    r: number,
+    referenceY: number,
+    camera: boolean,
+  ) {
     // A retaining face is not a step: low actors cannot enter the raised
     // support through its side and be snapped up by ground-following physics.
     if (
@@ -443,7 +457,11 @@ export class CollisionWorld {
         canadaLevel &&
         CANADA_PLACE_DECK_COLLIDER_IDS.has(b.id) &&
         !solidAt(x, z, r, referenceY, this.canadaGeometry) &&
-        (supportedDeck(x, z, r, this.canadaGeometry) ||
+        // Source west rail top is 8.802 + .05 + .08 = 8.932 m.
+        // Keep the proxy for lower cameras; only a sphere wholly above a
+        // conservative 8.98 m rail envelope may ignore actor support margins.
+        ((camera && referenceY - r > CANADA_PLACE_DECK_Y + 1.1) ||
+          supportedDeck(x, z, r, this.canadaGeometry) ||
           (!inCanadaPlacePier(x, z) && this.canada!.contains(x, z)))
       )
         continue;

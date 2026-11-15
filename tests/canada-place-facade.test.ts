@@ -129,12 +129,12 @@ function ray(root: T.Object3D, from: T.Vector3, to: T.Vector3) {
     from.distanceTo(to) + 0.015,
   ).intersectObject(root, true)[0];
 }
-test("source-pinned replacement is limited to reviewed west podium surfaces and eight shared material batches", async (t) => {
+test("source-pinned replacement is limited to reviewed west podium surfaces and ten bounded meshes sharing structural wall material", async (t) => {
   const { removed, additions, original } = await fixture;
   assert.equal(removed.concrete, 10);
   assert.equal(removed.glass, 100);
   assert.equal(removed.trim, 480);
-  assert.equal(additions.length, 8);
+  assert.equal(additions.length, 10);
   t.diagnostic(
     `${additions.reduce((s, m) => s + m.geometry.getIndex()!.count / 3, 0)} facade triangles`,
   );
@@ -166,7 +166,7 @@ test("source-pinned replacement is limited to reviewed west podium surfaces and 
 test("three curved glass tiers follow the section with real changes in surface normal", async () => {
   const { root } = await fixture,
     stations = CANADA_PLACE_CONCOURSE_STATIONS;
-  const i = Math.floor(stations.length / 2),
+  const i = stations.findIndex((st) => st.s > 36 && st.s < 40),
     s = (stations[i].s + stations[i + 1].s) / 2;
   const profile = CANADA_PLACE_CONCOURSE_PROFILE;
   for (const k of [3, 7, 11, 15, 19, 23]) {
@@ -218,7 +218,7 @@ test("coherent closed envelope fits source pier and preserves the complete publi
       assert.ok(d > 0.95, `route clearance ${d}`);
     }
   }
-  assert.equal(additions.length, 8);
+  assert.equal(additions.length, 10);
 });
 
 test("simultaneous paving extraction preserves the exact promenade walking plane", async () => {
@@ -263,7 +263,7 @@ test("facade preflight rejects the unrelated gallery asset", async () => {
     }
   assert.equal(canadaPlaceFacadeCompatible(root), false);
 });
-test("upper glazing is one continuous central region with reduced closed end profiles", () => {
+test("source-registered stations stay ordered through the new opaque bay boundaries", () => {
   const stations = CANADA_PLACE_CONCOURSE_STATIONS;
   assert.equal(stations[0].scale, 0.65);
   assert.ok(Math.abs(stations.at(-1)!.scale - 0.65) < 1e-8);
@@ -339,8 +339,9 @@ test("upright upper fascias replace curved ends and close both transition cheeks
     }
   }
   for (const [boundary, direction] of [
-    [22, 1],
-    [stations.at(-1)!.s - 22, -1],
+    [43, -1],
+    [65, 1],
+    [87, -1],
   ]) {
     const from = canadaPlaceConcoursePoint(
       boundary + direction * 0.5,
@@ -428,7 +429,7 @@ test("recessed ground doors and closed soffit leave real space below unchanged c
     );
   }
 });
-test("transparent upper panes first reveal closed shallow backing from normal and oblique views", async () => {
+test("transparent upper panes reveal closed concourse volume from normal and oblique views", async () => {
   const { root, additions } = await fixture;
   const glass = additions.find((m) => m.name === "canada-west-glass")!,
     backing = additions.find((m) => m.name === "canada-west-glazing-backing")!;
@@ -441,7 +442,9 @@ test("transparent upper panes first reveal closed shallow backing from normal an
   // survived, this first-hit test would identify it before the new structure.
   const station =
       CANADA_PLACE_CONCOURSE_STATIONS[
-        Math.floor(CANADA_PLACE_CONCOURSE_STATIONS.length / 2)
+        CANADA_PLACE_CONCOURSE_STATIONS.findIndex(
+          (st) => st.s > 36 && st.s < 40,
+        )
       ],
     profile = CANADA_PLACE_CONCOURSE_PROFILE;
   for (const k of [3, 6, 11, 14, 19, 22]) {
@@ -465,12 +468,17 @@ test("transparent upper panes first reveal closed shallow backing from normal an
           .addScaledVector(tangent, angle)
           .normalize(),
         from = p.clone().addScaledVector(normal, -0.015);
-      const hits = new T.Raycaster(from, direction, 0, 1)
+      const hits = new T.Raycaster(from, direction, 0, 30)
         .intersectObject(root, true)
         .filter((h) => h.object !== glass);
       assert.ok(hits.length, `missing closed back tier${k}`);
-      assert.equal(hits[0].object, backing);
-      assert.ok(hits[0].distance > 0.1 && hits[0].distance < 0.75);
+      assert.ok(
+        !(hits[0].object as T.Mesh<T.BufferGeometry, T.Material>).material
+          .transparent,
+      );
+      assert.ok(
+        hits[0].distance > (angle === 0 ? 1 : 0.01) && hits[0].distance < 30,
+      );
     }
   }
 });

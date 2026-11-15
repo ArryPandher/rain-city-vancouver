@@ -1,0 +1,23 @@
+# Canada Place architectural registration and wheel rendering
+
+This pass replaces the incorrectly continuous west glazing strip with two recessed opaque bays and separately mounted CANADA and PLACE lettering. Independent supplier and official west photographs establish the arrangement; station boundaries, window diameter and mounting dimensions remain documented estimates. See [the source registration](sources/canada-place-west-registration.md).
+
+The new ground outline follows the visible recessed walls, with doors excluded from the solid sections. Closed returns, round-window infill and glass-side perimeter ribs join the facade. Upper guards follow the actual roof steps. The original sails, mast endpoints and public paving remain intact. The facade is 45,366 indexed triangles in ten meshes, with 5,076 guard and 1,516 lettering triangles.
+
+The upper-glass lining now follows the source concourse floor, back, roof, ends and solid-bay transitions. It replaces the incorrect uniformly close curved back sheets; shallow 100 mm rebates remain. Interior-facing return linings sit inside the adjacent glazed volume so the original wall stays the first exterior surface. No furnished or accessible interior is added. See [glazing depth sources](sources/canada-place-glazing-depth.md).
+
+Native inspection also reproduced a camera collapse when looking toward the facade from the outer promenade. The whole-pier walking-support proxy became an invisible vertical wall above the rail. `cameraBlocked` permits camera air clearance only above a conservative source rail envelope, while retaining physical masses, anchors, barriers and all actor collision behavior. The recorded regression previously reduced the boom to about six centimetres; the corrected query preserves its full endpoint.
+
+## Wheels
+
+The exact source wheel geometry is packed into six material batches per car, with independent spin, steering, fixed calipers, culling and a capability fallback. Native isolated-car attribution confirms **24 to six calls per beauty/shadow pass, retaining 65,240 wheel triangles in each pass**. The comparison uses the same FOV, yaw and pitch; camera positions differ by 8.1 cm. This is draw attribution, not a whole-game FPS or universal pixel-equivalence claim. See [wheel implementation and source tests](sources/car-wheel-batching.md).
+
+## Verification and remaining work
+
+Candidate native checks covered approach driving/steering/braking/exit, the connected road-to-pier walk, parked wheels, first-person facade inspection, a short promenade drive and pistol aim/fire/holster. Continuing straight throttle met a physical support obstacle; a complete native promenade car traversal was not established. Source-based automated route tests independently cover walking, cycling and complete car collision capsules.
+
+All 308 integrated tests and the production build pass. A refreshed native third-person check at the recorded Canada Place viewpoint retains the full 4.3 m horizontal boom and a visible character. Native walking crosses the former door plane into the new recess, stops at the visible solid wall, and returns to the outer promenade. The final curved perimeter ribs, round infill and separated lettering were inspected from ordinary gameplay. Final local approach driving/steering/braking/exit and pistol aim/fire/holster passed with no captured runtime warnings/errors. Local `canada-solid-*` artifacts hold the tests, build, camera/recess views, render diagnostics and release evidence. The final suite corrects two index-based collision fixtures by pinning them to the same physical midpoint, and catches the initial return-lining placement so the exterior wall remains the first hit.
+
+The final stationary 20-second facade sample at 750×670, pixel ratio 1.35, Balanced/day averaged 41.83 fps: p95 33.4 ms, p99 34.9 ms, max 50.1 ms, one frame over 50 ms and none over 100 ms. This is a small fixed scene, with no directly matched timing baseline. It does not satisfy the five-minute/1080p route gate or establish whole-city performance.
+
+The segmentation substantially improves the building's architectural identity, but native art review still finds the upper panes too uniform and roof-like. Deeper enclosed space alone has not made the glass convincing. The next material task is to register the sparse hall supports visible in independent references, then calibrate their visibility through the glazing. Surface variation, promenade furnishings, water/skyline coherence, animation and sustained frame times remain below the GTA VI/AAA target. The other three priority regions remain in scope.

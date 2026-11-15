@@ -25,6 +25,7 @@ export function addCanadaPlaceDoorFrontage(
   materials: { glass: T.MeshStandardMaterial; frame: T.MeshStandardMaterial },
   point: DoorFrontagePoint,
   stationBreaks: number[],
+  intervals?: number[][],
 ): T.Mesh[] {
   const glass = materials.glass.clone();
   glass.name = "canada-west-door-glass";
@@ -174,7 +175,15 @@ export function addCanadaPlaceDoorFrontage(
     }
   }
   const { base, head, transom, glassDepth, frameFront } = CANADA_DOOR_FRONTAGE;
-  for (const bay of canadaPlaceDoorBays(stationBreaks.at(-1)!)) {
+  const bays = intervals
+    ? intervals.flatMap(([a, b]) =>
+        canadaPlaceDoorBays(b - a).map((v) => ({ l: v.l + a, r: v.r + a })),
+      )
+    : canadaPlaceDoorBays(stationBreaks.at(-1)!);
+  for (const bay of bays) {
+    const limits = intervals?.find(
+      ([a, b]) => bay.l >= a - 1e-6 && bay.r <= b + 1e-6,
+    ) ?? [0, stationBreaks.at(-1)!];
     const w = bay.r - bay.l,
       mid = (bay.l + bay.r) / 2;
     const xs = [bay.l, bay.l + w * 0.18, mid, bay.r - w * 0.18, bay.r];
@@ -249,12 +258,15 @@ export function addCanadaPlaceDoorFrontage(
       }
     for (let j = 0; j < xs.length; j++) {
       // Shared module boundary is owned by the following bay; no doubled frames.
-      if (j === xs.length - 1 && bay.r < stationBreaks.at(-1)! - 0.001)
+      if (
+        j === xs.length - 1 &&
+        bays.some((next) => Math.abs(next.l - bay.r) < 0.001)
+      )
         continue;
       ribbon(
         frame,
-        Math.max(0, xs[j] - 0.04),
-        Math.min(stationBreaks.at(-1)!, xs[j] + 0.04),
+        Math.max(limits[0], xs[j] - 0.04),
+        Math.min(limits[1], xs[j] + 0.04),
         base,
         head,
         frameFront,

@@ -1,3 +1,9 @@
+import { addCanadaPlaceSolidBays } from "./canada-place-solid-bays";
+import {
+  canadaPlaceSolidBayAt,
+  canadaPlaceUpperFasciaAt,
+  CANADA_PLACE_DOOR_INTERVALS,
+} from "./canada-place-concourse-layout";
 import { CanadaPlaceGlazingDepth } from "./canada-place-glazing-depth";
 import { addCanadaPlaceDoorFrontage } from "./canada-place-door-frontage";
 import { createCanadaPlaceConcourseGlass } from "./canada-place-concourse-glass";
@@ -297,8 +303,8 @@ export function addCanadaPlaceWestFacade(
   };
   for (let i = 1; i < stations.length; i++) {
     const middle = (stations[i - 1].s + stations[i].s) / 2;
-    const fasciaSection =
-      middle < concourse.upperGlazing[0] || middle > concourse.upperGlazing[1];
+    if (canadaPlaceSolidBayAt(middle)) continue;
+    const fasciaSection = canadaPlaceUpperFasciaAt(middle);
     const sectionAt = (j: number, k: number) => at(j, k, fasciaSection);
     for (let k = 2; k < profile.length; k++) {
       const [rawA, ya] = profile[k - 1],
@@ -308,10 +314,7 @@ export function addCanadaPlaceWestFacade(
       const ob = fasciaSection && k >= 18 && k <= 25 ? profile[17][0] : rawB;
       const roof = k === profile.length - 2,
         back = k === profile.length - 1;
-      const upperFascia =
-        k > 17 &&
-        (middle < concourse.upperGlazing[0] ||
-          middle > concourse.upperGlazing[1]);
+      const upperFascia = k > 17 && fasciaSection;
       const m = roof || back || upperFascia ? wall : glass;
       const nx = (stations[i].nx + stations[i - 1].nx) / 2,
         nz = (stations[i].nz + stations[i - 1].nz) / 2;
@@ -369,15 +372,20 @@ export function addCanadaPlaceWestFacade(
     quad(wall, [a, b, c, d], [stations[i].nx, 0, stations[i].nz]);
   }
   for (let i = 0; i < stations.length; i++) {
-    const fascia =
-      stations[i].s < concourse.upperGlazing[0] ||
-      stations[i].s > concourse.upperGlazing[1];
+    const solidBefore = !!canadaPlaceSolidBayAt(stations[i].s - 0.001);
+    const solidAfter = !!canadaPlaceSolidBayAt(stations[i].s + 0.001);
+    if (solidBefore && solidAfter) continue;
+    const bayBoundary = solidBefore !== solidAfter;
+    // Finish the projecting glass-side perimeter, not the recessed wall plane.
+    const glassStation =
+      stations[i].s + (solidBefore ? 0.001 : solidAfter ? -0.001 : 0);
+    const fascia = canadaPlaceUpperFasciaAt(glassStation);
     for (let k = 2; k < profile.length - 1; k++) {
       if (fascia && k > 17 && k < 26) continue;
       beam(
         at(i, k - 1, fascia),
         at(i, k, fascia),
-        i === 0 || i === stations.length - 1 ? 0.1 : 0.055,
+        bayBoundary || i === 0 || i === stations.length - 1 ? 0.1 : 0.055,
       );
     }
   }
@@ -388,10 +396,19 @@ export function addCanadaPlaceWestFacade(
     cheek.map(([o, y]) => new T.Vector2(o, y)),
     [],
   );
-  for (const boundary of concourse.upperGlazing) {
+  const fasciaTransitions = concourse.upperFasciaRanges
+    .flat()
+    .filter(
+      (s) =>
+        s > 0 &&
+        s < concourse.length &&
+        !canadaPlaceSolidBayAt(s - 0.001) &&
+        !canadaPlaceSolidBayAt(s + 0.001),
+    );
+  for (const boundary of fasciaTransitions) {
     const i = stations.findIndex((st) => Math.abs(st.s - boundary) < 0.0001);
     const st = stations[i];
-    const sign = boundary === concourse.upperGlazing[0] ? 1 : -1;
+    const sign = canadaPlaceUpperFasciaAt(boundary - 0.001) ? 1 : -1;
     const n: V = [-st.nz * sign, 0, st.nx * sign];
     for (const tri of cheekTriangles) {
       const v = tri.map(
@@ -405,6 +422,48 @@ export function addCanadaPlaceWestFacade(
       quad(wall, [v[0], v[1], v[2], v[2]], n);
     }
   }
+  // Opaque lateral returns join recessed full-height bays to the adjacent
+  // projecting glass/door section; no invisible ground barrier remains outside.
+  for (const [a, b] of concourse.solidBays)
+    for (const boundary of [a, b]) {
+      const i = stations.findIndex((st) => Math.abs(st.s - boundary) < 0.00001),
+        st = stations[i];
+      const fascia = canadaPlaceUpperFasciaAt(
+        boundary + (boundary === a ? -0.001 : 0.001),
+      );
+      const capProfile = [
+        [concourse.groundOutward, 7.8],
+        [concourse.groundOutward, concourse.groundGlassHeadY],
+        ...profile
+          .slice(1, 26)
+          .map(([o, y], j) => [
+            Math.max(
+              fascia && j + 1 >= 18 ? profile[17][0] : o,
+              concourse.solidBayOutward,
+            ),
+            y,
+          ]),
+        [0, 17.65],
+        [0, 7.8],
+      ];
+      const triangles = T.ShapeUtils.triangulateShape(
+        capProfile.map(([o, y]) => new T.Vector2(o, y)),
+        [],
+      );
+      const sign = boundary === a ? 1 : -1,
+        n: V = [-st.nz * sign, 0, st.nx * sign];
+      for (const tri of triangles) {
+        const v = tri.map(
+          (k) =>
+            canadaPlaceConcoursePoint(
+              boundary,
+              capProfile[k][0] * st.scale,
+              capProfile[k][1],
+            ).toArray() as V,
+        );
+        quad(wall, [v[0], v[1], v[2], v[2]], n);
+      }
+    }
   // Closed glazed ends expose the tiered section, with tapered plan depth and
   // opaque upper fascia instead of a fifteen-metre blank end wall.
   const endProfile = [
@@ -451,6 +510,11 @@ export function addCanadaPlaceWestFacade(
     meshes.push(mesh);
   }
   meshes.push(depth.finish(root));
+  meshes.push(
+    ...addCanadaPlaceSolidBays(root, wall, (s, out, y) =>
+      canadaPlaceConcoursePoint(s, out * scaleAt(s), y),
+    ),
+  );
   const doors = addCanadaPlaceDoorFrontage(
     root,
     { glass: source.get("door-glass") ?? endGlass, frame },
@@ -461,6 +525,7 @@ export function addCanadaPlaceWestFacade(
         y,
       ),
     stations.map((st) => st.s),
+    CANADA_PLACE_DOOR_INTERVALS,
   );
   return [...meshes, ...doors];
 }

@@ -1,3 +1,4 @@
+import { CANADA_PLACE_DOOR_INTERVALS } from "../src/world/canada-place-concourse-layout";
 import { Batcher } from "../src/world/geometry";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -38,6 +39,7 @@ function fixture() {
     { glass, frame },
     point,
     stations.map((s) => s.s),
+    CANADA_PLACE_DOOR_INTERVALS,
   );
   root.updateMatrixWorld(true);
   return { root, glass, hook, meshes };
@@ -103,7 +105,9 @@ test("every bay has outward-facing recessed glass and closed shallow backing wel
   const { meshes } = fixture(),
     pane = meshes.find((m) => m.name === "canada-west-door-glass")!,
     well = meshes.find((m) => m.name === "canada-west-door-gasket")!;
-  for (const bay of canadaPlaceDoorBays(stations.at(-1)!.s)) {
+  for (const bay of CANADA_PLACE_DOOR_INTERVALS.flatMap(([a, b]) =>
+    canadaPlaceDoorBays(b - a).map((v) => ({ l: v.l + a, r: v.r + a })),
+  )) {
     const s = bay.l + (bay.r - bay.l) * 0.1;
     for (const y of [9.2, 10.4]) {
       const hit = ray(pane, point(s, y, 0.2), point(s, y, -0.15));

@@ -135,6 +135,15 @@ export function buildDetailedCarTemplate(
     }
     gs.forEach((g) => g.dispose());
   }
+  const wheelMaterials = new Map<T.Material, T.Material>();
+  const wheelMaterial = (source: T.Material) => {
+    let material = wheelMaterials.get(source);
+    if (!material) {
+      material = source.clone();
+      wheelMaterials.set(source, material);
+    }
+    return material;
+  };
   for (const [name, w] of wheelGroups) {
     const frame = wheelFrame(w.source, transform);
     const center = frame.center;
@@ -149,8 +158,8 @@ export function buildDetailedCarTemplate(
     for (const o of w.meshes) {
       const g = canonicalWheelGeometry(o, transform, frame);
       const mat = Array.isArray(o.material)
-        ? o.material.map((m) => m.clone())
-        : o.material.clone();
+        ? o.material.map(wheelMaterial)
+        : wheelMaterial(o.material);
       const mats = Array.isArray(mat) ? mat : [mat];
       if (mats.some((m) => /Tire/i.test(m.name)))
         radius = Math.max(radius, tyreRadius(g));
@@ -178,6 +187,13 @@ export function detailedCar(
 ): VehicleModel | null {
   const source = traffic ? trafficTemplate : template;
   if (!source) return null;
+  return cloneDetailedCar(source, color);
+}
+
+export function cloneDetailedCar(
+  source: T.Group,
+  color = 0x3e656a,
+): VehicleModel {
   const group = source.clone(true);
   let brakes = new T.MeshStandardMaterial(),
     headlights = new T.MeshStandardMaterial();
