@@ -19,6 +19,7 @@ import { makeCharacter, makeWeapon, Character } from "./game/character";
 import { drive, damp, angleDelta } from "./game/physics";
 import { GameAudio } from "./game/audio";
 import { PointerInput } from "./game/pointer-input";
+import { shortenChaseBoom } from "./game/chase-camera";
 import { Combat, WEAPONS } from "./game/combat";
 import { Missions, formatTime } from "./game/missions";
 import "./ui/style.css";
@@ -1060,14 +1061,13 @@ class Game {
         desired.x += Math.cos(yaw) * 0.55;
         desired.z -= Math.sin(yaw) * 0.55;
       }
-      // Shorten the chase boom against mapped buildings so the camera stays outside walls.
-      for (let t = 0.15; t <= 1; t += 0.085) {
-        const p = focus.clone().lerp(desired, t);
-        if (this.world.collision.blocked(p.x, p.z, 0.25) && p.y < 45) {
-          desired.copy(focus).lerp(desired, Math.max(0.12, t - 0.09));
-          break;
-        }
-      }
+      // Keep the original boom endpoint until contact is resolved. Interpolating
+      // a vector to itself after copy(focus) used to collapse the camera into the player.
+      shortenChaseBoom(
+        focus,
+        desired,
+        (p) => this.world.collision.blocked(p.x, p.z, 0.25, p.y) && p.y < 45,
+      );
       desired.y = Math.max(
         this.world.collision.height(desired.x, desired.z, this.player.y) + 0.5,
         desired.y,
