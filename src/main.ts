@@ -2,6 +2,7 @@ import { sweepVehiclePedestrians } from "./game/vehicle-pedestrian-contact";
 import { FrameSample, type FrameSampleContext } from "./rendering/frame-sample";
 import * as T from "three";
 import { StaticShadowCache } from "./rendering/static-shadow-cache";
+import { LiveShadowCache } from "./rendering/live-shadow-cache";
 import { profileRender } from "./rendering/render-profile";
 import { getFallbackTreeBatchController } from "./world/fallback-tree-batch";
 import { CANADA_PLACE_CANOPY_OPTICS } from "./world/canada-place-canopy-glass";
@@ -14,6 +15,7 @@ import { loadDetailedCharacter } from "./game/detailed-character";
 import { loadDetailedCar } from "./world/detailed-car";
 import { ContactOcclusion } from "./rendering/contact-occlusion";
 import { SceneReflections } from "./rendering/reflection-probes";
+import { CarStreetReflections } from "./rendering/car-street-reflections";
 import { loadCity, LANDMARKS, geo, ungeo } from "./world/data";
 import { World, Weather } from "./world/world";
 import { UI } from "./ui/ui";
@@ -40,6 +42,9 @@ class Game {
   bloom: UnrealBloomPass;
   contactOcclusion: ContactOcclusion;
   reflections?: SceneReflections;
+  private carStreetReflections?: CarStreetReflections;
+  private carStreetReflectionsEnabled = true;
+  private reflectionFrameTime = 0;
   world!: World;
   actors!: Actors;
   character!: Character;
@@ -92,6 +97,7 @@ class Game {
   private frameSampleReport?: HTMLPreElement;
   private frameSampleButton?: HTMLButtonElement;
   shadowCache = new StaticShadowCache();
+  private liveShadowCache = new LiveShadowCache();
   footstepDistance = 0;
   headlights: T.SpotLight[] = [];
   constructor() {
@@ -304,6 +310,15 @@ class Game {
       this.world.sun,
       this.world.reflections,
     );
+    this.carStreetReflections = new CarStreetReflections(
+      this.reflections,
+      this.renderer,
+    );
+    window.addEventListener(
+      "pagehide",
+      () => this.carStreetReflections?.dispose(),
+      { once: true },
+    );
     ui.loading("Preparing your ride and character", 0.89);
     await actorAssets;
     this.actors = new Actors(
@@ -348,6 +363,8 @@ class Game {
       this.audio.notify();
     });
     const spawn = this.spawnPoint("canada");
+    // Prepare the bounded finished-surface index during loading, before walking.
+    this.world.collision.walkingHeight(spawn.x, spawn.z);
     // The title-screen player must already be on the road's real level:
     // Explore on foot checks exit support before the first gameplay update.
     this.player.set(
@@ -387,6 +404,11 @@ class Game {
           new T.Vector3(...probe.position),
         );
     }
+    // Filter existing street captures and compile the same car shaders that play uses.
+    this.carStreetReflections?.update(
+      this.actors.vehicles.map((v) => v.model),
+      0.25,
+    );
     ui.loading("Warming up the renderer", 0.97);
     this.setCamera(true);
     // The scene renders into the composer's HDR target before OutputPass applies
@@ -421,6 +443,21 @@ class Game {
             streetTreeShadowReceivers: this.renderer.shadowMap.enabled
               ? this.world.detailedTrees?.shadowReceiverState
               : undefined,
+            liveShadowCache: { ...this.liveShadowCache.stats },
+            carStreetReflections: {
+              enabled:
+                this.carStreetReflectionsEnabled && this.quality !== "low",
+              filterCount: this.carStreetReflections?.filterCount,
+              error: this.carStreetReflections?.lastFilterError,
+              filterSubmissionMs:
+                this.carStreetReflections?.lastFilterSubmissionMs,
+              vehicles: this.actors.vehicles
+                .filter((v) => v.kind === "car")
+                .map((v) => ({
+                  position: v.model.group.position.toArray(),
+                  reflection: this.carStreetReflections?.snapshot(v.model),
+                })),
+            },
             camera: {
               position: this.camera.position.toArray(),
               fov: this.camera.fov,
@@ -527,6 +564,40 @@ class Game {
       const comparisons = document.createElement("div");
       comparisons.style.cssText =
         "display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center";
+      const shadowLabel = document.createElement("label");
+      const shadowCheckbox = document.createElement("input");
+      shadowCheckbox.type = "checkbox";
+      shadowCheckbox.addEventListener("change", () => {
+        this.finishFrameSample("shadow rendering backend changed");
+        this.liveShadowCache.setEnabled(shadowCheckbox.checked);
+        this.renderer.shadowMap.needsUpdate = true;
+      });
+      shadowLabel.append(
+        shadowCheckbox,
+        " Cache static shadows (experimental)",
+      );
+      comparisons.append(shadowLabel);
+      const carReflectionLabel = document.createElement("label");
+      const carReflectionCheckbox = document.createElement("input");
+      carReflectionCheckbox.type = "checkbox";
+      carReflectionCheckbox.checked = this.carStreetReflectionsEnabled;
+      carReflectionCheckbox.addEventListener("change", () => {
+        this.finishFrameSample("car reflection mode changed");
+        this.carStreetReflectionsEnabled = carReflectionCheckbox.checked;
+        this.carStreetReflections?.setEnabled(
+          this.carStreetReflectionsEnabled && this.quality !== "low",
+        );
+      });
+      carReflectionLabel.append(
+        carReflectionCheckbox,
+        " Local car reflections",
+      );
+      comparisons.append(carReflectionLabel);
+      window.addEventListener(
+        "pagehide",
+        () => this.liveShadowCache.dispose(),
+        { once: true },
+      );
       const treeController = getFallbackTreeBatchController(this.world.root);
       if (treeController) {
         const label = document.createElement("label");
@@ -1024,6 +1095,9 @@ class Game {
   }
   setQuality(q: string) {
     this.quality = q;
+    this.carStreetReflections?.setEnabled(
+      this.carStreetReflectionsEnabled && q !== "low",
+    );
     if (q === "low") this.reflections?.invalidate();
     if (this.world?.detailedTrees)
       this.world.detailedTrees.budget =
@@ -1395,7 +1469,7 @@ class Game {
       );
       this.player.x = moved.x;
       this.player.z = moved.z;
-      const ground = this.world.collision.height(
+      const ground = this.world.collision.walkingHeight(
         this.player.x,
         this.player.z,
         this.player.y,
@@ -1636,6 +1710,14 @@ class Game {
         this.renderer,
         this.photo ? this.photoPos : this.player,
       );
+    const reflectionTime = performance.now();
+    this.carStreetReflections?.update(
+      this.actors.vehicles.map((v) => v.model),
+      this.reflectionFrameTime
+        ? (reflectionTime - this.reflectionFrameTime) / 1000
+        : 0,
+    );
+    this.reflectionFrameTime = reflectionTime;
     for (const light of this.headlights) {
       const v = this.vehicle,
         active =
@@ -1666,7 +1748,18 @@ class Game {
         this.camera,
         `${this.lastWorldUpdate}/${this.world.weather}/${this.quality}`,
         this.running || ui.introOpen,
-        () => this.composer.render(),
+        () =>
+          this.liveShadowCache.render(
+            this.renderer,
+            {
+              scene: this.scene,
+              camera: this.camera,
+              sun: this.world.sun,
+              root: this.world.root,
+              sources: this.world.chunks,
+            },
+            () => this.composer.render(),
+          ),
       );
     };
     // Restrict only this gameplay render. Reflection capture above uses the

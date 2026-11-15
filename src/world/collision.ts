@@ -3,6 +3,7 @@ import {
   type ExteriorRecessCollision,
 } from "./exterior-recess-collision";
 import { createFairmontArcadeSite } from "./fairmont-arcade-site";
+import { createCanadaWalkingSurface } from "./canada-walking-surface";
 import {
   createFairmontArrivalIsland,
   type FairmontArrivalIsland,
@@ -261,6 +262,7 @@ export class CollisionWorld {
   convention?: ConventionSite;
   canada?: CanadaPlaceSite;
   fairmontArrivalIsland?: FairmontArrivalIsland;
+  private canadaWalking?: ReturnType<typeof createCanadaWalkingSurface>;
   private exteriorRecesses = new Map<string, ExteriorRecessCollision>();
   buildings = new SpatialHash<Building>();
   roads = new SpatialHash<Road>(100);
@@ -401,6 +403,26 @@ export class CollisionWorld {
         }),
       );
     }
+  }
+  /** On-foot contact includes the finish; the baseline remains the construction datum. */
+  walkingHeight(x: number, z: number, referenceY = Infinity): number {
+    const base = this.height(x, z, referenceY);
+    if (
+      !this.canada ||
+      !this.canada.contains(x, z) ||
+      this.bridgeAt(x, z, referenceY) ||
+      supportedDeck(x, z, 0, this.canadaGeometry)
+    )
+      return base;
+    // Existing arcade/recess floors already carry their own finished elevation.
+    for (const recess of this.exteriorRecesses.values())
+      if (recess.floorAt(x, z) !== undefined) return base;
+    this.canadaWalking ??= createCanadaWalkingSurface(
+      this.data,
+      this.canada,
+      (road, x, z) => this.roadHeight(road, x, z),
+    );
+    return this.canadaWalking.height(x, z) ?? base;
   }
   groundHeight(x: number, z: number): number {
     for (const recess of this.exteriorRecesses.values()) {

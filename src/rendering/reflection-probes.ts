@@ -7,16 +7,23 @@ export interface ReflectionProbeSpec {
   materials: T.MeshStandardMaterial[];
   intensity?: { day: number; night: number };
 }
+export interface SceneReflectionProbe {
+  spec: ReflectionProbeSpec;
+  target: T.WebGLCubeRenderTarget;
+  camera: T.CubeCamera;
+  dirty: boolean;
+  /** Only a completed capture of the current lighting generation is valid. */
+  valid: boolean;
+  capturedGeneration: number;
+}
 
 /** Small static scene captures, refreshed on weather changes when nearby. */
 export class SceneReflections {
   private readonly casterVolume = new ShadowCasterVolume();
-  probes: {
-    spec: ReflectionProbeSpec;
-    target: T.WebGLCubeRenderTarget;
-    camera: T.CubeCamera;
-    dirty: boolean;
-  }[];
+  probes: SceneReflectionProbe[];
+  private generation = 0;
+  private disposed = false;
+  private listeners = new Set<() => void>();
   captures = 0;
   lastSubmissionMs = 0;
   lastError: string | null = null;
@@ -36,17 +43,47 @@ export class SceneReflections {
       target.texture.name = spec.name;
       const camera = new T.CubeCamera(0.1, 900, target);
       camera.position.set(...spec.position);
-      return { spec, target, camera, dirty: true };
+      return {
+        spec,
+        target,
+        camera,
+        dirty: true,
+        valid: false,
+        capturedGeneration: -1,
+      };
     });
   }
+  /** Borrowers never own capture targets or mutate architectural receivers. */
+  currentTexture(name: string): T.CubeTexture | null {
+    const probe = this.probes.find((p) => p.spec.name === name);
+    return !this.disposed &&
+      probe?.valid &&
+      !probe.dirty &&
+      probe.capturedGeneration === this.generation
+      ? probe.target.texture
+      : null;
+  }
+  subscribe(listener: () => void) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+  private changed() {
+    for (const listener of this.listeners) listener();
+  }
   invalidate() {
+    this.generation++;
     for (const probe of this.probes) {
       probe.dirty = true;
+      probe.valid = false;
+      probe.capturedGeneration = -1;
       for (const material of probe.spec.materials) {
         material.envMap = null;
         material.needsUpdate = true;
       }
     }
+    this.changed();
   }
   setNight(night: boolean) {
     for (const { spec } of this.probes) {
@@ -58,6 +95,7 @@ export class SceneReflections {
     }
   }
   update(renderer: T.WebGLRenderer, viewer: T.Vector3) {
+    if (this.disposed) return;
     const probe = this.probes.find(
       (p) =>
         p.dirty &&
@@ -67,6 +105,7 @@ export class SceneReflections {
         ) < 180,
     );
     if (!probe) return;
+    const captureGeneration = this.generation;
     const started = performance.now();
     const visibility = new Map<T.Object3D, boolean>();
     const shadows = new Map<T.Mesh, boolean>();
@@ -128,17 +167,29 @@ export class SceneReflections {
       renderer.shadowMap.autoUpdate = false;
       renderer.shadowMap.needsUpdate = true;
       probe.camera.update(renderer, this.scene);
+      // A capture invalidated by a render callback must not publish stale light.
+      if (captureGeneration !== this.generation || this.disposed) return;
       for (const material of probe.spec.materials) {
         material.envMap = probe.target.texture;
         material.needsUpdate = true;
       }
       probe.dirty = false;
+      probe.valid = true;
+      probe.capturedGeneration = captureGeneration;
       this.captures++;
       this.lastError = null;
+      this.changed();
     } catch (error) {
       // Optional local reflections must never interrupt the playable world.
       // Keep the current sky environment if a graphics driver rejects capture.
       probe.dirty = false;
+      probe.valid = false;
+      probe.capturedGeneration = -1;
+      for (const material of probe.spec.materials) {
+        material.envMap = null;
+        material.needsUpdate = true;
+      }
+      this.changed();
       this.lastError = String(error);
       console.warn("Local reflection capture unavailable", error);
     } finally {
@@ -155,7 +206,10 @@ export class SceneReflections {
     }
   }
   dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
     this.invalidate();
     for (const probe of this.probes) probe.target.dispose();
+    this.listeners.clear();
   }
 }

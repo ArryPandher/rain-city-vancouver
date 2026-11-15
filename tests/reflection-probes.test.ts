@@ -89,6 +89,8 @@ for (const fail of [false, true])
       if (fail) throw new Error("simulated graphics failure");
     };
     const warn = console.warn;
+    assert.equal(reflections.currentTexture("test basin"), null);
+    assert.equal(reflections.probes[0].valid, false);
     try {
       if (fail) console.warn = () => {};
       reflections.update(renderer, new T.Vector3(10, 1, 15));
@@ -111,6 +113,11 @@ for (const fail of [false, true])
       "failure does not repeat every frame",
     );
     assert.equal(reflections.captures, fail ? 0 : 1);
+    assert.equal(reflections.probes[0].valid, !fail);
+    assert.equal(
+      reflections.currentTexture("test basin"),
+      fail ? null : reflections.probes[0].target.texture,
+    );
     if (fail) {
       assert.equal(material.envMap, null, "sky fallback remains available");
       assert.match(reflections.lastError!, /simulated graphics failure/);
@@ -122,6 +129,42 @@ for (const fail of [false, true])
       "weather change removes stale lighting",
     );
     assert.equal(reflections.probes[0].dirty, true);
+    assert.equal(reflections.currentTexture("test basin"), null);
+    assert.equal(reflections.probes[0].valid, false);
     reflections.dispose();
     previous.dispose();
   });
+
+test("capture invalidated during rendering cannot become current or publish a borrowed texture", () => {
+  const scene = new T.Scene(),
+    root = new T.Group(),
+    sun = new T.DirectionalLight(),
+    material = new T.MeshPhysicalMaterial();
+  scene.add(root, sun, sun.target);
+  const reflections = new SceneReflections(scene, root, [], sun, [
+    { name: "street", position: [0, 2, 0], materials: [material] },
+  ]);
+  const renderer = {
+    shadowMap: { autoUpdate: true, needsUpdate: false },
+    xr: { enabled: false },
+    getRenderTarget: () => null,
+    getActiveCubeFace: () => 0,
+    getActiveMipmapLevel: () => 0,
+    setRenderTarget: () => {},
+  } as unknown as T.WebGLRenderer;
+  reflections.probes[0].camera.update = () => reflections.invalidate();
+  reflections.update(renderer, new T.Vector3());
+  assert.equal(reflections.currentTexture("street"), null);
+  assert.equal(reflections.probes[0].dirty, true);
+  assert.equal(reflections.probes[0].valid, false);
+  assert.equal(reflections.captures, 0);
+  assert.equal(material.envMap, null);
+  reflections.probes[0].camera.update = () => {};
+  reflections.update(renderer, new T.Vector3());
+  assert.equal(
+    reflections.currentTexture("street"),
+    reflections.probes[0].target.texture,
+  );
+  assert.equal(reflections.captures, 1);
+  reflections.dispose();
+});

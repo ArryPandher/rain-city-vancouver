@@ -4,7 +4,7 @@ Keep the active goal and integration in the main chat. Use three focused agents 
 
 The active goal was updated by Arry on November 15, 2026: build jaw-dropping, browser-only Vancouver gameplay scenes using GTA 6 as the realism reference. Focus on Canada Place/Howe Street first, Robson Square with the Art Gallery second, and the Ironworkers Memorial Bridge third. Prioritize exceptional daylight architecture, materials, lighting, vehicles and animation during ordinary third-person walking, driving and shooting. Finish one or two standout scenes before expanding. Tests and shipped code do not establish visual parity.
 
-The first scene is the complete playable Howe approach beside Canada Place, including the surrounding buildings visible while walking, driving and shooting. An isolated improved entrance is insufficient. The repeated heritage wall behind the current car comparison, vehicle reflections/finish, sparse street composition and frame pacing are still significant scene-wide defects. Earlier four-region references below describe historical scope; the current three-scene priority above governs new work.
+The first scene is the complete playable Howe approach beside Canada Place, including the surrounding buildings visible while walking, driving and shooting. An isolated improved entrance is insufficient. The Howe wing now has source-guided modern concrete geometry, but its street/terrace connection, vehicle finish, sparse street composition and frame pacing remain significant scene-wide defects. Earlier four-region references below describe historical scope; the current three-scene priority above governs new work.
 
 Arry subsequently made the visual bar explicit in the active goal: the scenes should appear like an AAA game with high quality and fidelity. This remains an unachieved acceptance requirement, not a description of the current build.
 
@@ -44,3 +44,8 @@ The next integrated pass uses ordered coloured-transmission and physical-reflect
 ## Primary support and distance-detail checkpoint
 
 Five estimated joined primary supports now extend the accepted single-support preview; final daylight glass roughness is0.12 following inspection of the existing raw reflection capture. Source-derived distant geometry applies only to non-AI concept cars, with nearby/driven cars and existing traffic fidelity preserved. The330-test suite, focused final checks and native gameplay pass. A short sample averages39.67fps but does not establish sustained smoothness or an FPS gain. Continue the full four-region goal with the same coordinator and specialists; see [the support checkpoint](CANADA-PLACE-SUPPORTS.md).
+
+
+## Granville Howe wing and finished-surface contact
+
+The misclassified w208599553 heritage wall is replaced with a dedicated modern wing: recessed windows, concrete belts and source-registered roof split. Native review caught and corrected mirrored sign lettering. The protagonist now contacts finished road/paving height on the Canada approach, with construction and vehicle datum retained. Car-only local reflections are calibrated against a matched gameplay view; the static-shadow experiment remains off because A/B/A timing did not establish a gain. The lower frontage still sits behind the raised roadway, and the missing station/terrace connection is a major remaining mismatch. Preserve the sourced roof difference while reconciling that shared section next; do not treat a global building uplift as a surveyed fix. See [the gameplay checkpoint](HOWE-GRANVILLE-GAMEPLAY.md).

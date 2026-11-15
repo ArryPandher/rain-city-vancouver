@@ -14,6 +14,7 @@ import {
 import type { Materials } from "./materials";
 import { CANADA_PLACE_ENTRY_CONNECTOR } from "./canada-place-deck";
 import type { CanadaPlaceSite } from "./canada-place-site";
+import { CANADA_PLACE_WALK_OFFSET } from "./canada-place-site";
 type Polygon = Point[][];
 type Multi = Polygon[];
 const open = (r: Point[]) =>
@@ -61,23 +62,24 @@ const inPolygons = (x: number, z: number, polys: Multi) =>
       pointInPoly(x, z, p[0].flat()) &&
       !p.slice(1).some((h) => pointInPoly(x, z, h.flat())),
   );
-const geometry = (position: number[]) => {
-  const g = new T.BufferGeometry();
-  g.setAttribute("position", new T.Float32BufferAttribute(position, 3));
-  const uv: number[] = [];
-  for (let i = 0; i < position.length; i += 3)
-    uv.push(position[i] / 4, position[i + 2] / 4);
-  g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
-  g.computeVertexNormals();
-  return g;
-};
-/** Bounded road support, matching the site's shared height. No source pier/deck
- * is rebuilt here. Building holes remain holes, including retaining faces. */
-export function canadaPlaceApproachGeometry(
-  data: Pick<CityData, "roads" | "buildings">,
+const surfaceMasks = new WeakMap<
+  CanadaPlaceSite,
+  {
+    roads: readonly Road[];
+    support: Multi;
+    carriageway: Multi;
+    sidewalks: Multi;
+    sidewalkRings: number[][][];
+  }
+>();
+
+/** Static source masks shared by paving and walking contact, not a new outline. */
+export function canadaPlaceApproachMasks(
+  data: Pick<CityData, "roads">,
   site: CanadaPlaceSite,
-  oldHeight: (x: number, z: number) => number,
 ) {
+  const cached = surfaceMasks.get(site);
+  if (cached?.roads === data.roads) return cached;
   const support: Multi = site.supportPolygons.map((p) => [p.outer, ...p.holes]);
   const roads = data.roads.filter(
     (r) => (isStreet(r) || r.kind === "service") && site.intersects(r.pts),
@@ -100,6 +102,57 @@ export function canadaPlaceApproachGeometry(
     sidewalks,
     clipping.intersection(support, [entry]),
   ) as Multi;
+  const result = {
+    roads: data.roads,
+    support,
+    carriageway,
+    sidewalks,
+    sidewalkRings: sidewalks.map((p) => p.map((ring) => ring.flat())),
+  };
+  surfaceMasks.set(site, result);
+  return result;
+}
+
+export function canadaPlacePavingHeight(
+  data: Pick<CityData, "roads">,
+  site: CanadaPlaceSite,
+  x: number,
+  z: number,
+) {
+  if (!site.contains(x, z)) return undefined;
+  const masks = canadaPlaceApproachMasks(data, site);
+  return (
+    site.supportHeight(x, z) +
+    (masks.sidewalkRings.some(
+      (p) =>
+        pointInPoly(x, z, p[0]) &&
+        !p.some((h, i) => i > 0 && pointInPoly(x, z, h)),
+    )
+      ? CANADA_PLACE_WALK_OFFSET
+      : 0.065)
+  );
+}
+const geometry = (position: number[]) => {
+  const g = new T.BufferGeometry();
+  g.setAttribute("position", new T.Float32BufferAttribute(position, 3));
+  const uv: number[] = [];
+  for (let i = 0; i < position.length; i += 3)
+    uv.push(position[i] / 4, position[i + 2] / 4);
+  g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
+  g.computeVertexNormals();
+  return g;
+};
+/** Bounded road support, matching the site's shared height. No source pier/deck
+ * is rebuilt here. Building holes remain holes, including retaining faces. */
+export function canadaPlaceApproachGeometry(
+  data: Pick<CityData, "roads" | "buildings">,
+  site: CanadaPlaceSite,
+  oldHeight: (x: number, z: number) => number,
+) {
+  const { support, carriageway, sidewalks } = canadaPlaceApproachMasks(
+    data,
+    site,
+  );
   const pavement: number[] = [],
     retaining: number[] = [],
     retainingUV: number[] = [],
@@ -178,7 +231,7 @@ export function canadaPlaceApproachGeometry(
   // A continuous structural top sits just below asphalt. Only shoulders/plaza
   // receive the +.15m walking finish, keeping the mapped road visible at +.092.
   top(support, 0.065);
-  top(sidewalks, 0.15);
+  top(sidewalks, CANADA_PLACE_WALK_OFFSET);
   const quad = (
     out: number[],
     a: number[],
