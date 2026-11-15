@@ -17,6 +17,7 @@ import type { ArchitecturalDetail } from "./detailed-architecture";
 import { ericksonPlace } from "./erickson-place";
 import { conventionCentre } from "./convention-centre";
 import { fairmontPacificRim } from "./fairmont-pacific-rim";
+import { waterfrontCentre } from "./waterfront-centre-building";
 import { rogersTower } from "./rogers-tower";
 import { harbourGreenTower } from "./harbour-towers";
 import { hastingsBuilding } from "./hastings-building";
@@ -150,6 +151,7 @@ export function architecture(
       continue;
     }
     if (
+      waterfrontCentre(b, shell, m, reflections) ||
       ericksonPlace(b, shell, m, reflections) ||
       fairmontPacificRim(b, shell, m, collision, reflections) ||
       rogersTower(b, shell, m, collision, reflections) ||
