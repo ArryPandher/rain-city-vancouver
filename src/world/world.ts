@@ -122,8 +122,10 @@ export class World {
     this.sun.shadow.camera.bottom = -80;
     this.sun.shadow.camera.near = 1;
     this.sun.shadow.camera.far = 650;
-    this.sun.shadow.bias = -0.0005;
-    this.sun.shadow.normalBias = 0.14;
+    // This map spans 649 m in light depth: the former -.0005 bias displaced
+    // contact by ~0.32 m before the normal offset, visibly detaching feet.
+    this.sun.shadow.bias = -0.00004;
+    this.sun.shadow.normalBias = 0.025;
     this.sun.shadow.radius = 3.5;
     scene.fog = new T.FogExp2(0xc2cbd0, 0.00032);
   }

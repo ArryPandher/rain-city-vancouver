@@ -32,11 +32,23 @@ separate from the GTA material/lighting benchmark; see
 [the gallery source note](sources/gallery-facade.md) for the exact photograph
 and remaining approximations.
 
-Canada Place's blank street-facing base and inaccessible promenade are still a
-larger composition problem than its mast detail. The official front-plaza plan
-establishes the elevated public approach; its local height integration remains
-unfinished. Neither the new gallery detail nor the corrected chase camera
-closes the larger gaps in character realism, animation, street coherence,
-vegetation, water or sustained frame rate.
+Canada Place's elevated public approach and sail-side walk were connected and
+verified in `73d87be`; see [the approach record](CANADA-PLACE-APPROACH.md). The
+now-reachable promenade exposes a nearly white featureless floor, flat terminal
+glazing and sparse public-place details. The next material and facade work is
+judged from that ordinary walking route. Character realism, animation, street
+coherence, vegetation, water and sustained frame rate remain substantial gaps.
+
+## Concentrated playable regions
+
+Arry's latest priority is a few smaller, excellent regions before further city
+coverage. Finish the coherent Canada Place promenade scene first, then apply the
+same standard to Robson Square and the Art Gallery, Granville's theatre blocks,
+and a Stanley Park seawall stretch. A scene is not visually finished because its
+landmark is recognizable or its geometry tests pass. Inspect real Vancouver
+references beside ordinary eye-height gameplay at near, middle and far distance;
+walk laterally to check depth, drive through to check continuity, and measure
+frame times with the same daylight preset. Keep material scale, usable routes,
+shadows, vehicle contact and animation consistent throughout each chosen region.
 
 This remains an independent browser prototype. The reference establishes the direction; it is not a claim of matching Rockstar's production fidelity, animation, simulation or content depth.

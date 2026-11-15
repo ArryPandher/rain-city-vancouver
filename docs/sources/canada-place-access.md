@@ -1,7 +1,11 @@
 # Canada Place promenade access gap
 
-Identified during native daylight review, November 14, 2026. This is an open
-defect, not an implemented access repair.
+Historical investigation from native daylight review, November 14, 2026.
+**Access repaired in `73d87be`:** the connected Howe/western approach, bounded
+public deck and rail opening are implemented and were walked in the published
+game. See [the verified approach](../CANADA-PLACE-APPROACH.md). The account below
+records the earlier defect and its source evidence; it is not current access
+status. Approximate grades and unresolved service-road levels remain documented.
 
 The new Howe Street arrival provides a visible Canada Place facade/sails view
 and supports a normal car start, braking and exit. Walking farther toward the

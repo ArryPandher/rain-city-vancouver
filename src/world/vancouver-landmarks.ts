@@ -5,6 +5,16 @@ import {
 } from "./gallery-facade";
 import { repairGalleryRearEntry } from "./gallery-rear-entry";
 import { openCanadaPlaceEntryRail } from "./canada-place-entry-rail";
+import { refineCanadaPlaceWestRailing } from "./canada-place-west-railing";
+import {
+  canadaPlacePavingMaterial,
+  extractCanadaPlacePaving,
+} from "./canada-place-paving";
+import {
+  addCanadaPlaceWestFacade,
+  canadaPlaceFacadeCompatible,
+  replaceCanadaPlaceWestFaces,
+} from "./canada-place-facade";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
@@ -88,15 +98,23 @@ export async function loadVancouverLandmarks(
     const refineGallery =
       asset.id === "vancouver-art-gallery" &&
       galleryFacadeCompatible(gltf.scene);
+    const refineCanada =
+      asset.id === "canada-place" && canadaPlaceFacadeCompatible(gltf.scene);
     const cache = new Map<T.Material, T.MeshStandardMaterial>();
     const galleryMaterials = new Map<string, T.MeshStandardMaterial>();
+    const canadaMaterials = new Map<string, T.MeshStandardMaterial>();
     gltf.scene.traverse((object) => {
       if (!(object instanceof T.Mesh)) return;
       const geometry = bakeGeometry(object.geometry, object.matrixWorld);
       const original = object.material as T.MeshStandardMaterial;
+      const paving =
+        asset.id === "canada-place"
+          ? extractCanadaPlacePaving(geometry, original.name)
+          : null;
       if (asset.id === "vancouver-art-gallery")
         repairGalleryRearEntry(geometry, original.name);
       if (refineGallery) replaceGalleryWingFaces(geometry, original.name);
+      if (refineCanada) replaceCanadaPlaceWestFaces(geometry, original.name);
       const positions = geometry.getAttribute("position");
       for (let i = 0; i < positions.count; i++) {
         const py = positions.getY(i);
@@ -106,6 +124,24 @@ export async function loadVancouverLandmarks(
       if (asset.id === "canada-place" && original.name === "steel") {
         openCanadaPlaceEntryRail(geometry);
         removeCanadaPlaceThinMasts(geometry);
+        const rail = refineCanadaPlaceWestRailing(geometry, original.name);
+        if (rail) {
+          const mesh = new T.Mesh(
+            rail,
+            new T.MeshStandardMaterial({
+              name: "Canada Place painted promenade rail",
+              color: 0xc6ceca,
+              roughness: 0.48,
+              metalness: 0.18,
+            }),
+          );
+          mesh.name = "Canada Place west rail frames and infill";
+          mesh.receiveShadow = true;
+          // The source posts retain structural shadows without shimmering
+          // shadows from the subpixel wire grid.
+          mesh.castShadow = false;
+          group.add(mesh);
+        }
       }
       const profile = landmarkSurfaceProfile(asset.id, original.name);
       landmarkSurfaceUV(geometry, profile?.metres ?? [4, 4]);
@@ -116,9 +152,16 @@ export async function loadVancouverLandmarks(
       }
       if (asset.id === "vancouver-art-gallery")
         galleryMaterials.set(original.name, mat);
+      if (asset.id === "canada-place") canadaMaterials.set(original.name, mat);
       const mesh = new T.Mesh(geometry, mat);
       mesh.castShadow = mesh.receiveShadow = true;
       group.add(mesh);
+      if (paving) {
+        const deck = new T.Mesh(paving, canadaPlacePavingMaterial(mat));
+        deck.name = "Canada Place public promenade paving";
+        deck.castShadow = deck.receiveShadow = true;
+        group.add(deck);
+      }
     });
     const hull = convexHull(points);
     if (hull.length > 2 && asset.id !== "gastown-steam-clock")
@@ -127,6 +170,7 @@ export async function loadVancouverLandmarks(
         box: new T.Box2().setFromPoints(hull.map((p) => new T.Vector2(...p))),
       });
     if (asset.id === "canada-place") addCanadaPlaceRigging(group);
+    if (refineCanada) addCanadaPlaceWestFacade(group, canadaMaterials);
     if (refineGallery) addGalleryFacade(group, galleryMaterials);
     parent.add(group);
   }
