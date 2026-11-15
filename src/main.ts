@@ -348,7 +348,13 @@ class Game {
       this.audio.notify();
     });
     const spawn = this.spawnPoint("canada");
-    this.player.set(spawn.x, 0, spawn.z);
+    // The title-screen player must already be on the road's real level:
+    // Explore on foot checks exit support before the first gameplay update.
+    this.player.set(
+      spawn.x,
+      this.world.collision.height(spawn.x, spawn.z),
+      spawn.z,
+    );
     this.heading = spawn.heading;
     this.vehicle = this.actors.addVehicle(
       "car",
