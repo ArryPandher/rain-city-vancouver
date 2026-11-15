@@ -15,4 +15,28 @@ Rockstar source images. Use the official gallery above when identifying GTA VI
 reference work. Priority scenes and review constraints are in
 [Daylight landmarks](DAYLIGHT-LANDMARKS.md).
 
+## Daylight comparison applied to the current pass
+
+Re-reviewed the cached official **Leonida Keys 02** still and reference contact
+sheet against the actual 0c1bea8 car/Harbour/gallery gameplay captures. The
+transferable standard is connected ground construction, real window and trim
+depth, material readable in shade, restrained highlights and wear concentrated
+at plausible edges. These reference stills do not establish gameplay frame rate.
+
+The gallery comparison led to a bounded rear-wing reconstruction: the source
+already had shallow window recesses, but thick pale crosses, identical row
+heights and missing sill profiles flattened them. A real Vancouver rear view
+supports darker sash frames, shorter upper windows, projecting stone sills,
+rusticated base courses and four engaged entrance columns. Keep that evidence
+separate from the GTA material/lighting benchmark; see
+[the gallery source note](sources/gallery-facade.md) for the exact photograph
+and remaining approximations.
+
+Canada Place's blank street-facing base and inaccessible promenade are still a
+larger composition problem than its mast detail. The official front-plaza plan
+establishes the elevated public approach; its local height integration remains
+unfinished. Neither the new gallery detail nor the corrected chase camera
+closes the larger gaps in character realism, animation, street coherence,
+vegetation, water or sustained frame rate.
+
 This remains an independent browser prototype. The reference establishes the direction; it is not a claim of matching Rockstar's production fidelity, animation, simulation or content depth.

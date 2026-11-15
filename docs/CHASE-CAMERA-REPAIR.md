@@ -25,6 +25,16 @@ turning toward the fountain, retained the visible character and the complete
 keyboard/mouse inputs, not a camera teleport. Evidence is saved locally as
 `artifacts/local/chase-camera-bench-local.{jpg,json}`.
 
+The local car accelerated and turned from the Howe Street arrival, braked, and
+exited at (504.36, 0, -487.38). A native walk toward the pier wall, short retreat
+and mouse turn left the player at (505.133, 0, -494.586), looking away from the
+wall. The camera shortened from 4.3 m to about 2.31 m horizontally, at
+(505.435, 1.958, -496.878), retaining a visible character and street view. Aiming
+and firing inputs were exercised before holstering and pausing; no claim of a
+hit is made for that interval. A later DOM read confirmed pistol ammunition
+14 / 180 and no captured warning/error. See
+`chase-camera-car-exit-local.jpg` and `chase-camera-wall-local.{jpg,json}`.
+
 This fixes camera placement, not the remaining visual/performance gap. The new
 view includes more of the scene than the collapsed camera: its roughly 19 fps
 HUD is a spot observation, not a controlled comparison or performance gain.

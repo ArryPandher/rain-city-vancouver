@@ -1,3 +1,8 @@
+import {
+  addGalleryFacade,
+  galleryFacadeCompatible,
+  replaceGalleryWingFaces,
+} from "./gallery-facade";
 import { repairGalleryRearEntry } from "./gallery-rear-entry";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -79,13 +84,18 @@ export async function loadVancouverLandmarks(
     group.position.set(x, 0.08, z);
     gltf.scene.updateMatrixWorld(true);
     const points: [number, number][] = [];
+    const refineGallery =
+      asset.id === "vancouver-art-gallery" &&
+      galleryFacadeCompatible(gltf.scene);
     const cache = new Map<T.Material, T.MeshStandardMaterial>();
+    const galleryMaterials = new Map<string, T.MeshStandardMaterial>();
     gltf.scene.traverse((object) => {
       if (!(object instanceof T.Mesh)) return;
       const geometry = bakeGeometry(object.geometry, object.matrixWorld);
       const original = object.material as T.MeshStandardMaterial;
       if (asset.id === "vancouver-art-gallery")
         repairGalleryRearEntry(geometry, original.name);
+      if (refineGallery) replaceGalleryWingFaces(geometry, original.name);
       const positions = geometry.getAttribute("position");
       for (let i = 0; i < positions.count; i++) {
         const py = positions.getY(i);
@@ -101,6 +111,8 @@ export async function loadVancouverLandmarks(
         mat = surfaces.material(original, asset.id);
         cache.set(original, mat);
       }
+      if (asset.id === "vancouver-art-gallery")
+        galleryMaterials.set(original.name, mat);
       const mesh = new T.Mesh(geometry, mat);
       mesh.castShadow = mesh.receiveShadow = true;
       group.add(mesh);
@@ -112,6 +124,7 @@ export async function loadVancouverLandmarks(
         box: new T.Box2().setFromPoints(hull.map((p) => new T.Vector2(...p))),
       });
     if (asset.id === "canada-place") addCanadaPlaceRigging(group);
+    if (refineGallery) addGalleryFacade(group, galleryMaterials);
     parent.add(group);
   }
   return assets.length;
