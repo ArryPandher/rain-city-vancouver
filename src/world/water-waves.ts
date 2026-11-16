@@ -28,7 +28,7 @@ export const WATER_WAVES = [
 const NORMAL =
   "float eps=.15;float dx=wave(p+vec2(eps,0))-wave(p-vec2(eps,0));float dz=wave(p+vec2(0,eps))-wave(p-vec2(0,eps));vec3 n=normalize(vec3(-dx,.65,-dz));";
 const gl = (n: number) => (Number.isInteger(n) ? `${n}.0` : String(n));
-export function waterWavesFragment(original: string) {
+export function waterWavesFragment(original: string, oceanLevel?: number) {
   if (
     original.split(NORMAL).length !== 2 ||
     original.split("void main()").length !== 2
@@ -42,6 +42,17 @@ export function waterWavesFragment(original: string) {
       slope += q * ${gl(w.amplitude)} * cos(dot(q,p)-${gl(w.omega)}*time+${gl(w.phase)}) * resolved;
     }`,
   ).join("\n");
+  const originalNormal = NORMAL.replace("vec3 n=", "n=");
+  const normalSelection =
+    oceanLevel === undefined
+      ? `vec3 n; if(waterWavesEnabled>0.0){n=harbourWaveNormal(p);}else{${originalNormal}}`
+      : `vec3 n;
+      if(waterWavesEnabled>0.0 && abs(vWorld.y-${gl(oceanLevel)})<0.001){
+        if(waterWavesEnabled>=0.99999){n=harbourWaveNormal(p);}else{
+          ${originalNormal}
+          n=normalize(mix(n,harbourWaveNormal(p),waterWavesEnabled));
+        }
+      }else{${originalNormal}}`;
   return original
     .replace(
       "void main()",
@@ -54,13 +65,7 @@ export function waterWavesFragment(original: string) {
   }
   void main()`,
     )
-    .replace(
-      NORMAL,
-      `vec3 n;
-  if(waterWavesEnabled>0.0){n=harbourWaveNormal(p);}else{
-    ${NORMAL.replace("vec3 n=", "n=")}
-  }`,
-    );
+    .replace(NORMAL, normalSelection);
 }
 
 /** CPU audit of the same physical field; pixel vectors are world metres/pixel. */
@@ -103,18 +108,32 @@ export class WaterWavesComparison {
   private readonly removeLayer: () => void;
   private readonly enabled = { value: 0 };
   private readonly onDispose = () => this.dispose();
-  constructor(private readonly material: T.ShaderMaterial) {
-    waterWavesFragment(material.fragmentShader); // Fail before changing ownership.
+  constructor(
+    private readonly material: T.ShaderMaterial,
+    oceanLevel?: number,
+  ) {
+    waterWavesFragment(material.fragmentShader, oceanLevel); // Fail before changing ownership.
     this.removeLayer = addWaterShaderLayer(
       material,
-      "harbour-directional-waves-v1",
+      oceanLevel === undefined
+        ? "harbour-directional-waves-v1"
+        : `harbour-directional-waves-ocean-${oceanLevel}-v1`,
       (shader) => {
-        shader.fragmentShader = waterWavesFragment(shader.fragmentShader);
+        shader.fragmentShader = waterWavesFragment(
+          shader.fragmentShader,
+          oceanLevel,
+        );
         shader.uniforms.waterWavesEnabled = this.enabled;
       },
     );
+    // Refresh the persistent ShaderMaterial map even when Three reuses a
+    // cached program and does not invoke the compile callback again.
+    material.uniforms.waterWavesEnabled = this.enabled;
     material.addEventListener("dispose", this.onDispose);
     material.needsUpdate = true;
+  }
+  setWeight(weight: number) {
+    if (!this.disposed) this.enabled.value = T.MathUtils.clamp(weight, 0, 1);
   }
   update(weather: string) {
     if (!this.disposed) this.enabled.value = weather === "day" ? 1 : 0;

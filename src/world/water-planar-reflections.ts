@@ -136,6 +136,9 @@ export class WaterPlanarReflections {
         Object.assign(shader.uniforms, this.uniforms);
       },
     );
+    // Cached ShaderMaterial programs may skip onBeforeCompile on re-entry.
+    // Three keeps this exact uniforms map; publish the new owner immediately.
+    Object.assign(context.water.uniforms, this.uniforms);
     context.water.addEventListener("dispose", this.onDispose);
   }
   /** Hide every shared water surface during ordinary glass captures as well. */

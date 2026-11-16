@@ -2,6 +2,7 @@ import {
   fitRailContextRoad,
   RAIL_CONTEXT_SERVICE_ROADS,
 } from "./second-narrows-rail-context-road";
+import { NorthHarbourWater } from "./north-harbour-water";
 import { WaterPlanarReflections } from "./water-planar-reflections";
 import { createRailContextGroundClipper } from "./second-narrows-rail-context-ground";
 import { createRailContextMeshes } from "./second-narrows-rail-context-materials";
@@ -187,6 +188,8 @@ export class World {
   private waterWavesComparison?: WaterWavesComparison;
   private waterSceneComparison?: WaterPlanarReflections;
   private waterPlanarDistortion = false;
+  private northHarbourWater?: NorthHarbourWater;
+  private northHarbourWaterDebugDisabled = false;
   weather: Weather = "day";
   rain!: T.Points;
   time = 0;
@@ -1602,6 +1605,7 @@ export class World {
     this.scene.add(this.rain);
   }
   setDebugWaterScene(enabled: boolean) {
+    if (enabled) this.northHarbourWater?.suspend("debug comparison");
     if (!enabled) {
       this.waterSceneComparison?.dispose();
       this.waterSceneComparison = undefined;
@@ -1634,6 +1638,7 @@ export class World {
     return this.waterSceneComparison?.diagnostics() ?? { requested: false, active: false, status: "off", retainedTextureBytes: 0 };
   }
   setDebugWaterWaves(enabled: boolean) {
+    if (enabled) this.northHarbourWater?.suspend("debug comparison");
     if (!enabled) {
       this.waterWavesComparison?.dispose();
       this.waterWavesComparison = undefined;
@@ -1654,6 +1659,7 @@ export class World {
     };
   }
   setDebugWaterOptics(renderer: T.WebGLRenderer, enabled: boolean) {
+    if (enabled) this.northHarbourWater?.suspend("debug comparison");
     if (!enabled) {
       this.waterOpticsComparison?.dispose();
       this.waterOpticsComparison = undefined;
@@ -1686,10 +1692,36 @@ export class World {
       retainedGpuBytes: 0, error: this.waterOpticsError,
     };
   }
+  updateNorthHarbourWater(renderer: T.WebGLRenderer, camera: T.PerspectiveCamera, quality: string, enabled: boolean, allowCapture: boolean) {
+    if (!this.water) return;
+    if (!this.northHarbourWater) {
+      this.northHarbourWater = new NorthHarbourWater({ scene: this.scene, root: this.root, sun: this.sun, water: this.water });
+      this.northHarbourWater.invalidate(this.weather);
+    }
+    this.northHarbourWater.update(renderer, camera, {
+      quality, allowCapture,
+      enabled: enabled && !this.northHarbourWaterDebugDisabled && !this.waterSceneComparison && !this.waterWavesComparison && !this.waterOpticsComparison,
+    });
+  }
+  withoutNorthHarbourWaterFeedback(action: () => void) {
+    if (this.northHarbourWater) this.northHarbourWater.withoutWater(action);
+    else action();
+  }
+  northHarbourWaterDiagnostics() {
+    return this.northHarbourWater?.diagnostics() ?? { enabled: true, status: "not entered", retainedTextureBytes: 0, depthBudgetBytes: 0 };
+  }
+  setDebugNorthHarbourWater(enabled: boolean) {
+    if (typeof location === "undefined" || !new URLSearchParams(location.search).has("debug")) return false;
+    this.northHarbourWaterDebugDisabled = !enabled;
+    if (!enabled) this.northHarbourWater?.suspend("debug disabled");
+    return true;
+  }
+  disposeNorthHarbourWater() { this.northHarbourWater?.dispose(); }
   setDebugDaylightOrientation(orientation: DebugDaylightOrientation) {
     this.debugDaylightOrientation = orientation;
     applyDaylightOrientation(this, orientation);
     this.waterSceneComparison?.invalidate(this.weather);
+    this.northHarbourWater?.invalidate(this.weather);
     this.waterOpticsComparison?.update(
       this.weather, this.scene.backgroundRotation, this.scene.backgroundIntensity,
     );
@@ -1761,6 +1793,7 @@ export class World {
     this.water.uniforms.night.value = night ? 1 : 0;
     this.waterWavesComparison?.update(w);
     this.waterSceneComparison?.invalidate(w);
+    this.northHarbourWater?.invalidate(w);
     this.waterOpticsComparison?.update(
       w, this.scene.backgroundRotation, this.scene.backgroundIntensity,
     );
