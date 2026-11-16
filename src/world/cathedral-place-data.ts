@@ -12,7 +12,13 @@ export const CATHEDRAL_PLACE_TIERS = source.tiers as {
  * roof directly into the game's flattened Gallery district. */
 export const CATHEDRAL_PLACE = {
   apex: 116.4,
-  roofPeak: 115.6,
+  roofPeak: 112.3,
+  crownPanelSpring: 100.2,
+  crownSolidFraction: 0.69,
+  crownPanelThickness: 0.045,
+  crownLatticePitch: 0.65,
+  crownLatticeRows: 3,
+  crownLatticeBar: 0.075,
   crownSpring: 99,
   mainBodyTop: 90.87,
   groundStorey: 5.6,

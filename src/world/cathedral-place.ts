@@ -1,3 +1,4 @@
+import { createCathedralPlaceCrown } from "./cathedral-place-crown";
 import * as T from "three";
 import polygonClipping from "polygon-clipping";
 import type { Building, Point } from "./data";
@@ -278,61 +279,21 @@ export function createCathedralPlaceGeometry(base = 0) {
     bottom = top;
   }
   cap(tiers[0].polygons, base, false);
-  const crown = openRing(tiers.at(-1)!.polygons[0][0]),
-    centre = centroid(crown.flat());
-  const peak: Vertex3 = [centre[0], base + D.roofPeak, centre[1]];
-  for (let i = 0; i < crown.length; i++) {
-    const a: Vertex3 = [crown[i][0], base + D.crownSpring, crown[i][1]],
-      b: Vertex3 = [
-        crown[(i + 1) % crown.length][0],
-        base + D.crownSpring,
-        crown[(i + 1) % crown.length][1],
-      ];
-    const n = vec(b)
-      .sub(vec(a))
-      .cross(vec(peak).sub(vec(a)));
-    if (n.y < 0) n.negate();
-    n.normalize();
-    triangle("roof", a, b, peak, n.toArray() as Vertex3);
-    // Physical raised standing seams converge to the pinnacle. No roof texture
-    // or photographic reuse; depth survives the Gallery approach silhouette.
-    const divisions = Math.max(2, Math.round(vec(a).distanceTo(vec(b)) / 0.65));
-    for (let j = 0; j <= divisions; j++) {
-      const t = j / divisions,
-        at = vec(a).lerp(vec(b), t),
-        across = vec(b).sub(vec(a)).normalize().multiplyScalar(0.023),
-        lift = n.clone().multiplyScalar(0.025);
-      const p0 = at.clone().sub(across).add(lift),
-        p1 = at.clone().add(across).add(lift),
-        p2 = vec(peak).add(lift);
-      triangle(
-        "frame",
-        p0.toArray() as Vertex3,
-        p1.toArray() as Vertex3,
-        p2.toArray() as Vertex3,
-        n.toArray() as Vertex3,
-      );
+  const crown = createCathedralPlaceCrown(base);
+  for (const role of ["roof", "frame"] as const) {
+    const g = crown[role],
+      p = g.getAttribute("position"),
+      uv = g.getAttribute("uv"),
+      q = data[role],
+      offset = q.p.length / 3;
+    for (let i = 0; i < p.count; i++) {
+      q.p.push(p.getX(i), p.getY(i), p.getZ(i));
+      q.uv.push(uv.getX(i), uv.getY(i));
     }
+    for (let i = 0; i < g.index!.count; i++)
+      q.ix.push(offset + g.index!.getX(i));
+    g.dispose();
   }
-  // Short four-sided finial, included within the retained overall height.
-  const r = 0.095,
-    y0 = base + D.roofPeak - 0.1,
-    y1 = base + D.apex;
-  const tip: Vertex3 = [centre[0], y1, centre[1]];
-  const foot: Point[] = [
-    [centre[0] - r, centre[1] - r],
-    [centre[0] + r, centre[1] - r],
-    [centre[0] + r, centre[1] + r],
-    [centre[0] - r, centre[1] + r],
-  ];
-  for (let i = 0; i < 4; i++)
-    triangle(
-      "frame",
-      [...foot[i].slice(0, 1), y0, foot[i][1]] as Vertex3,
-      [foot[(i + 1) % 4][0], y0, foot[(i + 1) % 4][1]],
-      tip,
-      [0, 1, 0],
-    );
   const parts = {} as Record<CathedralPlaceRole, T.BufferGeometry>;
   let triangles = 0;
   for (const role of roles) {

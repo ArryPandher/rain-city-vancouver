@@ -90,7 +90,7 @@ test("five bounded City records register nested shoulders to the exact current m
 
 test("all physical vertices remain inside source footprint and unchanged grade/apex, with finite outward-facing crown", () => {
   assert.equal(candidate.stats.batches, 5);
-  assert.ok(candidate.stats.triangles < 35000);
+  assert.ok(candidate.stats.triangles < 40000);
   assert.ok(candidate.stats.windows > 500);
   let max = -Infinity,
     min = Infinity;
@@ -110,26 +110,16 @@ test("all physical vertices remain inside source footprint and unchanged grade/a
       );
       if (role === "roof")
         assert.ok(
-          n.getY(i) > 0.2,
-          "all four pitched facets face outward/upward",
+          p.getY(i) <=
+            D.crownPanelSpring +
+              (D.roofPeak - D.crownPanelSpring) * D.crownSolidFraction +
+              0.01,
+          "no opaque roof behind the upper lattice",
         );
     }
   }
   assert.equal(min, 0);
   assert.ok(Math.abs(max - 116.4) < 0.00001);
-  const core = open(tiers.at(-1)!.polygons[0][0]);
-  const centre = core.reduce(
-    (a, p) => [a[0] + p[0] / core.length, a[1] + p[1] / core.length],
-    [0, 0],
-  );
-  const hit = ray(
-    new T.Vector3(centre[0] + 0.3, 130, centre[1]),
-    new T.Vector3(0, -1, 0),
-  );
-  assert.ok(
-    hit[0].point.y > 114 && hit[0].point.y < 116.4,
-    "visible sloped crown, not old flat tower roof",
-  );
   // Public approach is outside the immutable footprint, with no facade/crown
   // projection below or over the adjacent Gallery-facing road corridor.
   for (const p of [
