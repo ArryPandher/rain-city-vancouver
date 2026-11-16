@@ -148,7 +148,7 @@ test("candidate stays clear of all loaded source road/building footprints and ha
       bytes += a.array.byteLength;
     bytes += c.geometry.index!.array.byteLength;
   }
-  assert.ok(bytes < 5000000, `GPU geometry bytes ${bytes}`);
+  assert.ok(bytes < 5900000, `GPU geometry bytes ${bytes}`);
   const group = createNorthShoreDemGroup();
   for (const mesh of group.children as T.Mesh[]) {
     assert.equal(mesh.userData.visualTerrainOnly, true);

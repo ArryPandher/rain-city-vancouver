@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "year": 2024,
+  "scene": "S2A_10UDV_20240830_0_L2A",
+  "datetime": "2024-08-30T19:30:53.893Z",
+  "cloudCoverPercent": 0.002077,
+  "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/10/U/DV/2024/8/S2A_10UDV_20240830_0_L2A/TCI.tif",
+  "bounds": {
+    "west": -123.32,
+    "east": -122.93,
+    "south": 49.352,
+    "north": 49.515
+  },
+  "width": 1280,
+  "height": 815,
+  "projection": "EPSG:4326 north-up, pixel-centre resampling from EPSG:32610",
+  "footprint": [
+    [
+      -124.38571352908221,
+      49.644421246766726
+    ],
+    [
+      -124.35846461064666,
+      48.65792929304437
+    ],
+    [
+      -123.37196581878945,
+      48.66551914514479
+    ],
+    [
+      -123.0477994708608,
+      49.35928648892238
+    ],
+    [
+      -123.01264330640078,
+      49.438011917160516
+    ],
+    [
+      -122.90782022458198,
+      49.65267712864953
+    ]
+  ],
+  "edgeBlendMetres": 600,
+  "overview": 1,
+  "sourceResolution": [
+    20,
+    -20
+  ],
+  "sourceWindow": [
+    3838,
+    762,
+    5258,
+    1673
+  ],
+  "utmBox": [
+    476759.79203484394,
+    5466589.506033046,
+    505083.7992701828,
+    5484757.650738568
+  ],
+  "rangeBytesUsed": 3735552,
+  "ranges": [
+    {
+      "range": "bytes=0-65535",
+      "bytes": 65536,
+      "sha256": "80eede38c1e720c6136a4c2c045a3a1ad21143f32c8a0e0b4d54b33185cde499",
+      "contentRange": "bytes 0-65535/208521692"
+    },
+    {
+      "range": "bytes=19202048-19595263",
+      "bytes": 393216,
+      "sha256": "f4f45b18cad8d7c89776fe10e36a2d4f7327ee23e6f88b64a0df4bb5257d53f3",
+      "contentRange": "bytes 19202048-19595263/208521692"
+    },
+    {
+      "range": "bytes=19595264-20119551",
+      "bytes": 524288,
+      "sha256": "56619279d2897667a4fd17f3ba4ba0a6b62d5071b63fdbd7d57bad77a296de25",
+      "contentRange": "bytes 19595264-20119551/208521692"
+    },
+    {
+      "range": "bytes=20119552-20578303",
+      "bytes": 458752,
+      "sha256": "5756dcf5789d9b9afbf63cafb993693ab2867d2868851b3e06d0c91b12663f45",
+      "contentRange": "bytes 20119552-20578303/208521692"
+    },
+    {
+      "range": "bytes=22609920-23003135",
+      "bytes": 393216,
+      "sha256": "f02eef071a15737ae689004d6c9558654cd987333d619219dad8dd6254d091cf",
+      "contentRange": "bytes 22609920-23003135/208521692"
+    },
+    {
+      "range": "bytes=23003136-23527423",
+      "bytes": 524288,
+      "sha256": "816b851603c8fab40ab5ae6d10a1333980072260c32688bbfc94128b9e55a990",
+      "contentRange": "bytes 23003136-23527423/208521692"
+    },
+    {
+      "range": "bytes=23527424-23855103",
+      "bytes": 327680,
+      "sha256": "76a4d698e6b7078477513c17c3c4f6ca9beb119b1b6c8652b56686b1e5fcd299",
+      "contentRange": "bytes 23527424-23855103/208521692"
+    },
+    {
+      "range": "bytes=25886720-26279935",
+      "bytes": 393216,
+      "sha256": "da1b19349ec7e7bf6c2f5197bc95fcc4251d959faba415d24cfef5e9cd6b5b85",
+      "contentRange": "bytes 25886720-26279935/208521692"
+    },
+    {
+      "range": "bytes=26279936-26738687",
+      "bytes": 458752,
+      "sha256": "dbfb7ec4233c2f512211e2d2a2629025f6bcaa86cf72e648d2e1148b5deca8e0",
+      "contentRange": "bytes 26279936-26738687/208521692"
+    },
+    {
+      "range": "bytes=26738688-26935295",
+      "bytes": 196608,
+      "sha256": "9ba04632e57619aa8f782782a0ba1e456cdbbae5385c8765ce1b012de768639c",
+      "contentRange": "bytes 26738688-26935295/208521692"
+    }
+  ],
+  "licence": "Copernicus Sentinel Data legal notice",
+  "licenceUrl": "https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice",
+  "attribution": "Contains modified Copernicus Sentinel data 2024. Sentinel-2 Cloud-Optimized GeoTIFFs via Element 84 / AWS Open Data.",
+  "description": "Georeferenced satellite-derived colour, not measured albedo; baked lighting retained. Nodata and source/crop edges blend to neutral material; no invented coverage.",
+  "texture": "public/textures/north-shore-dem/sentinel-2024.webp",
+  "textureBytes": 164874,
+  "textureSha256": "adf2ca0c123d8f517cf212fd8c2df7d2eaf3cee19f7285442aecc816261f8830"
+}

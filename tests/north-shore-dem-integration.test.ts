@@ -49,8 +49,11 @@ test("World.mountains keeps default photo and requires both debug and terrain=de
       if (search === "?debug&terrain=dem") {
         assert.equal(
           urls.length,
-          0,
-          "no overlapping photographic plane loaded",
+          1,
+          "one local satellite colour map, no overlapping photographic plane",
+        );
+        assert.ok(
+          urls[0].endsWith("textures/north-shore-dem/sentinel-2024.webp"),
         );
         assert.equal(world.northShore, undefined);
         assert.equal(child.children.length, 28);

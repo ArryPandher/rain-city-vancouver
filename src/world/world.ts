@@ -1469,7 +1469,7 @@ export class World {
       typeof location === "undefined" ? "" : location.search,
     );
     if (params.has("debug") && params.get("terrain") === "dem") {
-      this.root.add(createNorthShoreDemGroup());
+      this.root.add(createNorthShoreDemGroup({ imagery: true }));
       return;
     }
     const photo = new T.TextureLoader().load(

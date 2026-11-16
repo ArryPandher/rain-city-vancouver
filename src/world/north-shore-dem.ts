@@ -1,6 +1,11 @@
 import * as T from "three";
 import { geo } from "./data";
 import data from "./north-shore-dem-data.json";
+import {
+  northShoreImageryUv,
+  loadNorthShoreImagery,
+  applyNorthShoreImageryShader,
+} from "./north-shore-imagery";
 
 /** Visual-only DEM. Never use this derivative for live road/player support. */
 export const NORTH_SHORE_DEM = data;
@@ -100,6 +105,7 @@ export function createNorthShoreDemGeometry() {
       const positions: number[] = [],
         ns: number[] = [],
         cs: number[] = [],
+        uvs: number[] = [],
         indices: number[] = [];
       for (let r = row; r <= endRow; r++)
         for (let c = col; c <= endCol; c++) {
@@ -111,6 +117,7 @@ export function createNorthShoreDemGeometry() {
           );
           ns.push(...normals.subarray(i * 3, i * 3 + 3));
           cs.push(...colors.subarray(i * 3, i * 3 + 3));
+          uvs.push(...northShoreImageryUv(minX + c * dx, minZ + r * dz));
           if (r < endRow && c < endCol) {
             const a = (r - row) * width + c - col;
             indices.push(a, a + width, a + 1, a + 1, a + width, a + width + 1);
@@ -123,6 +130,7 @@ export function createNorthShoreDemGeometry() {
       );
       geometry.setAttribute("normal", new T.Float32BufferAttribute(ns, 3));
       geometry.setAttribute("color", new T.Float32BufferAttribute(cs, 3));
+      geometry.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
       geometry.setIndex(indices);
       geometry.computeBoundingBox();
       geometry.computeBoundingSphere();
@@ -132,7 +140,7 @@ export function createNorthShoreDemGeometry() {
 }
 
 /** Attach directly to scene for frustum culling; not the city's 2.9 km static culler. */
-export function createNorthShoreDemGroup() {
+export function createNorthShoreDemGroup(options: { imagery?: boolean } = {}) {
   const group = new T.Group();
   group.name = "Measured North Shore visual terrain candidate";
   const material = new T.MeshStandardMaterial({
@@ -142,6 +150,7 @@ export function createNorthShoreDemGroup() {
     fog: true,
   });
   material.onBeforeCompile = (shader) => {
+    if (options.imagery) applyNorthShoreImageryShader(shader);
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <fog_fragment>",
       T.ShaderChunk.fog_fragment.replaceAll(
@@ -151,7 +160,7 @@ export function createNorthShoreDemGroup() {
     );
   };
   material.customProgramCacheKey = () =>
-    `north-shore-dem-fog-depth-${NORTH_SHORE_DEM_PROFILE.fogDepthScale}-v1`;
+    `north-shore-dem-fog-depth-${NORTH_SHORE_DEM_PROFILE.fogDepthScale}-imagery-${!!options.imagery}-v2`;
   for (const chunk of createNorthShoreDemGeometry()) {
     const mesh = new T.Mesh(chunk.geometry, material);
     mesh.position.set(chunk.origin[0], 0, chunk.origin[1]);
@@ -161,5 +170,6 @@ export function createNorthShoreDemGroup() {
     mesh.userData.visualTerrainOnly = true;
     group.add(mesh);
   }
+  if (options.imagery) loadNorthShoreImagery(material, group);
   return group;
 }
