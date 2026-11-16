@@ -40,6 +40,7 @@ import {
 } from "./gallery-roof";
 import { galleryWingCopperMaterial } from "./gallery-roof-material";
 import { addGalleryBanners } from "./gallery-banners";
+import { addGalleryUpperCanopy } from "./gallery-upper-canopy";
 import { openCanadaPlaceEntryRail } from "./canada-place-entry-rail";
 import { refineCanadaPlaceWestRailing } from "./canada-place-west-railing";
 import {
@@ -338,6 +339,7 @@ export async function loadVancouverLandmarks(
       const reflection = galleryFacadeReflection(facade, x, z);
       if (reflection) reflections.push(reflection);
       addGalleryBanners(group);
+      addGalleryUpperCanopy(group);
     }
     if (refineHowePodium) {
       const podium = createPanPacificHowePodium(materials);
