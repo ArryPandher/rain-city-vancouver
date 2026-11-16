@@ -10,6 +10,7 @@ import {
   CollisionWorld,
 } from "./collision";
 import { ribbon } from "./geometry";
+import { addIronworkersBridgeStructure } from "./ironworkers-bridge";
 export function buildLandmarks(
   parent: T.Group,
   m: Materials,
@@ -308,6 +309,10 @@ export function buildLandmarks(
         );
         mesh(strip, m.yellow, g);
       }
+    }
+    if (b.id === "ironworkers") {
+      addIronworkersBridgeStructure(g, b, deckY, m.concrete);
+      continue;
     }
     for (let t = 0.1; t < 1; t += 0.13) {
       const y = deckY(t);
