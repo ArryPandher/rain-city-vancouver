@@ -1,4 +1,5 @@
 import { createNorthShoreDemGroup } from "./north-shore-dem";
+import { readNorthShoreDiagnostics } from "./north-shore-diagnostics";
 import { buildRobsonStreetEdge } from "./robson-street-edge-materials";
 import { clipRobsonStreetPaths } from "./robson-street-edge-paths";
 import {
@@ -155,6 +156,7 @@ export class World {
   reflectionTextures: Record<string, T.Texture> = {};
   nightLights: T.MeshStandardMaterial[] = [];
   northShore?: T.MeshBasicMaterial;
+  northShoreTerrain?: T.Group;
   detailedTrees?: DetailedTrees;
   broadleafVolume?: ReturnType<typeof installBroadleafVolumes>;
   forestHabitat!: ForestHabitat;
@@ -1464,20 +1466,26 @@ export class World {
     remove.forEach((o) => o.removeFromParent());
     this.chunks.push(...batch.finish());
   }
+  northShoreDiagnostics() {
+    return readNorthShoreDiagnostics(this.northShoreTerrain, this.northShore);
+  }
   mountains() {
     const params = new URLSearchParams(
       typeof location === "undefined" ? "" : location.search,
     );
     if (params.has("debug") && params.get("terrain") === "dem") {
-      this.root.add(createNorthShoreDemGroup({ imagery: true }));
+      this.northShoreTerrain = createNorthShoreDemGroup({ imagery: true });
+      this.root.add(this.northShoreTerrain);
       return;
     }
     const photo = new T.TextureLoader().load(
       `${BASE}textures/vancouver/north-shore.webp`,
     );
     photo.colorSpace = T.SRGBColorSpace;
+    photo.name = "North Shore Selmo panorama photograph";
     photo.anisotropy = 8;
     this.northShore = new T.MeshBasicMaterial({
+      name: "North Shore photographic horizon",
       map: photo,
       transparent: true,
       depthWrite: false,

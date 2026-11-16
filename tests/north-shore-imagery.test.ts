@@ -4,6 +4,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import sharp from "sharp";
 import * as T from "three";
+import { readNorthShoreDiagnostics } from "../src/world/north-shore-diagnostics";
 import { geo } from "../src/world/data";
 import {
   NORTH_SHORE_IMAGERY as d,
@@ -125,11 +126,15 @@ test("diagnostic imagery loads locally, blends coverage into opaque neutral mate
         .material as T.MeshStandardMaterial;
     assert.ok(url.endsWith("textures/north-shore-dem/sentinel-2024.webp"));
     assert.equal(group.userData.imageryStatus, "loading");
+    assert.equal(readNorthShoreDiagnostics(group).imageryStatus, "loading");
     assert.equal(material.map, null);
     failed!({});
     assert.equal(group.userData.imageryStatus, "fallback");
+    assert.equal(readNorthShoreDiagnostics(group).imageryStatus, "fallback");
+    assert.equal(readNorthShoreDiagnostics(group).texture, null);
     assert.equal(material.map, null);
     const texture = new T.Texture<HTMLImageElement>();
+    texture.image = { width: 1280, height: 815 } as HTMLImageElement;
     loaded!(texture);
     assert.equal(material.map, texture);
     assert.equal(texture.colorSpace, T.SRGBColorSpace);
@@ -139,6 +144,17 @@ test("diagnostic imagery loads locally, blends coverage into opaque neutral mate
     assert.equal(material.opacity, 1);
     assert.equal(material.alphaTest, 0);
     assert.equal(group.userData.imageryStatus, "ready");
+    const diagnostic = readNorthShoreDiagnostics(group);
+    assert.equal(diagnostic.imageryStatus, "ready");
+    assert.equal(diagnostic.meshCount, 28);
+    assert.deepEqual(diagnostic.texture, {
+      width: 1280,
+      height: 815,
+      colorSpace: T.SRGBColorSpace,
+    });
+    assert.equal(diagnostic.material?.name, material.name);
+    assert.equal(diagnostic.material?.mapName, texture.name);
+    assert.ok(texture.name.includes("2024-08-30"));
     const shader = {
       fragmentShader: T.ShaderLib.standard.fragmentShader,
       vertexShader: T.ShaderLib.standard.vertexShader,

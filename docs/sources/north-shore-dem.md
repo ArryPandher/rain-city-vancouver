@@ -37,6 +37,24 @@ The DEM material uses an **experimental terrain-only fog-depth scale of 0.35**, 
 
 ## Verification and handoff
 
+`World.northShoreDiagnostics()` reports the selected mode, group name, mesh count,
+current image load status, material name/type/map name, vertex-colour and fog flags,
+and the live map width/height/colour space. It reads current resources on demand,
+so `loading`, `ready` and `fallback` reflect asynchronous image completion rather
+than a construction-time snapshot. The parent render-profile payload can include
+this value as `northShore`; the method does not alter rendering or the URL gate.
+The DEM map is named for the 2024-08-30 Copernicus source. A ready diagnostic should
+report 28 meshes and a 1280×815 sRGB map. Neutral coverage outside that image remains
+intentional; a ready map does not mean every visible ridge has source coverage.
+
+Native diagnostic views at Ironworkers on 2026-11-16 showed correct ridge relief
+but smooth/dark distant terrain. The source-pixel audit confirms the forward Lynn
+Valley and Seymour controls have zero image coverage, while Grouse and Fromme are
+covered. The Fromme source pixel itself is dark `[9,18,8]` sRGB. This does not prove
+the live image loaded: inspect the profile fields before diagnosing lighting or
+mipmap contrast. The candidate remains explicitly diagnostic, with no default
+promotion or appearance adjustment based on that first image alone.
+
 `npx tsx --test tests/north-shore-dem.test.ts tests/north-shore-dem-integration.test.ts`: **5 passed**. The added owning-method regression verifies the default photo and both required URL flags, direct-root attachment, no overlapping photo, and the installed Three.js standard shader fog hook without shared uniform or lighting changes. The checks cover exact metadata/control elevations, unmodified interior heights, all 202,496 upward-facing triangles, shared chunk seams, zero-height perimeter contact, front-sided rays at four real source controls, separation from actual source road/building/area vertices, and the bounded geometry budget. `node scripts/extract-north-shore-dem.mjs --verify` also passed against all 12 cached original PNGs. `npx tsc --noEmit --pretty false` passed for the integrated diagnostic candidate after narrowing the shader test fixture through `unknown`; no runtime change was needed for that fixture correction.
 
 Read-only measured-height preview: `artifacts/local/north-shore-dem/measured-height-preview.png` (north up, relief colouring; not a native screenshot). Proposed ordinary camera comparison: Ironworkers crest `[6797.68,37.91,−1704.90]`, northward heading around −3.1188, then west/east glances from the existing paths. The parent task owns build/native comparison and acceptance; no browser, build, full suite or publication was performed here. The later satellite-colour integration adds UVs and its own bounded texture; current costs and coverage are recorded in [the imagery source note](north-shore-imagery.md).

@@ -46,6 +46,8 @@ export function loadNorthShoreImagery(
   new T.TextureLoader().load(
     `${base}textures/north-shore-dem/sentinel-2024.webp`,
     (texture) => {
+      texture.name =
+        "North Shore Copernicus Sentinel-2 2024-08-30 geographic colour";
       texture.colorSpace = T.SRGBColorSpace;
       texture.anisotropy = 4;
       texture.wrapS = texture.wrapT = T.ClampToEdgeWrapping;
@@ -53,6 +55,8 @@ export function loadNorthShoreImagery(
       texture.magFilter = T.LinearFilter;
       texture.generateMipmaps = true;
       material.map = texture;
+      material.name =
+        "North Shore DEM Copernicus colour with neutral coverage fallback";
       material.needsUpdate = true;
       group.userData.imageryStatus = "ready";
     },

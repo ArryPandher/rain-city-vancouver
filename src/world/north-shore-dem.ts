@@ -144,6 +144,7 @@ export function createNorthShoreDemGroup(options: { imagery?: boolean } = {}) {
   const group = new T.Group();
   group.name = "Measured North Shore visual terrain candidate";
   const material = new T.MeshStandardMaterial({
+    name: "North Shore DEM neutral vegetation and rock",
     vertexColors: true,
     roughness: 1,
     metalness: 0,

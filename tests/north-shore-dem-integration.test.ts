@@ -56,6 +56,13 @@ test("World.mountains keeps default photo and requires both debug and terrain=de
           urls[0].endsWith("textures/north-shore-dem/sentinel-2024.webp"),
         );
         assert.equal(world.northShore, undefined);
+        const diagnostic = world.northShoreDiagnostics();
+        assert.equal(diagnostic.mode, "dem");
+        assert.equal(diagnostic.groupName, child.name);
+        assert.equal(diagnostic.meshCount, 28);
+        assert.equal(diagnostic.imageryStatus, "loading");
+        assert.equal(diagnostic.material.type, "MeshStandardMaterial");
+        assert.equal(diagnostic.texture, null);
         assert.equal(child.children.length, 28);
         assert.ok(
           child.children.every(
@@ -77,6 +84,17 @@ test("World.mountains keeps default photo and requires both debug and terrain=de
         );
         assert.equal(child.material, world.northShore);
         assert.equal(world.northShore.fog, false);
+        const diagnostic = world.northShoreDiagnostics();
+        assert.equal(diagnostic.mode, "photo");
+        assert.equal(diagnostic.meshCount, 1);
+        assert.equal(
+          diagnostic.material.name,
+          "North Shore photographic horizon",
+        );
+        assert.equal(
+          diagnostic.material.mapName,
+          "North Shore Selmo panorama photograph",
+        );
       }
     }
   } finally {
