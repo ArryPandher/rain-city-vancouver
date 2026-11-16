@@ -30,6 +30,33 @@ export function ironworkersFirstHitCoverage(
   return { front, side, total: Math.min(1, front + side) };
 }
 
+/** Resolved box coverage tends to the exact area mean before its periodic
+ * modulation exceeds Nyquist. Front/side share the same weight so legal full
+ * grazing occlusion remains1. No opacity or structural duty reduction. */
+export function ironworkersBandlimitedCoverage(
+  section: IronworkersPicketSection,
+  cell: number,
+  pixelWidth: number,
+  signedSlope: number,
+) {
+  const exact = ironworkersFirstHitCoverage(
+    section,
+    cell,
+    pixelWidth,
+    signedSlope,
+  );
+  const width = Math.abs(pixelWidth),
+    t = T.MathUtils.smoothstep(width, 0.25, 0.75);
+  const frontMean = section.width / section.pitch;
+  const sideMean = Math.min(
+    (section.depth * Math.abs(signedSlope)) / section.pitch,
+    1 - frontMean,
+  );
+  const front = T.MathUtils.lerp(exact.front, frontMean, t),
+    side = T.MathUtils.lerp(exact.side, sideMean, t);
+  return { front, side, total: Math.min(1, front + side) };
+}
+
 /** Debug-only radiance average. Same steel response, two actual face normals.
  * Continuous alpha requires separately sorted side chunks and no depth write. */
 export function createIronworkersRadianceCoverageMaterial(
@@ -102,8 +129,10 @@ float fenceSideDuty=min(ironworkersPicketSection.y*abs(fenceSlope)/ironworkersPi
 float fenceShift=fenceSlope*ironworkersPicketSection.y/(2.*ironworkersPicketSection.z);
 float fenceFrontCell=vFenceCell+fenceShift;
 float fenceSideCell=fenceFrontCell-sign(fenceSlope)*(fenceFrontDuty+fenceSideDuty)*.5;
-float fenceFrontCoverage=fenceCoverage(fenceFrontCell,fwidth(fenceFrontCell),fenceFrontDuty);
-float fenceSideCoverage=fenceCoverage(fenceSideCell,fwidth(fenceSideCell),fenceSideDuty);
+float fenceFootprint=max(fwidth(fenceFrontCell),fwidth(fenceSideCell));
+float fenceMeanWeight=smoothstep(.25,.75,fenceFootprint);
+float fenceFrontCoverage=mix(fenceCoverage(fenceFrontCell,fenceFootprint,fenceFrontDuty),fenceFrontDuty,fenceMeanWeight);
+float fenceSideCoverage=mix(fenceCoverage(fenceSideCell,fenceFootprint,fenceSideDuty),fenceSideDuty,fenceMeanWeight);
 float fenceTotal=clamp(fenceFrontCoverage+fenceSideCoverage,0.,1.);
 vec2 fenceWeights=vec2(fenceFrontCoverage,fenceSideCoverage)/max(fenceTotal,.00001);
 ReflectedLight fenceSum=ReflectedLight(vec3(0.),vec3(0.),vec3(0.),vec3(0.));`,
@@ -144,6 +173,6 @@ reflectedLight=fenceSum;`,
       );
   };
   material.customProgramCacheKey = () =>
-    `${key}:ironworkers-first-hit-radiance-v1`;
+    `${key}:ironworkers-first-hit-radiance-v2-bandlimited`;
   return material;
 }

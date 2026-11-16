@@ -131,56 +131,50 @@ test("trial averages separately lit face radiance, keeps source steel, and appli
     createIronworkersRadianceCoverageMaterial(source, { ...section, pitch: 0 }),
   );
 });
-test("explicit trial preserves all physical members and near matrices; separates sortable far sides within a bounded draw budget", () => {
+test("projected trial preserves exact physical members, split side domains and bounded draw capacity", () => {
   const boundary = createIronworkersPathBoundary(
     (t) => 5 + 40 * Math.sin(Math.PI * t),
     () => 0.07,
   );
   const original = boundary.members.map((m) => m.matrix.elements.slice());
-  const source = new T.MeshStandardMaterial({
-      color: 0xa7afac,
-      roughness: 0.5,
-      metalness: 0.75,
-    }),
-    plain = boundary.createRenderGroup(new T.MeshBasicMaterial(), source),
-    trial = boundary.createRenderGroup(new T.MeshBasicMaterial(), source, {
+  const steel = new T.MeshStandardMaterial(),
+    plain = boundary.createRenderGroup(new T.MeshBasicMaterial(), steel),
+    trial = boundary.createRenderGroup(new T.MeshBasicMaterial(), steel, {
       filterTrial: true,
     });
-  const a = plain.group.children.filter((x): x is T.LOD => x instanceof T.LOD),
-    b = trial.group.children.filter((x): x is T.LOD => x instanceof T.LOD);
+  const a = plain.group.children.filter((x): x is T.LOD => x instanceof T.LOD);
+  const b = trial.group.children.filter((x) => x instanceof T.Group);
   assert.equal(a.length, b.length);
-  assert.equal(plain.stats.filterTrial, false);
-  assert.equal(trial.stats.filterTrial, true);
   assert.equal(plain.stats.maxDrawCalls, 24);
-  assert.equal(trial.stats.maxDrawCalls, 45);
+  assert.equal(trial.stats.maxDrawCalls, 87);
+  const matrices = (mesh: T.InstancedMesh) =>
+    Array.from({ length: mesh.instanceMatrix.count }, (_, i) =>
+      Array.from(mesh.instanceMatrix.array.slice(i * 16, (i + 1) * 16)).join(
+        ",",
+      ),
+    ).sort();
   for (let i = 0; i < a.length; i++) {
     assert.equal(a[i].levels[1].distance, 2000);
-    assert.equal(b[i].levels[1].distance, 48);
-    assert.equal(b[i].levels[1].hysteresis, IRONWORKERS_PATH.nearHysteresis);
-    const nearA = a[i].levels[0].object as T.InstancedMesh,
-      nearB = b[i].levels[0].object as T.InstancedMesh;
-    assert.deepEqual(nearA.instanceMatrix.array, nearB.instanceMatrix.array);
-    assert.equal(nearB.material, source);
-    const far = b[i].levels[1].object;
-    assert.equal(far.children.length, 2);
-    let count = 0;
-    const centres = [];
-    for (const child of far.children) {
-      assert.ok(child instanceof T.InstancedMesh);
-      const mesh = child as T.InstancedMesh;
-      count += mesh.count;
-      assert.equal(mesh.castShadow, false);
-      assert.equal(mesh.receiveShadow, false);
-      assert.ok(mesh.boundingSphere);
-      centres.push(mesh.boundingSphere!.center.clone());
-      const mat = mesh.material as T.MeshStandardMaterial;
-      assert.equal(mat.depthWrite, false);
-      assert.equal(mat.transparent, true);
+    const old = a[i].levels[0].object as T.InstancedMesh;
+    assert.equal(b[i].children.length, 4);
+    const near = b[i].children.filter(
+        (_, j) => j % 2 === 0,
+      ) as T.InstancedMesh[],
+      far = b[i].children.filter((_, j) => j % 2 === 1) as T.InstancedMesh[];
+    assert.deepEqual(near.flatMap(matrices).sort(), matrices(old));
+    for (const mesh of near) {
+      assert.equal(mesh.material, steel);
+      assert.equal(mesh.castShadow, true);
     }
-    assert.equal(count, nearB.count);
+    for (const mesh of far) {
+      assert.equal(mesh.count, 0);
+      assert.equal(mesh.castShadow, false);
+      assert.equal((mesh.material as T.Material).depthWrite, false);
+      assert.ok(mesh.boundingSphere);
+    }
     assert.ok(
-      centres[0].distanceTo(centres[1]) > 35,
-      "opposite sides have distinct sort centres",
+      far[0].boundingSphere!.center.distanceTo(far[1].boundingSphere!.center) >
+        35,
     );
   }
   assert.deepEqual(
@@ -191,4 +185,5 @@ test("explicit trial preserves all physical members and near matrices; separates
     (plain.group.children[0] as T.Mesh).geometry.attributes.position.array,
     (trial.group.children[0] as T.Mesh).geometry.attributes.position.array,
   );
+  trial.disposeSelection?.();
 });

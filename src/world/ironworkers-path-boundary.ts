@@ -1,4 +1,8 @@
 import * as T from "three";
+import {
+  IronworkersPicketSelection,
+  installIronworkersPicketSelection,
+} from "./ironworkers-picket-selection";
 import { createIronworkersPicketCoverageMaterial } from "./ironworkers-picket-coverage";
 import { createIronworkersRadianceCoverageMaterial } from "./ironworkers-picket-radiance";
 import {
@@ -550,6 +554,7 @@ export function createIronworkersPathBoundary(
       group.add(mesh);
     }
     let chunks = 0;
+    const selectors: IronworkersPicketSelection[] = [];
     for (let start = 0; start < LENGTH; start += d.chunkLength) {
       const list = members.filter(
           (m) =>
@@ -562,18 +567,19 @@ export function createIronworkersPathBoundary(
         [x, z] = ironworkersPoint(t),
         y = deckHeight(ironworkersGradeT(x, z));
       lod.position.set(x, y, z);
-      const near = new T.InstancedMesh(unit, steel, list.length),
-        translation = new T.Matrix4().makeTranslation(-x, -y, -z);
-      near.castShadow = near.receiveShadow = true;
-      // Single-sample shadow maps cannot reproduce the far MSAA coverage.
-      // Only visible near physical boxes cast; never a full-pitch proxy sheet.
-      list.forEach((m, i) => {
-        near.setMatrixAt(
-          i,
-          new T.Matrix4().multiplyMatrices(translation, m.matrix),
+      const translation = new T.Matrix4().makeTranslation(-x, -y, -z);
+      const makeNear = (selection: IronworkersMember[]) => {
+        const near = new T.InstancedMesh(unit, steel, selection.length);
+        near.castShadow = near.receiveShadow = true;
+        selection.forEach((m, i) =>
+          near.setMatrixAt(
+            i,
+            new T.Matrix4().multiplyMatrices(translation, m.matrix),
+          ),
         );
-      });
-      near.computeBoundingSphere();
+        near.computeBoundingSphere();
+        return near;
+      };
       const makeFar = (selection: IronworkersMember[]) => {
         const far = new T.InstancedMesh(plane, farMaterial, selection.length);
         far.castShadow = far.receiveShadow = false;
@@ -596,10 +602,9 @@ export function createIronworkersPathBoundary(
         far.computeBoundingSphere();
         return far;
       };
-      let far: T.Object3D;
       if (trial) {
-        // Transparent instances are not individually sorted. Separate the two
-        // fence sides so Three sorts each bounded chunk by its real sphere centre.
+        // One sortable far mesh and physical subset per side, sharing the same
+        // immutable 64m domain. Every member belongs to exactly one subset.
         const sides: [IronworkersMember[], IronworkersMember[]] = [[], []];
         for (const m of list) {
           const [cx, cz] = ironworkersPoint(ironworkersTAtDistance(m.station));
@@ -608,23 +613,35 @@ export function createIronworkersPathBoundary(
             (m.centre[2] - cz) * m.axes[1][2];
           sides[side < 0 ? 0 : 1].push(m);
         }
-        far = new T.Group();
+        const cell = new T.Group();
+        cell.position.copy(lod.position);
         sides.forEach((side, i) => {
-          const mesh = makeFar(side);
-          mesh.name = `Ironworkers filtered fence side ${i}`;
-          far.add(mesh);
+          const near = makeNear(side),
+            far = makeFar(side);
+          near.name = `Ironworkers physical fence side ${i}`;
+          far.name = `Ironworkers filtered fence side ${i}`;
+          cell.add(near, far);
+          selectors.push(
+            new IronworkersPicketSelection(near, far, actualPitch),
+          );
         });
-      } else far = makeFar(list);
-      lod.addLevel(near, 0);
-      lod.addLevel(far, trial ? 48 : d.nearDistance, d.nearHysteresis);
-      group.add(lod);
+        group.add(cell);
+      } else {
+        lod.addLevel(makeNear(list), 0);
+        lod.addLevel(makeFar(list), d.nearDistance, d.nearHysteresis);
+        group.add(lod);
+      }
       chunks++;
     }
+    const disposeSelection = trial
+      ? installIronworkersPicketSelection(group, selectors)
+      : undefined;
     return {
       group,
+      disposeSelection,
       stats: {
         chunks,
-        maxDrawCalls: chunks * (trial ? 2 : 1) + 3,
+        maxDrawCalls: chunks * (trial ? 4 : 1) + 3,
         filterTrial: trial,
         pickets: members.filter((m) => m.kind === "picket").length,
         pathTriangles: top.length + sides.length,
