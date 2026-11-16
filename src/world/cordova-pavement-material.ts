@@ -2,13 +2,17 @@ import * as T from "three";
 import type { Materials } from "./materials";
 import type { Road } from "./data";
 
-/** Only the four connected approaches to Howe/West Cordova. Whole mapped ways
- * retain their existing geometry, grade, markings and collision support. */
+/** Connected Howe/West Cordova approaches and the Canada Place arrival loop.
+ * Whole mapped ways retain geometry, grade, markings and collision support. */
 export const CORDOVA_PAVEMENT_ROADS = new Set([
   "w50162809",
   "w232195213",
   "w1153403243",
   "w1255588459",
+  "w1255990033", // Howe: north of the Cordova approach to Canada Place.
+  "w1550614843", // Canada Place: short turn at the arrival intersection.
+  "w1255990035", // Canada Place: terminal frontage east section.
+  "w706831744", // Canada Place: continuing west frontage.
 ]);
 export const CORDOVA_AGGREGATE_REPEAT_METRES = 1.2;
 export function hasCordovaPavement(road: Pick<Road, "id">) {
