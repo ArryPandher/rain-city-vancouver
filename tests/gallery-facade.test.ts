@@ -212,20 +212,29 @@ test("actual gallery source replacement preserves landing and all other material
 test("added geometry is finite, bounded, economical and has outward sill faces", async (t) => {
   const { root, chunks } = await scene();
   let triangles = 0;
-  assert.equal(chunks.length, 7);
+  assert.equal(chunks.length, 9);
   for (const mesh of chunks) {
     const p = mesh.geometry.getAttribute("position"),
       normal = mesh.geometry.getAttribute("normal");
     for (let i = 0; i < p.count; i++) {
       assert.ok(Number.isFinite(p.getX(i) + p.getY(i) + p.getZ(i)));
       assert.ok(p.getY(i) >= -0.081 && p.getY(i) <= 16.751);
+      // The source-supported west edge and fitted five-crown envelope are
+      // the sole extension of the prior portico/bistro construction bounds.
+      const westTerrace =
+        p.getX(i) >= -27.801 &&
+        p.getX(i) <= -9.399 &&
+        p.getZ(i) >= 24.149 &&
+        p.getZ(i) <= 28.44 &&
+        p.getY(i) <= 13.161;
       assert.ok(
-        p.getX(i) > -10.951 &&
-          p.getX(i) < 20 &&
-          p.getZ(i) > 22 &&
-          p.getZ(i) < 33.4,
+        westTerrace ||
+          (p.getX(i) > -10.951 &&
+            p.getX(i) < 20 &&
+            p.getZ(i) > 22 &&
+            p.getZ(i) < 33.4),
       );
-      if (p.getZ(i) >= 25 || p.getY(i) < -0.001)
+      if (!westTerrace && (p.getZ(i) >= 25 || p.getY(i) < -0.001))
         assert.ok(
           p.getX(i) >= -8.831 &&
             p.getX(i) <= 19.001 &&
@@ -240,8 +249,8 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
   }
   t.diagnostic(`${triangles} added triangles in ${chunks.length} draws`);
   assert.ok(
-    triangles < 20500,
-    `${triangles} added triangles including terrace framing`,
+    triangles < 33500,
+    `${triangles} added triangles including 13,000-triangle west planting and frontage`,
   );
   const hit = wingRay((0.5 * GALLERY_FACADE.length) / 6, 4.25, root)[0];
   assert.ok(
