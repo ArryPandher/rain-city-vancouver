@@ -104,6 +104,7 @@ export class TreeShadowReceivers {
     camera: T.Camera,
     sun: T.DirectionalLight,
     draw: (changed: boolean) => R,
+    shadowBounds?: ReadonlyMap<T.InstancedMesh, T.Sphere>,
   ): R {
     const records = Array.from(meshes, (mesh) => ({
       mesh,
@@ -115,6 +116,7 @@ export class TreeShadowReceivers {
         records.filter((r) => r.cast).map((r) => r.mesh),
         camera,
         sun,
+        shadowBounds,
       );
       const desired = new Map(
         records.map(({ mesh }) => [mesh.id, mesh.castShadow]),
@@ -151,6 +153,7 @@ export class TreeShadowReceivers {
     meshes: Iterable<T.InstancedMesh>,
     camera?: T.Camera,
     sun?: T.DirectionalLight,
+    shadowBounds?: ReadonlyMap<T.InstancedMesh, T.Sphere>,
   ) {
     if (camera && sun) {
       this.frustum.setFromProjectionMatrix(
@@ -168,7 +171,9 @@ export class TreeShadowReceivers {
       let cast = true;
       if (camera && sun) {
         if (!mesh.boundingSphere) mesh.computeBoundingSphere();
-        this.sphere.copy(mesh.boundingSphere!).applyMatrix4(mesh.matrixWorld);
+        this.sphere
+          .copy(shadowBounds?.get(mesh) ?? mesh.boundingSphere!)
+          .applyMatrix4(mesh.matrixWorld);
         this.sphere.radius += directionalShadowMargin(sun);
         cast = shadowSphereReachesView(
           this.sphere,

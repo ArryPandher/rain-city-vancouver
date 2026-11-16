@@ -1,3 +1,7 @@
+import {
+  StreetTreeShadowLOD,
+  type StreetTreeShadowPair,
+} from "./street-tree-shadow-lod";
 import { TreeShadowReceivers } from "../rendering/tree-shadow-receivers";
 import { yieldDetailFrame } from "./detail-stream";
 import * as T from "three";
@@ -46,6 +50,10 @@ export class DetailedTrees {
   private lastProjectionScale: number | undefined;
   lodState = { near: 0, medium: 0 };
   private readonly shadowReceivers = new TreeShadowReceivers();
+  private readonly shadowLOD = new StreetTreeShadowLOD();
+  get shadowLodState() {
+    return this.shadowLOD.state;
+  }
   /** Last successful final-render policy, not temporarily restored cast flags. */
   get shadowReceiverState() {
     return this.shadowReceivers.state;
@@ -56,18 +64,43 @@ export class DetailedTrees {
     camera: T.Camera,
     sun: T.DirectionalLight,
     draw: (changed: boolean) => R,
+    renderer?: T.WebGLRenderer,
   ): R {
     camera.updateWorldMatrix(true, false);
     sun.updateWorldMatrix(true, false);
     sun.target.updateWorldMatrix(true, false);
     const meshes: T.InstancedMesh[] = [];
+    const pairs: StreetTreeShadowPair[] = [];
+    const shadowBounds = new Map<T.InstancedMesh, T.Sphere>();
     for (const slot of this.slots) {
       if (!slot.group.visible) continue;
       slot.group.updateWorldMatrix(true, true);
       for (const level of slot.levels)
         for (const mesh of level) if (mesh.visible) meshes.push(mesh);
+      if (renderer)
+        for (const target of slot.levels[0]) {
+          if (!target.visible) continue;
+          const medium = slot.levels[1]?.find(
+            (mesh) =>
+              (mesh.material as T.Material).name ===
+              (target.material as T.Material).name,
+          );
+          if (!medium) continue;
+          if (!medium.boundingSphere) medium.computeBoundingSphere();
+          pairs.push({ target, medium });
+          shadowBounds.set(target, medium.boundingSphere!);
+        }
     }
-    return this.shadowReceivers.render(meshes, camera, sun, draw);
+    return this.shadowReceivers.render(
+      meshes,
+      camera,
+      sun,
+      (changed) =>
+        renderer
+          ? this.shadowLOD.render(renderer, camera, pairs, () => draw(changed))
+          : draw(changed),
+      shadowBounds,
+    );
   }
   static async load(scene: T.Scene) {
     const loader = new GLTFLoader();
