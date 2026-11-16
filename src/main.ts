@@ -529,13 +529,20 @@ class Game {
           "podium",
           "return",
           "hotel",
+          "tower-wide",
+          "tower-near",
+          "rink-street",
+          "rink-north",
+          "rink-south",
           "gallery",
           "terrace",
         ] as const
       ).map((check) => {
         const button = document.createElement("button");
         button.textContent =
-          check === "gallery" || check === "terrace"
+          check === "gallery" ||
+          check === "terrace" ||
+          check.startsWith("rink-")
             ? `Walk at Robson ${check}`
             : `Walk at Howe ${check}`;
         button.addEventListener("click", () => {
@@ -913,6 +920,11 @@ class Game {
       | "podium"
       | "return"
       | "hotel"
+      | "tower-wide"
+      | "tower-near"
+      | "rink-street"
+      | "rink-north"
+      | "rink-south"
       | "gallery"
       | "terrace",
   ) {
@@ -921,65 +933,77 @@ class Game {
     // Recorded ordinary street comparison, cordova-geometry-baseline-profile.
     // Use live walking support and the normal collision-shortened chase boom.
     const place =
-      check === "gallery" || check === "terrace" ? "Robson" : "Howe";
+      check === "gallery" || check === "terrace" || check.startsWith("rink-")
+        ? "Robson"
+        : "Howe";
     const { x, z, yaw, pitch } =
-      check === "hotel"
-        ? {
-            x: 480.7306161858139,
-            z: -456.9860640434517,
-            yaw: 4.369913102028912,
-            pitch: -0.49715,
-          }
-        : check === "gallery"
-          ? {
-              x: -68.78511329120707,
-              z: 51.52276041041648,
-              yaw: 2.3554594283507932,
-              pitch: -0.1583,
-            }
-          : check === "terrace"
-            ? {
-                x: -145.8943919801504,
-                z: 127.92436055962261,
-                yaw: 2.3554594283507932,
-                pitch: 0.19,
-              }
-            : check === "return"
-              ? { x: 500, z: -506, yaw: 2.97, pitch: -0.18 }
-              : check === "podium"
-                ? {
-                    x: 517.8729019962855,
-                    z: -474.3508166211231,
-                    yaw: 2.7413631020289113,
-                    pitch: 0.21025000000000005,
-                  }
-                : check === "forecourt"
+      check === "tower-wide"
+        ? { x: 515, z: -480, yaw: 0.52, pitch: -0.51 }
+        : check === "tower-near"
+          ? { x: 570, z: -452, yaw: -0.389, pitch: -0.35 }
+          : check === "rink-street"
+            ? { x: -93.9, z: 74.5, yaw: 1.53494, pitch: 0.08 }
+            : check === "rink-north"
+              ? { x: -63.8, z: 83.4, yaw: -2.40733, pitch: 0.19 }
+              : check === "rink-south"
+                ? { x: -87.9, z: 106.9, yaw: -2.12754, pitch: 0.19 }
+                : check === "hotel"
                   ? {
-                      x: 486.06376139308657,
-                      z: -436.3726305675954,
-                      yaw: 2.4443631020289107,
-                      pitch: 0.19,
+                      x: 480.7306161858139,
+                      z: -456.9860640434517,
+                      yaw: 4.369913102028912,
+                      pitch: -0.49715,
                     }
-                  : check === "apron"
+                  : check === "gallery"
                     ? {
-                        x: 421.2023,
-                        z: -388.0413,
-                        yaw: 2.35619449,
-                        pitch: -0.18,
+                        x: -68.78511329120707,
+                        z: 51.52276041041648,
+                        yaw: 2.3554594283507932,
+                        pitch: -0.1583,
                       }
-                    : check === "sidewalk"
+                    : check === "terrace"
                       ? {
-                          x: 424.90576707774363,
-                          z: -389.90909834218024,
-                          yaw: -1.2648368979710893,
-                          pitch: -0.39049999999999996,
+                          x: -145.8943919801504,
+                          z: 127.92436055962261,
+                          yaw: 2.3554594283507932,
+                          pitch: 0.19,
                         }
-                      : {
-                          x: 450.2797011432693,
-                          z: -407.32055060898534,
-                          yaw: -1.2648368979710893,
-                          pitch: -0.39049999999999996,
-                        };
+                      : check === "return"
+                        ? { x: 500, z: -506, yaw: 2.97, pitch: -0.18 }
+                        : check === "podium"
+                          ? {
+                              x: 517.8729019962855,
+                              z: -474.3508166211231,
+                              yaw: 2.7413631020289113,
+                              pitch: 0.21025000000000005,
+                            }
+                          : check === "forecourt"
+                            ? {
+                                x: 486.06376139308657,
+                                z: -436.3726305675954,
+                                yaw: 2.4443631020289107,
+                                pitch: 0.19,
+                              }
+                            : check === "apron"
+                              ? {
+                                  x: 421.2023,
+                                  z: -388.0413,
+                                  yaw: 2.35619449,
+                                  pitch: -0.18,
+                                }
+                              : check === "sidewalk"
+                                ? {
+                                    x: 424.90576707774363,
+                                    z: -389.90909834218024,
+                                    yaw: -1.2648368979710893,
+                                    pitch: -0.39049999999999996,
+                                  }
+                                : {
+                                    x: 450.2797011432693,
+                                    z: -407.32055060898534,
+                                    yaw: -1.2648368979710893,
+                                    pitch: -0.39049999999999996,
+                                  };
     const collision = this.world.collision,
       y = collision.walkingHeight(x, z);
     if (
