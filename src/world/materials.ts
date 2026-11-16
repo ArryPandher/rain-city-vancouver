@@ -109,6 +109,15 @@ export class Materials {
     if (color) t.colorSpace = T.SRGBColorSpace;
     return t;
   }
+  textureSourceStats() {
+    return (
+      this.textureSources?.stats ?? {
+        requests: 0,
+        sourceLoads: 0,
+        currentURLs: 0,
+      }
+    );
+  }
   pbr(id: string, color: number, roughness: number) {
     return new T.MeshStandardMaterial({
       color,

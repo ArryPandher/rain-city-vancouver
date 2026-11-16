@@ -161,6 +161,11 @@ test("synchronous failure and separate cache owners never retain or cross-share 
   });
   assert.notEqual(cache.texture("bad").source, cache.texture("bad").source);
   assert.equal(calls, 2);
+  assert.deepEqual(cache.stats, {
+    requests: 2,
+    sourceLoads: 2,
+    currentURLs: 0,
+  });
   const { loader, requests } = delayedLoader();
   const a = new SharedTextureSources(loader),
     b = new SharedTextureSources(loader);
@@ -170,4 +175,52 @@ test("synchronous failure and separate cache owners never retain or cross-share 
     2,
     "cache lifetime belongs to one Materials owner",
   );
+});
+
+test("statistics are snapshots of requests, attempted loads and currently retained URL records", () => {
+  const { loader, requests } = delayedLoader();
+  const m = Object.create(Materials.prototype) as Materials;
+  m.loader = loader as T.TextureLoader;
+  const empty = m.textureSourceStats();
+  assert.deepEqual(empty, { requests: 0, sourceLoads: 0, currentURLs: 0 });
+  m.texture("a");
+  m.texture("a", true);
+  m.texture("b");
+  assert.deepEqual(m.textureSourceStats(), {
+    requests: 3,
+    sourceLoads: 2,
+    currentURLs: 2,
+  });
+  requests[0].fail();
+  assert.deepEqual(m.textureSourceStats(), {
+    requests: 3,
+    sourceLoads: 2,
+    currentURLs: 1,
+  });
+  m.texture("a");
+  requests[0].fail();
+  requests[2].finish({
+    width: 1,
+    height: 1,
+    complete: true,
+  } as HTMLImageElement);
+  const complete = m.textureSourceStats();
+  assert.deepEqual(complete, { requests: 4, sourceLoads: 3, currentURLs: 2 });
+  assert.notEqual(
+    complete,
+    m.textureSourceStats(),
+    "inspection cannot mutate cache counters",
+  );
+  assert.deepEqual(empty, { requests: 0, sourceLoads: 0, currentURLs: 0 });
+  const throwing = new SharedTextureSources({
+    load() {
+      throw new Error("loader threw");
+    },
+  });
+  assert.throws(() => throwing.texture("bad"), /loader threw/);
+  assert.deepEqual(throwing.stats, {
+    requests: 1,
+    sourceLoads: 1,
+    currentURLs: 0,
+  });
 });

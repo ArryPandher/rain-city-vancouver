@@ -23,3 +23,9 @@ Installed Three r182 WebGLTextures uses Source identity plus upload/sampler sett
 Eleven focused tests pass: five cache tests plus existing Pan Pacific tower and Robson paving material tests. They cover delayed completion including arbitrary further clones, independent color interpretation and sampler transforms through actual Materials.texture, distinct URL/owner separation, failure eviction/retry, repeated old failure safety, synchronous failure and disposal isolation. Scoped strict TypeScript checking passes. The existing material tests retain licensed map reuse, geometry-based metre sampling and disposal contracts.
 
 No full build, browser or native memory benchmark was run for this change. Native review belongs to the combined candidate build. Verify all image maps load after an ordinary fresh start and preserve per-site tiling/colors before accepting the cache.
+
+## Read-only native profile counters
+
+`Materials.textureSourceStats()` returns a fresh `{ requests, sourceLoads, currentURLs }` snapshot. Before first use it returns zeros without constructing a cache. `requests` counts every request through Materials.texture, `sourceLoads` counts loader attempts including asynchronous/synchronous failures and thrown loader errors, and `currentURLs` counts retained records including pending loads. Failure eviction reduces currentURLs; a retry increments requests/sourceLoads. Successful completion does not change counts. Wrapper clones/disposal do not change these counters. The helper also exposes the same snapshot through `SharedTextureSources.stats`.
+
+These are application allocation/request counts, not GPU residency, texture wrappers, HTTP bytes or process memory. Six focused cache tests now pass, including snapshot stability and counter behavior through failures, retry and a thrown loader error. Root owns the debug-profile hookup.

@@ -7,13 +7,27 @@ import * as T from "three";
  */
 export class SharedTextureSources {
   private readonly sources = new Map<string, T.Texture>();
+  private requests = 0;
+  private sourceLoads = 0;
 
   constructor(private readonly loader: Pick<T.TextureLoader, "load">) {}
 
+  /** Allocation/request counters only, not GPU residency or network traffic.
+   * Load attempts include failures; currentURLs includes pending valid records. */
+  get stats() {
+    return {
+      requests: this.requests,
+      sourceLoads: this.sourceLoads,
+      currentURLs: this.sources.size,
+    } as const;
+  }
+
   texture(url: string): T.Texture {
+    this.requests++;
     const cached = this.sources.get(url);
     if (cached) return cached.clone();
 
+    this.sourceLoads++;
     let failed = false;
     let canonical: T.Texture | undefined;
     canonical = this.loader.load(url, undefined, undefined, () => {
