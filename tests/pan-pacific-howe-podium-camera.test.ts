@@ -83,6 +83,9 @@ test("every sampled allowed sphere clears actual authored triangles, including b
   ];
   for (const support of D.supports)
     stations.push(support.u, support.u - 1 / LENGTH, support.u + 1 / LENGTH);
+  for (const { start, end } of D.galleryScreens.intervals)
+    for (const u of [start, end])
+      stations.push(u - 0.3 / LENGTH, u, u + 0.3 / LENGTH);
   const closest = new T.Vector3();
   let admitted = 0;
   for (const u of stations)
@@ -133,4 +136,45 @@ test("camera clearance follows the shared thicker gallery fascia", () => {
       "outside fascia remains open",
     );
   }
+});
+
+test("screen thickness blocks camera contact while the exterior and lower viewing corridor stay clear", () => {
+  for (const { start, end } of D.galleryScreens.intervals) {
+    const u = (start + end) / 2;
+    assert.equal(
+      allowed(u, D.galleryY + 0.45, -1.3, 0.1),
+      false,
+      "new deeper masonry back cannot admit a camera sphere",
+    );
+    assert.equal(
+      allowed(u, D.galleryY + 0.93, -1.3, 0.1),
+      false,
+      "projecting coping participates in clearance",
+    );
+    assert.equal(
+      allowed(u, 9.7, -1.8, 0.1),
+      true,
+      "lower glass viewing corridor unchanged",
+    );
+    assert.equal(
+      allowed(u, 11.3, 0.25, 0.1),
+      true,
+      "public exterior side remains clear",
+    );
+    assert.equal(
+      allowed(u, 12.5, -1.8, 0.1),
+      true,
+      "clear space above screen remains available",
+    );
+  }
+  // Beyond a screen end, its deeper backing must not become an arbitrary fence.
+  assert.equal(
+    allowed(
+      D.galleryScreens.intervals[0].end + 0.35 / LENGTH,
+      D.galleryY + 0.45,
+      -1.4,
+      0.1,
+    ),
+    true,
+  );
 });

@@ -282,3 +282,72 @@ test("photographic gallery fascia keeps floor fixed and clears lower glazing hea
     "gallery floor unchanged",
   );
 });
+
+test("photo-traced gallery screens replace rail only in the three visible pale spans", () => {
+  const screens = D.galleryScreens;
+  assert.equal(screens.intervals.length, 3);
+  const spans = screens.intervals.map((s) => (s.end - s.start) * LENGTH);
+  assert.ok(
+    Math.max(...spans) - Math.min(...spans) > 1.5,
+    "photographic screen spans remain nonuniform",
+  );
+  const frontMaterial = new T.MeshBasicMaterial();
+  const concrete = new T.Mesh(parts.concrete, frontMaterial);
+  concrete.updateMatrixWorld();
+  for (const { start, end } of screens.intervals) {
+    const u = (start + end) / 2;
+    const hit = ray(u, D.galleryY + 0.5).intersectObject(concrete)[0];
+    assert.ok(
+      hit &&
+        hit.point.distanceTo(point(u, D.galleryY + 0.5, -screens.frontInset)) <
+          0.001,
+      "closed screen front is outward-facing and stands on the gallery edge",
+    );
+    // The former top rail must not hover above the solid screen/coping.
+    assert.equal(
+      ray(u, D.galleryY + 1.05).intersectObject(mesh("frame")).length,
+      0,
+    );
+    const cap = new T.Raycaster(
+      point(u, D.galleryY + 1.4, -screens.frontInset - 0.08),
+      new T.Vector3(0, -1, 0),
+      0,
+      1,
+    ).intersectObject(concrete)[0];
+    assert.ok(cap);
+    assert.ok(
+      Math.abs(
+        cap.point.y - (D.galleryY + screens.height + screens.copingHeight),
+      ) < 0.00001,
+    );
+    assert.ok(cap.face!.normal.y > 0.999, "solid upward-facing coping");
+    // Interior and exterior faces belong to one thickness; the back is closed.
+    const inside = point(u, D.galleryY + 0.5, -2),
+      outward = point(u, 0, 0)
+        .sub(point(u, 0, -1))
+        .normalize(),
+      back = new T.Raycaster(inside, outward, 0, 1).intersectObject(
+        concrete,
+      )[0];
+    assert.ok(back);
+    assert.ok(
+      back.point.distanceTo(
+        point(u, D.galleryY + 0.5, -screens.frontInset - screens.thickness),
+      ) < 0.001,
+    );
+  }
+  // The large observed opening between screens retains its light metal rail.
+  const gap = (screens.intervals[0].end + screens.intervals[1].start) / 2;
+  const railHit = ray(gap, D.galleryY + 1.05).intersectObject(mesh("frame"))[0];
+  assert.ok(railHit && railHit.distance < 5.2);
+  const wallHit = ray(gap, D.galleryY + 0.5).intersectObject(concrete)[0];
+  assert.ok(
+    !wallHit || wallHit.distance > 6.5,
+    "no speculative screen fills the observed open section",
+  );
+  assert.ok(
+    ray(gap, D.galleryY + 0.5).intersectObject(mesh("backing"))[0],
+    "open rail still has closed facade behind it",
+  );
+  frontMaterial.dispose();
+});

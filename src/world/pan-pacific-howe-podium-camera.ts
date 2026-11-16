@@ -93,6 +93,25 @@ export function panPacificHowePodiumCameraClearance(
     out >= galleryRail - 0.045 - clearance
   )
     return false;
+  // The photographed masonry screens are deeper than the former thin rail.
+  // Use the same exact intervals/section as geometry, including the coping.
+  const screens = D.galleryScreens;
+  if (
+    low <= D.galleryY + screens.height + screens.copingHeight &&
+    high >= D.galleryY - screens.embed &&
+    out <= -screens.frontInset + screens.copingOverhang + clearance &&
+    out >=
+      -screens.frontInset -
+        screens.thickness -
+        screens.copingOverhang -
+        clearance &&
+    screens.intervals.some(
+      ({ start, end }) =>
+        along >= start * LENGTH - clearance &&
+        along <= end * LENGTH + clearance,
+    )
+  )
+    return false;
   // Conservative enclosing radii include octagonal flares and square bearings.
   let supportRadius: number = D.columnRadius;
   if (low <= D.floor + 0.18) supportRadius = 0.51;

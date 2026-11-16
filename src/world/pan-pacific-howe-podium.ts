@@ -236,41 +236,55 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
     g.translate(c.x, c.y, c.z);
     bins[role].push(g);
   }
-  function rail(y: number, inset: number) {
+  function rail(
+    y: number,
+    inset: number,
+    intervals: readonly (readonly [number, number])[] = [[0, 1]],
+  ) {
     // Thin open rails belong to the raised terrace, not a collision fence.
-    box(
-      "frame",
-      "lower",
-      0,
-      1,
-      y + 1.025,
-      y + 1.08,
-      -inset - 0.045,
-      -inset + 0.015,
-    );
-    for (const h of [0.34, 0.67])
+    for (const [start, end] of intervals) {
+      if (end - start < 0.002) continue;
       box(
         "frame",
         "lower",
-        0,
-        1,
-        y + h,
-        y + h + 0.026,
-        -inset - 0.024,
-        -inset + 0.002,
+        start,
+        end,
+        y + 1.025,
+        y + 1.08,
+        -inset - 0.045,
+        -inset + 0.015,
       );
-    for (const u of D.paneBoundaries) {
-      const du = 0.025 / LENGTH;
-      box(
-        "frame",
-        "lower",
-        Math.max(0, u - du),
-        Math.min(1, u + du),
-        y + 0.015,
-        y + 1.06,
-        -inset - 0.035,
-        -inset + 0.01,
-      );
+      for (const h of [0.34, 0.67])
+        box(
+          "frame",
+          "lower",
+          start,
+          end,
+          y + h,
+          y + h + 0.026,
+          -inset - 0.024,
+          -inset + 0.002,
+        );
+      // Terminal posts meet the masonry. Pane stations continue only through
+      // the genuinely open sections; no rail runs through a solid screen.
+      const posts = [
+        start,
+        ...D.paneBoundaries.filter((u) => u > start && u < end),
+        end,
+      ];
+      for (const u of posts) {
+        const du = 0.025 / LENGTH;
+        box(
+          "frame",
+          "lower",
+          Math.max(start, u - du),
+          Math.min(end, u + du),
+          y + 0.015,
+          y + 1.06,
+          -inset - 0.035,
+          -inset + 0.01,
+        );
+      }
     }
   }
   // Existing PIER already supplies the floor. Only a vertical retaining face
@@ -454,7 +468,38 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
     -D.recess,
     -D.galleryInset,
   );
-  rail(D.galleryY, D.galleryInset + 0.03);
+  const screens = D.galleryScreens;
+  let openStart = 0;
+  const openRail: [number, number][] = [];
+  for (const { start, end } of screens.intervals) {
+    openRail.push([openStart, start]);
+    openStart = end;
+    const front = -screens.frontInset,
+      back = front - screens.thickness,
+      top = D.galleryY + screens.height;
+    box(
+      "concrete",
+      "lower",
+      start,
+      end,
+      D.galleryY - screens.embed,
+      top,
+      back,
+      front,
+    );
+    box(
+      "concrete",
+      "lower",
+      start,
+      end,
+      top - 0.012,
+      top + screens.copingHeight,
+      back - screens.copingOverhang,
+      front + screens.copingOverhang,
+    );
+  }
+  openRail.push([openStart, 1]);
+  rail(D.galleryY, D.galleryInset + 0.03, openRail);
   box(
     "concrete",
     "lower",

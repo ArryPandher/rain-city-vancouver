@@ -48,6 +48,13 @@ export const PAN_PACIFIC_HOWE_PHOTO_TRACE = {
     [1072, 1233],
     [1084, 1256],
   ],
+  // Confident pale front-screen spans on the upper terrace. Trees and the
+  // foreground parking board obscure other intervals; do not fill those in.
+  galleryScreenPixelsX: [
+    [1116, 1197],
+    [1311, 1362],
+    [1450, 1484],
+  ],
   lowerWindowPixelsX: [
     [1078, 1120],
     [1135, 1174],
@@ -124,6 +131,31 @@ export const PAN_PACIFIC_HOWE_PODIUM = {
   galleryThickness: 0.6,
   galleryInset: 1.08,
   guardHeight: 1.08,
+  galleryScreens: {
+    height: 0.9,
+    thickness: 0.2,
+    frontInset: 1.085,
+    copingHeight: 0.065,
+    copingOverhang: 0.025,
+    // Slight embed avoids a duplicate bottom face on the retained gallery slab.
+    embed: 0.015,
+    intervals: PAN_PACIFIC_HOWE_PHOTO_TRACE.galleryScreenPixelsX.map(
+      ([a, b]) => ({
+        start: panPacificPhotoStation(
+          a,
+          PAN_PACIFIC_HOWE_PHOTO_TRACE.galleryWallEndpointsX,
+        ),
+        // Terminate within the existing solid far cheek, not on its outer end face.
+        end: Math.min(
+          0.9985,
+          panPacificPhotoStation(
+            b,
+            PAN_PACIFIC_HOWE_PHOTO_TRACE.galleryWallEndpointsX,
+          ),
+        ),
+      }),
+    ),
+  },
   galleryWall: {
     bottom: 11.02,
     top: 13.48,
