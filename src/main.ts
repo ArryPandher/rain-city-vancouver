@@ -1,4 +1,5 @@
 import { sweepVehiclePedestrians } from "./game/vehicle-pedestrian-contact";
+import { walkingCameraLookHeight } from "./game/walking-camera-look";
 import {
   contactMotionClearance,
   resolveVehicleContacts,
@@ -1614,6 +1615,17 @@ class Game {
             Math.cos(yaw) * (this.aiming ? 20 : 3),
           ),
         );
+      if (!veh && !this.aiming) {
+        look.y = walkingCameraLookHeight(
+          look.y,
+          this.camera.position.y,
+          Math.hypot(
+            look.x - this.camera.position.x,
+            look.z - this.camera.position.z,
+          ),
+          this.pitch,
+        );
+      }
       this.camera.lookAt(look);
     }
     const showBody = (!veh || veh.kind === "bike") && !first;
