@@ -1,0 +1,49 @@
+{
+  "status": "source-fit interpretation; native acceptance pending",
+  "source": {
+    "orthophotoService": "https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer",
+    "photographyDates": "2022-06-06 through 2022-07-01",
+    "streetReferenceArticle": "https://vanasitwas.wordpress.com/2015/08/09/waterfront-station-howe-street-entry/",
+    "referenceOnly": true,
+    "localReproduction": "artifacts/local/howe-station-reference/paving-fit.py"
+  },
+  "pixelFit": {
+    "method": "Gaussian5 grayscale highpass; product of orthogonal periodic components over exposed street-side strip; trees/shadows retained",
+    "coarseCrossAngleDegrees": [41, 42],
+    "chosenCrossAngleDegrees": 41.5,
+    "periodPixels": 14.75,
+    "phaseIntersectionPixel": [310.7436607364495, 434.29845630999625],
+    "projectedMetresPerPixel": 0.14929107082380833,
+    "groundMetresPerPixelAtEntrance": 0.09737839053915152,
+    "moduleMetres": [1.4318187646616392, 1.4306156724149448],
+    "apparentBrightnessBandWidthMetres": 0.572486887415317
+  },
+  "runtimeInterpretation": {
+    "origin": [478.71652, -432.33508],
+    "downAxisBeforeNormalization": [-0.66573, 0.74619],
+    "crossAxisBeforeNormalization": [0.74619, 0.66573],
+    "moduleMetres": 1.43,
+    "moduleUncertaintyMetres": 0.1,
+    "bandMetres": 0.4,
+    "bandPlausibleRangeMetres": [0.3, 0.55],
+    "phaseUncertaintyMetres": [0.2, 0.3],
+    "bandWidthIsSurveyed": false,
+    "colorsAreCalibrated": false
+  },
+  "observedPaving": {
+    "ring": [[478.35201,-432.65403],[506.00389,-461.95297],[511.6511,-457.11817],[495.09892,-438.35911],[492.66478,-431.97715],[485.84918,-429.36635],[482.83084,-429.36635]],
+    "areaSquareMetres": 331.884,
+    "edgeUncertaintyMetres": [0.5, 1.0],
+    "rearEdgesAreVisibilityLimits": true,
+    "perimeterBorderAdded": false,
+    "distinctInferredSupportClosureSquareMetres": 730.935
+  },
+  "mappedGeometryFixture": {
+    "patternedAreaSquareMetres": 331.1859601,
+    "fieldTriangles": 980,
+    "addedPartitionTriangles": 365,
+    "extraPatternedMaterialChunks": 1,
+    "originalTrianglePlanesPreserved": true,
+    "existingCutsPreserved": true
+  }
+}
