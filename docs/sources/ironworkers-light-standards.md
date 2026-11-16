@@ -94,3 +94,22 @@ Expect a continuous row of pale, tall road-facing standards instead of black
 stubs disappearing into the crest. Check east bracing and west curved arms at
 near and medium distance, walkway width, pole-foot contact, and distant aliasing.
 No build, browser session or push was performed for this scoped candidate.
+
+## World hookup verification
+
+The root-owned integration is now exercised by two additional focused tests. A
+bounded execution of the real World build method stops immediately after the
+fixture hook, before streets/terrain/asset construction. It verifies exactly one
+group, all 12 children registered once for distance/shadow culling, and rays at
+all 56 actual bases under a raised, sloped endpoint grade. Actual World.update
+and ShadowCasterVolume keep nearby fixtures visible, cull them from downtown,
+restore them on return, and never enable diffuser shadows.
+
+The actual World.streetDetails method is run twice over the four retained bridge
+roads interleaved with six nearby source primary roads. The baseline changes only
+those four IDs to bypass the replacement predicate; every coordinate/tag remains
+the same. Captured material roles and all emitted position/normal/UV/index bytes
+show 191 generic bridge lamp parts removed, all four bridge sign parts identical,
+and all 43 unrelated parts identical. Input source records remain unchanged. This
+checks the owning loop and its global side/count sequence, not a copied loop.
+The sign-text canvas is a minimal test fixture; no browser or GPU render is used.
