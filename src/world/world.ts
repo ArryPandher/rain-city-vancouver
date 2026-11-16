@@ -1,4 +1,4 @@
-import { WaterSceneReflections } from "./water-scene-reflections";
+import { WaterPlanarReflections } from "./water-planar-reflections";
 import { WaterWavesComparison } from "./water-waves";
 import { WaterOpticsComparison } from "./water-optics";
 import { galleryWestTreeExcluded } from "./gallery-west-tree-placement";
@@ -179,7 +179,7 @@ export class World {
   private waterOpticsComparison?: WaterOpticsComparison;
   private waterOpticsError: string | null = null;
   private waterWavesComparison?: WaterWavesComparison;
-  private waterSceneComparison?: WaterSceneReflections;
+  private waterSceneComparison?: WaterPlanarReflections;
   weather: Weather = "day";
   rain!: T.Points;
   time = 0;
@@ -1587,16 +1587,15 @@ export class World {
     }
     if (typeof location === "undefined" || !new URLSearchParams(location.search).has("debug") || !this.water || !this.skyTextures.day) return false;
     if (!this.waterSceneComparison) {
-      this.waterSceneComparison = new WaterSceneReflections({
-        scene: this.scene, root: this.root, chunks: this.chunks, sun: this.sun,
-        water: this.water, daySky: this.skyTextures.day,
+      this.waterSceneComparison = new WaterPlanarReflections({
+        scene: this.scene, root: this.root, sun: this.sun, water: this.water,
       });
       this.waterSceneComparison.invalidate(this.weather);
     }
     return true;
   }
-  updateDebugWaterScene(renderer: T.WebGLRenderer, viewer: T.Vector3, allowCapture: boolean) {
-    this.waterSceneComparison?.update(renderer, viewer, allowCapture);
+  updateDebugWaterScene(renderer: T.WebGLRenderer, camera: T.PerspectiveCamera, allowCapture: boolean) {
+    this.waterSceneComparison?.update(renderer, camera, allowCapture);
   }
   withoutDebugWaterSceneFeedback(action: () => void) {
     if (this.waterSceneComparison) this.waterSceneComparison.withoutWater(action);

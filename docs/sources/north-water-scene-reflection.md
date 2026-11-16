@@ -1,5 +1,7 @@
 # Debug Canada North static water reflection
 
+**Historical rejected trial.** Native `water-scene-on-native.png` / `water-scene-combined-native.png` showed an obvious dark patch ending at the 260 m surface fade; preparation was about 1,198 ms CPU wall time. The debug UI now uses the [current-camera planar candidate](north-water-planar-reflection.md). This module and its tests remain as evidence; it is not the active backend or an accepted default.
+
 ## Source gap and bounded location
 
 Native `water-north-horizon-revision-native.png` and `water-directional-waves-native.png` still show mostly sky in water below the visible North Shore. Changing wave normals cannot supply those missing reflected objects. The existing west-concourse cube is at `[589.8143,11.58,-650.1731]`, 108 m from the north public standing point and 167 m from the east apron. Its 900 m far plane cannot include the existing photo horizon at `[400,480,-7000]`.

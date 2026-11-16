@@ -853,7 +853,7 @@ class Game {
         this.finishFrameSample("water scene comparison changed");
         if (!this.world.setDebugWaterScene(waterSceneCheckbox.checked)) waterSceneCheckbox.checked = false;
       });
-      waterSceneLabel.append(waterSceneCheckbox, " Local north-harbour reflection (day only)");
+      waterSceneLabel.append(waterSceneCheckbox, " Planar north-harbour reflection (day only)");
       comparisons.append(waterSceneLabel);
       window.addEventListener(
         "pagehide",
@@ -2372,7 +2372,7 @@ class Game {
         this.renderer,
         this.photo ? this.photoPos : this.player,
       ));
-    this.world.updateDebugWaterScene(this.renderer, this.camera.position,
+    this.world.updateDebugWaterScene(this.renderer, this.camera,
       !ui.introOpen && this.quality !== "low" && (this.reflections?.captures ?? 0) === priorReflectionCaptures);
     const reflectionTime = performance.now();
     this.carStreetReflections?.update(
