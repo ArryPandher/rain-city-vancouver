@@ -121,6 +121,7 @@ const travel = new Function(
   "robsonWalkingArrival",
   "ui",
   "LANDMARKS",
+  "ironworkersVehicleArrival = () => undefined",
   body.slice(0, body.lastIndexOf("}")),
 );
 const road = { x: -152.65, z: 60.51, heading: 2.360409428350793 };
@@ -128,10 +129,13 @@ function game(vehicle: boolean, collision = clear()) {
   return {
     player: new Vector3(),
     lastSafe: new Vector3(),
-    world: { collision },
+    world: { collision, data: { roads: [] } },
     camera: new PerspectiveCamera(39),
     vehicle: vehicle
-      ? { state: { speed: 10, vx: 3, vz: 4, steer: 1 }, model: {} }
+      ? {
+          state: { speed: 10, vx: 3, vz: 4, steer: 1 },
+          model: { group: { userData: {} } },
+        }
       : null,
     photo: true,
     cameraMode: 2,

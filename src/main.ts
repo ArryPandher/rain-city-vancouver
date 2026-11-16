@@ -1,6 +1,7 @@
 import { sweepVehiclePedestrians } from "./game/vehicle-pedestrian-contact";
 import { walkingCameraLookHeight } from "./game/walking-camera-look";
 import { robsonWalkingArrival } from "./game/robson-walking-arrival";
+import { ironworkersVehicleArrival } from "./game/ironworkers-vehicle-arrival";
 import {
   contactMotionClearance,
   resolveVehicleContacts,
@@ -1406,8 +1407,19 @@ class Game {
   }
   travel(id: string) {
     const walking = robsonWalkingArrival(id, !this.vehicle, this.world.collision);
-    const p = walking ?? this.spawnPoint(id);
-    this.player.set(p.x, walking?.y ?? this.world.collision.height(p.x, p.z), p.z);
+    const driving = ironworkersVehicleArrival(
+      id,
+      this.vehicle?.kind,
+      this.world.data.roads,
+      this.world.collision,
+      this.vehicle?.model.group.userData.contactFootprint,
+    );
+    const p = walking ?? driving ?? this.spawnPoint(id);
+    this.player.set(
+      p.x,
+      walking?.y ?? driving?.y ?? this.world.collision.height(p.x, p.z),
+      p.z,
+    );
     this.heading = p.heading;
     this.mouseYaw = p.heading;
     this.pitch = walking?.pitch ?? 0.19;
