@@ -90,7 +90,10 @@ test("Rendered garden substrate follows the continuous ramp datum within ten cen
   } as any);
   const surface = batch
     .finish()
-    .find((m) => (m.material as T.Material).userData.robsonPaving)!;
+    .find(
+      (m) =>
+        m.material instanceof T.Material && m.material.userData.robsonPaving,
+    )!;
   assert.ok(
     surface,
     "the garden substrate renders with its scoped paving material",
