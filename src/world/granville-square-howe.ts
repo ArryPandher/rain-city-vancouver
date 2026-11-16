@@ -12,6 +12,7 @@ import {
   type GranvilleHoweMaterials,
 } from "./granville-square-howe-materials";
 import type { Materials } from "./materials";
+import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import {
   GRANVILLE_HOWE_ID as ID,
   GRANVILLE_HOWE_ORIGIN as centre,
@@ -330,16 +331,41 @@ export function buildGranvilleSquareHowe(
   return true;
 }
 
+/** One local street capture for the photographed main Howe ribbon facade.
+ * A facade-midpoint cube is an exterior approximation, not per-pane parallax. */
+export function granvilleHoweReflection(
+  glass: T.MeshPhysicalMaterial,
+  datum: number,
+): ReflectionProbeSpec {
+  const frame = facadeFrame(ring[3], ring[4]);
+  return {
+    name: "Granville Square Howe recessed ribbons",
+    resolution: 256,
+    position: frame.p(
+      frame.length / 2,
+      datum + (section.middle.head + section.upper.sill) / 2,
+      -1.2,
+    ),
+    // All uses of this unique receiver are omitted while capturing. Concrete,
+    // existing closed backings, and neighboring buildings remain in the scene.
+    materials: [glass],
+    intensity: { day: 0.9, night: 0.9 },
+  };
+}
+
 /** Dedicated dispatch prevents heritage photo tiles and fictional shop generation. */
 export function granvilleSquareHowe(
   building: Building,
   batch: Batcher,
   library: Pick<Materials, "texture">,
+  reflections: ReflectionProbeSpec[],
 ) {
   if (building.id !== ID) return false;
-  return buildGranvilleSquareHowe(
-    batch,
-    building,
-    createGranvilleHoweMaterials(library, createGranvilleHoweSignMap()),
+  const materials = createGranvilleHoweMaterials(
+    library,
+    createGranvilleHoweSignMap(),
   );
+  if (!buildGranvilleSquareHowe(batch, building, materials)) return false;
+  reflections.push(granvilleHoweReflection(materials.glass, batch.offsetY));
+  return true;
 }

@@ -1,5 +1,6 @@
 import * as T from "three";
 import type { Materials } from "./materials";
+import { createExteriorLobbyGlass } from "./exterior-lobby-glass";
 
 /** Existing CC0 mineral maps, with metre UVs supplied by every concrete face.
  * This is an exposed-aggregate approximation, not a photographed façade atlas. */
@@ -30,17 +31,15 @@ export function createGranvilleHoweMaterials(
       metalness: 0,
       roughness: 0.91,
     }),
-    // Closed coated-window proxy. Actual metre-deep reveals create the recess;
-    // no invented interior image, emissive illumination or extra capture pass.
-    glass: new T.MeshPhysicalMaterial({
-      name: "Granville Square Howe recessed neutral glazing",
-      color: 0x62706e,
-      metalness: 0.32,
-      roughness: 0.16,
-      clearcoat: 0.7,
-      clearcoatRoughness: 0.13,
-      envMapIntensity: 0.9,
-    }),
+    // The photographed ribbons are dark glazed recesses, not pale metal panels.
+    // Use the existing untinted dielectric slab over the unchanged dark closure:
+    // IOR 1.5, roughness .12 and two interfaces, without a diffuse paint lobe or
+    // clearcoat. Throughput is an exterior fit, not a measured glass specification.
+    glass: createExteriorLobbyGlass(
+      "Granville Square Howe recessed dielectric glazing",
+      0.82,
+      2,
+    ),
     frame: new T.MeshStandardMaterial({
       name: "Granville Square Howe dark anodized frames and joints",
       color: 0x353b3b,

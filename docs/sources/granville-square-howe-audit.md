@@ -183,3 +183,51 @@ rays at screen-left/right positions; interpolated UVs must be U=0.25 and U=0.75.
 This catches the visible failure instead of merely repeating local indexing.
 Nine focused tests and typecheck pass after the correction. The resource counts
 are unchanged; native confirmation of the corrected lettering follows separately.
+
+## Source-dark ribbon glazing candidate, 2026-11-15
+
+The normal driving view `artifacts/local/howe-final-driving.png` exposes the
+Howe wing behind the separate station pavilion. The cached 2015 source image
+`artifacts/local/granville-howe-reference.jpg` shows distinctly dark window
+ribbons under the concrete splay; the prior light opaque metallic/clearcoat
+proxy made those openings read as pale panels. This pass supersedes only the
+old glazing response described above. Source geometry, concrete, roof,
+lettering, mapped footprint, datum and all 0.70–1.10 m reveals remain unchanged.
+
+The existing `createExteriorLobbyGlass` two-interface dielectric sheet now
+replaces the opaque painted-window proxy. It has neutral white incident tint,
+IOR 1.5, roughness 0.12, throughput 0.82, metalness 0 and no clearcoat/diffuse
+paint contribution. These are restrained exterior fit values, not surveyed
+optical properties. It exposes the existing dark frame closure only 6 mm behind
+the pane; this is deliberately not a claim of a modeled room. No new backing,
+interior, refraction render, reflection image or runtime texture is added.
+
+`granvilleHoweReflection` supplies one 256px static street capture, 1.2 m outside
+the main Howe facade (ring edge 3) at its midpoint. Capture height is caller
+datum +9.75 m, between the middle and upper window bands. Day/night environment
+intensity remains 0.9. The shared reflection system excludes all panes using
+this unique receiver and moving actors while retaining neighboring surfaces,
+concrete and the original closed backings. Weather invalidation retains the
+existing fallback/lifecycle behavior. A single cube for this small building is
+still an approximation; it does not supply exact per-pane reflection parallax.
+
+The assembly retains 2,910 triangles and six material batches. There is one
+additional dirty-only six-face capture and approximately 10 MiB of raw cube
+plus filtered color storage before depth/driver overhead. No downloadable
+asset, asset license, texture memory or geometry buffer changes occurred.
+
+Focused verification passes 23 tests across the wing, dielectric optics and
+reflection lifecycle; targeted TypeScript diagnostics and scoped diff checks
+pass. Actual mesh rays verify all three main ribbon courses still hit glass
+first and the original closure 6 mm later. Capture tests check the owning
+receiver's exclusion, retained neighboring glass/backings, omitted actors,
+scene restoration and invalidation. These tests establish integration and
+bounded optics, not the appearance of a rendered GPU image.
+
+Native acceptance remains pending: compare the exact saved driving camera with
+`granville-howe-reference.jpg`, with both builds settled in the same daylight.
+Keep the candidate only if the window ribbons read darker/deeper while local
+reflections remain plausible and bounded; inspect the raw cube if the result
+is uniformly black or mirror-bright. Recheck ordinary station-front walking
+and report capture/steady-state cost separately. No AAA-quality claim follows
+from this scoped material change.

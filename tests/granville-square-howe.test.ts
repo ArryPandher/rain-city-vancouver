@@ -17,6 +17,7 @@ import { facadeFrame } from "../src/world/architectural-mesh";
 import {
   buildGranvilleSquareHowe,
   granvilleSquareHowe,
+  granvilleHoweReflection,
 } from "../src/world/granville-square-howe";
 import {
   createGranvilleHoweMaterials,
@@ -33,6 +34,7 @@ import {
   granvilleHoweFacades,
 } from "../src/world/granville-square-howe-site";
 import source from "../src/world/granville-square-howe-parts.json";
+import { SceneReflections } from "../src/rendering/reflection-probes";
 
 const library = { texture: () => new T.Texture<HTMLImageElement>() },
   materials = createGranvilleHoweMaterials(library, new T.Texture()),
@@ -110,14 +112,14 @@ test("dedicated Howe-wing dispatch retains the actual mapped collision footprint
       false,
     );
     assert.equal(
-      granvilleSquareHowe({ id, pts: ring.flat() }, fresh, library),
+      granvilleSquareHowe({ id, pts: ring.flat() }, fresh, library, []),
       false,
     );
     assert.equal(fresh.groups.size, 0);
   }
   const architecture = fs.readFileSync("src/world/architecture.ts", "utf8");
   assert.ok(
-    architecture.indexOf("granvilleSquareHowe(b, shell, m)") <
+    architecture.indexOf("granvilleSquareHowe(b, shell, m, reflections)") <
       architecture.indexOf("heritage ="),
   );
 });
@@ -370,10 +372,31 @@ test("materials reuse isolated CC0 samplers and do not add photographic facades 
   assert.equal(m.concrete.metalness, 0);
   assert.equal(m.sign.metalness, 0);
   for (const material of Object.values(m)) {
-    assert.equal(material.transparent, false);
+    assert.equal(material.transparent, material === m.glass);
     assert.equal(material.emissive.getHex(), 0);
   }
-  assert.ok(m.glass.clearcoatRoughness >= 0.1);
+  assert.equal(m.glass.clearcoat, 0);
+  assert.equal(m.glass.metalness, 0);
+  assert.equal(m.glass.ior, 1.5);
+  assert.equal(m.glass.roughness, 0.12);
+  assert.equal(m.glass.color.getHex(), 0xffffff);
+  assert.equal(m.glass.depthWrite, false);
+  assert.equal(m.glass.blending, T.CustomBlending);
+  assert.equal(m.glass.blendSrc, T.OneFactor);
+  assert.equal(m.glass.blendDst, T.OneMinusSrcAlphaFactor);
+  assert.equal(m.glass.userData.castShadow, false);
+  const shader = {
+    uniforms: {},
+    vertexShader: "",
+    fragmentShader: "#include <common>\n#include <opaque_fragment>",
+  };
+  m.glass.onBeforeCompile(shader as never, {} as T.WebGLRenderer);
+  assert.deepEqual(shader.uniforms, { lobbyThroughput: { value: 0.82 } });
+  assert.match(
+    shader.fragmentShader,
+    /outgoingLight=totalSpecular\*lobbyReflectionGain/,
+  );
+  assert.match(shader.fragmentShader, /diffuseColor.a=1.0-lobbyTransmission/);
 });
 
 test("shared forecourt supports the wing while its building datum stays horizontal", () => {
@@ -397,4 +420,132 @@ test("shared forecourt supports the wing while its building datum stays horizont
     assert.equal(a.count, b.count);
     for (let j = 0; j < a.count; j++) near(a.getY(j), b.getY(j) + 2.3);
   });
+});
+
+test("Howe ribbon capture is outside the owning facade at bounded resolution and tracks datum", () => {
+  const collision = new CollisionWorld(activeMap());
+  const datum = collision.groundHeight(518.048598556, -427.296666667);
+  const spec = granvilleHoweReflection(materials.glass, datum);
+  const f = facadeFrame(ring[3], ring[4]);
+  const midpoint = vector(f.p(f.length / 2, datum + 9.75, 0));
+  const delta = vector(spec.position).sub(midpoint);
+  near(delta.length(), 1.2);
+  near(delta.dot(new T.Vector3(f.outward[0], 0, f.outward[1])), 1.2);
+  assert.equal(
+    collision.blocked(
+      spec.position[0],
+      spec.position[2],
+      0.15,
+      spec.position[1],
+    ),
+    false,
+  );
+  assert.equal(spec.resolution, 256);
+  assert.deepEqual(spec.materials, [materials.glass]);
+  assert.deepEqual(spec.intensity, { day: 0.9, night: 0.9 });
+  const moved = granvilleHoweReflection(materials.glass, datum + 2.3);
+  near(moved.position[1] - spec.position[1], 2.3);
+  near(moved.position[0], spec.position[0]);
+  near(moved.position[2], spec.position[2]);
+});
+
+test("dielectric glazing keeps the original closed backing immediately behind every visible ribbon", () => {
+  const f = facadeFrame(ring[3], ring[4]);
+  for (const row of [section.lower, section.middle, section.upper]) {
+    const width = f.length / Math.round(f.length / section.targetBay);
+    for (let i = 0; i < Math.round(f.length / section.targetBay); i++) {
+      const u = width * (i + 0.3),
+        y = (row.sill + row.head) / 2;
+      const hits = ray(
+        vector(f.p(u, y, -0.1)),
+        vector(f.p(u, y, row.recess + 0.1)),
+      );
+      assert.equal(materialOf(hits[0]), materials.glass);
+      assert.equal(materialOf(hits[1]), materials.frame);
+      near(hits[1].distance - hits[0].distance, 0.006, 0.0003);
+    }
+  }
+});
+
+test("local capture hides every wing receiver, keeps the real surroundings, and restores the borrowed scene", () => {
+  const scene = new T.Scene(),
+    sun = new T.DirectionalLight(),
+    actor = new T.Group();
+  sun.position.set(100, 330, 250);
+  const neighbor = new T.Mesh(
+    new T.BoxGeometry(),
+    new T.MeshPhysicalMaterial(),
+  );
+  neighbor.position.set(505, 12, -440);
+  root.add(neighbor);
+  scene.add(root, sun, sun.target, actor);
+  scene.updateMatrixWorld(true);
+  const spec = granvilleHoweReflection(materials.glass, 0);
+  const captures = new SceneReflections(scene, root, meshes, sun, [spec]);
+  const receivers = meshes.filter((mesh) => mesh.material === materials.glass);
+  assert.equal(
+    receivers.length,
+    1,
+    "all wing panes share one uniquely owned capture receiver",
+  );
+  const backing = meshes.find((mesh) => mesh.material === materials.frame)!;
+  const original = {
+    receivers: receivers.map((mesh) => mesh.visible),
+    backing: backing.visible,
+  };
+  let sampled = false;
+  captures.probes[0].camera.update = () => {
+    sampled = true;
+    for (const mesh of receivers) assert.equal(mesh.visible, false);
+    assert.equal(
+      backing.visible,
+      true,
+      "existing dark window closures remain real scene geometry",
+    );
+    assert.equal(
+      neighbor.visible,
+      true,
+      "neighboring glass is not excluded by a broad material class",
+    );
+    assert.equal(
+      actor.visible,
+      false,
+      "moving gameplay actors are not baked into the cube",
+    );
+  };
+  const renderer = {
+    shadowMap: { autoUpdate: true, needsUpdate: false },
+    xr: { enabled: false },
+    getRenderTarget: () => null,
+    getActiveCubeFace: () => 0,
+    getActiveMipmapLevel: () => 0,
+    setRenderTarget() {},
+  } as unknown as T.WebGLRenderer;
+  captures.setNight(false);
+  try {
+    captures.update(renderer, vector(spec.position));
+    assert.equal(sampled, true);
+    assert.equal(captures.lastError, null);
+    assert.equal(captures.captures, 1);
+    assert.equal(materials.glass.envMap, captures.probes[0].target.texture);
+    assert.deepEqual(
+      receivers.map((mesh) => mesh.visible),
+      original.receivers,
+    );
+    assert.equal(backing.visible, original.backing);
+    assert.equal(actor.visible, true);
+    assert.equal(neighbor.material.envMap, null);
+    captures.invalidate();
+    assert.equal(
+      materials.glass.envMap,
+      null,
+      "invalidated lighting falls back without retaining a stale capture",
+    );
+  } finally {
+    captures.dispose();
+    root.remove(neighbor);
+    scene.remove(root);
+    neighbor.geometry.dispose();
+    neighbor.material.dispose();
+  }
 });

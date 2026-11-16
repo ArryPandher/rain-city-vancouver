@@ -182,7 +182,7 @@ export function architecture(
     }
     if (
       terminalCity(b, shell) ||
-      granvilleSquareHowe(b, shell, m) ||
+      granvilleSquareHowe(b, shell, m, reflections) ||
       customsWarehouse(
         b,
         shell,
