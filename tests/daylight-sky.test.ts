@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import * as T from "three";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import { DAYLIGHT_SKY_ROTATION, sunOffset } from "../src/world/daylight";
+import { applyDaylightOrientation } from "../src/world/daylight-orientation";
 
 test("unclamped photographic HDR solar disc aligns with the daylight sun using only vertical rotation", (t) => {
   const source = JSON.parse(
@@ -99,6 +100,28 @@ test("unclamped photographic HDR solar disc aligns with the daylight sun using o
   assert.ok(
     new T.Vector3(...source.dayOffset).distanceTo(sunOffset("day")) < 1e-10,
   );
+  const state = {
+    weather: "day",
+    scene: new T.Scene(),
+    sun: new T.DirectionalLight(),
+    water: { uniforms: { sunDir: { value: new T.Vector3() } } },
+  };
+  for (const mode of ["southeast", "southwest"] as const) {
+    applyDaylightOrientation(state, mode);
+    const disc = centroid
+      .clone()
+      .applyAxisAngle(new T.Vector3(0, 1, 0), state.scene.backgroundRotation.y);
+    assert.ok(
+      disc.angleTo(state.sun.position.clone().sub(state.sun.target.position)) <
+        1e-7,
+    );
+    assert.ok(disc.distanceTo(state.water.uniforms.sunDir.value) < 1e-10);
+    assert.equal(
+      state.scene.backgroundRotation.y,
+      state.scene.environmentRotation.y,
+    );
+    assert.equal(disc.y, centroid.y);
+  }
   t.diagnostic(
     `${pixels} half-peak pixels; azimuth ${azimuth.toFixed(6)} / elevation ${elevation.toFixed(6)} degrees; peak ${peak.toFixed(2)}`,
   );

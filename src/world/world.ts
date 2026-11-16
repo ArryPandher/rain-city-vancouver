@@ -34,7 +34,12 @@ import { createHoweStationPavilionMaterials } from "./howe-station-pavilion-mate
 import { batchFallbackTrees } from "./fallback-tree-batch";
 import { batchTerrainTiles } from "./terrain-batch";
 import { ShadowCasterVolume } from "../rendering/shadow-caster-volume";
-import { DAYLIGHT_SKY_ROTATION, sunOffset } from "./daylight";
+import {
+  comparisonSunOffset as sunOffset,
+  applyDaylightOrientation,
+  daylightOrientationProfile,
+  type DebugDaylightOrientation,
+} from "./daylight-orientation";
 import { batchStaticChunks } from "./static-chunk-batch";
 import { batchPhotographicFacades } from "./photographic-facade-batch";
 import { clipGalleryStairPath } from "./gallery-rear-entry";
@@ -145,6 +150,7 @@ export class World {
   })();
   private cordovaPavement?: T.MeshStandardMaterial;
   private robsonRoadMaterial?: T.MeshStandardMaterial;
+  debugDaylightOrientation: DebugDaylightOrientation = "southeast";
   collision: CollisionWorld;
   private vehicleRoadSurface?: VehicleRoadSurface;
   chunks: T.Mesh[] = [];
@@ -1534,11 +1540,18 @@ export class World {
     );
     this.scene.add(this.rain);
   }
+  setDebugDaylightOrientation(orientation: DebugDaylightOrientation) {
+    this.debugDaylightOrientation = orientation;
+    applyDaylightOrientation(this, orientation);
+  }
+  daylightOrientationProfile() {
+    return daylightOrientationProfile(this, this.debugDaylightOrientation);
+  }
   setWeather(w: Weather) {
     this.weather = w;
     // Startup reflection captures happen before update() follows the player.
     // Establish the same directional offset immediately, around the current target.
-    sunOffset(w, this.sun.position).add(this.sun.target.position);
+    applyDaylightOrientation(this, this.debugDaylightOrientation);
     this.northShore?.color.set(
       w === "night" ? 0x233953 : w === "overcast" ? 0x9eafbb : 0xddd6ce,
     );
@@ -1547,8 +1560,6 @@ export class World {
       day = w === "day";
     // Day's sky, distant reflections and direct light share the same measured
     // solar direction. Local probes capture that lighting in world space.
-    this.scene.backgroundRotation.set(0, day ? DAYLIGHT_SKY_ROTATION : 2.3, 0);
-    this.scene.environmentRotation.set(0, day ? DAYLIGHT_SKY_ROTATION : 1.2, 0);
     if (this.skyTextures[w]) this.scene.background = this.skyTextures[w];
     if (this.reflectionTextures[w])
       this.scene.environment = this.reflectionTextures[w];
@@ -1626,7 +1637,11 @@ export class World {
       sz = Math.round(z / 2) * 2,
       ground = this.collision.groundHeight(x, z);
     this.sun.target.position.set(sx, ground, sz);
-    sunOffset(this.weather, this.sun.position).add(this.sun.target.position);
+    sunOffset(
+      this.weather,
+      this.sun.position,
+      this.debugDaylightOrientation,
+    ).add(this.sun.target.position);
     this.water.uniforms.sunDir.value
       .copy(this.sun.position)
       .sub(this.sun.target.position)

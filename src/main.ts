@@ -1,5 +1,6 @@
 import { sweepVehiclePedestrians } from "./game/vehicle-pedestrian-contact";
 import { walkingCameraLookHeight } from "./game/walking-camera-look";
+import { changeDebugDaylightOrientation } from "./world/daylight-orientation";
 import { robsonWalkingArrival } from "./game/robson-walking-arrival";
 import { ironworkersVehicleArrival } from "./game/ironworkers-vehicle-arrival";
 import {
@@ -645,6 +646,7 @@ class Game {
               getFallbackTreeBatchController(this.world.root)?.enabled ?? false,
             lighting: {
               weather: this.world.weather,
+              daylightOrientation: this.world.daylightOrientationProfile(),
               sunDirection: this.world.sun.position
                 .clone()
                 .sub(this.world.sun.target.position)
@@ -741,6 +743,35 @@ class Game {
       const comparisons = document.createElement("div");
       comparisons.style.cssText =
         "display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center";
+      const daylightDirectionLabel = document.createElement("label"),
+        daylightDirectionSelect = document.createElement("select");
+      daylightDirectionSelect.setAttribute(
+        "aria-label",
+        "Debug daylight direction",
+      );
+      daylightDirectionSelect.add(
+        new Option("SE 135° · baseline", "southeast"),
+      );
+      daylightDirectionSelect.add(
+        new Option("SW 225° · comparison", "southwest"),
+      );
+      daylightDirectionSelect.value = this.world.debugDaylightOrientation;
+      daylightDirectionSelect.addEventListener("change", () => {
+        this.finishFrameSample("debug daylight direction changed");
+        changeDebugDaylightOrientation(
+          this.world,
+          daylightDirectionSelect.value === "southwest"
+            ? "southwest"
+            : "southeast",
+          this.renderer.shadowMap,
+          this.reflections,
+        );
+      });
+      daylightDirectionLabel.append(
+        "Daylight direction (day only) ",
+        daylightDirectionSelect,
+      );
+      comparisons.append(daylightDirectionLabel);
       const shadowLabel = document.createElement("label");
       const shadowCheckbox = document.createElement("input");
       shadowCheckbox.type = "checkbox";
