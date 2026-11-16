@@ -1,4 +1,5 @@
 import test from "node:test";
+import { GALLERY_BISTRO as B } from "../src/world/gallery-bistro-data";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import * as T from "three";
@@ -94,15 +95,21 @@ test("retained gallery foundation closes terrace backs and shared stair geometry
   builder.finish();
   batch.finish();
   root.updateMatrixWorld(true);
-  for (const t of D.terraces)
+  for (const t of [...D.terraces, { minU: B.cheekMaxU, maxU: B.maxU }])
     for (const f of [0.1, 0.5, 0.9]) {
       const u = t.minU + (t.maxU - t.minU) * f;
       const hit = ray(root, [u, 2.9, D.minV + 1], [0, 0, -1], 2);
       assert.ok(hit, `foundation behind terrace at u${u}`);
-      assert.ok(
-        hit.point.z > D.minV + 0.01,
-        `bounded overlap ${hit.point.z - D.minV}`,
-      );
+      if (t.minU === B.cheekMaxU) {
+        assert.ok(
+          Math.abs(hit.point.z - galleryStairBackV(u)) < 0.006,
+          `new wide terrace meets decoded rear face at u${u}`,
+        );
+      } else
+        assert.ok(
+          hit.point.z > D.minV + 0.01,
+          `bounded overlap ${hit.point.z - D.minV}`,
+        );
     }
   for (const { a, b } of galleryStairRails().filter(
     (r) => r.a[0] > S.minU && r.a[0] < S.maxU,
@@ -120,7 +127,7 @@ test("retained gallery foundation closes terrace backs and shared stair geometry
 test("closed terrace walls have visible top, bottom, end and side faces in two reused material batches", () => {
   const { root, chunks } = assembly();
   assert.equal(chunks.length, 2);
-  for (const t of D.terraces) {
+  for (const t of D.terraces.slice(0, 1)) {
     const u = (t.minU + t.maxU) / 2,
       v = (D.minV + D.maxV) / 2;
     const top = ray(root, [u, 5, v], [0, -1, 0])!;

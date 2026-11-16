@@ -1,4 +1,8 @@
 import {
+  galleryBistroBlocked,
+  galleryBistroHeight,
+} from "./gallery-bistro-contact";
+import {
   GALLERY_STAIR_FRAMING as D,
   galleryStairLocal,
   galleryStairRails,
@@ -18,6 +22,7 @@ export function galleryStairFramingBlocked(
   camera: boolean,
 ) {
   const [u, v] = galleryStairLocal(x, z);
+  if (galleryBistroBlocked(u, v, radius, y, camera)) return true;
   if (
     v < D.minV - radius - 0.5 ||
     v > S.endV + radius + 0.1 ||
@@ -27,7 +32,7 @@ export function galleryStairFramingBlocked(
     return false;
   const low = camera ? y - radius : y + 0.06;
   const high = camera ? y + radius : y + 1.8;
-  for (const t of D.terraces) {
+  for (const t of D.terraces.slice(0, 1)) {
     // Match the recessed wall and its wider120mm coping separately.
     for (const [insetU, insetV, bottom, top] of [
       [0.03, 0.015, D.bottom, D.top - 0.12],
@@ -77,6 +82,8 @@ export function galleryStairFramingHeight(
 ) {
   const [u, v] = galleryStairLocal(x, z),
     top = D.top + D.datum;
+  const bistro = galleryBistroHeight(u, v, referenceY);
+  if (bistro !== undefined) return bistro;
   if (
     referenceY < top - 0.35 ||
     v < Math.max(D.minV, galleryStairBackV(u)) ||

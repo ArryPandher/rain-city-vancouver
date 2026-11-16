@@ -142,8 +142,10 @@ test("actual gallery source replacement preserves landing and all other material
   }
   // Analytic evidence: old pale centre mullions are replaced by transparent-view
   // dark framing; sample off the horizontal meeting rail to reach closed glass.
+  // The new raised bistro platform physically covers the lower foundation row
+  // on this wing; its closed outward wall is checked in gallery-bistro.test.
   for (let i = 0; i < 6; i++)
-    for (const y of i < 3 ? [1.45, 5.5, 10.4] : [5.5, 10.4]) {
+    for (const y of [5.5, 10.4]) {
       const along =
         ((i + 0.5) * GALLERY_FACADE.length) / 6 - (y < 3 ? 0 : 0.55);
       const hit = wingRay(along, y, root)[0];
@@ -186,7 +188,7 @@ test("actual gallery source replacement preserves landing and all other material
 test("added geometry is finite, bounded, economical and has outward sill faces", async (t) => {
   const { root, chunks } = await scene();
   let triangles = 0;
-  assert.equal(chunks.length, 5);
+  assert.equal(chunks.length, 7);
   for (const mesh of chunks) {
     const p = mesh.geometry.getAttribute("position"),
       normal = mesh.geometry.getAttribute("normal");
@@ -201,7 +203,9 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
       );
       if (p.getZ(i) >= 25 || p.getY(i) < -0.001)
         assert.ok(
-          p.getX(i) >= -8.831 && p.getX(i) <= 5.751 && p.getY(i) <= 4.268,
+          p.getX(i) >= -8.831 &&
+            p.getX(i) <= 19.001 &&
+            (p.getX(i) <= 5.751 ? p.getY(i) <= 4.268 : p.getY(i) <= 6.231),
           "expanded bounds belong only to bounded terrace/rail assembly",
         );
       assert.ok(
@@ -212,7 +216,7 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
   }
   t.diagnostic(`${triangles} added triangles in ${chunks.length} draws`);
   assert.ok(
-    triangles < 9000,
+    triangles < 15500,
     `${triangles} added triangles including terrace framing`,
   );
   const hit = wingRay((0.5 * GALLERY_FACADE.length) / 6, 4.25, root)[0];

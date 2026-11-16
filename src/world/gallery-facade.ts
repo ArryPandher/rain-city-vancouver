@@ -1,4 +1,5 @@
 import * as T from "three";
+import { addGalleryBistro } from "./gallery-bistro";
 import { ArchitecturalMesh, type Vertex3 } from "./architectural-mesh";
 import { Batcher } from "./geometry";
 import { landmarkSurfaceUV } from "./landmark-surfaces";
@@ -283,6 +284,7 @@ export function addGalleryFacade(
   addGalleryEntryCornice(mesh, stone);
   addGalleryStairFraming(mesh, base, frame);
   addGalleryEntryStairs(mesh, createGalleryStairMaterial(base));
+  addGalleryBistro(mesh, base, frame);
   mesh.finish();
   const chunks = batch.finish();
   for (const chunk of chunks) {

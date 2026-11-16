@@ -1,4 +1,5 @@
 import { geo } from "./data";
+import { GALLERY_BISTRO as B } from "./gallery-bistro-data";
 import source from "./gallery-rear-entry-data.json";
 import {
   GALLERY_REAR_STEPS as S,
@@ -71,7 +72,11 @@ export function galleryStairRails(): GalleryRail[] {
   for (const [i, t] of D.terraces.entries()) {
     const outer = i === 0 ? t.minU + 0.13 : t.maxU - 0.13;
     const inner = i === 0 ? t.maxU - 0.13 : t.minU + 0.13;
-    const back = Math.max(D.minV + 0.25, galleryStairBackV(outer) + 0.1),
+    const back = Math.max(
+        D.minV + 0.25,
+        galleryStairBackV(outer) + 0.1,
+        i === 1 ? B.frontV : -Infinity,
+      ),
       front = D.maxV - 0.13;
     const y = D.top + 1.04;
     // Two rails close the exposed terrace edges; existing gallery closes back.

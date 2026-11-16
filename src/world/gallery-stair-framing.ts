@@ -1,4 +1,5 @@
 import * as T from "three";
+import { addGalleryBistroPlatform } from "./gallery-bistro";
 import { galleryStairBackV } from "./gallery-entry-stairs-data";
 import type { ArchitecturalMesh } from "./architectural-mesh";
 import {
@@ -13,7 +14,8 @@ export function addGalleryStairFraming(
   stone: T.Material,
   rail: T.Material,
 ) {
-  for (const t of D.terraces) {
+  addGalleryBistroPlatform(mesh, stone);
+  for (const t of D.terraces.slice(0, 1)) {
     const midU = (t.minU + t.maxU) / 2,
       midV = (D.minV + D.maxV) / 2;
     // Broad cast-stone side wall and restrained projecting coping. Neither
