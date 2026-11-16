@@ -27,6 +27,8 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import shape from "../src/world/broadleaf-volume-data.json";
 import { Terrain } from "../src/world/terrain";
 import { ROBSON_MOUND_TREE_SITES } from "../src/world/robson-mound-trees";
+import { reconcileTrees } from "../src/world/tree-profile";
+import { galleryWestTreeExcluded } from "../src/world/gallery-west-tree-placement";
 async function fixture() {
   const read = (p: string) => JSON.parse(fs.readFileSync(p, "utf8"));
   const d = read("public/data/vancouver.json");
@@ -280,6 +282,44 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
       `dedicated source ${site.osmId} must not remain in the fallback payload`,
     );
   }
+  // Native west-terrace repair removed three legacy mapped stems that pierced
+  // the elevated slab. Independently identify those source points rather than
+  // replacing the golden total with a new unexplained magic number.
+  const westSourcePoints = [
+    [-64.4514014439037, 38.36999999985528],
+    [-69.4514014439037, 42.86999999985528],
+    [-72.4514014439037, 45.86999999985528],
+  ];
+  const mapped = reconcileTrees(w.data.trees, w.data.publicTrees);
+  const westExcluded = mapped.filter((tree) =>
+    westSourcePoints.some(
+      ([x, z]) => Math.hypot(tree.x - x, tree.z - z) < 1e-7,
+    ),
+  );
+  assert.equal(
+    westExcluded.length,
+    3,
+    "three exact original OSM source positions",
+  );
+  assert.deepEqual(
+    mapped.filter(galleryWestTreeExcluded),
+    westExcluded,
+    "finite terrace mask excludes exactly the documented three stems",
+  );
+  for (const site of westExcluded) {
+    assert.equal(
+      site.sourceId,
+      undefined,
+      "legacy OSM point, not a City inventory replacement",
+    );
+    assert.ok(
+      !w.treeSamples.some(
+        (tree: any) => Math.hypot(tree.x - site.x, tree.z - site.z) < 0.35,
+      ),
+      "piercing stem must be absent from fallback and detailed-tree samples",
+    );
+  }
+  const removedSites = [...ROBSON_MOUND_TREE_SITES, ...westExcluded];
   const replacedCell = w.treeSamples.find(
     (t: any) => Math.floor(t.x / 192) === -1 && Math.floor(t.z / 192) === 0,
   );
@@ -291,8 +331,12 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
     replacedCell.crown,
     replacedCell.trunk,
   ] as T.InstancedMesh[];
-  const removedPayload = (frustum: T.Frustum, shadow = false) =>
-    ROBSON_MOUND_TREE_SITES.reduce((sum, site) => {
+  const removedPayload = (
+    frustum: T.Frustum,
+    shadow = false,
+    sites: readonly { x: number; z: number }[] = removedSites,
+  ) =>
+    sites.reduce((sum, site) => {
       assert.equal(Math.floor(site.x / 192), -1);
       assert.equal(Math.floor(site.z / 192), 0);
       return (
@@ -310,9 +354,19 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
       );
     }, 0);
   assert.equal(
-    removedPayload(bf),
+    removedPayload(bf, false, ROBSON_MOUND_TREE_SITES),
     2848,
     "eight former crown/wood instances at this cell's current LOD",
+  );
+  assert.equal(
+    removedPayload(bf, false, westExcluded),
+    1068,
+    "three former crown/wood instances: 3 × 356 triangles at the same cell LOD",
+  );
+  assert.equal(
+    removedPayload(bf),
+    3916,
+    "all eleven explicit source exclusions",
   );
   assert.equal(
     removedPayload(sf, true),
@@ -321,12 +375,12 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
   );
   const removedBeauty = removedPayload(bf);
   const expectedOriginalBeauty = 1536532 - removedBeauty;
-  for (const site of ROBSON_MOUND_TREE_SITES)
+  for (const site of removedSites)
     assert.ok(
       bf.containsPoint(
         new T.Vector3(site.x, collision.groundHeight(site.x, site.z), site.z),
       ),
-      "each removed Robson source was also inside per-instance beauty coverage",
+      "each replaced or excluded source was inside per-instance beauty coverage",
     );
   assert.equal(total(bf), expectedOriginalBeauty);
   assert.equal(total(sf, true) + removedPayload(sf, true), 335528);
