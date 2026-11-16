@@ -1,3 +1,4 @@
+import { createHoweStationRoadFinishClipper } from "./howe-station-road-finish";
 import { HOWE_STATION_SPEC } from "./howe-station-site";
 import { buildCordovaStreetDetails } from "./cordova-street-details";
 import {
@@ -652,6 +653,9 @@ export class World {
     oceanRect(bounds.minX, 15000, -18000, -8500);
   }
   roads() {
+    const clipStationFinish = this.collision.canada
+      ? createHoweStationRoadFinishClipper(this.data, this.collision.canada)
+      : undefined;
     const vehicleSurface = this.vehicleSurfaceSupport
       ? new VehicleRoadSurfaceBuilder()
       : undefined;
@@ -809,6 +813,7 @@ export class World {
             this.collision.howeCordovaJunction,
           );
       }
+      if (clipStationFinish) surface = clipStationFinish(surface, r);
       // Copy only final clipped road triangles, before batching disposes them.
       // Sidewalks, curb faces and paint decals are not road contact layers.
       vehicleSurface?.add(surface);
