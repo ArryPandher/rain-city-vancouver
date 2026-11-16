@@ -1,3 +1,4 @@
+import { galleryUpperWindowStoneCameraBlocked } from "./gallery-upper-window-stone";
 import { galleryPorticoBlocked } from "./gallery-portico-contact";
 import { galleryWestTerraceBlocked } from "./gallery-west-terrace-contact";
 import {
@@ -24,6 +25,8 @@ export function galleryStairFramingBlocked(
   camera: boolean,
 ) {
   const [u, v] = galleryStairLocal(x, z);
+  if (camera && galleryUpperWindowStoneCameraBlocked(u, v, y, radius))
+    return true;
   if (galleryPorticoBlocked(u, v, radius, y, camera)) return true;
   if (galleryWestTerraceBlocked(u, v, radius, y, camera)) return true;
   if (galleryBistroBlocked(u, v, radius, y, camera)) return true;

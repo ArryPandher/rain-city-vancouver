@@ -11,6 +11,10 @@ import {
   addGalleryPortico,
   removeOriginalGalleryPortico,
 } from "./gallery-portico";
+import {
+  GALLERY_UPPER_WINDOW_STONE as upperStone,
+  addGalleryUpperWindowStone,
+} from "./gallery-upper-window-stone";
 import { createGalleryAshlarMaterial } from "./gallery-ashlar-material";
 import { createGalleryStairMaterial } from "./gallery-stair-material";
 import { addGalleryStairFraming } from "./gallery-stair-framing";
@@ -27,7 +31,7 @@ function edge(a: number[], b: number[], bays: number) {
   return { a, b, bays, length, dx, dz, nx: dz, nz: -dx, angle: entry.angle };
 }
 export const GALLERY_FACADE_EDGES = [
-  edge([19.452, 23.181], [0.413, 23.62], 6),
+  edge([...upperStone.facadeA], [...upperStone.facadeB], upperStone.bays),
   edge([0.413, 23.62], [-8.872, 23.82], 3),
 ];
 export const GALLERY_FACADE = GALLERY_FACADE_EDGES[0];
@@ -233,9 +237,9 @@ export function addGalleryFacade(
         ? [[1, 2.35]]
         : [
             [4.35, 7.85],
-            [9.55, 11.75],
+            [upperStone.windowBottom, 11.75],
           ];
-      const width = foundation ? 1.05 : 1.65;
+      const width = foundation ? 1.05 : upperStone.windowWidth;
       const holes = rows.flatMap(([b, t]) =>
         Array.from({ length: bays }, (_, j) => {
           const centre = ((j + 0.5) * length) / bays;
@@ -271,6 +275,13 @@ export function addGalleryFacade(
             box(l, r, b + 0.012, t - 0.012, 0, 0.035, mat);
           } else quad(mat, l, r, b, t);
         }
+      const exposedUpper = holes.filter(
+        (h) =>
+          !foundation &&
+          h.b === upperStone.windowBottom &&
+          at(h.r + upperStone.sillOverhang, h.b)[0] > upperStone.porticoEast,
+      );
+      if (exposedUpper.length) addGalleryUpperWindowStone(mesh, mat, at);
       for (const h of holes) {
         const { l, r, b, t } = h,
           depth = 0.38;
@@ -290,8 +301,10 @@ export function addGalleryFacade(
         ])
           box(ll, rr, bb, tt, 0.29, 0.37, frame);
         // Projecting stone sill, drip lip and shallow jamb architraves seen in the reference.
-        box(l - 0.13, r + 0.13, b - 0.16, b - 0.035, -0.16, 0.06, mat);
-        box(l - 0.1, r + 0.1, b - 0.205, b - 0.16, -0.1, 0.04, mat);
+        if (!exposedUpper.includes(h)) {
+          box(l - 0.13, r + 0.13, b - 0.16, b - 0.035, -0.16, 0.06, mat);
+          box(l - 0.1, r + 0.1, b - 0.205, b - 0.16, -0.1, 0.04, mat);
+        }
         if (!foundation) {
           box(l - 0.09, l, b - 0.035, t + 0.09, -0.055, 0.04, mat);
           box(r, r + 0.09, b - 0.035, t + 0.09, -0.055, 0.04, mat);
