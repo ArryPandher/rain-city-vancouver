@@ -2,6 +2,10 @@ import { galleryWestTreeExcluded } from "./gallery-west-tree-placement";
 import { createNorthShorePhotoHorizon, NORTH_SHORE_PHOTO_HORIZON } from "./north-shore-photo-horizon";
 import { createNorthShoreDemGroup } from "./north-shore-dem";
 import { createNorthShoreUrbanHorizon } from "./north-shore-urban-horizon";
+import {
+  createIronworkersLightStandards,
+  replacesIronworkersStreetLamp,
+} from "./ironworkers-light-standards";
 import { readNorthShoreDiagnostics } from "./north-shore-diagnostics";
 import { buildRobsonStreetEdge } from "./robson-street-edge-materials";
 import { clipRobsonStreetPaths } from "./robson-street-edge-paths";
@@ -281,6 +285,12 @@ export class World {
     pathMeshes.group.name = "Ironworkers shared paths and finite safety fence";
     this.root.add(pathMeshes.group);
     this.collision.ironworkersPaths = pathBoundary;
+    const bridgeLights = createIronworkersLightStandards(
+      (t) => this.collision.bridgeHeight(ironworkers, t),
+    );
+    this.root.add(bridgeLights);
+    for (const mesh of bridgeLights.children)
+      if (mesh instanceof T.Mesh) this.chunks.push(mesh);
     if (this.collision.robsonRink) {
       const rink = createRobsonRinkExteriorMeshes(this.materials);
       this.root.add(...rink);
@@ -1297,6 +1307,9 @@ export class World {
           const side = count++ % 2 ? 1 : -1,
             x = ax + dx * d + dz * offset * side,
             z = az + dz * d - dx * offset * side;
+          // Preserve the generic placement sequence elsewhere. The bridge's
+          // standards use its actual deck grade and source-specific silhouette.
+          if (replacesIronworkersStreetLamp(r)) continue;
           if (
             this.collision.water(x, z) ||
             this.collision.blocked(x, z, 0.5) ||
