@@ -71,7 +71,7 @@ test("World.mountains keeps default photo and requires both debug and terrain=de
         );
       } else {
         assert.equal(urls.length, 1);
-        assert.ok(urls[0].endsWith("textures/vancouver/north-shore.webp"));
+        assert.ok(urls[0].endsWith("textures/vancouver/north-shore-ridge.webp?v=ridge-20261116"));
         assert.equal(child.name, "Photographic North Shore mountain horizon");
         assert.deepEqual(child.position.toArray(), [400, 480, -7000]);
         assert.equal(
@@ -93,7 +93,7 @@ test("World.mountains keeps default photo and requires both debug and terrain=de
         );
         assert.equal(
           diagnostic.material.mapName,
-          "North Shore Selmo panorama photograph",
+          "North Shore Selmo panorama — source-guided ridge mask",
         );
       }
     }
