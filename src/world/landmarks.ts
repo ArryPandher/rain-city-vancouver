@@ -22,6 +22,7 @@ export function buildLandmarks(
   parent: T.Group,
   m: Materials,
   collision?: CollisionWorld,
+  ironworkersAsphalt?: T.MeshStandardMaterial,
 ) {
   const landmarkGroups: T.Group[] = [];
   function place(lat: number, lon: number, angle = 0) {
@@ -274,7 +275,7 @@ export function buildLandmarks(
       b.id === "ironworkers"
         ? createIronworkersDeckGeometry(deckY)
         : ribbon(points, b.width, 0.0, height),
-      m.asphalt,
+      b.id === "ironworkers" ? (ironworkersAsphalt ?? m.asphalt) : m.asphalt,
       g,
     );
     const dx = (b.b[0] - b.a[0]) / length,

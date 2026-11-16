@@ -28,7 +28,14 @@ import {
   createCordovaPavementMaterial,
   hasCordovaPavement,
 } from "./cordova-pavement-material";
-import { createRobsonRoadMaterial, hasRobsonAsphalt } from "./robson-road-material";
+import {
+  createRobsonRoadMaterial,
+  hasRobsonAsphalt,
+} from "./robson-road-material";
+import {
+  createIronworkersRoadMaterial,
+  hasIronworkersAsphalt,
+} from "./ironworkers-road-material";
 import { buildHoweStationPavilion } from "./howe-station-pavilion";
 import { createHoweStationPavilionMaterials } from "./howe-station-pavilion-materials";
 import { batchFallbackTrees } from "./fallback-tree-batch";
@@ -150,6 +157,7 @@ export class World {
   })();
   private cordovaPavement?: T.MeshStandardMaterial;
   private robsonRoadMaterial?: T.MeshStandardMaterial;
+  private ironworkersRoadMaterial?: T.MeshStandardMaterial;
   debugDaylightOrientation: DebugDaylightOrientation = "southeast";
   collision: CollisionWorld;
   private vehicleRoadSurface?: VehicleRoadSurface;
@@ -394,7 +402,12 @@ export class World {
     await report("Building and merging waterfront landmarks", 0.68);
     const landmarkRoot = new T.Group();
     this.root.add(landmarkRoot);
-    buildLandmarks(landmarkRoot, this.materials, this.collision);
+    buildLandmarks(
+      landmarkRoot,
+      this.materials,
+      this.collision,
+      this.ironworkersRoadMaterial,
+    );
     this.mergeStatic(landmarkRoot);
     await report("Building street furniture and detail batches", 0.76);
     this.streetDetails();
@@ -729,6 +742,7 @@ export class World {
       m = this.materials;
     this.cordovaPavement = createCordovaPavementMaterial(m);
     this.robsonRoadMaterial = createRobsonRoadMaterial(m);
+    this.ironworkersRoadMaterial = createIronworkersRoadMaterial(m);
     const cobble = m.pbr("cobblestone_floor_05", 0xb1aaa2, 0.88);
     const stripes = new T.MeshStandardMaterial({
       color: 0xdfd8c0,
@@ -925,7 +939,9 @@ export class World {
                 ? this.cordovaPavement
                 : hasRobsonAsphalt(r)
                   ? this.robsonRoadMaterial
-                  : m.asphalt
+                  : hasIronworkersAsphalt(r)
+                    ? this.ironworkersRoadMaterial
+                    : m.asphalt
               : m.concrete,
         x,
         z,
@@ -1594,6 +1610,10 @@ export class World {
     if (this.robsonRoadMaterial) {
       this.robsonRoadMaterial.roughness = this.materials.asphalt.roughness;
       this.robsonRoadMaterial.metalness = this.materials.asphalt.metalness;
+    }
+    if (this.ironworkersRoadMaterial) {
+      this.ironworkersRoadMaterial.roughness = this.materials.asphalt.roughness;
+      this.ironworkersRoadMaterial.metalness = this.materials.asphalt.metalness;
     }
     this.rain.visible = rain;
     this.water.uniforms.deep.value.set(
