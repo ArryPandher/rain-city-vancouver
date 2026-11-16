@@ -73,3 +73,25 @@ An offline front-view alpha ray preview is recorded at `artifacts/local/gallery-
 `npx tsx --test tests/gallery-west-terrace.test.ts tests/gallery-west-foliage.test.ts` verifies750 full-height source rays over the corrected strip; regression rejection of the roof-enclosed old placement; crown-volume and ordinary-arrival source sightlines; unchanged source arrays; a single new closed cap; recessed lower frontage depth; closed front-side rays; all five crown orientation/closure/root contact; actual world-ground pier contact; finite rendered/contact member parity; full-width mapped route and stair-mouth clearance; walking/chase-camera integration; a bounded five-material geometry budget; image provenance and actual alpha gaps; atlas orientation and normal convention; load failure/disposal; and actual Gallery batch UV/contact integration. TypeScript checking is separate from native visual acceptance.
 
 Native ordinary walking-view review is still required. Metric plant/frontage fits and shadow appearance are not claimed as surveyed or visually accepted by these source tests.
+
+## Native overlap repair and ground finish
+
+The corrected strip's first native side view (`artifacts/local/gallery-west-corrected-side.png`) exposed three existing broadleaf stems passing through the new planter and slab. The previous `CollisionWorld.blocked(x,z,.35)` vegetation filter tests ground-level contact, so it correctly allows the open recess and cannot serve as an overhead tree-placement mask.
+
+`gallery-west-tree-placement.ts` supplies a finite stem/rectangle exclusion, using the same registered terrace footprint and the existing fallback stem radius (`.55 * diameter`). Apply it only with the Gallery enabled, before the existing vegetation batching and treeSamples lists are populated. DetailedTrees reads that same list, so neither tree representation keeps an excluded stem. Crown overhang alone is not a reason to delete a neighboring tree. The source map/inventory arrays and all retained coordinates remain unchanged.
+
+Actual full-city reconciliation removes exactly three of 50,141 mapped tree profiles:
+
+| World x,z | Gallery-local u,v |
+| --- | --- |
+| −64.451401,38.370000 | −5.317571,38.885967 |
+| −69.451401,42.870000 | −5.727893,45.600253 |
+| −72.451401,45.870000 | −5.763756,49.842742 |
+
+These are legacy OSM points, not City inventory records with source IDs. Adjacent trees at local(−5.269754,33.229315) beside the stair mouth and local(−5.817549,56.206476) beyond the terrace remain at their source positions. Audit: `artifacts/local/gallery-west-tree-audit.json`. There are no mapped street-tree collision trunks in the current system: only generated forest and explicit Harbour trunks are inserted. This repair preserves that policy and adds no barrier or collision exemption.
+
+The same native view showed grass beneath the entire lower frontage. A bounded two-triangle concrete finish now covers only the exterior strip footprint at **world y0.07**, using the existing stone batch and metric UVs. Seven centimetres is the existing World non-street path rendering layer, above ground/grass; it does not change the **y0 walking datum**, claim a new interior, or introduce elevated support. The source wing and rear glazing stay closed. The added plane faces upward, shares the existing material, and ends at the existing strip bounds. Current west total: **13,006 triangles**, five batches; Gallery facade factory **31,696 triangles**, nine batches (upper canopy separate).
+
+Focused tests verify exact removed/retained source trees, round-stem corner clearance, no source mutation, unchanged mapped-tree collision policy, actual upward floor rays, unchanged ground support and no floor outside the footprint. Existing full-source cap/crown/sightline, foliage, route, camera and facade regressions remain required. The source footway test uses `roadWidth(road)` (1.8m runtime default), because these retained ways do not carry an explicit width tag.
+
+CI context: combined commit `2650c10`, run `43869851655`, completed 958/959 tests; its sole failure was the explicit `road.width` assertion at `tests/gallery-west-terrace.test.ts:299`. This correction keeps every sampled route/clearance assertion, using the same `roadWidth` resolution as runtime instead of assuming an optional source tag exists.

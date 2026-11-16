@@ -250,7 +250,7 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
   t.diagnostic(`${triangles} added triangles in ${chunks.length} draws`);
   assert.ok(
     triangles < 33500,
-    `${triangles} added triangles including 13,004-triangle west planting and frontage`,
+    `${triangles} added triangles including 13,006-triangle west planting and frontage`,
   );
   const hit = wingRay((0.5 * GALLERY_FACADE.length) / 6, 4.25, root)[0];
   assert.ok(

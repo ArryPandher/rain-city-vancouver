@@ -30,6 +30,7 @@ import {
   galleryWestConiferGeometry,
 } from "../src/world/gallery-west-terrace";
 import { CollisionWorld } from "../src/world/collision";
+import { roadWidth } from "../src/world/data";
 import { loadCity } from "./helpers/full-city-data";
 import { shortenChaseBoom } from "../src/game/chase-camera";
 const ray = (root: T.Object3D, p: number[], d: number[], far = 100) =>
@@ -296,7 +297,8 @@ test("actual route and complete stair mouth remain clear with grounded supports 
   for (const id of ["w263530524", "w749560067"]) {
     const road = data.roads.find((r) => r.id === id)!;
     assert.ok(road);
-    assert.ok(road.width);
+    const width = roadWidth(road);
+    assert.equal(width, 1.8, "same source footway width used by rendering");
     for (let i = 2; i < road.pts.length; i += 2) {
       const ax = road.pts[i - 2],
         az = road.pts[i - 1],
@@ -307,8 +309,8 @@ test("actual route and complete stair mouth remain clear with grounded supports 
       for (let j = 0; j <= count; j++)
         for (const side of [-1, 0, 1]) {
           const [u, v] = galleryStairLocal(
-            ax + (dx * j) / count - (((dz / len) * road.width) / 2) * side,
-            az + (dz * j) / count + (((dx / len) * road.width) / 2) * side,
+            ax + (dx * j) / count - (((dz / len) * width) / 2) * side,
+            az + (dz * j) / count + (((dx / len) * width) / 2) * side,
           );
           assert.equal(
             blocked(u, v, 0.36, 0, false),
@@ -382,7 +384,7 @@ test("registered finite camera spheres preserve corners and compact five-batch b
   assert.equal(chunks.length, 5);
   assert.equal(
     chunks.reduce((n, m) => n + m.geometry.index!.count / 3, 0),
-    13004,
+    13006,
   );
   for (const m of chunks)
     for (const a of Object.values(m.geometry.attributes))

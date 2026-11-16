@@ -140,6 +140,15 @@ export function galleryWestHedgeGeometry() {
   g.computeVertexNormals();
   return tint(g, 91);
 }
+/** Same seven-centimetre rendering layer as ordinary World footway ribbons.
+ * Ground contact stays at y0; this finite surface only replaces visible grass
+ * beneath the exterior recess. Input/output are still assembly coordinates. */
+export function galleryWestPavingGeometry() {
+  const g = new T.PlaneGeometry(D.maxU - D.minU, D.frontV - D.rearV);
+  g.rotateX(-Math.PI / 2);
+  g.translate((D.minU + D.maxU) / 2, D.bottom + 0.07, (D.rearV + D.frontV) / 2);
+  return g;
+}
 export function addGalleryWestTerrace(
   mesh: ArchitecturalMesh,
   stone: T.Material,
@@ -160,6 +169,7 @@ export function addGalleryWestTerrace(
     geometry.translate(u, 0, v);
     return geometry;
   };
+  mesh.add(registered(galleryWestPavingGeometry()), stone);
   for (const b of galleryWestTerraceBoxes())
     mesh.add(registered(galleryWestBoxGeometry(b)), materials[b.role]);
   mesh.add(registered(galleryWestHedgeGeometry()), leaf);
