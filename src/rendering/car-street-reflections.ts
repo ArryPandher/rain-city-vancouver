@@ -30,7 +30,9 @@ const smooth = (x: number) => {
 };
 const eligible = (material: T.Material): material is T.MeshStandardMaterial =>
   material instanceof T.MeshStandardMaterial &&
-  /^(Paint\s+[12]\b|Glass\b)/i.test(material.name);
+  (/^(Paint\s+[12]\b|Glass\b)/i.test(material.name) ||
+    material.userData.vehicleRole === "paint" ||
+    material.userData.vehicleRole === "glass");
 
 /** Reuse Three's own PMREM roughness lookup with independent 128px-cube
  * atlas constants, so a differently sized sky PMREM cannot distort this lookup. */

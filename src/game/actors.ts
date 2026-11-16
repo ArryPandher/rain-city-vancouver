@@ -109,6 +109,16 @@ export class Actors {
     public world: World,
     private readonly wheelMultiDraw = false,
   ) {}
+  groundHeight(
+    model: VehicleModel,
+    x: number,
+    z: number,
+    referenceY = Infinity,
+  ) {
+    return model.group.userData.vehicleAsset === "e30-coupe"
+      ? this.world.vehicleGroundHeight(x, z, referenceY)
+      : this.world.collision.height(x, z, referenceY);
+  }
   addVehicle(
     kind: "car" | "bike",
     x: number,
@@ -117,11 +127,12 @@ export class Actors {
     ai = false,
     color = 0x375f68,
     referenceY = Infinity,
+    hero = false,
   ) {
     const model =
       kind === "bike"
         ? makeBike(this.world.materials)
-        : detailedCar(color, ai) || makeCar(this.world.materials, color);
+        : detailedCar(color, ai, hero) || makeCar(this.world.materials, color);
     mergeGroup(model.body as T.Group);
     model.wheels.forEach(mergeGroup);
     if (kind === "car") {
@@ -130,7 +141,7 @@ export class Actors {
     }
     model.group.position.set(
       x,
-      this.world.collision.height(x, z, referenceY) +
+      this.groundHeight(model, x, z, referenceY) +
         (model.group.userData.roadClearance ?? 0.12),
       z,
     );
@@ -141,7 +152,10 @@ export class Actors {
       model,
       state: carState(x, z, heading),
       kind,
-      name: kind === "bike" ? "Seawall cycle" : "Pacific GT",
+      name:
+        kind === "bike"
+          ? "Seawall cycle"
+          : (model.group.userData.vehicleName ?? "Pacific GT"),
       ai,
       segment: 0,
       progress: 0,
@@ -342,8 +356,12 @@ export class Actors {
     const tex = new T.CanvasTexture(c),
       shadow = new T.Mesh(
         new T.PlaneGeometry(
-          model.kind === "car" ? 3.4 : 1.3,
-          model.kind === "car" ? 6.3 : 2.6,
+          model.kind === "car"
+            ? (model.group.userData.contactFootprint?.halfWidth ?? 1.43) * 2.38
+            : 1.3,
+          model.kind === "car"
+            ? (model.group.userData.contactFootprint?.halfLength ?? 2.45) * 2.57
+            : 2.6,
         ),
         new T.MeshBasicMaterial({
           map: tex,
@@ -704,39 +722,45 @@ export class Actors {
   sync(v: Vehicle, dt: number) {
     const s = v.state,
       g = v.model.group;
+    const support = (x: number, z: number, y: number) =>
+      this.groundHeight(v.model, x, z, y);
     g.position.set(
       s.x,
-      this.world.collision.height(s.x, s.z, g.position.y) +
-        (g.userData.roadClearance ?? 0.13),
+      support(s.x, s.z, g.position.y) + (g.userData.roadClearance ?? 0.13),
       s.z,
     );
     g.rotation.order = "YXZ";
     g.rotation.y = s.heading;
     const forward = new T.Vector3(Math.sin(s.heading), 0, Math.cos(s.heading));
-    const y1 = this.world.collision.height(
-        s.x + forward.x * 1.5,
-        s.z + forward.z * 1.5,
+    const samples = g.userData.groundSamples ?? {
+      front: 1.5,
+      rear: -1.5,
+      halfTrack: 1,
+    };
+    const y1 = support(
+        s.x + forward.x * samples.front,
+        s.z + forward.z * samples.front,
         g.position.y,
       ),
-      y0 = this.world.collision.height(
-        s.x - forward.x * 1.5,
-        s.z - forward.z * 1.5,
+      y0 = support(
+        s.x + forward.x * samples.rear,
+        s.z + forward.z * samples.rear,
         g.position.y,
       );
-    g.rotation.x = -Math.atan2(y1 - y0, 3);
+    g.rotation.x = -Math.atan2(y1 - y0, samples.front - samples.rear);
     const sideX = Math.cos(s.heading),
       sideZ = -Math.sin(s.heading);
-    const left = this.world.collision.height(
-        s.x - sideX,
-        s.z - sideZ,
+    const left = support(
+        s.x - sideX * samples.halfTrack,
+        s.z - sideZ * samples.halfTrack,
         g.position.y,
       ),
-      right = this.world.collision.height(
-        s.x + sideX,
-        s.z + sideZ,
+      right = support(
+        s.x + sideX * samples.halfTrack,
+        s.z + sideZ * samples.halfTrack,
         g.position.y,
       );
-    g.rotation.z = Math.atan2(right - left, 2);
+    g.rotation.z = Math.atan2(right - left, 2 * samples.halfTrack);
     v.model.wheels.forEach(
       (w) =>
         (w.rotation.x += (s.speed * dt) / (w.userData.rollingRadius || 0.34)),

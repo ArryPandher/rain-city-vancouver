@@ -1,6 +1,9 @@
 import { attachCarLOD } from "./car-lod";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { buildE30CarTemplate } from "./e30-car";
+import { e30CarMaterial } from "./e30-car-materials";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { carBodyGeometry, carGeometryLayout } from "./car-body-geometry";
 import { VehicleModel } from "./vehicles";
@@ -10,6 +13,7 @@ import {
   wheelFrame,
   tyreRadius,
 } from "./vehicle-wheels";
+let heroTemplate: T.Group | null = null;
 let template: T.Group | null = null,
   trafficTemplate: T.Group | null = null,
   distantTemplate: T.Group | null = null;
@@ -85,7 +89,10 @@ export function buildDetailedCarTemplate(
             mat.transparent = false;
             mat.opacity = 1;
           }
-          if (/Paint 1/.test(mat.name)) {
+          if (
+            /Paint 1/.test(mat.name) ||
+            mat.userData.vehicleRole === "paint"
+          ) {
             mat.color.set(0x3e656a);
             mat.metalness = 0.72;
             mat.roughness = 0.23;
@@ -101,7 +108,10 @@ export function buildDetailedCarTemplate(
             mat.emissive.set(0xff2315);
             mat.emissiveIntensity = 0.6;
           }
-          if (/Headlight/i.test(mat.name)) {
+          if (
+            /Headlight/i.test(mat.name) ||
+            mat.userData.vehicleRole === "headlights"
+          ) {
             mat.emissive.set(0xe4f2ff);
             mat.emissiveIntensity = 2;
           }
@@ -199,12 +209,29 @@ export function buildDetailedCarTemplate(
   root.userData.roadClearance = 0.04;
   return root;
 }
-export async function loadDetailedCar() {
-  template = await buildCarTemplate("car-concept.glb");
+export async function loadDetailedCar(useE30 = true) {
+  heroTemplate = null;
   const traffic = await new GLTFLoader().loadAsync(
     `${BASE}models/car-traffic.glb`,
   );
   trafficTemplate = buildDetailedCarTemplate(traffic.scene.clone(true));
+  if (useE30) {
+    try {
+      const gltf = await new GLTFLoader()
+        .setMeshoptDecoder(MeshoptDecoder)
+        .loadAsync(`${BASE}models/e30-coupe.glb`);
+      heroTemplate = buildE30CarTemplate(gltf.scene, e30CarMaterial);
+      heroTemplate.userData.vehicleName = "E30 Coupe";
+      // Ambient parked and moving cars share the existing traffic geometry and
+      // texture allocation. Only the explicitly requested player car is E30.
+      template = trafficTemplate;
+      distantTemplate = null;
+      return;
+    } catch (error) {
+      console.warn("Coupe unavailable; retaining concept car", error);
+    }
+  }
+  template = await buildCarTemplate("car-concept.glb");
   distantTemplate = buildDetailedCarTemplate(
     traffic.scene.clone(true),
     undefined,
@@ -214,8 +241,10 @@ export async function loadDetailedCar() {
 export function detailedCar(
   color = 0x3e656a,
   traffic = false,
+  hero = false,
 ): VehicleModel | null {
-  const source = traffic ? trafficTemplate : template;
+  const source =
+    hero && heroTemplate ? heroTemplate : traffic ? trafficTemplate : template;
   if (!source) return null;
   return cloneDetailedCar(source, color);
 }
@@ -238,9 +267,18 @@ export function cloneDetailedCar(
       }
       o.material = mat;
       if (mat instanceof T.MeshStandardMaterial) {
-        if (/Paint 1/.test(mat.name)) mat.color.set(color);
-        if (/Brakelight/i.test(mat.name)) brakes = mat;
-        if (/Headlight/i.test(mat.name)) headlights = mat;
+        if (/Paint 1/.test(mat.name) || mat.userData.vehicleRole === "paint")
+          mat.color.set(color);
+        if (
+          /Brakelight/i.test(mat.name) ||
+          mat.userData.vehicleRole === "brakes"
+        )
+          brakes = mat;
+        if (
+          /Headlight/i.test(mat.name) ||
+          mat.userData.vehicleRole === "headlights"
+        )
+          headlights = mat;
       }
     }
   });

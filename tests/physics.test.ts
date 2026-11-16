@@ -110,3 +110,19 @@ test("curved bridge ramps follow mapped points without an elevation jump", () =>
     assert.equal(c.water(...p), false);
   }
 });
+
+test("a measured coupe wheelbase changes turn curvature without changing acceleration", () => {
+  const original = carState(0, 0),
+    coupe = carState(0, 0);
+  const turn = { ...input, steering: 1 };
+  for (let i = 0; i < 120; i++) {
+    drive(original, turn, 1 / 60);
+    drive(coupe, turn, 1 / 60, false, 2.591114044189453);
+  }
+  assert.equal(coupe.speed, original.speed);
+  assert.ok(
+    Math.abs(coupe.heading / original.heading - 2.95 / 2.591114044189453) <
+      1e-12,
+  );
+  assert.ok(coupe.x > original.x);
+});

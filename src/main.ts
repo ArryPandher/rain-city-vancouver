@@ -349,7 +349,9 @@ class Game {
     ui.data = data;
     // Fetch actor assets while the independent city geometry and textures prepare.
     const actorAssets = Promise.all([
-      loadDetailedCar().catch((e) =>
+      loadDetailedCar(
+        new URLSearchParams(location.search).get("car") !== "concept",
+      ).catch((e) =>
         console.warn("Detailed car unavailable; using built-in model", e),
       ),
       loadDetailedCharacter().catch((e) =>
@@ -363,6 +365,7 @@ class Game {
       this.renderer.extensions.has("WEBGL_multi_draw"),
       new URLSearchParams(location.search).has("debug") &&
         new URLSearchParams(location.search).has("tree-batch-experiment"),
+      new URLSearchParams(location.search).get("car") !== "concept",
     );
     await this.world.build(
       (s, n) => this.startupStage(s, n * 0.82),
@@ -445,6 +448,16 @@ class Game {
       spawn.x,
       spawn.z,
       spawn.heading,
+      false,
+      0x375f68,
+      this.player.y,
+      true,
+    );
+    this.player.y = this.actors.groundHeight(
+      this.vehicle.model,
+      spawn.x,
+      spawn.z,
+      this.player.y,
     );
     this.actors.populate(spawn.x, spawn.z);
     this.actors.update(0, this.player, this.vehicle);
@@ -525,6 +538,29 @@ class Game {
         report.textContent = JSON.stringify(
           {
             startup: this.startupTimings.snapshot(),
+            vehicleRoadSurface: this.world.vehicleSurfaceStats,
+            vehicleFit: this.vehicle
+              ? {
+                  name: this.vehicle.name,
+                  asset:
+                    this.vehicle.model.group.userData.vehicleAsset ?? "concept",
+                  position: this.vehicle.model.group.position.toArray(),
+                  rotation: this.vehicle.model.group.rotation.toArray(),
+                  speed: this.vehicle.state.speed,
+                  steer: this.vehicle.state.steer,
+                  wheelbase: this.vehicle.model.group.userData.wheelbase,
+                  footprint: this.vehicle.model.group.userData.contactFootprint,
+                  wheels: this.vehicle.model.wheels.map((w) => ({
+                    name: w.name,
+                    roll: w.rotation.x,
+                    radius: w.userData.rollingRadius,
+                  })),
+                  front: this.vehicle.model.front.map((w) => ({
+                    name: w.name,
+                    steer: w.rotation.y,
+                  })),
+                }
+              : null,
             locomotion: {
               onFoot: !this.vehicle,
               actualSpeed: this.vehicle ? null : this.footSpeed,
@@ -1118,7 +1154,8 @@ class Game {
     this.combat.holster();
     this.player.set(
       near.state.x,
-      this.world.collision.height(
+      this.actors.groundHeight(
+        near.model,
         near.state.x,
         near.state.z,
         near.model.group.position.y,
@@ -1133,7 +1170,7 @@ class Game {
     ui.toast(
       near.kind === "bike"
         ? "Seawall cycle · Shift to pedal harder"
-        : "Pacific GT · Shift for full throttle · Space to brake",
+        : `${near.name} · Shift for full throttle · Space to brake`,
     );
   }
   exitVehicle() {
@@ -1207,12 +1244,13 @@ class Game {
       false,
       0x375f68,
       this.player.y,
+      true,
     );
     this.vehicle = v;
     this.combat.holster();
     this.player.set(
       p[0],
-      this.world.collision.height(...p, this.player.y),
+      this.actors.groundHeight(v.model, ...p, this.player.y),
       p[1],
     );
     this.heading = heading;
@@ -1223,7 +1261,7 @@ class Game {
     ui.toast(
       kind === "bike"
         ? "Your seawall ride is ready."
-        : "Your Pacific GT is ready.",
+        : `Your ${v.name} is ready.`,
     );
   }
   recover() {
@@ -1255,6 +1293,12 @@ class Game {
       this.vehicle.health = 100;
       this.heading = this.vehicle.state.heading;
       this.actors.sync(this.vehicle, 0);
+      this.player.y = this.actors.groundHeight(
+        this.vehicle.model,
+        this.player.x,
+        this.player.z,
+        this.player.y,
+      );
     }
     this.mouseYaw = this.heading;
     this.setCamera(true);
@@ -1279,6 +1323,12 @@ class Game {
         steer: 0,
       });
       this.actors.sync(this.vehicle, 0);
+      this.player.y = this.actors.groundHeight(
+        this.vehicle.model,
+        this.player.x,
+        this.player.z,
+        this.player.y,
+      );
     }
     this.actors.recycle(this.player, this.vehicle, true);
     this.setCamera(true);
@@ -1584,29 +1634,40 @@ class Game {
         ox = s.x,
         oz = s.z,
         previousHeading = s.heading;
+      const support = (x: number, z: number, y: number) =>
+        this.actors.groundHeight(v.model, x, z, y);
       drive(
         s,
         { throttle, steering: steer, brake: this.keys.has("Space"), boost },
         dt,
         v.kind === "bike",
+        v.model.group.userData.wheelbase,
       );
       const result = this.world.collision.move(
         ox,
         oz,
         s.x - ox,
         s.z - oz,
-        v.kind === "bike" ? 0.45 : 1.16,
+        v.kind === "bike"
+          ? 0.45
+          : Math.min(
+              1.16,
+              v.model.group.userData.contactFootprint?.halfWidth ?? 1.16,
+            ),
         this.player.y,
       );
       s.x = result.x;
       s.z = result.z;
       if (v.kind === "car") {
+        const footprint = v.model.group.userData.contactFootprint;
+        const endRadius = Math.min(0.9, footprint?.halfWidth ?? 0.9);
+        const endOffset = footprint ? footprint.halfLength - endRadius : 1.35;
         for (const sign of [-1, 1]) {
           if (
             this.world.collision.blocked(
-              s.x + Math.sin(s.heading) * 1.35 * sign,
-              s.z + Math.cos(s.heading) * 1.35 * sign,
-              0.9,
+              s.x + Math.sin(s.heading) * endOffset * sign,
+              s.z + Math.cos(s.heading) * endOffset * sign,
+              endRadius,
               this.player.y,
             )
           ) {
@@ -1622,7 +1683,7 @@ class Game {
         {
           x: s.x,
           z: s.z,
-          y: this.world.collision.height(s.x, s.z, this.player.y),
+          y: support(s.x, s.z, this.player.y),
           heading: s.heading,
         },
         this.actors.pedestrianBodies(),
@@ -1662,7 +1723,7 @@ class Game {
         {
           x: s.x,
           z: s.z,
-          y: this.world.collision.height(s.x, s.z, this.player.y),
+          y: support(s.x, s.z, this.player.y),
           heading: s.heading,
         },
         v.kind,
@@ -1671,16 +1732,24 @@ class Game {
           z: other.state.z,
           heading: other.state.heading,
           kind: other.kind,
+          footprint: other.model.group.userData.contactFootprint,
           y:
             other.model.group.position.y -
             (other.model.group.userData.roadClearance ?? 0.13),
         })),
         s,
         contactMotionClearance(
-          this.world.collision,
+          {
+            height: support,
+            water: this.world.collision.water.bind(this.world.collision),
+            blocked: this.world.collision.blocked.bind(this.world.collision),
+            move: this.world.collision.move.bind(this.world.collision),
+          },
           this.actors.pedestrianBodies(),
           v.kind,
+          v.model.group.userData.contactFootprint,
         ),
+        v.model.group.userData.contactFootprint,
       );
       s.x = vehicleContact.x;
       s.z = vehicleContact.z;
@@ -1699,11 +1768,7 @@ class Game {
         }
       }
       this.heading = s.heading;
-      this.player.set(
-        s.x,
-        this.world.collision.height(s.x, s.z, this.player.y),
-        s.z,
-      );
+      this.player.set(s.x, support(s.x, s.z, this.player.y), s.z);
       this.actors.sync(v, dt);
       v.model.brakes.emissiveIntensity =
         this.keys.has("Space") || throttle < 0 ? 4 : 0.65;
@@ -1853,7 +1918,7 @@ class Game {
     ui.$("mode").textContent = veh
       ? veh.kind === "bike"
         ? "SEAWALL CYCLE"
-        : "PACIFIC GT"
+        : veh.name.toUpperCase()
       : "ON FOOT";
     (ui.$("health") as HTMLElement).style.width =
       `${veh ? veh.health : this.health}%`;

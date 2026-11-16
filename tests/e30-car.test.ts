@@ -439,6 +439,14 @@ test("actual E30 material adaptation retains PBR maps and gives each clone indep
   }
   const paint = first.get("BMW_E30_M3_PAINT")!;
   assert.equal(paint.userData.vehicleRole, "paint");
+  assert.equal(
+    paint.metalness,
+    0,
+    "paint beneath clearcoat is not a coloured conductor",
+  );
+  assert.equal(paint.roughness, 0.4);
+  assert.equal(first.get("BMW_E30_M3_LENS")!.opacity, 0.75);
+  assert.equal(a.brakes.emissive.getHex(), 0xff2410);
   assert.equal(paint.color.getHex(), 0x8c273c);
   assert.equal(second.get(paint.name)!.color.getHex(), 0x245478);
   assert.equal(a.brakes, first.get("BMW_E30_M3_TAILLIGHT_REFLECTOR"));
@@ -447,7 +455,7 @@ test("actual E30 material adaptation retains PBR maps and gives each clone indep
   assert.equal(a.headlights.userData.vehicleRole, "headlights");
   assert.ok(
     a.brakes.emissiveMap,
-    "source coloured rear emission remains available",
+    "source grayscale rear emission mask remains available",
   );
   a.brakes.emissiveIntensity = 4;
   a.headlights.emissiveIntensity = 3;

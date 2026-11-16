@@ -23,6 +23,7 @@ export function drive(
   input: DriveInput,
   dt: number,
   bike = false,
+  wheelbase = bike ? 1.42 : 2.95,
 ) {
   const top = bike ? 13.8 : input.boost ? 63 : 46,
     maxReverse = bike ? 3 : 10;
@@ -58,7 +59,7 @@ export function drive(
   const maxSteer =
     (bike ? 0.52 : 0.53) / (1 + Math.abs(s.speed) * (bike ? 0.03 : 0.046));
   s.steer = damp(s.steer, input.steering * maxSteer, 7, dt);
-  s.heading += ((Math.tan(s.steer) * s.speed) / (bike ? 1.42 : 2.95)) * dt;
+  s.heading += ((Math.tan(s.steer) * s.speed) / wheelbase) * dt;
   const targetX = Math.sin(s.heading) * s.speed,
     targetZ = Math.cos(s.heading) * s.speed;
   const grip = input.brake && !bike ? 2.2 : bike ? 15 : 9;
