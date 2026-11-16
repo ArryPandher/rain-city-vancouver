@@ -1,0 +1,25 @@
+# Pan Pacific Howe podium materials — 2026-11-15
+
+The scoped factory in `src/world/pan-pacific-howe-podium-materials.ts` serves only the replacement southeast podium elevation. It does not recolor the hotel tower, west junction, concourse, sails, shared city materials or lighting.
+
+## Reference and interpretation
+
+Inspected the original 2048 × 1713 [Handford20 photograph from MCM's Canada Place project](https://www.mcmparchitects.com/wp-content/uploads/2025/09/Handford-MCM-CanadaPlace-20-WEB.jpg), cached at `artifacts/local/canada-place-pedestrian-references/Handford-MCM-CanadaPlace-20-WEB.jpg`, alongside `artifacts/local/howe-paving-public-scene.png`. The reference shows substantial pale warm supports and projecting belts, finer light window frames, divided blue-green glazing, and a recessed base. The game image instead shows a blank white lower wall and two uninterrupted blue strips. Geometry must resolve that architectural difference; color alone cannot.
+
+The photo is reference only and is not a shipped texture. Its exposure, white balance, reflected surroundings and date of capture are not calibrated. Material tints, glass throughput, roughness and texture scale below are authored estimates, not measured site properties.
+
+## Surface and optical contract
+
+Four shared opaque materials cover the assembly: warm pale concrete (`#d7d3c7`) for columns, projecting slab faces and opaque bands; the same granular mineral with a modestly darker soffit tint (`#bab9b0`); pale frame finish (`#c6c8bf`); and neutral dark closed backing (`#4c5554`). Real overhangs, column normals and the scene light supply the depth and shadow. The soffit remains a lit mineral surface. No fake unlit black band or emissive interior is added. Finite window cavities must close at the back, ends, top and bottom.
+
+Concrete and soffit share three local sampler wrappers over `public/textures/canada-place-plinth/{color,normal,roughness}.webp`. These committed maps derive from Charlotte Baglioni / Poly Haven's [Concrete Wall 009](https://polyhaven.com/a/concrete_wall_009), [CC0](https://creativecommons.org/publicdomain/zero/1.0/); exact crop/preparation and original URLs remain in `public/textures/canada-place-plinth/SOURCES.json`. The joint/tie-hole-free crop is generic mineral detail, not a scan of Pan Pacific. No asset download or licence change was needed. Diffuse is sRGB, normal/roughness are linear. Geometry must supply metre UVs; all maps repeat every estimated 2 m. Normal strength is restrained at 0.1, and roughness multiplier 1 retains the crop's prepared approximately 0.74–0.86 range. No procedural panel seams are superimposed on the architectural bands.
+
+Glazing reuses the independent hotel extinction/reflection pair: linear channel throughput `[0.60, 0.80, 0.82]`, IOR 1.5, roughness 0.14 and environment intensity 0.8. The first draw multiplies the already rendered opaque cavity by RGB throughput and Fresnel transmission; the second adds dielectric reflection from the existing environment. Metalness and transmission are zero; there is no diffuse blue paint, room texture, extra clearcoat lobe, new light or new refraction/cube capture. Both draws preserve framebuffer alpha and disable fog under the existing near-building approximation. Existing west hotel calibration remains unchanged.
+
+The coordinator must assign an existing Canada Place probe to the reflection material named `pan-pacific-howe-podium-glass`. The module does not request a probe. A reused west-facing capture is an approximation for this southeast facade; matched native daylight comparison must judge its broad reflection response before considering another capture.
+
+## Geometry, budget and acceptance
+
+`createPanPacificHowePodiumMaterials(library)` returns `{ concrete, frame, backing, soffit, glassPair }`. The geometry owner supplies four merged opaque role buffers plus one merged indexed glass buffer. `createPanPacificHowePodiumGlazingMesh(geometry, glassPair)` clones the input and keeps two ordered full-index groups on one mesh. Its input remains caller-owned and should be disposed after wrapping if no longer needed. Four opaque submissions plus two optical submissions target six base draws, before shadows; this is a material budget, not a measured whole-scene performance result. Do not flatten the paired groups or build a separate material per pane. Panes must face outward, sit behind actual reveals and have physical closed backing; avoid duplicate optical layers at bends and end returns.
+
+Focused tests verify source licence/files, sampler and west-optics isolation, matching map registration, and preservation of ordered optical groups through the actual static batcher while opaque geometry can consolidate. The test checks no glass shadow, new transmission capture or emissive fill. Native integrated visual acceptance and actual rendering budget remain the coordinator's work: compare all three tiers from the same Howe camera/daylight, walk laterally for recess parallax, inspect near/far returns and floor contact. No browser capture or visual-success claim was made by this material-only pass.
