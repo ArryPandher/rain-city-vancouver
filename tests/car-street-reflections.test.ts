@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { buildE30CarTemplate } from "../src/world/e30-car";
+import { e30CarMaterial } from "../src/world/e30-car-materials";
 import { SceneReflections } from "../src/rendering/reflection-probes";
 import {
   CarStreetReflections,
@@ -19,7 +22,7 @@ import type { VehicleModel } from "../src/world/vehicles";
 
 async function raw(file: string) {
   const bytes = await readFile(`public/models/${file}.glb`),
-    loader = new GLTFLoader();
+    loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   loader.register(() => ({
     name: "no-images",
     loadTexture: () => Promise.resolve(new T.Texture()),
@@ -440,4 +443,124 @@ test("PMREM lookup uses independent atlas scale and keeps the original irradianc
   assert.ok(chunk.includes("return PI * envMapColor.rgb * envMapIntensity;"));
   assert.ok(chunk.includes("getIBLAnisotropyRadiance"));
   assert.doesNotMatch(chunk, /samplerCube carStreet/);
+});
+
+test("actual E30 paint/windows borrow existing street reflections without changing wheel normals, lamps or other clones", async () => {
+  const template = buildE30CarTemplate(await raw("e30-coupe"), e30CarMaterial);
+  const car = cloneDetailedCar(template, 0x6c2432),
+    other = cloneDetailedCar(template, 0x304a63);
+  const before = materials(car),
+    otherBefore = materials(other);
+  const originalTemplate = new Map<T.Mesh, T.Material | T.Material[]>();
+  template.traverse((node) => {
+    if (node instanceof T.Mesh) originalTemplate.set(node, node.material);
+  });
+  const geometry = new Map(
+    [...before].map(([mesh]) => [
+      mesh,
+      {
+        geometry: mesh.geometry,
+        normal: mesh.geometry.getAttribute("normal"),
+        values: mesh.geometry.getAttribute("normal").array.slice(),
+      },
+    ]),
+  );
+  const f = fixture();
+  f.capture();
+  const sourceCaptures = f.reflections.probes.map((p) => p.target.texture);
+  car.group.position.set(478, 5, -466);
+  other.group.position.set(480, 5, -466);
+  const helper = new CarStreetReflections(f.reflections, f.renderer, {
+    enabled: true,
+    filter: f.filter,
+  });
+  for (let i = 0; i < 60; i++) helper.update([car, other], 1 / 60);
+  assert.equal(helper.snapshot(car)!.materialCount, 2);
+  assert.equal(helper.snapshot(other)!.materialCount, 2);
+  const changes: string[] = [];
+  let wheelPrimitives = 0;
+  for (const [mesh, old] of before) {
+    assert.ok(old instanceof T.MeshStandardMaterial);
+    const saved = geometry.get(mesh)!;
+    assert.equal(mesh.geometry, saved.geometry);
+    assert.equal(mesh.geometry.getAttribute("normal"), saved.normal);
+    assert.deepEqual(saved.normal.array, saved.values);
+    const current = mesh.material as T.MeshStandardMaterial;
+    if (["BMW_E30_M3_PAINT", "BMW_E30_M3_WINDOWS"].includes(old.name)) {
+      changes.push(old.name);
+      assert.notEqual(current, old);
+      assert.equal(current.userData.vehicleRole, old.userData.vehicleRole);
+      for (const slot of [
+        "map",
+        "normalMap",
+        "roughnessMap",
+        "metalnessMap",
+        "aoMap",
+      ] as const)
+        assert.equal(current[slot], old[slot]);
+      assert.deepEqual(current.color.toArray(), old.color.toArray());
+      assert.equal(current.metalness, old.metalness);
+      assert.equal(current.roughness, old.roughness);
+      assert.deepEqual(
+        current.normalScale.toArray(),
+        old.normalScale.toArray(),
+      );
+      const shader = shaderFor(current, f.renderer);
+      assert.equal(shader.uniforms.carStreetMapA.value, f.outputs[0].texture);
+      assert.ok((shader.uniforms.carStreetWeights.value as T.Vector2).x > 0);
+      assert.match(shader.fragmentShader, /carStreetRadiance/);
+      const counterpart = [...otherBefore.keys()].find(
+        (m) => m.name === mesh.name,
+      )!;
+      assert.notEqual(current, counterpart.material);
+    } else {
+      assert.equal(
+        current,
+        old,
+        "reflection adaptation must only replace body paint/windows",
+      );
+      if (mesh.userData.e30SourceBranch !== "body") {
+        wheelPrimitives++;
+        assert.ok(saved.normal.count > 0);
+        assert.equal(current.normalMap, old.normalMap);
+      }
+    }
+    if (current instanceof T.MeshPhysicalMaterial)
+      assert.equal(current.transmission, 0);
+  }
+  assert.deepEqual(changes.sort(), ["BMW_E30_M3_PAINT", "BMW_E30_M3_WINDOWS"]);
+  assert.equal(wheelPrimitives, 20);
+  const brakeMesh = [...before.keys()].find(
+    (m) => (m.material as T.Material).userData.vehicleRole === "brakes",
+  )!;
+  const headlightMesh = [...before.keys()].find(
+    (m) => (m.material as T.Material).userData.vehicleRole === "headlights",
+  )!;
+  assert.equal(brakeMesh.material, car.brakes);
+  assert.equal(headlightMesh.material, car.headlights);
+  car.brakes.emissiveIntensity = 4;
+  car.headlights.emissiveIntensity = 3;
+  assert.equal(other.brakes.emissiveIntensity, 0.35);
+  assert.equal(other.headlights.emissiveIntensity, 0.2);
+  for (const [mesh, material] of originalTemplate)
+    assert.equal(mesh.material, material);
+  assert.deepEqual(
+    f.reflections.probes.map((p) => p.target.texture),
+    sourceCaptures,
+  );
+  assert.equal(
+    f.cubeCalls(),
+    3,
+    "E30 only borrows the already-captured street cubes",
+  );
+  helper.dispose();
+  for (const [mesh, original] of before) assert.equal(mesh.material, original);
+  for (const [mesh, original] of otherBefore)
+    assert.equal(mesh.material, original);
+  assert.equal(
+    car.brakes.emissiveIntensity,
+    4,
+    "restoring reflection materials must not reset brake control",
+  );
+  f.reflections.dispose();
 });

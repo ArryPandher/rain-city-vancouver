@@ -10,6 +10,7 @@ import {
   E30_WHEELS,
 } from "../src/world/e30-car";
 import { cloneDetailedCar } from "../src/world/detailed-car";
+import { e30CarMaterial } from "../src/world/e30-car-materials";
 import {
   batchCarWheels,
   syncCarWheelBatches,
@@ -343,4 +344,124 @@ test("material callback is cached per source and standard clones retain the whee
 
 test("wrong source scenes fail without creating a partial vehicle", () => {
   assert.throws(() => buildE30CarTemplate(new T.Group()), /four audited tyre/);
+});
+
+test("actual E30 material adaptation retains PBR maps and gives each clone independent paint and lamp controls", async () => {
+  const raw = await loaded;
+  const byName = (root: T.Object3D) =>
+    new Map(
+      meshes(root).map((m) => {
+        assert.ok(m.material instanceof T.MeshStandardMaterial);
+        return [m.material.name, m.material] as const;
+      }),
+    );
+  const source = byName(raw);
+  const sourceStates = new Map(
+    [...source].map(([name, m]) => [
+      name,
+      {
+        color: m.color.toArray(),
+        emission: m.emissive.toArray(),
+        intensity: m.emissiveIntensity,
+        transmission:
+          m instanceof T.MeshPhysicalMaterial ? m.transmission : undefined,
+      },
+    ]),
+  );
+  const sourceLens = source.get("BMW_E30_M3_LENS")!;
+  assert.ok(
+    sourceLens instanceof T.MeshPhysicalMaterial && sourceLens.transmission > 0,
+    "actual source must exercise transmission removal",
+  );
+  const template = buildE30CarTemplate(raw, e30CarMaterial),
+    adapted = byName(template);
+  const a = cloneDetailedCar(template, 0x8c273c),
+    b = cloneDetailedCar(template, 0x245478);
+  const first = byName(a.group),
+    second = byName(b.group);
+  assert.equal(adapted.size, 15);
+  for (const [name, original] of source) {
+    const material = adapted.get(name)!,
+      am = first.get(name)!,
+      bm = second.get(name)!;
+    assert.notEqual(material, original);
+    assert.notEqual(am, material);
+    assert.notEqual(bm, material);
+    assert.notEqual(am, bm);
+    for (const slot of [
+      "map",
+      "normalMap",
+      "roughnessMap",
+      "metalnessMap",
+      "aoMap",
+      "emissiveMap",
+    ] as const) {
+      assert.equal(
+        material[slot],
+        original[slot],
+        `${name}: retain source ${slot}`,
+      );
+      assert.equal(am[slot], original[slot]);
+      assert.equal(bm[slot], original[slot]);
+    }
+    assert.deepEqual(
+      material.normalScale.toArray(),
+      original.normalScale.toArray(),
+    );
+    for (const candidate of [material, am, bm])
+      if (candidate instanceof T.MeshPhysicalMaterial)
+        assert.equal(
+          candidate.transmission,
+          0,
+          `${name} must not enter Three's city transmission pass`,
+        );
+    const saved = sourceStates.get(name)!;
+    assert.deepEqual(original.color.toArray(), saved.color);
+    assert.deepEqual(original.emissive.toArray(), saved.emission);
+    assert.equal(original.emissiveIntensity, saved.intensity);
+    if (original instanceof T.MeshPhysicalMaterial)
+      assert.equal(original.transmission, saved.transmission);
+  }
+  for (const name of [
+    "BMW_E30_M3_RIM",
+    "BMW_E30_M3_TIRE",
+    "Brake_Disc",
+    "Brembo_Calipers",
+  ]) {
+    const material = source.get(name)!;
+    assert.ok(
+      material.map &&
+        material.normalMap &&
+        material.roughnessMap &&
+        material.metalnessMap,
+      `${name} has actual authored wheel PBR maps, not a vacuous null comparison`,
+    );
+  }
+  const paint = first.get("BMW_E30_M3_PAINT")!;
+  assert.equal(paint.userData.vehicleRole, "paint");
+  assert.equal(paint.color.getHex(), 0x8c273c);
+  assert.equal(second.get(paint.name)!.color.getHex(), 0x245478);
+  assert.equal(a.brakes, first.get("BMW_E30_M3_TAILLIGHT_REFLECTOR"));
+  assert.equal(a.headlights, first.get("BMW_E30_M3_HEADLIGHT_REFLECTOR"));
+  assert.equal(a.brakes.userData.vehicleRole, "brakes");
+  assert.equal(a.headlights.userData.vehicleRole, "headlights");
+  assert.ok(
+    a.brakes.emissiveMap,
+    "source coloured rear emission remains available",
+  );
+  a.brakes.emissiveIntensity = 4;
+  a.headlights.emissiveIntensity = 3;
+  assert.equal(first.get(a.brakes.name)!.emissiveIntensity, 4);
+  assert.equal(first.get(a.headlights.name)!.emissiveIntensity, 3);
+  assert.equal(b.brakes.emissiveIntensity, 0.35);
+  assert.equal(b.headlights.emissiveIntensity, 0.2);
+  assert.equal(adapted.get(a.brakes.name)!.emissiveIntensity, 0.35);
+  assert.equal(adapted.get(a.headlights.name)!.emissiveIntensity, 0.2);
+  const windows = first.get("BMW_E30_M3_WINDOWS")!,
+    lens = first.get("BMW_E30_M3_LENS")!;
+  assert.equal(windows.userData.vehicleRole, "glass");
+  assert.equal(windows.transparent, true);
+  assert.equal(lens.transparent, true);
+  assert.equal(windows.depthWrite, false);
+  assert.equal(lens.depthWrite, false);
 });
