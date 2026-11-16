@@ -5,6 +5,11 @@ import {
   replacePanPacificHowePodiumFaces,
 } from "./pan-pacific-howe-podium-source";
 import { createPanPacificHowePodium } from "./pan-pacific-howe-podium-install";
+import {
+  panPacificTowerCompatible,
+  replacePanPacificTowerSource,
+} from "./pan-pacific-tower-source";
+import { createPanPacificTower } from "./pan-pacific-tower-install";
 import { addCanadaPlacePromenadeFixtures } from "./canada-place-promenade-fixtures";
 import { CANADA_PLACE_PROMENADE_FIXTURES } from "./canada-place-promenade-fixtures-data";
 import { createCanadaPlaceDoorGlass } from "./canada-place-door-glass";
@@ -152,6 +157,9 @@ export async function loadVancouverLandmarks(
       refineCanadaCanopy && canadaPlaceHotelCompatible(gltf.scene);
     const refineHowePodium =
       asset.id === "canada-place" && panPacificHowePodiumCompatible(gltf.scene);
+    const refinePanPacificTower =
+      asset.id === "canada-place" && panPacificTowerCompatible(gltf.scene);
+    const towerSource: { geometry: T.BufferGeometry; material: string }[] = [];
     const cache = new Map<T.Material, T.MeshStandardMaterial>();
     const galleryMaterials = new Map<string, T.MeshStandardMaterial>();
     const canadaMaterials = new Map<string, T.MeshStandardMaterial>();
@@ -159,6 +167,8 @@ export async function loadVancouverLandmarks(
       if (!(object instanceof T.Mesh)) return;
       const geometry = bakeGeometry(object.geometry, object.matrixWorld);
       const original = object.material as T.MeshStandardMaterial;
+      if (refinePanPacificTower)
+        towerSource.push({ geometry, material: original.name });
       const paving =
         asset.id === "canada-place"
           ? extractCanadaPlacePaving(geometry, original.name)
@@ -227,6 +237,10 @@ export async function loadVancouverLandmarks(
         group.add(deck);
       }
     });
+    // Meshes retain these same baked buffers. Commit all five source cuts
+    // together, after paving and the independently guarded lower facades.
+    const installPanPacificTower =
+      refinePanPacificTower && replacePanPacificTowerSource(towerSource) === 3140;
     const hull = convexHull(points);
     if (hull.length > 2 && asset.id !== "gastown-steam-clock")
       footprints.push({
@@ -317,6 +331,17 @@ export async function loadVancouverLandmarks(
           podium.capture.z + z,
         ],
         materials: [podium.glass],
+        resolution: 256,
+      });
+    }
+    if (installPanPacificTower) {
+      const tower = createPanPacificTower(materials);
+      group.add(tower.group);
+      reflections.push({
+        name: "Pan Pacific hotel tower",
+        // Five metres outside the broad southwest curtain face, halfway up.
+        position: [x - 154.744568, 52.08, z + 92.026581],
+        materials: [tower.glass],
         resolution: 256,
       });
     }
