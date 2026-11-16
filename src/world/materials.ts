@@ -1,5 +1,6 @@
 import * as T from "three";
 import { seeded } from "./data";
+import { SharedTextureSources } from "./shared-texture-sources";
 export const BASE = import.meta.env?.BASE_URL ?? "/";
 const CURTAIN_TINTS = [0xc1d6d7, 0xc2ccc1, 0xbccbd6] as const;
 
@@ -31,6 +32,7 @@ export class Materials {
     period: number;
   }[] = [];
   loader = new T.TextureLoader();
+  private textureSources?: SharedTextureSources;
   asphalt: T.MeshStandardMaterial;
   concrete: T.MeshStandardMaterial;
   grass: T.MeshStandardMaterial;
@@ -100,7 +102,8 @@ export class Materials {
     }
   }
   texture(name: string, color = false) {
-    const t = this.loader.load(`${BASE}textures/${name}`);
+    this.textureSources ??= new SharedTextureSources(this.loader);
+    const t = this.textureSources.texture(`${BASE}textures/${name}`);
     t.wrapS = t.wrapT = T.RepeatWrapping;
     t.anisotropy = 8;
     if (color) t.colorSpace = T.SRGBColorSpace;
