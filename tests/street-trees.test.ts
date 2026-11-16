@@ -247,11 +247,13 @@ test("screen-size transition restores source canopy and trunk before hiding the 
   tree.height = 8;
   detail.samples = [tree];
   const camera = new T.PerspectiveCamera(60);
+  camera.position.set(20, 0, 0);
   detail.update(20, 0, 0, camera);
   assert.equal(detail.lodState.near + detail.lodState.medium, 1);
   const matrix = new T.Matrix4();
   tree.crown.getMatrixAt(tree.crownIndex, matrix);
   assert.equal(matrix.determinant(), 0);
+  camera.position.set(80, 0, 0);
   detail.update(80, 0, 0, camera);
   assert.deepEqual(detail.lodState, { near: 0, medium: 0 });
   tree.crown.getMatrixAt(tree.crownIndex, matrix);
@@ -372,4 +374,119 @@ test("stationary FOV changes switch curved versus medium leaves without dropping
     0,
     "the detailed tree remains selected rather than exposing duplicate fallback leaves",
   );
+});
+
+function cameraSelectionFixture() {
+  const source = new T.Group();
+  const geometry = new T.BoxGeometry(1, 4, 1);
+  geometry.translate(0, 2, 0);
+  source.add(
+    new T.Mesh(geometry, new T.MeshStandardMaterial({ name: "test leaves" })),
+  );
+  return DetailedTrees.fromModels(new T.Scene(), [source, source.clone()]);
+}
+
+test("native close canopy enters from camera height and refreshes when only the camera moves", () => {
+  const detail = cameraSelectionFixture(),
+    tree = samples()[0];
+  Object.assign(tree, {
+    sourceId: 84096,
+    x: 413.1,
+    y: 9.398,
+    z: -376.72,
+    height: 13.7,
+  });
+  const originalCrown = tree.crownMatrix.clone(),
+    originalTrunk = tree.trunkMatrix.clone();
+  detail.samples = [tree];
+  const camera = new T.PerspectiveCamera(62);
+  camera.position.set(414.344, 11.468, -376.002);
+  const update = () => detail.update(410.244, -374.707, 9.398, camera);
+  assert.ok(
+    streetTreeDistance(tree, 410.244, -374.707, 9.398) > 4,
+    "player feet cannot enter this canopy's 4m gate",
+  );
+  assert.ok(
+    streetTreeDistance(
+      tree,
+      camera.position.x,
+      camera.position.z,
+      camera.position.y,
+    ) < 4,
+  );
+  update();
+  assert.deepEqual(detail.lodState, { near: 1, medium: 0 });
+  camera.position.x += 7;
+  update();
+  assert.deepEqual(
+    detail.lodState,
+    { near: 0, medium: 1 },
+    "camera-only retreat exits full leaves while player stays still",
+  );
+  camera.position.x -= 7;
+  update();
+  assert.deepEqual(
+    detail.lodState,
+    { near: 1, medium: 0 },
+    "camera-only approach restores full curvature",
+  );
+  camera.position.x += 200;
+  update();
+  assert.deepEqual(detail.lodState, { near: 0, medium: 0 });
+  const matrix = new T.Matrix4();
+  tree.crown.getMatrixAt(tree.crownIndex, matrix);
+  assert.deepEqual(matrix.elements, originalCrown.elements);
+  tree.trunk.getMatrixAt(tree.trunkIndex, matrix);
+  assert.deepEqual(matrix.elements, originalTrunk.elements);
+});
+
+test("parented camera world movement controls selection and camera-less calls keep their supplied origin", () => {
+  const detail = cameraSelectionFixture(),
+    tree = samples()[0];
+  tree.height = 10;
+  detail.samples = [tree];
+  const parent = new T.Group(),
+    camera = new T.PerspectiveCamera(62);
+  parent.add(camera);
+  camera.position.set(0, 4, 0);
+  parent.position.x = 12;
+  detail.update(0, 0, 4, camera);
+  assert.deepEqual(detail.lodState, { near: 0, medium: 1 });
+  parent.position.x = 3.5;
+  detail.update(0, 0, 4, camera);
+  assert.deepEqual(detail.lodState, { near: 1, medium: 0 });
+  parent.position.x = 12;
+  detail.update(0, 0, 4, camera);
+  assert.deepEqual(detail.lodState, { near: 0, medium: 1 });
+  detail.update(0, 0, 4);
+  assert.deepEqual(
+    detail.lodState,
+    { near: 1, medium: 0 },
+    "without a camera, caller x/y/z remain authoritative",
+  );
+});
+
+test("parent-only camera rotation refreshes visible-tree priority at a fixed world position", () => {
+  const detail = cameraSelectionFixture(),
+    [front, back] = samples().slice(0, 2);
+  Object.assign(front, { x: 0, z: -20, height: 10 });
+  Object.assign(back, { x: 0, z: 20, height: 10 });
+  detail.samples = [front, back];
+  detail.budget = 1;
+  const parent = new T.Group(),
+    camera = new T.PerspectiveCamera(62);
+  parent.add(camera);
+  camera.position.y = 4;
+  const matrix = new T.Matrix4();
+  detail.update(0, 0, 4, camera);
+  front.crown.getMatrixAt(front.crownIndex, matrix);
+  assert.equal(matrix.determinant(), 0);
+  back.crown.getMatrixAt(back.crownIndex, matrix);
+  assert.notEqual(matrix.determinant(), 0);
+  parent.rotation.y = Math.PI;
+  detail.update(0, 0, 4, camera);
+  front.crown.getMatrixAt(front.crownIndex, matrix);
+  assert.notEqual(matrix.determinant(), 0);
+  back.crown.getMatrixAt(back.crownIndex, matrix);
+  assert.equal(matrix.determinant(), 0);
 });

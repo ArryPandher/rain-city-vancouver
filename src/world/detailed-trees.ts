@@ -40,6 +40,9 @@ export class DetailedTrees {
   private lastY = Infinity;
   private lastBudget = -1;
   private lastView = new T.Quaternion();
+  private lastCamera?: T.Camera;
+  private readonly viewPosition = new T.Vector3();
+  private readonly viewQuaternion = new T.Quaternion();
   private lastProjectionScale: number | undefined;
   lodState = { near: 0, medium: 0 };
   private readonly shadowReceivers = new TreeShadowReceivers();
@@ -181,6 +184,15 @@ export class DetailedTrees {
     return result;
   }
   update(x: number, z: number, y = 0, camera?: T.Camera) {
+    // Leaf resolution is measured from the actual view, not the player feet.
+    // World transforms also cover parented cameras and camera-only movement.
+    if (camera) {
+      camera.getWorldPosition(this.viewPosition);
+      camera.getWorldQuaternion(this.viewQuaternion);
+      x = this.viewPosition.x;
+      y = this.viewPosition.y;
+      z = this.viewPosition.z;
+    }
     const projectionScale =
       camera instanceof T.PerspectiveCamera
         ? camera.projectionMatrix.elements[5]
@@ -189,7 +201,8 @@ export class DetailedTrees {
       Math.hypot(x - this.lastX, z - this.lastZ, y - this.lastY) < 3 &&
       this.lastBudget === this.budget &&
       this.lastProjectionScale === projectionScale &&
-      (!camera || this.lastView.angleTo(camera.quaternion) < 0.04)
+      this.lastCamera === camera &&
+      (!camera || this.lastView.angleTo(this.viewQuaternion) < 0.04)
     )
       return;
     this.lastX = x;
@@ -197,7 +210,8 @@ export class DetailedTrees {
     this.lastY = y;
     this.lastBudget = this.budget;
     this.lastProjectionScale = projectionScale;
-    if (camera) this.lastView.copy(camera.quaternion);
+    this.lastCamera = camera;
+    if (camera) this.lastView.copy(this.viewQuaternion);
     const dirty = new Set<T.InstancedMesh>();
     for (const tree of this.selected) {
       tree.crown.setMatrixAt(tree.crownIndex, tree.crownMatrix);

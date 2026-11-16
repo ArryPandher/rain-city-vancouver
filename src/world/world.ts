@@ -168,7 +168,7 @@ export class World {
     mark: (text: string, n: number) => void = () => {},
   ) {
     await report("Preparing Vancouver collision and ground", 0.12);
-    this.collision = new CollisionWorld(this.data);
+    // The constructor already indexed this map and built its walking surfaces.
     addProspectGeology(this.data, this.collision);
     this.forestHabitat = new ForestHabitat(this.data, this.collision);
     await report("Building terrain and ground batches", 0.15);
