@@ -1,0 +1,203 @@
+{
+  "source": "OpenStreetMap contributors, ODbL. Retained bounded map response 2026-11-16. Rail continuation only; elevations separately authored.",
+  "ways": [
+    {
+      "id": "510021324",
+      "tags": {
+        "electrified": "no",
+        "gauge": "1435",
+        "maxspeed": "10 mph",
+        "name": "North Shore Industrial Line",
+        "operator": "Canadian National Railway",
+        "railway": "rail",
+        "usage": "main"
+      },
+      "geometry": [
+        {
+          "lat": 49.2988718,
+          "lon": -123.0243354
+        },
+        {
+          "lat": 49.2987299,
+          "lon": -123.0243384
+        }
+      ]
+    },
+    {
+      "id": "588125862",
+      "tags": {
+        "electrified": "no",
+        "gauge": "1435",
+        "maxspeed": "10 mph",
+        "name": "North Shore Industrial Line",
+        "operator": "Canadian National Railway",
+        "railway": "rail",
+        "usage": "main"
+      },
+      "geometry": [
+        {
+          "lat": 49.2988718,
+          "lon": -123.0243354
+        },
+        {
+          "lat": 49.2990864,
+          "lon": -123.0243275
+        },
+        {
+          "lat": 49.2991855,
+          "lon": -123.0243193
+        },
+        {
+          "lat": 49.299382,
+          "lon": -123.0243137
+        },
+        {
+          "lat": 49.299575,
+          "lon": -123.0243086
+        },
+        {
+          "lat": 49.2997213,
+          "lon": -123.0243002
+        },
+        {
+          "lat": 49.2998936,
+          "lon": -123.0243072
+        },
+        {
+          "lat": 49.3000334,
+          "lon": -123.0243384
+        },
+        {
+          "lat": 49.3001745,
+          "lon": -123.0243778
+        },
+        {
+          "lat": 49.3002943,
+          "lon": -123.0244335
+        },
+        {
+          "lat": 49.3004265,
+          "lon": -123.0245018
+        },
+        {
+          "lat": 49.300551,
+          "lon": -123.0245673
+        },
+        {
+          "lat": 49.3006478,
+          "lon": -123.024624
+        }
+      ]
+    },
+    {
+      "id": "588125863",
+      "tags": {
+        "electrified": "no",
+        "gauge": "1435",
+        "maxspeed": "10 mph",
+        "name": "North Shore Industrial Line",
+        "operator": "Canadian National Railway",
+        "railway": "rail",
+        "usage": "main"
+      },
+      "geometry": [
+        {
+          "lat": 49.3009128,
+          "lon": -123.024785
+        },
+        {
+          "lat": 49.3008294,
+          "lon": -123.0247301
+        },
+        {
+          "lat": 49.3006478,
+          "lon": -123.024624
+        }
+      ]
+    },
+    {
+      "id": "915622100",
+      "tags": {
+        "electrified": "no",
+        "gauge": "1435",
+        "operator": "Canadian National Railway",
+        "railway": "rail",
+        "usage": "main"
+      },
+      "geometry": [
+        {
+          "lat": 49.3038945,
+          "lon": -123.0319421
+        },
+        {
+          "lat": 49.3037814,
+          "lon": -123.0315876
+        },
+        {
+          "lat": 49.3034149,
+          "lon": -123.0302175
+        },
+        {
+          "lat": 49.3028023,
+          "lon": -123.0279347
+        },
+        {
+          "lat": 49.3026212,
+          "lon": -123.0272508
+        },
+        {
+          "lat": 49.3024936,
+          "lon": -123.0268019
+        },
+        {
+          "lat": 49.3023595,
+          "lon": -123.0264287
+        },
+        {
+          "lat": 49.30225,
+          "lon": -123.0262064
+        },
+        {
+          "lat": 49.3021871,
+          "lon": -123.0260962
+        },
+        {
+          "lat": 49.3021197,
+          "lon": -123.0259922
+        },
+        {
+          "lat": 49.3019767,
+          "lon": -123.0258062
+        },
+        {
+          "lat": 49.3018975,
+          "lon": -123.0257172
+        },
+        {
+          "lat": 49.3017051,
+          "lon": -123.0255168
+        },
+        {
+          "lat": 49.3014217,
+          "lon": -123.0252393
+        },
+        {
+          "lat": 49.3012767,
+          "lon": -123.0250984
+        },
+        {
+          "lat": 49.3011505,
+          "lon": -123.0249819
+        },
+        {
+          "lat": 49.3010459,
+          "lon": -123.0248867
+        },
+        {
+          "lat": 49.3009128,
+          "lon": -123.024785
+        }
+      ]
+    }
+  ]
+}

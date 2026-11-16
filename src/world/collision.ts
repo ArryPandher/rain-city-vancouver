@@ -1,3 +1,7 @@
+import {
+  createSecondNarrowsRailContext,
+  type SecondNarrowsRailContext,
+} from "./second-narrows-rail-context";
 import { canadaPlaceNorthSeatHeight } from "./canada-place-north-seating-data";
 import {
   createRobsonStreetEdgeSite,
@@ -299,6 +303,7 @@ export class CollisionWorld {
       Math.max(az, bz) + radius,
     );
   }
+  railContext: SecondNarrowsRailContext | null = null;
   harbour = false;
   gallery = false;
   robsonGarden?: Building;
@@ -330,6 +335,7 @@ export class CollisionWorld {
     );
   }
   constructor(public data: CityData) {
+    this.railContext = createSecondNarrowsRailContext(data);
     this.gallery = data.buildings.some((b) => b.id === "w69701736");
     this.harbour = data.areas.some((a) => a.name === "Harbour Green Park");
     for (const source of data.buildings) {
@@ -603,6 +609,8 @@ export class CollisionWorld {
   }
   /** Shared neighborhood field, preserving the separately authored VCC approach. */
   existingGroundHeight(x: number, z: number) {
+    const bank = this.railContext?.sampleSurface(x, z);
+    if (bank !== undefined) return bank;
     if (
       this.howeTerrain?.contains(x, z) &&
       !(this.convention && jackGroundHeight(x, z) !== undefined) &&
@@ -692,7 +700,8 @@ export class CollisionWorld {
     const b = this.bridgeAt(x, z, referenceY);
     return b
       ? this.bridgeHeight(b.bridge, b.t)
-      : (this.robsonStreetEdge?.height(x, z) ??
+      : (this.railContext?.support(x, z, referenceY) ??
+          this.robsonStreetEdge?.height(x, z) ??
           this.pacificApron?.height(x, z) ??
           this.howeCordovaJunction?.height(x, z) ??
           this.howeCordovaJunction?.roadHeight(x, z) ??
@@ -735,6 +744,7 @@ export class CollisionWorld {
     referenceY: number,
     camera: boolean,
   ) {
+    if (this.railContext?.blocked(x, z, r, referenceY, camera)) return true;
     if (this.gallery && galleryStairFramingBlocked(x, z, r, referenceY, camera))
       return true;
     if (this.granvilleEntrance?.blocked(x, z, r, referenceY, camera)) return true;

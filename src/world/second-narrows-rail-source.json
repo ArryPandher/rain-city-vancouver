@@ -44,7 +44,9 @@
     "pierTop": 10.8,
     "frameTop": 58,
     "houseTop": 64,
-    "sourceStatus": "Authored source-constrained exterior approximation, not surveyed elevations; official adjacent fixed-span underside10.8m and raised lift underside46m above HHW."
+    "sourceStatus": "Authored source-constrained exterior approximation, not surveyed elevations; official adjacent fixed-span underside10.8m and raised lift underside46m above HHW.",
+    "northRailTop": 9.6,
+    "northApproachStatus": "Authored adaptation: main/lift13m retained; north fixed approaches descend gently to9.6m shore to meet a source-guided bank and flattened game yard. Not surveyed rail elevations."
   },
   "mainPanels": 16,
   "approachPanels": 10,

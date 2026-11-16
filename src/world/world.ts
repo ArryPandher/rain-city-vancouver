@@ -1,4 +1,10 @@
+import {
+  fitRailContextRoad,
+  RAIL_CONTEXT_SERVICE_ROADS,
+} from "./second-narrows-rail-context-road";
 import { WaterPlanarReflections } from "./water-planar-reflections";
+import { createRailContextGroundClipper } from "./second-narrows-rail-context-ground";
+import { createRailContextMeshes } from "./second-narrows-rail-context-materials";
 import { WaterWavesComparison } from "./water-waves";
 import { WaterOpticsComparison } from "./water-optics";
 import { galleryWestTreeExcluded } from "./gallery-west-tree-placement";
@@ -571,8 +577,11 @@ export class World {
   }
   terrain() {
     const m = this.materials;
+    const railCut = this.collision.railContext
+      ? createRailContextGroundClipper(this.collision.railContext)
+      : (g: T.BufferGeometry) => g;
     const rinkCut = (g: T.BufferGeometry) =>
-      this.collision.robsonRink ? clipRobsonRinkOpenings(g) : g;
+      railCut(this.collision.robsonRink ? clipRobsonRinkOpenings(g) : g);
     const rinkCutouts = this.collision.robsonRink
       ? ROBSON_RINK_TERRAIN_CUTOUTS
       : [];
@@ -707,6 +716,11 @@ export class World {
       this.root,
     );
     cityBase.castShadow = false;
+    if (this.collision.railContext) {
+      const context = createRailContextMeshes(this.collision.railContext, m);
+      this.root.add(...context);
+      this.chunks.push(...context);
+    }
     const chunks = b.finish(false);
     batchStaticChunks(this.root, chunks, this.facadeMultiDraw, {
       releaseOwnedPreRenderGeometry: true,
@@ -813,7 +827,11 @@ export class World {
           x < 1800;
       const moundRoad =
         !!this.collision.robsonGarden && robsonMoundIntersects(r.pts);
+      const railRoad =
+        !!this.collision.railContext &&
+        RAIL_CONTEXT_SERVICE_ROADS.has(r.id ?? "");
       const onTerrain =
+        railRoad ||
         isIronworkersCarriageway(r.id) ||
         moundRoad ||
         (this.collision.canada?.intersects(r.pts) ?? false) ||
@@ -859,6 +877,8 @@ export class World {
           scale,
           onTerrain && !bridgeRoute,
         );
+        if (railRoad)
+          geometry = fitRailContextRoad(geometry, this.collision.railContext!, y);
         if (clipIronworkers) geometry = clipIronworkers(geometry, r);
         if (moundRoad) {
           geometry = clipRobsonMoundCirculation(geometry, height, y);
@@ -936,6 +956,7 @@ export class World {
         height,
         historic ? 1.6 : 5,
       );
+      if (railRoad) this.collision.railContext!.captureRoadContact(surface);
       if (this.collision.robsonStreetEdge)
         surface = clipRobsonStreetPaths(
           surface,

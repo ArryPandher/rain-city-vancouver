@@ -10,6 +10,7 @@ import {
   SECOND_NARROWS_RAIL_LENGTH as length,
   SECOND_NARROWS_TOWER_STATIONS as stations,
   secondNarrowsRailPoint as point,
+  secondNarrowsRailElevation as elevation,
   preflightSecondNarrowsRail,
   createSecondNarrowsRailGeometry,
   createSecondNarrowsRailAssembly,
@@ -147,7 +148,7 @@ test("actual geometry stays finite, modest and far clear of highway driving/walk
     `${minDistance}m minimum highway centreline separation`,
   );
   for (let s = 0; s <= length; s += 2.5) {
-    const p = point(s, 0, 13.5);
+    const p = point(s, 0, elevation(s) + 0.5);
     assert.equal(
       new T.Raycaster(
         new T.Vector3(...p),
@@ -215,8 +216,9 @@ test("continuous stringers physically connect the actual floor-beam and sleeper 
     mesh.updateMatrixWorld(true);
     for (const side of [-0.7175, 0.7175]) {
       // Away from a transverse floor beam, ray the real stringer's two faces.
-      const upper = point(span.station + 0.8, side, 12.8);
-      const lower = point(span.station + 0.8, side, 12.0);
+      const railTop = elevation(span.station + 0.8);
+      const upper = point(span.station + 0.8, side, railTop - 0.2);
+      const lower = point(span.station + 0.8, side, railTop - 1);
       const top = new T.Raycaster(
         new T.Vector3(...upper),
         new T.Vector3(0, -1, 0),
@@ -230,10 +232,10 @@ test("continuous stringers physically connect the actual floor-beam and sleeper 
         1,
       ).intersectObject(mesh)[0];
       assert.ok(top && bottom);
-      assert.ok(Math.abs(top.point.y - 12.66) < 1e-4);
-      assert.ok(Math.abs(bottom.point.y - 12.36) < 1e-4);
-      const floorTop = S.elevation.railTop - 0.3 - 0.5 + 0.35 / 2;
-      const sleeperBottom = S.elevation.railTop - 0.3 + 0.03 - 0.18 / 2;
+      assert.ok(Math.abs(top.point.y - (railTop - 0.34)) < 1e-4);
+      assert.ok(Math.abs(bottom.point.y - (railTop - 0.64)) < 1e-4);
+      const floorTop = railTop - 0.3 - 0.5 + 0.35 / 2;
+      const sleeperBottom = railTop - 0.3 + 0.03 - 0.18 / 2;
       assert.ok(
         bottom.point.y <= floorTop && top.point.y >= sleeperBottom,
         "no air gap between transverse beam, stringer and sleeper",

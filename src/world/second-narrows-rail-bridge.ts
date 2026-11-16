@@ -44,6 +44,19 @@ export const SECOND_NARROWS_TOWER_STATIONS = source.towers.map((tower) => {
       (distances[i] - distances[i - 1])
   );
 });
+/** The north fixed approaches descend at about0.92%; towers/main/south retain
+ * their original datum. This reconciles the bounded shore context, not survey data. */
+export function secondNarrowsRailElevation(station: number) {
+  const start = SECOND_NARROWS_TOWER_STATIONS[1],
+    t = Math.max(
+      0,
+      Math.min(1, (station - start) / (SECOND_NARROWS_RAIL_LENGTH - start)),
+    );
+  return (
+    source.elevation.railTop +
+    (source.elevation.northRailTop - source.elevation.railTop) * t
+  );
+}
 export function preflightSecondNarrowsRail(buildings: Building[]) {
   return source.towers.every((expected) => {
     const matches = buildings.filter((b) => b.id === expected.id);
@@ -114,7 +127,7 @@ export function createSecondNarrowsRailGeometry(): RailBridgePart[] {
       bins[role].push(g);
     }
   }
-  function finish(station: number) {
+  function finish(station: number, grade: "none" | "span" | "pier" = "none") {
     // Local coordinates are across/y/relative station; transform once into registered world coordinates.
     for (const role of roles)
       if (bins[role].length) {
@@ -124,7 +137,18 @@ export function createSecondNarrowsRailGeometry(): RailBridgePart[] {
           const p = secondNarrowsRailPoint(
             station + positions.getZ(i),
             positions.getX(i),
-            positions.getY(i),
+            positions.getY(i) +
+              (grade === "span"
+                ? secondNarrowsRailElevation(station + positions.getZ(i)) -
+                  source.elevation.railTop
+                : grade === "pier"
+                  ? (secondNarrowsRailElevation(station) -
+                      source.elevation.railTop) *
+                    Math.max(
+                      0,
+                      Math.min(1, positions.getY(i) / source.elevation.pierTop),
+                    )
+                  : 0),
           );
           positions.setXYZ(i, ...p);
         }
@@ -290,7 +314,10 @@ export function createSecondNarrowsRailGeometry(): RailBridgePart[] {
       );
     for (let z = low + 0.4; z < -low; z += 0.8)
       box([2.5, 0.18, 0.22], [0, y + 0.03, z], "hardware");
-    finish(station);
+    finish(
+      station,
+      !main && a >= SECOND_NARROWS_TOWER_STATIONS[1] ? "span" : "none",
+    );
   }
   // Every fixed approach terminates at a real bearing; only the two mapped end abutments touch land.
   const supports = new Set(
@@ -301,7 +328,10 @@ export function createSecondNarrowsRailGeometry(): RailBridgePart[] {
       !SECOND_NARROWS_TOWER_STATIONS.some((v) => Math.abs(v - station) < 1e-6)
     ) {
       pier(false);
-      finish(station);
+      finish(
+        station,
+        station > SECOND_NARROWS_TOWER_STATIONS[1] ? "pier" : "none",
+      );
     }
   return result;
 }
