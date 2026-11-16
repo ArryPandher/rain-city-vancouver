@@ -14,7 +14,10 @@ import {
 } from "../src/world/gallery-upper-canopy";
 import { repairGalleryRearEntry } from "../src/world/gallery-rear-entry";
 import { replaceGalleryWingFaces } from "../src/world/gallery-facade";
-import { replaceGalleryRoofFaces } from "../src/world/gallery-roof";
+import {
+  replaceGalleryRoofFaces,
+  addGalleryRoofs,
+} from "../src/world/gallery-roof";
 import source from "../src/world/gallery-rear-entry-data.json";
 function model() {
   const root = new T.Group(),
@@ -114,7 +117,7 @@ test("fabric edges close and smooth normals follow curved surface instead of a f
     "roof structure outside ordinary terrace jump/camera reach",
   );
 });
-test("all canopy feet and roof perimeter are supported by unchanged actual source cap", async () => {
+test("actual cap supports canopy and all retained roofs/walls leave its full volume clear", async (t) => {
   await MeshoptDecoder.ready;
   const doc = await new NodeIO()
     .registerExtensions(ALL_EXTENSIONS)
@@ -122,6 +125,7 @@ test("all canopy feet and roof perimeter are supported by unchanged actual sourc
     .read(source.source);
   const root = new T.Group(),
     sourceMeshes: T.Mesh[] = [],
+    materials = new Map<string, T.MeshStandardMaterial>(),
     cap = new T.Group();
   let capFound = 0;
   const triples = [
@@ -150,7 +154,8 @@ test("all canopy feet and roof perimeter are supported by unchanged actual sourc
       replaceGalleryRoofFaces(g, name);
       g.rotateY(source.angle);
       g.computeVertexNormals();
-      const m = new T.Mesh(g, new T.MeshBasicMaterial());
+      const m = new T.Mesh(g, new T.MeshBasicMaterial({ side: T.DoubleSide }));
+      materials.set(name, new T.MeshStandardMaterial({ name }));
       root.add(m);
       sourceMeshes.push(m);
       if (name === "stone") {
@@ -177,6 +182,42 @@ test("all canopy feet and roof perimeter are supported by unchanged actual sourc
     p: Array.from(m.geometry.getAttribute("position").array),
     ix: Array.from(m.geometry.index!.array),
   }));
+  // Include actual retained upper source and the independently reconstructed
+  // copper roofs/stone eaves. A cap hit alone does not prove exterior space.
+  const roofChunks = addGalleryRoofs(root, materials);
+  if (roofChunks.length) roofChunks[0].parent!.rotation.y = 0;
+  root.updateMatrixWorld(true);
+  const obstacles = new T.Group();
+  for (const m of [...sourceMeshes, ...roofChunks]) {
+    const g = m.geometry.clone().applyMatrix4(m.matrixWorld),
+      p = g.getAttribute("position"),
+      ix = g.index!,
+      keep: number[] = [];
+    for (let i = 0; i < ix.count; i += 3) {
+      const ids = [ix.getX(i), ix.getX(i + 1), ix.getX(i + 2)];
+      const x = ids.map((j) => p.getX(j)),
+        y = ids.map((j) => p.getY(j)),
+        z = ids.map((j) => p.getZ(j));
+      if (
+        Math.max(...y) <= D.base + 0.001 ||
+        Math.max(...x) < D.minU - 0.13 ||
+        Math.min(...x) > D.maxU + 0.13 ||
+        Math.max(...z) < D.back - 0.08 ||
+        Math.min(...z) > D.front + 0.08
+      )
+        continue;
+      keep.push(...ids);
+    }
+    if (keep.length)
+      obstacles.add(
+        new T.Mesh(
+          g.setIndex(keep),
+          new T.MeshBasicMaterial({ side: T.DoubleSide }),
+        ),
+      );
+    else g.dispose();
+  }
+  obstacles.updateMatrixWorld(true);
   const added = addGalleryUpperCanopy(root);
   sourceMeshes.forEach((m, i) => {
     assert.deepEqual(
@@ -198,6 +239,20 @@ test("all canopy feet and roof perimeter are supported by unchanged actual sourc
         }
   // Entire projected geometry is within actual retained cap; this catches a
   // floating overhang as well as unsupported feet without a bounding-box shortcut.
+  const checked = new Set<string>();
+  const clearAbove = (u: number, v: number) => {
+    const key = `${u.toFixed(4)},${v.toFixed(4)}`;
+    if (checked.has(key)) return;
+    checked.add(key);
+    const obstruction = cast(obstacles, [u, D.base + 0.002, v], [0, 1, 0], 30);
+    assert.equal(
+      obstruction,
+      undefined,
+      `retained wall/roof above canopy footprint at ${key}: ${obstruction?.point.toArray()}`,
+    );
+  };
+  for (let u = D.minU; u <= D.maxU; u += 0.25)
+    for (let v = D.back; v <= D.front; v += 0.25) clearAbove(u, v);
   for (const m of added) {
     const p = m.geometry.getAttribute("position");
     for (let i = 0; i < p.count; i++) {
@@ -208,6 +263,10 @@ test("all canopy feet and roof perimeter are supported by unchanged actual sourc
         0.2,
       );
       assert.ok(h, "actual cap beneath every authored vertex");
+      clearAbove(p.getX(i), p.getZ(i));
     }
   }
+  t.diagnostic(
+    `${checked.size} distinct full-height clearance columns; ${obstacles.children.reduce((sum, m) => sum + (m as T.Mesh).geometry.index!.count / 3, 0)} retained broadphase triangles`,
+  );
 });
