@@ -356,7 +356,7 @@ export async function loadVancouverLandmarks(
       );
     }
     if (refineGallery) {
-      const facade = addGalleryFacade(group, galleryMaterials);
+      const facade = addGalleryFacade(group, galleryMaterials, materials);
       const reflection = galleryFacadeReflection(facade, x, z);
       if (reflection) reflections.push(reflection);
       addGalleryBanners(group);

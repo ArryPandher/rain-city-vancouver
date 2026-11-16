@@ -1,0 +1,66 @@
+{
+  "title": "Gallery west cast-concrete grain",
+  "author": "Charlotte Baglioni / Poly Haven",
+  "source": "https://polyhaven.com/a/concrete_wall_009",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "crop": {
+    "left": 300,
+    "top": 380,
+    "width": 200,
+    "height": 200
+  },
+  "changes": "Joint/tie-hole-free crop from committed 1K maps, mirrored to 400px with normal X/Y sign corrections; original color retained, source roughness remapped to dry range .82–.98; lossless WebP. Not a Gallery scan.",
+  "repeatMetres": 0.6,
+  "scaleStatus": "Authored plausible grain scale, not surveyed. Original crop covers .3m; several-pixel surface marks become millimetres, not wall-sized holes.",
+  "oldMeanLinearRGB": [
+    0.8238738892992181,
+    0.8238738892992181,
+    0.8238738892992181
+  ],
+  "newMeanLinearRGB": [
+    0.3543403237085747,
+    0.316826642179966,
+    0.2607232842275935
+  ],
+  "meanCompensation": [
+    2.325092105455118,
+    2.6003933369695464,
+    3.15995516756391
+  ],
+  "files": [
+    {
+      "kind": "color",
+      "file": "public/textures/gallery-west-concrete/color.webp",
+      "source": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_diff_1k.jpg",
+        "md5": "183930f83ca9b70797b1226833d64bf3",
+        "size": 626688
+      },
+      "bytes": 129078,
+      "sha256": "c992f488668d6cb92bdcfd7ff0611deabf6b55df086957a3f2c1ec421daf8e71"
+    },
+    {
+      "kind": "normal",
+      "file": "public/textures/gallery-west-concrete/normal.webp",
+      "source": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_nor_gl_1k.jpg",
+        "md5": "68c543079c71fd14e9f0b38b126eb116",
+        "size": 518536
+      },
+      "bytes": 117126,
+      "sha256": "724012afcafe708320ce88d5fb7a2721e430cf34d91c9933eb6bc8011f57a3bd"
+    },
+    {
+      "kind": "roughness",
+      "file": "public/textures/gallery-west-concrete/roughness.webp",
+      "source": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_009/concrete_wall_009_rough_1k.jpg",
+        "md5": "4b5da97ce2a223738a67457ff9b75081",
+        "size": 766943
+      },
+      "bytes": 51834,
+      "sha256": "7ab0f9feba12870e89792cc830d7308fdd0e81bc35723aa980760c73cd597bf6"
+    }
+  ]
+}

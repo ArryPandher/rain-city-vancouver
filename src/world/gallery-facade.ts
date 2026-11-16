@@ -1,4 +1,6 @@
 import * as T from "three";
+import type { Materials } from "./materials";
+import { createGalleryWestConcreteMaterial } from "./gallery-west-concrete-material";
 import { addGalleryWestTerrace } from "./gallery-west-terrace";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import { addGalleryBistro } from "./gallery-bistro";
@@ -153,6 +155,7 @@ export function replaceGalleryWingFaces(g: T.BufferGeometry, material: string) {
 export function addGalleryFacade(
   parent: T.Object3D,
   materials: Map<string, T.MeshStandardMaterial>,
+  textureLibrary?: Pick<Materials, "texture">,
 ) {
   const stone = materials.get("stone"),
     base = materials.get("foundation"),
@@ -318,7 +321,15 @@ export function addGalleryFacade(
   addGalleryStairFraming(mesh, base, frame);
   addGalleryEntryStairs(mesh, createGalleryStairMaterial(base));
   addGalleryBistro(mesh, base, frame);
-  addGalleryWestTerrace(mesh, base, frame, glass);
+  addGalleryWestTerrace(
+    mesh,
+    base,
+    frame,
+    glass,
+    textureLibrary
+      ? createGalleryWestConcreteMaterial(base, textureLibrary)
+      : base,
+  );
   mesh.finish();
   const chunks = batch.finish();
   for (const chunk of chunks) {

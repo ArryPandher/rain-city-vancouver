@@ -174,3 +174,7 @@ The adjacent paired repair shed w23776220 also retains its exact OpenStreetMap o
 ## North Shore diagnostic orthophoto colour — DNV2013
 
 **Contains information licensed under the [Open Government Licence - North Vancouver](https://geoweb.dnv.org/data/).** The [District of North Vancouver Orthoimagery2013 dataset](https://geoweb.dnv.org/data/metadata.php?dataset=ImgOrthoimagery2013) provides the forward-slope colour crop. Its publicly served NAD83 UTM10N cache is resampled to a geographic2048×504 WebP with conservative exterior coverage fade. Photographed June2013 snow and baked shadows remain; this is not measured albedo. [Source/licence/reproduction and limits](docs/sources/north-shore-ortho.md), [public manifest](public/textures/north-shore-dem/DNV-SOURCES.json). Only the diagnostic DEM uses this asset; default panorama is unchanged. DNV2024 imagery was inspected for research but is not included.
+
+## Gallery west terrace concrete
+
+The Gallery west planted terrace uses a joint- and tie-hole-free derivative of **Concrete Wall 009**, Charlotte Baglioni / [Poly Haven](https://polyhaven.com/a/concrete_wall_009), **CC0-1.0**. The committed source maps are cropped, mirrored with normal-sign correction and compressed; this generic material is not a Gallery scan. [Derivative provenance and hashes](public/textures/gallery-west-concrete/SOURCES.json), [regeneration script](scripts/prepare-gallery-west-concrete.mjs), [scope and scale limits](docs/sources/gallery-west-concrete.md).

@@ -154,6 +154,7 @@ export function addGalleryWestTerrace(
   stone: T.Material,
   metal: T.Material,
   glass: T.Material,
+  concrete: T.Material = stone,
 ) {
   const leaf = new T.MeshStandardMaterial({
     name: "Gallery west columnar conifers and hedge",
@@ -162,7 +163,7 @@ export function addGalleryWestTerrace(
     roughness: 1,
     metalness: 0,
   });
-  const materials = { stone, metal, glass };
+  const materials = { stone: concrete, metal, glass };
   const registered = (geometry: T.BufferGeometry) => {
     geometry.rotateY(Math.PI / 2);
     const [u, v] = galleryWestPoint(0, 0);
