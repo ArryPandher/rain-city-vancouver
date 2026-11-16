@@ -22,6 +22,8 @@ import { waterfrontCentre } from "./waterfront-centre-building";
 import { fairmontWaterfront } from "./fairmont-waterfront-building";
 import { pwcPlace } from "./pwc-place-building";
 import { granvilleSquareHowe } from "./granville-square-howe";
+import { granvilleSquareTower } from "./granville-square-tower-building";
+import { GRANVILLE_SQUARE_TOWER_ID } from "./granville-square-tower-data";
 import { customsWarehouse } from "./customs-warehouse-building";
 import { pacificCoast } from "./pacific-coast-building";
 import { createTerminalCityAssembly } from "./terminal-city-building";
@@ -150,6 +152,7 @@ export function architecture(
     if (specialBuilding(b) || b.id === CACTUS_ID) continue;
     const [baseX, baseZ] = centroid(b.pts);
     if (
+      b.id !== GRANVILLE_SQUARE_TOWER_ID &&
       b.id !== "w1363485360" &&
       b.id !== "w143683962" &&
       collision.howeTerrain?.contains(baseX, baseZ) &&
@@ -183,6 +186,13 @@ export function architecture(
     if (
       terminalCity(b, shell) ||
       granvilleSquareHowe(b, shell, m, reflections) ||
+      granvilleSquareTower(
+        b,
+        shell,
+        m,
+        reflections,
+        collision.baselineGroundHeight.bind(collision),
+      ) ||
       customsWarehouse(
         b,
         shell,
