@@ -6,6 +6,10 @@ import { Batcher } from "./geometry";
 import { landmarkSurfaceUV } from "./landmark-surfaces";
 import entry from "./gallery-rear-entry-data.json";
 import { addGalleryEntryCornice } from "./gallery-entry-cornice";
+import {
+  addGalleryPortico,
+  removeOriginalGalleryPortico,
+} from "./gallery-portico";
 import { createGalleryAshlarMaterial } from "./gallery-ashlar-material";
 import { createGalleryStairMaterial } from "./gallery-stair-material";
 import { addGalleryStairFraming } from "./gallery-stair-framing";
@@ -69,6 +73,7 @@ export function galleryFacadeCompatible(root: T.Object3D) {
   const expected: Record<string, [number, number]> = {
     foundation: [4063, 8199],
     glass: [1196, 1848],
+    trim: [1644, 7560],
     stone: [19388, 52020],
   };
   const found = new Set<string>();
@@ -86,12 +91,14 @@ export function galleryFacadeCompatible(root: T.Object3D) {
       valid = false;
     found.add(name);
   });
-  return valid && found.size === 3;
+  return valid && found.size === 4;
 }
 
 /** Replace the continuous nine-bay rear elevation. Source-pinned entry ranges
- * explicitly protect translated stair, column and pediment geometry. */
+ * protect retained entry geometry; the portico selector separately replaces
+ * only its superseded upper shafts and heads. */
 export function replaceGalleryWingFaces(g: T.BufferGeometry, material: string) {
+  if (material === "trim") return removeOriginalGalleryPortico(g, material);
   if (!["stone", "foundation", "glass"].includes(material)) return 0;
   const removedStairs = removeOriginalGalleryStairs(g, material);
   const p = g.getAttribute("position"),
@@ -292,31 +299,7 @@ export function addGalleryFacade(
       }
     }
   }
-  // The real rear composition has four engaged shafts. Retain its two existing
-  // outer columns and add only the missing pair, at their shared repaired datum.
-  for (const x of [-8.8 + (4.95 + 8.8) / 3, -8.8 + (2 * (4.95 + 8.8)) / 3]) {
-    const z = 12.17 + entry.translationV;
-    mesh.add(
-      new T.CylinderGeometry(0.554, 0.554, 0.22, 16).translate(x, 3.31, z),
-      stone,
-    );
-    mesh.add(
-      new T.LatheGeometry(
-        [
-          [0.554, 3.42],
-          [0.546, 3.56],
-          [0.42, 3.73],
-          [0.403, 3.8],
-          [0.344, 13.22],
-          [0.42, 13.3],
-          [0.42, 13.43],
-        ].map(([r, y]) => new T.Vector2(r, y)),
-        16,
-      ).translate(x, 0, z),
-      stone,
-    );
-    mesh.box([x, 13.65, z], 1.218, 0.5, 1.134, stone);
-  }
+  addGalleryPortico(mesh, stone);
   addGalleryEntryCornice(mesh, stone);
   addGalleryStairFraming(mesh, base, frame);
   addGalleryEntryStairs(mesh, createGalleryStairMaterial(base));

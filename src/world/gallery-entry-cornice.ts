@@ -1,5 +1,6 @@
 import * as T from "three";
 import { ArchitecturalMesh, type Vertex3 } from "./architectural-mesh";
+import { GALLERY_PORTICO } from "./gallery-portico-data";
 
 /** Source-local rear elevation before the gallery's single baked rotation.
  * Exact source contact, with estimated profile sections from the two cited photos. */
@@ -24,7 +25,17 @@ export const GALLERY_ENTRY_CORNICE = {
   // [v,y] perimeter, closed by the extrusion. All visible surfaces are in
   // front of the retained source cornice's exact maximum v24.05063.
   corniceProfile: [
-    [23.83, 13.48],
+    [22.84, GALLERY_PORTICO.entablatureBottom],
+    [24.1, GALLERY_PORTICO.entablatureBottom],
+    [24.1, 12.2],
+    [24.02, 12.2],
+    [24.02, 12.33],
+    [23.95, 12.33],
+    [23.95, 12.55],
+    [24.03, 12.55],
+    [24.03, 12.64],
+    [23.92, 12.64],
+    [23.92, 13.48],
     [24.1, 13.48],
     [24.1, 13.59],
     [24.075, 13.63],
@@ -32,7 +43,7 @@ export const GALLERY_ENTRY_CORNICE = {
     [24.24, 13.87],
     [24.34, 13.93],
     [24.34, 14.05],
-    [23.83, 14.05],
+    [22.84, 14.05],
   ] as const,
   dentilCount: 39,
   dentilPitch: 0.45,

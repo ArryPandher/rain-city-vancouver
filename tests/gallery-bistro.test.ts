@@ -169,38 +169,67 @@ test("actual full-city transverse path and steps retain ribbon clearance, source
   }
   assert.ok(count > 200);
   assert.ok(minGap > 0.75);
-  // Exact native upper-landing pose: D at yaw2.355 follows positive localu.
-  // Reproduce movement across the formerly continuous right-hand rail.
-  for (const v of [23.864404129264646, 24.05]) {
-    let previous = galleryStairWorld(1.0924789358402052, v);
-    for (let u = 1.1724789358402052; u < 7; u += 0.08) {
-      const p = galleryStairWorld(u, v),
-        move = c.move(
-          ...previous,
-          p[0] - previous[0],
-          p[1] - previous[1],
-          0.36,
-          3.28,
-        );
-      assert.equal(move.hit, false, `native lateral entry at u${u}/v${v}`);
-      assert.ok(Math.hypot(move.x - p[0], move.z - p[1]) < 1e-6);
+  const oldEndpoint = galleryStairWorld(1.0924789358402052, 23.864404129264646);
+  assert.equal(
+    c.blocked(...oldEndpoint, 0.36, 3.28),
+    true,
+    "retired native line cannot ghost through the corrected visible column",
+  );
+  // The corrected five-column portico now physically occupies the former
+  // straight lateral line. Follow the open upper treads around the stone,
+  // cross the existing rail gap, then pass forward of the original outer base.
+  const route = [
+    [1.0924789358402052, 24.5],
+    [2.75, 24.5],
+    [3.0, 24.1],
+    [4.15, 24.1],
+    [4.15, 24.5],
+    [6.1, 24.5],
+    [7, 24.5],
+  ];
+  for (let i = 1; i < route.length; i++) {
+    const a = route[i - 1],
+      b = route[i],
+      count = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 0.06);
+    let previous = galleryStairWorld(a[0], a[1]);
+    let y = c.walkingHeight(...previous, 3.28);
+    for (let j = 1; j <= count; j++) {
+      const u = a[0] + ((b[0] - a[0]) * j) / count,
+        v = a[1] + ((b[1] - a[1]) * j) / count,
+        p = galleryStairWorld(u, v);
+      const move = c.move(
+        ...previous,
+        p[0] - previous[0],
+        p[1] - previous[1],
+        0.36,
+        y,
+      );
+      assert.equal(move.hit, false, `physical portico detour at u${u}/v${v}`);
+      const next = c.walkingHeight(...p, y);
       assert.ok(
-        Math.abs(c.walkingHeight(...p, 3.28) - 3.28) < 1e-9,
-        "no forced floor promotion",
+        Math.abs(next - y) < 0.3,
+        "ordinary step, no forced floor promotion",
       );
-      const behind = galleryStairWorld(u - 4.3, v),
-        focus = new T.Vector3(p[0], 4.8, p[1]),
-        camera = new T.Vector3(behind[0], 5.35, behind[1]);
-      const fraction = shortenChaseBoom(focus, camera, (q) =>
-        c.cameraBlocked(q.x, q.z, 0.25, q.y),
+      y = next;
+      assert.equal(
+        c.cameraBlocked(p[0], p[1], 0.25, y + 1.52),
+        false,
+        "camera focus clear around actual columns",
       );
-      assert.ok(fraction >= 0.4, `usable ordinary chase camera ${fraction}`);
-      assert.equal(c.cameraBlocked(focus.x, focus.z, 0.25, focus.y), false);
+      const back = galleryStairWorld(u, v + 4.3);
+      const focus = new T.Vector3(p[0], y + 1.52, p[1]);
+      const camera = new T.Vector3(back[0], y + 2.07, back[1]);
+      assert.ok(
+        shortenChaseBoom(focus, camera, (q) =>
+          c.cameraBlocked(q.x, q.z, 0.25, q.y),
+        ) > 0.8,
+        "ordinary arrival-facing camera remains usable during lateral detour",
+      );
       previous = p;
     }
   }
   for (let u = 4.4; u < 17.8; u += 0.2) {
-    const v = 24.05,
+    const v = u < 6.0 ? 24.6 : 24.05,
       [x, z] = galleryStairWorld(u, v);
     assert.ok(Math.abs(c.walkingHeight(x, z, 3.28) - 3.28) < 1e-9);
     assert.equal(

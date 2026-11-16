@@ -2,13 +2,14 @@ import * as T from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { GALLERY_FACADE_EDGES } from "./gallery-facade";
 import entry from "./gallery-rear-entry-data.json";
+import { GALLERY_PORTICO } from "./gallery-portico-data";
 
 /** Original identity-only interpretation; dimensions are not a measured survey. */
 export const GALLERY_BANNERS = {
-  shaftU: [-8.8, -8.8 + 13.75 / 3, -8.8 + 27.5 / 3, 4.95],
-  width: 2.35,
+  shaftU: GALLERY_PORTICO.shaftU,
+  width: 1.9,
   bottom: 5.45,
-  top: 12.65,
+  top: GALLERY_PORTICO.bannerTop,
   // Clear existing 160 mm stone sills; no underlying facade faces are removed.
   standOff: 0.19,
   drape: 0.02,
@@ -70,7 +71,7 @@ export function addGalleryBanners(parent: T.Object3D): T.Mesh[] {
   const panels: T.BufferGeometry[] = [],
     hardware: T.BufferGeometry[] = [];
   const p = GALLERY_BANNERS;
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < p.shaftU.length - 1; i++) {
     const centre = (p.shaftU[i] + p.shaftU[i + 1]) / 2;
     const g = new T.PlaneGeometry(p.width, p.top - p.bottom, 8, 24);
     const pos = g.getAttribute("position");

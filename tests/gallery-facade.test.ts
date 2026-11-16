@@ -16,6 +16,7 @@ import {
 } from "../src/world/gallery-facade";
 import { repairGalleryRearEntry } from "../src/world/gallery-rear-entry";
 import source from "../src/world/gallery-rear-entry-data.json";
+import { galleryPorticoSourceTriangle } from "../src/world/gallery-portico-data";
 
 async function scene() {
   await MeshoptDecoder.ready;
@@ -73,6 +74,7 @@ async function scene() {
           );
         if (
           name !== "foundation" &&
+          !(name === "trim" && galleryPorticoSourceTriangle(triangle)) &&
           triangle.some((id) => ranges.some(([a, b]) => id >= a && id <= b))
         )
           assert.ok(
@@ -146,15 +148,14 @@ test("actual gallery source replacement preserves landing and all other material
     glass: 54,
     stone: 380,
     copper: 0,
-    trim: 0,
+    trim: 712,
   });
   for (const [name, count] of Object.entries(removed))
-    if (!["stone", "foundation", "glass"].includes(name))
+    if (!["stone", "foundation", "glass", "trim"].includes(name))
       assert.equal(count, 0);
   // The adjoining rear edge and opposite facade retain their exact surface hits.
   for (const [u, v, dv] of [
-    [-8.8, 30, -1],
-    [4.95, 30, -1],
+    // Original outer bases remain exact; upper shafts are intentionally replaced.
     [10, -40, 1],
   ]) {
     const ray = new T.Raycaster(point(u, 5.5, v), point(0, 0, dv), 0, 60);
@@ -239,7 +240,7 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
   }
   t.diagnostic(`${triangles} added triangles in ${chunks.length} draws`);
   assert.ok(
-    triangles < 15500,
+    triangles < 20500,
     `${triangles} added triangles including terrace framing`,
   );
   const hit = wingRay((0.5 * GALLERY_FACADE.length) / 6, 4.25, root)[0];
@@ -256,8 +257,9 @@ test("source guard rejects absent or changed gallery primitives", () => {
 test("all four aperture reveals face the opening in an oblique exterior view", async () => {
   const { root } = await scene();
   for (const e of GALLERY_FACADE_EDGES) {
-    // First bay on each edge, upper row: clear of retained entrance shafts.
-    const centre = (0.5 * e.length) / e.bays,
+    // East first bay and west end bay: clear of the corrected five-column heads.
+    const centre =
+        ((e === GALLERY_FACADE_EDGES[1] ? 2.5 : 0.5) * e.length) / e.bays,
       l = centre - 0.825,
       r = centre + 0.825,
       b = 9.55,

@@ -65,8 +65,8 @@ test("cornice and dentils create alternating physical relief, closed ends and so
     assert.ok(hit && Math.abs(hit.point.x - endU) < 0.00001);
     assert.ok(hit.face!.normal.x * side > 0.999);
   }
-  const underside = ray(root, [D.centreU, 12, 24.09], [0, 1, 0])[0];
-  assert.ok(underside && Math.abs(underside.point.y - 13.48) < 0.00001);
+  const underside = ray(root, [D.centreU, 11, 24.09], [0, 1, 0])[0];
+  assert.ok(underside && Math.abs(underside.point.y - 12.05) < 0.00001);
   assert.ok(underside.face!.normal.y < -0.999);
   // Teeth physically intersect the frieze and upper sloping corona.
   assert.ok(D.dentilBackV < 24.075);
@@ -122,8 +122,8 @@ test("closed profile solids have paired oriented edges and preserve the source c
     "unchanged source pediment crest",
   );
   assert.ok(
-    minY >= 13.4799,
-    "entire addition above shafts; no stair or route footprint",
+    minY >= 12.0499,
+    "entablature is on shared capital bearing, clear of stair/route",
   );
   assert.ok(triangles < 700);
   t.diagnostic(`${triangles} triangles, no additional material batch`);

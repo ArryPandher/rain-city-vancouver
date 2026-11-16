@@ -110,3 +110,7 @@ The shared texture size, physical cloth extent and draw/triangle counts remain
 unchanged. White lines above the pediment in the screenshot cannot be generated
 by this helper: all its vertices remain below source y=12.70 m. Those require
 separate source investigation. Native colour/readability acceptance is pending.
+
+## 2026-11-16 portico proportion correction
+
+The prior four-shaft reading and shallow horizontal entablature are superseded by the source-registered five-shaft/four-banner assembly in [gallery-portico.md](gallery-portico.md). Both rear photographs resolve the count. Original outer plinths and pediment remain; only the two obsolete upper shafts/heads are explicitly removed. The new shared capital bearing is12.05m under the retained14.05m spring. Historical validation above describes the earlier version; current source preservation, geometry budget and the necessary natural sidestep around real columns are documented in that correction.
