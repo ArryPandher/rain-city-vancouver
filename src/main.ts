@@ -520,7 +520,7 @@ class Game {
       title.textContent = "Render diagnostics";
       const button = document.createElement("button");
       button.textContent = "Profile one frame";
-      const howeButtons = (
+      const sceneButtons = (
         [
           "corner",
           "apron",
@@ -528,12 +528,17 @@ class Game {
           "forecourt",
           "podium",
           "return",
+          "gallery",
+          "terrace",
         ] as const
       ).map((check) => {
         const button = document.createElement("button");
-        button.textContent = `Walk at Howe ${check}`;
+        button.textContent =
+          check === "gallery" || check === "terrace"
+            ? `Walk at Robson ${check}`
+            : `Walk at Howe ${check}`;
         button.addEventListener("click", () => {
-          this.walkAtHoweCheck(check);
+          this.walkAtSceneCheck(check);
           panel.open = false;
           button.blur();
         });
@@ -852,7 +857,7 @@ class Game {
       panel.append(
         title,
         button,
-        ...howeButtons,
+        ...sceneButtons,
         sampleButton,
         probeSelect,
         probeButton,
@@ -898,45 +903,69 @@ class Game {
         : (p?.heading ?? l.heading),
     };
   }
-  private walkAtHoweCheck(
-    check: "corner" | "apron" | "sidewalk" | "forecourt" | "podium" | "return",
+  private walkAtSceneCheck(
+    check:
+      | "corner"
+      | "apron"
+      | "sidewalk"
+      | "forecourt"
+      | "podium"
+      | "return"
+      | "gallery"
+      | "terrace",
   ) {
     if (!this.ready || !new URLSearchParams(location.search).has("debug"))
       return;
     // Recorded ordinary street comparison, cordova-geometry-baseline-profile.
     // Use live walking support and the normal collision-shortened chase boom.
+    const place =
+      check === "gallery" || check === "terrace" ? "Robson" : "Howe";
     const { x, z, yaw, pitch } =
-      check === "return"
-        ? { x: 500, z: -506, yaw: 2.97, pitch: -0.18 }
-        : check === "podium"
+      check === "gallery"
+        ? {
+            x: -68.78511329120707,
+            z: 51.52276041041648,
+            yaw: 2.3554594283507932,
+            pitch: -0.1583,
+          }
+        : check === "terrace"
           ? {
-              x: 517.8729019962855,
-              z: -474.3508166211231,
-              yaw: 2.7413631020289113,
-              pitch: 0.21025000000000005,
+              x: -145.8943919801504,
+              z: 127.92436055962261,
+              yaw: 2.3554594283507932,
+              pitch: 0.19,
             }
-          : check === "forecourt"
-            ? {
-                x: 486.06376139308657,
-                z: -436.3726305675954,
-                yaw: 2.4443631020289107,
-                pitch: 0.19,
-              }
-            : check === "apron"
-              ? { x: 421.2023, z: -388.0413, yaw: 2.35619449, pitch: -0.18 }
-              : check === "sidewalk"
+          : check === "return"
+            ? { x: 500, z: -506, yaw: 2.97, pitch: -0.18 }
+            : check === "podium"
+              ? {
+                  x: 517.8729019962855,
+                  z: -474.3508166211231,
+                  yaw: 2.7413631020289113,
+                  pitch: 0.21025000000000005,
+                }
+              : check === "forecourt"
                 ? {
-                    x: 424.90576707774363,
-                    z: -389.90909834218024,
-                    yaw: -1.2648368979710893,
-                    pitch: -0.39049999999999996,
+                    x: 486.06376139308657,
+                    z: -436.3726305675954,
+                    yaw: 2.4443631020289107,
+                    pitch: 0.19,
                   }
-                : {
-                    x: 450.2797011432693,
-                    z: -407.32055060898534,
-                    yaw: -1.2648368979710893,
-                    pitch: -0.39049999999999996,
-                  };
+                : check === "apron"
+                  ? { x: 421.2023, z: -388.0413, yaw: 2.35619449, pitch: -0.18 }
+                  : check === "sidewalk"
+                    ? {
+                        x: 424.90576707774363,
+                        z: -389.90909834218024,
+                        yaw: -1.2648368979710893,
+                        pitch: -0.39049999999999996,
+                      }
+                    : {
+                        x: 450.2797011432693,
+                        z: -407.32055060898534,
+                        yaw: -1.2648368979710893,
+                        pitch: -0.39049999999999996,
+                      };
     const collision = this.world.collision,
       y = collision.walkingHeight(x, z);
     if (
@@ -945,11 +974,11 @@ class Game {
       collision.water(x, z, y)
     ) {
       ui.toast(
-        "Howe comparison point is no longer clear. Walk there normally.",
+        `${place} comparison point is no longer clear. Walk there normally.`,
       );
       return;
     }
-    this.finishFrameSample("returned to Howe comparison point");
+    this.finishFrameSample(`returned to ${place} comparison point`);
     this.keys.clear();
     this.clearPointerInput();
     this.combat.holster();
@@ -978,7 +1007,7 @@ class Game {
     this.character.group.rotation.set(0, this.heading, 0);
     this.actors.recycle(this.player, parkedVehicle, true);
     this.setCamera(true);
-    ui.toast(`Howe ${check} · normal walking controls · drag to look`);
+    ui.toast(`${place} ${check} · normal walking controls · drag to look`);
   }
   start(mode: "drive" | "walk") {
     if (!this.ready) return;

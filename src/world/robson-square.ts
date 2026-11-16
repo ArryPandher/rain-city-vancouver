@@ -1,4 +1,5 @@
 import * as T from "three";
+import { createRobsonPavingMaterial } from "./robson-paving-material";
 import { robsonLowerStairGeometry } from "./robson-stairs";
 import { Building, centroid } from "./data";
 import { Batcher } from "./geometry";
@@ -175,7 +176,7 @@ export function robsonSquare(b: Building, batch: Batcher, m: Materials) {
   g.setAttribute("position", new T.Float32BufferAttribute(positions, 3));
   g.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
   g.computeVertexNormals();
-  add(g, m.concrete);
+  add(g, createRobsonPavingMaterial(m));
   add(robsonLowerStairGeometry(), concrete);
   const planted = new T.MeshStandardMaterial({
     name: "Robson Square — evergreen planting",
