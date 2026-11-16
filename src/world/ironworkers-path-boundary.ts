@@ -1,5 +1,6 @@
 import * as T from "three";
 import { createIronworkersPicketCoverageMaterial } from "./ironworkers-picket-coverage";
+import { createIronworkersRadianceCoverageMaterial } from "./ironworkers-picket-radiance";
 import {
   IRONWORKERS_ALIGNMENT as A,
   IRONWORKERS_DECK_STATIONS,
@@ -504,7 +505,11 @@ export function createIronworkersPathBoundary(
   /** Each chunk has one near instanced box batch and one far instanced flat batch.
    * Same picket centres/width/heights; distant faces retain visible spacing at2tri/picket.
    * No opacity wall and no thousands of individual Object3Ds. */
-  const createRenderGroup = (concrete: T.Material, steel: T.Material) => {
+  const createRenderGroup = (
+    concrete: T.Material,
+    steel: T.Material,
+    options: { filterTrial?: boolean } = {},
+  ) => {
     const group = new T.Group(),
       unit = new T.BoxGeometry(1, 1, 1),
       plane = new T.PlaneGeometry(1, 1),
@@ -516,8 +521,14 @@ export function createIronworkersPathBoundary(
     // before the integer count. Each filtered cell covers one full interval.
     const actualPitch = LENGTH / Math.ceil(LENGTH / d.picketPitch);
     const filtered = steel instanceof T.MeshStandardMaterial;
+    const trial =
+      options.filterTrial === true &&
+      filtered &&
+      steel.type === "MeshStandardMaterial";
     const farMaterial = filtered
-      ? createIronworkersPicketCoverageMaterial(steel, {
+      ? (trial
+          ? createIronworkersRadianceCoverageMaterial
+          : createIronworkersPicketCoverageMaterial)(steel, {
           width: d.picketWidth,
           depth: d.picketDepth,
           pitch: actualPitch,
@@ -552,36 +563,60 @@ export function createIronworkersPathBoundary(
         y = deckHeight(ironworkersGradeT(x, z));
       lod.position.set(x, y, z);
       const near = new T.InstancedMesh(unit, steel, list.length),
-        far = new T.InstancedMesh(plane, farMaterial, list.length),
         translation = new T.Matrix4().makeTranslation(-x, -y, -z);
       near.castShadow = near.receiveShadow = true;
       // Single-sample shadow maps cannot reproduce the far MSAA coverage.
       // Only visible near physical boxes cast; never a full-pitch proxy sheet.
-      far.castShadow = far.receiveShadow = false;
       list.forEach((m, i) => {
         near.setMatrixAt(
           i,
           new T.Matrix4().multiplyMatrices(translation, m.matrix),
         );
-        const u = new T.Vector3(...m.axes[0]),
-          v = new T.Vector3(0, 1, 0),
-          n = new T.Vector3().crossVectors(u, v),
-          matrix = new T.Matrix4()
-            .makeBasis(u, v, n)
-            .scale(
-              new T.Vector3(
-                filtered ? actualPitch : d.picketWidth,
-                d.fenceHeight,
-                1,
-              ),
-            )
-            .setPosition(m.centre[0] - x, m.centre[1] - y, m.centre[2] - z);
-        far.setMatrixAt(i, matrix);
       });
       near.computeBoundingSphere();
-      far.computeBoundingSphere();
+      const makeFar = (selection: IronworkersMember[]) => {
+        const far = new T.InstancedMesh(plane, farMaterial, selection.length);
+        far.castShadow = far.receiveShadow = false;
+        selection.forEach((m, i) => {
+          const u = new T.Vector3(...m.axes[0]),
+            v = new T.Vector3(0, 1, 0),
+            n = new T.Vector3().crossVectors(u, v),
+            matrix = new T.Matrix4()
+              .makeBasis(u, v, n)
+              .scale(
+                new T.Vector3(
+                  filtered ? actualPitch : d.picketWidth,
+                  d.fenceHeight,
+                  1,
+                ),
+              )
+              .setPosition(m.centre[0] - x, m.centre[1] - y, m.centre[2] - z);
+          far.setMatrixAt(i, matrix);
+        });
+        far.computeBoundingSphere();
+        return far;
+      };
+      let far: T.Object3D;
+      if (trial) {
+        // Transparent instances are not individually sorted. Separate the two
+        // fence sides so Three sorts each bounded chunk by its real sphere centre.
+        const sides: [IronworkersMember[], IronworkersMember[]] = [[], []];
+        for (const m of list) {
+          const [cx, cz] = ironworkersPoint(ironworkersTAtDistance(m.station));
+          const side =
+            (m.centre[0] - cx) * m.axes[1][0] +
+            (m.centre[2] - cz) * m.axes[1][2];
+          sides[side < 0 ? 0 : 1].push(m);
+        }
+        far = new T.Group();
+        sides.forEach((side, i) => {
+          const mesh = makeFar(side);
+          mesh.name = `Ironworkers filtered fence side ${i}`;
+          far.add(mesh);
+        });
+      } else far = makeFar(list);
       lod.addLevel(near, 0);
-      lod.addLevel(far, d.nearDistance, d.nearHysteresis);
+      lod.addLevel(far, trial ? 48 : d.nearDistance, d.nearHysteresis);
       group.add(lod);
       chunks++;
     }
@@ -589,7 +624,8 @@ export function createIronworkersPathBoundary(
       group,
       stats: {
         chunks,
-        maxDrawCalls: chunks + 3,
+        maxDrawCalls: chunks * (trial ? 2 : 1) + 3,
+        filterTrial: trial,
         pickets: members.filter((m) => m.kind === "picket").length,
         pathTriangles: top.length + sides.length,
       },

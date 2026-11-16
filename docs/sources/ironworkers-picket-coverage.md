@@ -49,3 +49,11 @@ Five coverage/LOD tests plus the path-shadow test pass; strict scoped TypeScript
 ## Rejected native trial and physical fallback
 
 Native screenshots `bridge-fence-48m-native.png`, `bridge-filtered-normal-native.png` and `bridge-filtered-normal-oblique-native.png` exposed the seam. Projected-area blended normals corrected the fixed-plane orientation but still do not equal the average rectangular-face BRDF. That approximation remains only in the remote fallback. All real member matrices, collision, materials, chunk sizes and draw ceilings remain unchanged. The actual LOD test now verifies physical bars across ordinary walking/car stations on both sides. Native review of this physical fallback is required before publication.
+
+## Separate debug-only follow-up
+
+The ordinary2km physical tier remains unchanged. A new optional first-hit
+face-radiance trial diagnoses the rejected averaged-normal proxy and uses
+continuous coverage with separately sorted side chunks. It is available only when
+the caller explicitly passes `filterTrial:true`; the parent gates that option with
+`debug && fence=filtered`. [Exact derivation, costs and native acceptance limits](ironworkers-fence-radiance-trial.md).

@@ -1,0 +1,194 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import * as T from "three";
+import {
+  ironworkersFirstHitCoverage,
+  createIronworkersRadianceCoverageMaterial,
+} from "../src/world/ironworkers-picket-radiance";
+import {
+  createIronworkersPathBoundary,
+  IRONWORKERS_PATH,
+} from "../src/world/ironworkers-path-boundary";
+const section = { width: 0.05, depth: 0.04, pitch: 0.13 };
+test("first-hit front and side coverage matches independent physical box rays before and after overlap", () => {
+  const boxes = Array.from(
+    { length: 101 },
+    (_, i) =>
+      new T.Box3(
+        new T.Vector3(
+          (i - 50) * section.pitch - section.width / 2,
+          0,
+          -section.depth / 2,
+        ),
+        new T.Vector3(
+          (i - 50) * section.pitch + section.width / 2,
+          3,
+          section.depth / 2,
+        ),
+      ),
+  );
+  const samples = 4096;
+  for (const slope of [0, 0.5, 1.25, 2, 5, -5])
+    for (const width of [0.3, 1, 4.7])
+      for (const cell of [0.06, 0.5, 0.93]) {
+        let front = 0,
+          side = 0;
+        for (let i = 0; i < samples; i++) {
+          const x =
+              (cell - 0.5 + ((i + 0.5) / samples - 0.5) * width) *
+              section.pitch,
+            ray = new T.Ray(
+              new T.Vector3(x + slope, 1, 1),
+              new T.Vector3(-slope, 0, -1).normalize(),
+            );
+          let nearest = Infinity,
+            face = "";
+          for (const box of boxes) {
+            const hit = ray.intersectBox(box, new T.Vector3());
+            if (!hit) continue;
+            const distance = hit.distanceTo(ray.origin);
+            if (distance < nearest) {
+              nearest = distance;
+              face =
+                Math.abs(hit.z - section.depth / 2) < 1e-8 ? "front" : "side";
+            }
+          }
+          if (face === "front") front++;
+          if (face === "side") side++;
+        }
+        const result = ironworkersFirstHitCoverage(section, cell, width, slope);
+        assert.ok(Math.abs(result.front - front / samples) < 0.0008);
+        assert.ok(Math.abs(result.side - side / samples) < 0.0008);
+        assert.ok(result.total <= 1 && result.total >= 0);
+      }
+  for (const slope of [2, 5, 20]) {
+    const p = ironworkersFirstHitCoverage(section, 0.5, 1, slope);
+    assert.ok(Math.abs(p.front - section.width / section.pitch) < 1e-12);
+    assert.ok(Math.abs(p.side - (1 - section.width / section.pitch)) < 1e-12);
+    assert.equal(p.total, 1);
+  }
+});
+test("trial averages separately lit face radiance, keeps source steel, and applies continuous coverage once", () => {
+  const source = new T.MeshStandardMaterial({
+    color: 0xa7afac,
+    metalness: 0.75,
+    roughness: 0.5,
+  });
+  const m = createIronworkersRadianceCoverageMaterial(source, section);
+  assert.equal(m.transparent, true);
+  assert.equal(m.depthWrite, false);
+  assert.equal(m.depthTest, true);
+  assert.equal(m.alphaToCoverage, false);
+  assert.equal(m.premultipliedAlpha, false);
+  assert.equal(m.alphaTest, 0);
+  assert.deepEqual(m.color, source.color);
+  assert.equal(m.roughness, source.roughness);
+  assert.equal(m.metalness, source.metalness);
+  assert.equal(source.transparent, false);
+  const shader = {
+    vertexShader: T.ShaderLib.standard.vertexShader,
+    fragmentShader: T.ShaderLib.standard.fragmentShader,
+    uniforms: {},
+  } as T.WebGLProgramParametersWithUniforms;
+  m.onBeforeCompile(shader, {} as T.WebGLRenderer);
+  for (const chunk of [
+    "lights_physical_fragment",
+    "lights_fragment_begin",
+    "lights_fragment_maps",
+    "lights_fragment_end",
+    "aomap_fragment",
+  ])
+    assert.equal(
+      shader.fragmentShader.split(`#include <${chunk}>`).length - 1,
+      2,
+      `two complete lighting evaluations: ${chunk}`,
+    );
+  assert.ok(
+    shader.fragmentShader.includes(
+      "normal=fenceFront;nonPerturbedNormal=fenceFront;",
+    ),
+  );
+  assert.ok(
+    shader.fragmentShader.includes(
+      "normal=fenceSide;nonPerturbedNormal=fenceSide;",
+    ),
+  );
+  assert.ok(shader.fragmentShader.includes("reflectedLight=fenceSum;"));
+  assert.ok(shader.fragmentShader.includes("1.-fenceFrontDuty"));
+  assert.ok(shader.fragmentShader.includes("diffuseColor.a=fenceTotal;"));
+  assert.ok(!shader.fragmentShader.includes("normal=normalize(normal*"));
+  assert.equal(
+    shader.fragmentShader.split("#include <opaque_fragment>").length - 1,
+    1,
+  );
+  assert.throws(() =>
+    createIronworkersRadianceCoverageMaterial(
+      new T.MeshPhysicalMaterial(),
+      section,
+    ),
+  );
+  assert.throws(() =>
+    createIronworkersRadianceCoverageMaterial(source, { ...section, pitch: 0 }),
+  );
+});
+test("explicit trial preserves all physical members and near matrices; separates sortable far sides within a bounded draw budget", () => {
+  const boundary = createIronworkersPathBoundary(
+    (t) => 5 + 40 * Math.sin(Math.PI * t),
+    () => 0.07,
+  );
+  const original = boundary.members.map((m) => m.matrix.elements.slice());
+  const source = new T.MeshStandardMaterial({
+      color: 0xa7afac,
+      roughness: 0.5,
+      metalness: 0.75,
+    }),
+    plain = boundary.createRenderGroup(new T.MeshBasicMaterial(), source),
+    trial = boundary.createRenderGroup(new T.MeshBasicMaterial(), source, {
+      filterTrial: true,
+    });
+  const a = plain.group.children.filter((x): x is T.LOD => x instanceof T.LOD),
+    b = trial.group.children.filter((x): x is T.LOD => x instanceof T.LOD);
+  assert.equal(a.length, b.length);
+  assert.equal(plain.stats.filterTrial, false);
+  assert.equal(trial.stats.filterTrial, true);
+  assert.equal(plain.stats.maxDrawCalls, 24);
+  assert.equal(trial.stats.maxDrawCalls, 45);
+  for (let i = 0; i < a.length; i++) {
+    assert.equal(a[i].levels[1].distance, 2000);
+    assert.equal(b[i].levels[1].distance, 48);
+    assert.equal(b[i].levels[1].hysteresis, IRONWORKERS_PATH.nearHysteresis);
+    const nearA = a[i].levels[0].object as T.InstancedMesh,
+      nearB = b[i].levels[0].object as T.InstancedMesh;
+    assert.deepEqual(nearA.instanceMatrix.array, nearB.instanceMatrix.array);
+    assert.equal(nearB.material, source);
+    const far = b[i].levels[1].object;
+    assert.equal(far.children.length, 2);
+    let count = 0;
+    const centres = [];
+    for (const child of far.children) {
+      assert.ok(child instanceof T.InstancedMesh);
+      const mesh = child as T.InstancedMesh;
+      count += mesh.count;
+      assert.equal(mesh.castShadow, false);
+      assert.equal(mesh.receiveShadow, false);
+      assert.ok(mesh.boundingSphere);
+      centres.push(mesh.boundingSphere!.center.clone());
+      const mat = mesh.material as T.MeshStandardMaterial;
+      assert.equal(mat.depthWrite, false);
+      assert.equal(mat.transparent, true);
+    }
+    assert.equal(count, nearB.count);
+    assert.ok(
+      centres[0].distanceTo(centres[1]) > 35,
+      "opposite sides have distinct sort centres",
+    );
+  }
+  assert.deepEqual(
+    boundary.members.map((m) => m.matrix.elements),
+    original,
+  );
+  assert.deepEqual(
+    (plain.group.children[0] as T.Mesh).geometry.attributes.position.array,
+    (trial.group.children[0] as T.Mesh).geometry.attributes.position.array,
+  );
+});
