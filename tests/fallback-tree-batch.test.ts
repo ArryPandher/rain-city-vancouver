@@ -26,7 +26,6 @@ import {
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import shape from "../src/world/broadleaf-volume-data.json";
 import { Terrain } from "../src/world/terrain";
-import { sunOffset } from "../src/world/daylight";
 import { ROBSON_MOUND_TREE_SITES } from "../src/world/robson-mound-trees";
 async function fixture() {
   const read = (p: string) => JSON.parse(fs.readFileSync(p, "utf8"));
@@ -185,6 +184,10 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
       pitch: -0.15,
     },
     player: [470.7373497939464, 7.88, -578.9551267171248],
+    // These golden payload counts were recorded with the former east sun.
+    // Pin the shadow fixture: this tests batching/restoration parity, while
+    // daylight-sky/weather-direction tests cover the current authored sun.
+    shadowOffset: [278, 149.61315223935466, 0],
   };
   const camera = new T.PerspectiveCamera(62, 723 / 670, 0.1, 10000);
   camera.position.fromArray(profile.camera.position);
@@ -206,7 +209,9 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
       collision.groundHeight(profile.player[0], profile.player[2]),
       -578,
     );
-  shadow.position.copy(target).add(sunOffset("day"));
+  shadow.position
+    .copy(target)
+    .add(new T.Vector3().fromArray(profile.shadowOffset));
   shadow.lookAt(target);
   shadow.updateMatrixWorld(true);
   w.root.updateMatrixWorld(true);
@@ -407,9 +412,7 @@ test("actual mapped fallback trees preserve source payload and per-pass visibili
     "off-camera trees continue casting valid shadows",
   );
   assert.equal(beauty + removedBeauty, 1163284);
-  // The same mapped payload under the east-facing morning shadow camera.
-  // Rotating the fixed sun changes which individual trees cast into this view;
-  // the original source payload/beauty and restoration assertions stay fixed.
+  // The same mapped payload under the pinned east-facing shadow fixture.
   assert.equal(shade, 70594);
   assert.equal(
     draw(camera),

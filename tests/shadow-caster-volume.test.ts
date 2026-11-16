@@ -24,9 +24,14 @@ function boundsMesh(box: T.Box3) {
   g.boundingSphere = box.getBoundingSphere(new T.Sphere());
   return new T.Mesh(g, new T.MeshBasicMaterial());
 }
-test("actual Fairmont tower bounds enter the shadow camera despite remote batch centre", () => {
-  const l = lightAt(),
-    query = new ShadowCasterVolume().update(l);
+test("the former east-sun Fairmont regression retains off-centre tower casters", () => {
+  const l = lightAt();
+  // Preserve the geometry/lighting combination that exposed the old cell-centre
+  // exclusion bug, independently of later photographic lighting choices.
+  l.position
+    .copy(l.target.position)
+    .add(new T.Vector3(278, 149.61315223935466, 0));
+  const query = new ShadowCasterVolume().update(l);
   for (const p of fairmont.parts.filter((p) => p.height > 100)) {
     const box = new T.Box3();
     for (const [x, z] of p.pts) {
@@ -59,6 +64,35 @@ test("actual Fairmont tower bounds enter the shadow camera despite remote batch 
   );
   ground.userData.allowShadow = false;
   assert.equal(query.includes(ground), false);
+});
+test("current daylight eligibility agrees with Three's actual finite shadow camera", () => {
+  const l = lightAt(),
+    query = new ShadowCasterVolume().update(l);
+  l.updateMatrixWorld(true);
+  l.target.updateMatrixWorld(true);
+  l.shadow.updateMatrices(l);
+  const native = l.shadow.getFrustum();
+  let excluded = 0;
+  for (const p of fairmont.parts.filter((p) => p.height > 100)) {
+    const box = new T.Box3();
+    for (const [x, z] of p.pts) {
+      box.expandByPoint(new T.Vector3(x, p.minHeight, z));
+      box.expandByPoint(new T.Vector3(x, p.height, z));
+    }
+    const mesh = boundsMesh(box);
+    mesh.userData.center = [l.target.position.x, l.target.position.z];
+    const expected = native.intersectsBox(box);
+    if (!expected) excluded++;
+    assert.equal(
+      query.includes(mesh),
+      expected,
+      `actual finite camera eligibility for ${p.id}`,
+    );
+  }
+  assert.ok(
+    excluded > 0,
+    "the changed azimuth excludes some old casters despite a nearby metadata centre",
+  );
 });
 test("aggregate instance bounds and object transforms control eligibility", () => {
   const query = new ShadowCasterVolume().update(lightAt()),

@@ -58,7 +58,9 @@ test("weather establishes gameplay sun direction before startup reflection captu
     World.prototype.setWeather.call(world, weather);
     assert.deepEqual(world.sun.target.position.toArray(), target.toArray());
     const expected =
-      weather === "day" ? [278, 149.61315223935466, 0] : [-220, 110, 170];
+      weather === "day"
+        ? [278 / Math.SQRT2, 149.61315223935466, 278 / Math.SQRT2]
+        : [-220, 110, 170];
     assert.ok(
       world.sun.position
         .clone()
@@ -78,21 +80,26 @@ test("initial daylight and first player-follow update agree on direction and int
   const before = world.sun.position.clone().sub(world.sun.target.position);
   assert.equal(world.sun.intensity, 3.4);
   World.prototype.update.call(world, 0, -81, -798, 17);
-  assert.deepEqual(
-    world.sun.position.clone().sub(world.sun.target.position).toArray(),
-    before.toArray(),
+  assert.ok(
+    world.sun.position
+      .clone()
+      .sub(world.sun.target.position)
+      .distanceTo(before) < 1e-10,
   );
   assert.deepEqual(world.sun.target.position.toArray(), [-80, 17, -798]);
   assert.equal(world.sun.intensity, 3.4);
 });
 
-test("morning daylight faces the Howe hotel and preserves a physically plausible solar direction", async () => {
+test("southeast daylight separates Howe and Cordova while preserving a plausible sun and documenting the hotel tradeoff", async () => {
   const { canadaPlaceCanopyPoint: at } = await import(
     "../src/world/canada-place-canopy"
   );
   const { facadeFrame } = await import("../src/world/architectural-mesh");
   const { FAIRMONT_WATERFRONT_RING: ring } = await import(
     "../src/world/fairmont-waterfront-site"
+  );
+  const { PACIFIC_COAST_RING: pacific } = await import(
+    "../src/world/pacific-coast-site"
   );
   const world = fixture();
   World.prototype.setWeather.call(world, "day");
@@ -103,20 +110,45 @@ test("morning daylight faces the Howe hotel and preserves a physically plausible
   const azimuth =
     ((Math.atan2(direction.x, -direction.z) * 180) / Math.PI + 360) % 360;
   const elevation = (Math.asin(direction.y) * 180) / Math.PI;
-  assert.ok(Math.abs(azimuth - 90) < 1e-8);
+  assert.ok(direction.toArray().every(Number.isFinite));
+  assert.ok(Math.abs(direction.length() - 1) < 1e-12);
+  assert.ok(Math.abs(azimuth - 135) < 1e-8);
   assert.ok(Math.abs(elevation - 28.288107223038665) < 0.00001);
+  const incidence = (points: [number, number][], edge: number) => {
+    const n = facadeFrame(points[edge], points[edge + 1]).outward;
+    return new T.Vector3(n[0], 0, n[1]);
+  };
+  const cordova = incidence(pacific, 0).dot(direction),
+    howe = incidence(pacific, 1).dot(direction);
+  assert.ok(
+    cordova > 0 && cordova < 0.03,
+    "the source Cordova plane receives only grazing direct light before occlusion",
+  );
+  assert.ok(
+    howe > 0.87 && howe < 0.89 && howe - cordova > 0.85,
+    "the photographed upper Howe face has strong incidence, unlike the nearly equal east-sun faces",
+  );
   const facadeNormal = at(0, 0, 1)
     .sub(at(0, 0, 0))
     .normalize();
   assert.ok(
-    facadeNormal.dot(direction) < -0.4 && facadeNormal.dot(direction) > -0.42,
-    "the west concourse correctly loses direct light; no facade-specific light override",
+    facadeNormal.dot(direction) < -0.83 && facadeNormal.dot(direction) > -0.85,
+    "the west concourse remains back-facing to the same world sun; no facade-specific override",
   );
+  const oldEast = new T.Vector3(278, 149.61315223935466, 0).normalize(),
+    hotelIncidence = [
+      0.3529513414277388, 0.6226610771992099, 0.7674882736887214,
+    ];
   for (const edge of [0, 1, 2]) {
-    const n = facadeFrame(ring[edge], ring[edge + 1]).outward;
+    const normal = incidence(ring, edge),
+      value = normal.dot(direction);
     assert.ok(
-      new T.Vector3(n[0], 0, n[1]).dot(direction) > 0.8,
-      "the source Howe-facing hotel planes can receive morning sun before occlusion",
+      Math.abs(value - hotelIncidence[edge]) < 1e-8,
+      `Fairmont edge ${edge} keeps its recorded southeast incidence`,
+    );
+    assert.ok(
+      value > 0.3 && value < normal.dot(oldEast),
+      "all three hotel planes retain positive direct incidence, with a real reduction versus the east sun",
     );
   }
   // Solar declination implied by this azimuth/elevation at Vancouver must lie
@@ -131,10 +163,13 @@ test("morning daylight faces the Howe hotel and preserves a physically plausible
     ) *
       180) /
     Math.PI;
-  assert.ok(Math.abs(declination) < 23.44);
+  assert.ok(Number.isFinite(declination) && Math.abs(declination) < 23.44);
   assert.equal(world.sun.intensity, 3.4);
+  assert.equal(world.sun.color.getHex(), 0xffefd9);
   assert.equal(world.ambient.intensity, 1.15);
+  assert.equal(world.ambient.color.getHex(), 0xc7deef);
   assert.equal(world.scene.environmentIntensity, 0.8);
+  assert.equal(world.scene.backgroundIntensity, 1);
 });
 
 test("weather transitions and multiple follow positions keep water aligned with the active sun", () => {

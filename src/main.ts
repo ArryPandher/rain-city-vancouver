@@ -9,6 +9,7 @@ import { CANADA_PLACE_CANOPY_OPTICS } from "./world/canada-place-canopy-glass";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { installBloomHighlightFilter } from "./rendering/bloom-highlight-filter";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { loadDetailedCharacter } from "./game/detailed-character";
@@ -40,6 +41,10 @@ class Game {
   renderer: T.WebGLRenderer;
   composer: EffectComposer;
   bloom: UnrealBloomPass;
+  private bloomEnabled = true;
+  private daylightBloomStrength = 0.04;
+  private bloomHighlightFilterEnabled = true;
+  private bloomHighlightFilter: ReturnType<typeof installBloomHighlightFilter>;
   contactOcclusion: ContactOcclusion;
   reflections?: SceneReflections;
   private carStreetReflections?: CarStreetReflections;
@@ -154,6 +159,7 @@ class Game {
       0.4,
       2.2,
     );
+    this.bloomHighlightFilter = installBloomHighlightFilter(this.bloom);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     const grade = new ShaderPass({
@@ -490,6 +496,13 @@ class Game {
               sunIntensity: this.world.sun.intensity,
               ambientIntensity: this.world.ambient.intensity,
               exposure: this.renderer.toneMappingExposure,
+              bloom: {
+                enabled: this.bloom.enabled,
+                highlightFilter: this.bloomHighlightFilter.enabled,
+                threshold: this.bloom.threshold,
+                strength: this.bloom.strength,
+                radius: this.bloom.radius,
+              },
               backgroundRotation: this.scene.backgroundRotation.toArray(),
               environmentRotation: this.scene.environmentRotation.toArray(),
               sharedSkyEnvironment:
@@ -598,6 +611,56 @@ class Game {
         " Local car reflections",
       );
       comparisons.append(carReflectionLabel);
+      for (const [name, initial, change] of [
+        [
+          "Bloom",
+          this.bloomEnabled,
+          (enabled: boolean) => {
+            this.bloomEnabled = enabled;
+            this.bloom.enabled = enabled && this.quality !== "low";
+          },
+        ],
+        [
+          "Limit daylight bloom highlights",
+          this.bloomHighlightFilterEnabled,
+          (enabled: boolean) => {
+            this.bloomHighlightFilterEnabled = enabled;
+            this.bloomHighlightFilter.setEnabled(
+              enabled && this.world.weather === "day",
+            );
+          },
+        ],
+      ] as const) {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = initial;
+        checkbox.addEventListener("change", () => {
+          this.finishFrameSample("bloom comparison changed");
+          change(checkbox.checked);
+        });
+        label.append(checkbox, ` ${name}`);
+        comparisons.append(label);
+      }
+      const bloomStrengthLabel = document.createElement("label");
+      const bloomStrengthSelect = document.createElement("select");
+      bloomStrengthSelect.setAttribute("aria-label", "Daylight bloom strength");
+      for (const strength of [0.02, 0.04, 0.08, 0.12]) {
+        const option = new Option(String(strength), String(strength));
+        option.selected = strength === this.daylightBloomStrength;
+        bloomStrengthSelect.add(option);
+      }
+      bloomStrengthSelect.addEventListener("change", () => {
+        this.finishFrameSample("daylight bloom strength changed");
+        this.daylightBloomStrength = Number(bloomStrengthSelect.value);
+        if (this.world.weather === "day")
+          this.bloom.strength = this.daylightBloomStrength;
+      });
+      bloomStrengthLabel.append(
+        "Daylight bloom strength ",
+        bloomStrengthSelect,
+      );
+      comparisons.append(bloomStrengthLabel);
       window.addEventListener(
         "pagehide",
         () => this.liveShadowCache.dispose(),
@@ -1093,7 +1156,11 @@ class Game {
     this.reflections?.setNight(w === "night");
     this.reflections?.invalidate();
     this.bloom.threshold = w === "night" ? 1.15 : w === "golden" ? 1.7 : 2.2;
-    this.bloom.strength = w === "night" ? 0.21 : 0.12;
+    this.bloom.strength =
+      w === "day" ? this.daylightBloomStrength : w === "night" ? 0.21 : 0.12;
+    this.bloomHighlightFilter.setEnabled(
+      this.bloomHighlightFilterEnabled && w === "day",
+    );
     try {
       localStorage.setItem("rain-city-weather", w);
     } catch {}
@@ -1123,7 +1190,7 @@ class Game {
     this.renderer.setPixelRatio(ratio);
     this.composer.setPixelRatio(ratio);
     this.renderer.shadowMap.enabled = q !== "low";
-    this.bloom.enabled = q !== "low";
+    this.bloom.enabled = this.bloomEnabled && q !== "low";
     this.contactOcclusion.enabled = q !== "low";
     this.contactOcclusion.updateGtaoMaterial({
       samples: q === "high" ? 16 : 8,

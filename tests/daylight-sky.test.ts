@@ -76,10 +76,30 @@ test("unclamped photographic HDR solar disc aligns with the daylight sun using o
     rotated.angleTo(sunOffset("day")) < 1e-7,
     "photographic and directional sun coincide",
   );
-  assert.ok(rotated.x > 0 && Math.abs(rotated.z) < 1e-8, "sun points east");
+  const azimuth =
+    ((Math.atan2(rotated.x, -rotated.z) * 180) / Math.PI + 360) % 360;
+  assert.ok(
+    Math.abs(azimuth - 135) < 1e-8,
+    "sun points southeast at 135 degrees",
+  );
+  assert.ok(rotated.x > 0 && rotated.z > 0);
+  assert.ok(Math.abs(rotated.x - rotated.z) < 1e-10);
+  assert.ok(
+    Math.abs(DAYLIGHT_SKY_ROTATION - (0.6112152105481597 - Math.PI / 4)) <
+      1e-12,
+    "rotate the retained photographic sun by exactly 45 degrees, not the horizon",
+  );
+  assert.ok(
+    sunOffset("day").distanceTo(
+      new T.Vector3(278 / Math.SQRT2, 149.61315223935466, 278 / Math.SQRT2),
+    ) < 1e-10,
+    "preserve the measured elevation and offset length while changing azimuth",
+  );
   assert.ok(Math.abs(source.rotationY - DAYLIGHT_SKY_ROTATION) < 1e-10);
-  assert.ok(new T.Vector3(...source.dayOffset).distanceTo(sunOffset("day")) < 1e-10);
+  assert.ok(
+    new T.Vector3(...source.dayOffset).distanceTo(sunOffset("day")) < 1e-10,
+  );
   t.diagnostic(
-    `${pixels} half-peak pixels; elevation ${elevation.toFixed(6)} degrees; peak ${peak.toFixed(2)}`,
+    `${pixels} half-peak pixels; azimuth ${azimuth.toFixed(6)} / elevation ${elevation.toFixed(6)} degrees; peak ${peak.toFixed(2)}`,
   );
 });

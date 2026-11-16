@@ -12,11 +12,11 @@
     0.5053299079803285
   ],
   "elevationDegrees": 28.288107223038665,
-  "rotationY": 0.6112152105481597,
+  "rotationY": -0.17418295284928853,
   "dayOffset": [
-    278,
+    196.57568516986024,
     149.61315223935466,
-    0
+    196.57568516986024
   ],
   "asset": "Rustig Koppie Pure Sky",
   "assetPage": "https://polyhaven.com/a/rustig_koppie_puresky",
@@ -25,7 +25,7 @@
   "licenseURL": "https://polyhaven.com/license",
   "credit": "Greg Zaal (original), Jarod Guest (sky edits) / Poly Haven",
   "measurement": "Luminance-weighted spherical centroid of unclamped pixels above half peak, solid-angle weighted; HDRLoader flipY accounted for. Vertical-axis rotation only, no horizon warp.",
-  "runtime": "Same texture and Y rotation for daylight sky and distant environment; luminance limited to 16 before upload. Direct sun and water direction match measured elevation and east azimuth. Existing North Shore backdrop is unchanged.",
-  "limits": "Generic photographic lighting with clear blue sky and sparse clouds, not Vancouver weather capture. Fixed summer-morning interpretation, not a date/time solar simulation; HUD 08:30 is authored. Local reflection probes preserve direction and recapture on weather changes.",
-  "history": "The retained afternoon-daylight.json / afternoon-sky.hdr filenames identify the earlier asset integration. On 2026-11-15, the daylight interpretation rotated 180 degrees around vertical to illuminate the east-facing Howe hotel. No HDR pixels, measured source direction, intensity or exposure changed; west-facing buildings now receive less direct sun."
+  "runtime": "Same texture and Y rotation for daylight sky and distant environment; luminance limited to16 before upload. Direct sun and water direction match measured elevation and authored southeast135-degree azimuth. Existing North Shore backdrop is unchanged.",
+  "limits": "Generic photographic lighting with clear blue sky and sparse clouds, not a Vancouver weather capture. Fixed daylight composition, not a date/time solar simulation; HUD08:30 is authored. Local reflection probes preserve direction and recapture on weather changes.",
+  "history": "The retained afternoon-daylight.json / afternoon-sky.hdr filenames identify the earlier asset integration. On 2026-11-15, the daylight interpretation rotated 180 degrees around vertical to illuminate the east-facing Howe hotel. No HDR pixels, measured source direction, intensity or exposure changed; west-facing buildings now receive less direct sun. The later accepted Howe daylight pass rotates the sun and HDR together another45 degrees to southeast135 degrees, preserving elevation and all lighting intensities. CPU rays found PwC blocking the east sun across most of325 Howe; native corner/Fairmont/west-concourse checks found useful street-face separation. Bloom was separately limited and reduced after the broader Fairmont view exposed an excessive halo."
 }
