@@ -619,7 +619,10 @@ export class CollisionWorld {
   roadHeight(road: Road, x: number, z: number) {
     // The new local finish must not feed back into the original road ribbons.
     // Their exact gutter band is replaced by matching supported geometry.
-    if (this.howeCordovaJunction?.containsRoadSupportBounds(x, z))
+    if (
+      this.howeCordovaJunction?.containsRoadSupportBounds(x, z) ||
+      this.robsonStreetEdge?.containsRoadSupportBounds(x, z)
+    )
       return this.groundHeight(x, z);
     if (this.canada && road.id && CANADA_PLACE_SERVICE_IDS.has(road.id))
       return this.existingGroundHeight(x, z);

@@ -714,6 +714,7 @@ export class World {
     const vehicleSurface = this.vehicleSurfaceSupport
       ? new VehicleRoadSurfaceBuilder()
       : undefined;
+    this.collision.robsonStreetEdge?.beginRoadContact();
     const b = new Batcher(this.root, 450),
       m = this.materials;
     this.cordovaPavement = createCordovaPavementMaterial(m);
@@ -901,6 +902,7 @@ export class World {
       // Copy only final clipped road triangles, before batching disposes them.
       // Sidewalks, curb faces and paint decals are not road contact layers.
       vehicleSurface?.add(surface);
+      this.collision.robsonStreetEdge?.captureRoadContact(surface, r);
       b.add(
         surface,
         seawall && r.surface === "paving_stones"
@@ -936,6 +938,7 @@ export class World {
       this.stats.roads++;
     }
     this.vehicleRoadSurface = vehicleSurface?.finish();
+    this.collision.robsonStreetEdge?.finishRoadContact();
     for (const group of b.groups.values())
       for (const geometry of group.geo) {
         const p = geometry.getAttribute("position"),

@@ -1,4 +1,8 @@
 import * as T from "three";
+import {
+  VehicleRoadSurfaceBuilder,
+  type VehicleRoadSurface,
+} from "./vehicle-road-surface";
 import { ROBSON_MOUND_OUTLINE } from "./robson-mound-site";
 import { ROBSON_MOUND_CIRCULATION_POLYGONS } from "./robson-mound-circulation";
 import { ROBSON_RINK_OPENINGS } from "./robson-rink-exterior-data";
@@ -388,6 +392,73 @@ export function createRobsonStreetEdgeSite(
         buckets.set(k, v);
       }
   }
+  const containsRoadSupportBounds = (x: number, z: number) => {
+    const [u, v] = local(x, z);
+    return u >= B.minU && u <= B.maxU && v >= B.minV && v <= B.maxV;
+  };
+  let roadBuilder: VehicleRoadSurfaceBuilder | undefined;
+  let roadContact: VehicleRoadSurface | undefined;
+  const beginRoadContact = () => {
+    roadBuilder = new VehicleRoadSurfaceBuilder();
+    roadContact = undefined;
+  };
+  const captureRoadContact = (geometry: T.BufferGeometry, road: Road) => {
+    if (
+      !roadBuilder ||
+      !(roads.includes(road) || road.kind === "footway" || road.kind === "path")
+    )
+      return;
+    const sourcePlan = Array.from({ length: road.pts.length / 2 }, (_, i) =>
+      local(road.pts[i * 2], road.pts[i * 2 + 1]),
+    );
+    const margin = roadWidth(road);
+    if (
+      Math.max(...sourcePlan.map((p) => p[0])) < B.minU - margin ||
+      Math.min(...sourcePlan.map((p) => p[0])) > B.maxU + margin ||
+      Math.max(...sourcePlan.map((p) => p[1])) < B.minV - margin ||
+      Math.min(...sourcePlan.map((p) => p[1])) > B.maxV + margin
+    )
+      return;
+    const position = geometry.getAttribute("position"),
+      ix = geometry.index;
+    if (!position) return;
+    const vertices: number[] = [];
+    const end = Math.min(
+      ix?.count ?? position.count,
+      geometry.drawRange.start + geometry.drawRange.count,
+    );
+    for (let i = geometry.drawRange.start; i + 2 < end; i += 3) {
+      const ids = [0, 1, 2].map((k) => (ix ? ix.getX(i + k) : i + k));
+      const points = ids.map((j) => [
+        position.getX(j),
+        position.getY(j),
+        position.getZ(j),
+      ]);
+      const plan = points.map((p) => local(p[0], p[2]));
+      if (
+        Math.max(...plan.map((p) => p[0])) < B.minU ||
+        Math.min(...plan.map((p) => p[0])) > B.maxU ||
+        Math.max(...plan.map((p) => p[1])) < B.minV ||
+        Math.min(...plan.map((p) => p[1])) > B.maxV
+      )
+        continue;
+      // Keep only the actual visible upward floor, not undersides or caps.
+      const [a, b, c] = points;
+      if ((b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]) <= 1e-9)
+        continue;
+      vertices.push(...points.flat());
+    }
+    const copy = new T.BufferGeometry().setAttribute(
+      "position",
+      new T.Float32BufferAttribute(vertices, 3),
+    );
+    roadBuilder.add(copy);
+    copy.dispose();
+  };
+  const finishRoadContact = () => {
+    roadContact = roadBuilder?.finish();
+    roadBuilder = undefined;
+  };
   const height = (x: number, z: number) => {
     for (const {
       points: [a, b, c],
@@ -398,9 +469,22 @@ export function createRobsonStreetEdgeSite(
       if (u >= -1e-8 && v >= -1e-8 && u + v <= 1 + 1e-8)
         return u * a[1] + v * b[1] + (1 - u - v) * c[1];
     }
+    // The final road triangles supply on-foot contact only. Their construction
+    // samples groundHeight, never this finish, so build order cannot raise them.
+    // Protected plaza/bike/service routes and garden/wells keep their providers.
+    if (
+      containsRoadSupportBounds(x, z) &&
+      !inside(x, z, protectedGarden) &&
+      !inside(x, z, protectedPlan)
+    )
+      return roadContact?.height(x, z);
     return undefined;
   };
   return {
+    containsRoadSupportBounds,
+    beginRoadContact,
+    captureRoadContact,
+    finishRoadContact,
     coverage: union(Object.values(masks)),
     protectedGarden,
     triangles,
