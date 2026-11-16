@@ -1,6 +1,8 @@
-# Diagnostic North Shore satellite-derived colour
+# Retained North Shore satellite-derived colour
 
-The debug DEM can use a bounded, georeferenced colour crop of **Copernicus Sentinel-2 scene S2A_10UDV_20240830_0_L2A**, captured **2024-08-30T19:30:53.893Z**. This is satellite-derived colour, **not measured diffuse albedo**: baked shadows, seasonal appearance and source display processing remain. No guessed panorama camera, artificial forest filling, newer EOX non-commercial imagery, or whole-scene download is used.
+This first diagnostic has been superseded at runtime by the [licensed DNV2013 forward-slope orthophoto](north-shore-ortho.md). Its asset, provenance and reproduction remain preserved.
+
+The earlier debug DEM used a bounded, georeferenced colour crop of **Copernicus Sentinel-2 scene S2A_10UDV_20240830_0_L2A**, captured **2024-08-30T19:30:53.893Z**. This is satellite-derived colour, **not measured diffuse albedo**: baked shadows, seasonal appearance and source display processing remain. No guessed panorama camera, artificial forest filling, newer EOX non-commercial imagery, or whole-scene download is used.
 
 ## Source, rights and reproducibility
 

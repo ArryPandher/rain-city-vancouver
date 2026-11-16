@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "year": 2013,
+  "scene": "District of North Vancouver Orthoimagery 2013",
+  "capture": "Urban 2013-05-03; alpine 2013-06-15",
+  "bounds": {
+    "west": -123.128,
+    "east": -122.876,
+    "south": 49.352,
+    "north": 49.414
+  },
+  "width": 2048,
+  "height": 504,
+  "projection": "EPSG:4326 north-up pixel-centre resampling from NAD83 UTM10N (EPSG:26910) tile cache",
+  "level": 1,
+  "sourceResolution": 10.583354500042335,
+  "tileOrigin": {
+    "x": 474584,
+    "y": 5480125
+  },
+  "records": [
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/2/5",
+      "bytes": 8325,
+      "sha256": "fec0c7b36f6e97261585e64f0220f3cc25325e188f179dcb66dd723e69bd0409",
+      "row": 2,
+      "col": 5
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/2/6",
+      "bytes": 21418,
+      "sha256": "55cda1a872f7dab5be78aa33601b70896b542281db89474455e75eda29cdcb2a",
+      "row": 2,
+      "col": 6
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/2/7",
+      "bytes": 23826,
+      "sha256": "a507e2dac60104b25ea3cb3144158d35902e99dd0f1333274fa89b70b33e972a",
+      "row": 2,
+      "col": 7
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/2/8",
+      "bytes": 19534,
+      "sha256": "230991152f4b2b637a8cc0bcb328631833fac8f539dd02dae7d36f7fa2bd2d36",
+      "row": 2,
+      "col": 8
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/2/9",
+      "bytes": 21627,
+      "sha256": "49ef571418e2e7dab58fdbf554d4719e7256f589488abd636dd98dcd290408d3",
+      "row": 2,
+      "col": 9
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/2/10",
+      "bytes": 30178,
+      "sha256": "64878159f134b5d32f7f3c34ba195ff88fd2e16d9e22f0e69c80947692538056",
+      "row": 2,
+      "col": 10
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/2/11",
+      "bytes": 35340,
+      "sha256": "9709f3baee9ba8ec7f326011a60d58c7a00381bedff15b9b9622e23d75697703",
+      "row": 2,
+      "col": 11
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/2/12",
+      "bytes": 18254,
+      "sha256": "c8f5fb96606fdfcb3c3ebd9bfe22afe2a26c4fdebd2f6dfc77ef56d637fd66c3",
+      "row": 2,
+      "col": 12
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/3/5",
+      "bytes": 13681,
+      "sha256": "565d830689752055ed7d02af3787196a3338827723aab0882682305f96eb98a7",
+      "row": 3,
+      "col": 5
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/3/6",
+      "bytes": 37038,
+      "sha256": "bc6a41f54b0204eaa0098ba375cd406f1cf0540408c9d01a8fc723dcbdf4cc8b",
+      "row": 3,
+      "col": 6
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/3/7",
+      "bytes": 46559,
+      "sha256": "0be4e5146643d61ed6ec1aa51a3e9fd31d3a30812d34aca1e9e130c52d3890b4",
+      "row": 3,
+      "col": 7
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/3/8",
+      "bytes": 41549,
+      "sha256": "eb7764d843cadc21ed816b521072559d92ec75e85c0820518e350ceff5c95fd4",
+      "row": 3,
+      "col": 8
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/3/9",
+      "bytes": 40145,
+      "sha256": "7c26f794a91e677c6173912f01937a736e133b04f3f9ebd111723fda4077f5e0",
+      "row": 3,
+      "col": 9
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/3/10",
+      "bytes": 42608,
+      "sha256": "07057379682c4e56df027d8b50f27891b1643b1be95108e429de12b88f5a3c0d",
+      "row": 3,
+      "col": 10
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/3/11",
+      "bytes": 44283,
+      "sha256": "95a50d8ad6e3bfb3ea65e1ed249c357ecbc3628482c88eff8b793ac8460b7b3f",
+      "row": 3,
+      "col": 11
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/3/12",
+      "bytes": 24168,
+      "sha256": "5313939ec1f8e72d13eae8a23e1f91bf8e81911fb0a8a89cc0b205c042959fe7",
+      "row": 3,
+      "col": 12
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/4/5",
+      "bytes": 16181,
+      "sha256": "e3b419bf9a20a43b80ba2bc29738417b1ce7f26950877e83aee227f79c6c7345",
+      "row": 4,
+      "col": 5
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/4/6",
+      "bytes": 40631,
+      "sha256": "72a7f3b40ee0005bec27199a9d6b1c24c763aed5f7b43377e596a63670d84af5",
+      "row": 4,
+      "col": 6
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/4/7",
+      "bytes": 42495,
+      "sha256": "576adaa4344c33a6295a3c5567c0688f8c46290e535f61d9b45c52e11f075efa",
+      "row": 4,
+      "col": 7
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/4/8",
+      "bytes": 40019,
+      "sha256": "4c1beb8d44aa0541a2514761812a0761559ae46b4186f2f81c9e7e43c5942a0b",
+      "row": 4,
+      "col": 8
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/4/9",
+      "bytes": 38374,
+      "sha256": "5681ee3120f2181ee9e2bdc82ac81b921e69d6c872ee154b99f32eac620c3fed",
+      "row": 4,
+      "col": 9
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/4/10",
+      "bytes": 41645,
+      "sha256": "601b52fe5c580c449beb7bb28728ffb9f507b8edc379d412f8b0dee018a33495",
+      "row": 4,
+      "col": 10
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/4/11",
+      "bytes": 38783,
+      "sha256": "d03d599a12bbf15482c43d4e082bbc62aa9f9d27245f7888a0bb28b97a7e7a32",
+      "row": 4,
+      "col": 11
+    },
+    {
+      "url": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2013/MapServer/tile/1/4/12",
+      "bytes": 15093,
+      "sha256": "f5891b341a2402aedb879598acbb3f6a6cacc2f5ca065126f93f51e9ff524975",
+      "row": 4,
+      "col": 12
+    }
+  ],
+  "sourceBytes": 741754,
+  "licence": "Open Government Licence - North Vancouver",
+  "licenceUrl": "https://geoweb.dnv.org/data/",
+  "metadataUrl": "https://geoweb.dnv.org/data/metadata.php?dataset=ImgOrthoimagery2013",
+  "attribution": "Contains information licensed under the Open Government Licence - North Vancouver.",
+  "edgeBlendMetres": 300,
+  "exteriorMissingPixels": 38773,
+  "description": "Orthophoto-derived colour, not measured albedo. June2013 summit snow and baked lighting retained. Neutral fallback beyond crop and exterior coverage.",
+  "texture": "public/textures/north-shore-dem/dnv-2013.webp",
+  "textureBytes": 643400,
+  "textureSha256": "737206b9ae0945c5f5914601d3a9e7b52abb58933efb02c8d02f2da50f56ca5e"
+}

@@ -53,7 +53,7 @@ test("World.mountains keeps default photo and requires both debug and terrain=de
           "one local satellite colour map, no overlapping photographic plane",
         );
         assert.ok(
-          urls[0].endsWith("textures/north-shore-dem/sentinel-2024.webp"),
+          urls[0].endsWith("textures/north-shore-dem/dnv-2013.webp"),
         );
         assert.equal(world.northShore, undefined);
         const diagnostic = world.northShoreDiagnostics();

@@ -1,6 +1,6 @@
 import * as T from "three";
 import { ungeo } from "./data";
-import data from "./north-shore-imagery-data.json";
+import data from "./north-shore-ortho-data.json";
 export const NORTH_SHORE_IMAGERY = data;
 
 /** Reprojected north-up geographic crop, with image north at texture v=1. */
@@ -44,10 +44,9 @@ export function loadNorthShoreImagery(
   group.userData.imageryStatus = "loading";
   const base = import.meta.env?.BASE_URL ?? "/";
   new T.TextureLoader().load(
-    `${base}textures/north-shore-dem/sentinel-2024.webp`,
+    `${base}textures/north-shore-dem/dnv-2013.webp`,
     (texture) => {
-      texture.name =
-        "North Shore Copernicus Sentinel-2 2024-08-30 geographic colour";
+      texture.name = "North Shore DNV orthophoto 2013 geographic colour";
       texture.colorSpace = T.SRGBColorSpace;
       texture.anisotropy = 4;
       texture.wrapS = texture.wrapT = T.ClampToEdgeWrapping;
@@ -56,7 +55,7 @@ export function loadNorthShoreImagery(
       texture.generateMipmaps = true;
       material.map = texture;
       material.name =
-        "North Shore DEM Copernicus colour with neutral coverage fallback";
+        "North Shore DEM DNV orthophoto colour with neutral coverage fallback";
       material.needsUpdate = true;
       group.userData.imageryStatus = "ready";
     },

@@ -43,8 +43,9 @@ and the live map width/height/colour space. It reads current resources on demand
 so `loading`, `ready` and `fallback` reflect asynchronous image completion rather
 than a construction-time snapshot. The parent render-profile payload can include
 this value as `northShore`; the method does not alter rendering or the URL gate.
-The DEM map is named for the 2024-08-30 Copernicus source. A ready diagnostic should
-report 28 meshes and a 1280×815 sRGB map. Neutral coverage outside that image remains
+The current DEM map is named for the licensed DNV2013 orthophoto source. A ready diagnostic should
+report 28 meshes and a 2048×504 sRGB map. The earlier Copernicus map remains preserved;
+see the [current crop and limits](north-shore-ortho.md). Neutral coverage outside that image remains
 intentional; a ready map does not mean every visible ridge has source coverage.
 
 Native diagnostic views at Ironworkers on 2026-11-16 showed correct ridge relief
