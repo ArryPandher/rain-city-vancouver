@@ -115,6 +115,9 @@ export class Materials {
         requests: 0,
         sourceLoads: 0,
         currentURLs: 0,
+        readyCount: 0,
+        pendingURLs: [] as string[],
+        failedURLs: [] as string[],
       }
     );
   }
