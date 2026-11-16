@@ -4,6 +4,7 @@ import { Batcher } from "./geometry";
 import { landmarkSurfaceUV } from "./landmark-surfaces";
 import entry from "./gallery-rear-entry-data.json";
 import { addGalleryEntryCornice } from "./gallery-entry-cornice";
+import { createGalleryAshlarMaterial } from "./gallery-ashlar-material";
 
 // Two nearly collinear mapped rear edges form one continuous nine-bay elevation.
 function edge(a: number[], b: number[], bays: number) {
@@ -103,6 +104,7 @@ export function addGalleryFacade(
     base = materials.get("foundation"),
     glass = materials.get("glass");
   if (!stone || !base || !glass) return [];
+  const wallStone = createGalleryAshlarMaterial(stone);
   const root = new T.Group();
   root.name = "Gallery southeast wing and engaged entrance";
   root.rotation.y = -entry.angle;
@@ -170,7 +172,7 @@ export function addGalleryFacade(
       );
     }
     for (const foundation of [true, false]) {
-      const mat = foundation ? base : stone,
+      const mat = foundation ? base : wallStone,
         end = length,
         lo = foundation ? 0 : 3.2,
         hi = foundation ? 3.2 : 13.15;
