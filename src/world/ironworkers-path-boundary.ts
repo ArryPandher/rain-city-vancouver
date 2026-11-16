@@ -506,6 +506,7 @@ export function createIronworkersPathBoundary(
       plane = new T.PlaneGeometry(1, 1),
       path = new T.Mesh(geometry([...top, ...sides]), concrete);
     path.position.set(6800, 0, -1600);
+    path.receiveShadow = true;
     group.add(path);
     // Match the distributed physical members, not the nominal pitch rounded
     // before the integer count. Each filtered cell covers one full interval.
@@ -528,6 +529,7 @@ export function createIronworkersPathBoundary(
       [rails, steel],
     ] as const) {
       const mesh = new T.InstancedMesh(unit, mat, list.length);
+      mesh.castShadow = mesh.receiveShadow = true;
       list.forEach((m, i) => mesh.setMatrixAt(i, m.matrix));
       mesh.computeBoundingSphere();
       group.add(mesh);
@@ -548,6 +550,10 @@ export function createIronworkersPathBoundary(
       const near = new T.InstancedMesh(unit, steel, list.length),
         far = new T.InstancedMesh(plane, farMaterial, list.length),
         translation = new T.Matrix4().makeTranslation(-x, -y, -z);
+      near.castShadow = near.receiveShadow = true;
+      // Single-sample shadow maps cannot reproduce the far MSAA coverage.
+      // Only visible near physical boxes cast; never a full-pitch proxy sheet.
+      far.castShadow = far.receiveShadow = false;
       list.forEach((m, i) => {
         near.setMatrixAt(
           i,
