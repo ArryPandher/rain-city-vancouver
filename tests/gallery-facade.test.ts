@@ -145,8 +145,8 @@ test("actual gallery source replacement preserves landing and all other material
   t.diagnostic(JSON.stringify({ removed }));
   assert.deepEqual(removed, {
     foundation: 210 + 144,
-    glass: 54,
-    stone: 380,
+    glass: 54 + 20, // Exact Hooper east-face panes.
+    stone: 380 + 210, // Exact Hooper east-face wall/reveals.
     copper: 0,
     trim: 712,
   });
@@ -212,13 +212,13 @@ test("actual gallery source replacement preserves landing and all other material
 test("added geometry is finite, bounded, economical and has outward sill faces", async (t) => {
   const { root, chunks } = await scene();
   let triangles = 0;
-  assert.equal(chunks.length, 9);
+  assert.equal(chunks.length, 10);
   for (const mesh of chunks) {
     const p = mesh.geometry.getAttribute("position"),
       normal = mesh.geometry.getAttribute("normal");
     for (let i = 0; i < p.count; i++) {
       assert.ok(Number.isFinite(p.getX(i) + p.getY(i) + p.getZ(i)));
-      assert.ok(p.getY(i) >= -0.081 && p.getY(i) <= 16.751);
+      assert.ok(p.getY(i) >= -0.081 && p.getY(i) <= 18.0001);
       // The exterior west edge and fitted five-crown envelope are
       // the sole extension of the prior portico/bistro construction bounds.
       const westTerrace =
@@ -227,14 +227,21 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
         p.getZ(i) >= 34.499 &&
         p.getZ(i) <= 52.901 &&
         p.getY(i) <= 13.161;
+      const hooper =
+        p.getX(i) > -9.25 &&
+        p.getX(i) < -8.2 &&
+        p.getZ(i) >= 33.69 &&
+        p.getZ(i) < 49.38 &&
+        p.getY(i) >= 3.1999;
       assert.ok(
-        westTerrace ||
+        hooper ||
+          westTerrace ||
           (p.getX(i) > -10.951 &&
             p.getX(i) < 20 &&
             p.getZ(i) > 22 &&
             p.getZ(i) < 33.4),
       );
-      if (!westTerrace && (p.getZ(i) >= 25 || p.getY(i) < -0.001))
+      if (!hooper && !westTerrace && (p.getZ(i) >= 25 || p.getY(i) < -0.001))
         assert.ok(
           p.getX(i) >= -8.831 &&
             p.getX(i) <= 19.001 &&
@@ -249,7 +256,7 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
   }
   t.diagnostic(`${triangles} added triangles in ${chunks.length} draws`);
   assert.ok(
-    triangles < 33500,
+    triangles < 36500,
     `${triangles} added triangles including 13,006-triangle west planting and frontage`,
   );
   const hit = wingRay((0.5 * GALLERY_FACADE.length) / 6, 4.25, root)[0];

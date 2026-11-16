@@ -5,7 +5,12 @@ import { addGalleryWestTerrace } from "./gallery-west-terrace";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import { addGalleryBistro } from "./gallery-bistro";
 import { ArchitecturalMesh, type Vertex3 } from "./architectural-mesh";
-import { Batcher } from "./geometry";
+import { Batcher, bakeGeometry } from "./geometry";
+import {
+  addGalleryHooperFacade,
+  galleryHooperSourceCompatible,
+  removeOriginalGalleryHooperFace,
+} from "./gallery-hooper-facade";
 import { landmarkSurfaceUV } from "./landmark-surfaces";
 import entry from "./gallery-rear-entry-data.json";
 import { addGalleryEntryCornice } from "./gallery-entry-cornice";
@@ -96,6 +101,11 @@ export function galleryFacadeCompatible(root: T.Object3D) {
       object.geometry.getIndex()?.count !== counts[1]
     )
       valid = false;
+    if (name === "stone" || name === "glass") {
+      const baked = bakeGeometry(object.geometry, object.matrixWorld);
+      if (!galleryHooperSourceCompatible(baked, name)) valid = false;
+      baked.dispose();
+    }
     found.add(name);
   });
   return valid && found.size === 4;
@@ -107,6 +117,7 @@ export function galleryFacadeCompatible(root: T.Object3D) {
 export function replaceGalleryWingFaces(g: T.BufferGeometry, material: string) {
   if (material === "trim") return removeOriginalGalleryPortico(g, material);
   if (!["stone", "foundation", "glass"].includes(material)) return 0;
+  const removedHooper = removeOriginalGalleryHooperFace(g, material);
   const removedStairs = removeOriginalGalleryStairs(g, material);
   const p = g.getAttribute("position"),
     ix = g.getIndex(),
@@ -149,7 +160,7 @@ export function replaceGalleryWingFaces(g: T.BufferGeometry, material: string) {
     else kept.push(...ids);
   }
   if (removed) g.setIndex(kept);
-  return removed + removedStairs;
+  return removed + removedStairs + removedHooper;
 }
 
 export function addGalleryFacade(
@@ -316,6 +327,7 @@ export function addGalleryFacade(
       }
     }
   }
+  addGalleryHooperFacade(mesh, wallStone, frame, sourceGlass);
   addGalleryPortico(mesh, stone);
   addGalleryEntryCornice(mesh, stone);
   addGalleryStairFraming(mesh, base, frame);

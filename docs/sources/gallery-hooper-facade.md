@@ -1,0 +1,27 @@
+# Gallery Hooper east-end facade
+
+This correction replaces the generic five-bay wall visible above the five conifers in the left of `artifacts/local/gallery-concrete-public-scene.png`. It preserves the existing Gallery arrival, terrace, stairs, planting, building footprint, roof silhouette and navigation. It does not add a freestanding portico.
+
+## Source registration
+
+- Dietmar Rabich, [Vancouver Art Gallery, 2022, 1923](https://commons.wikimedia.org/wiki/File:Vancouver_(BC,_Canada),_Art_Gallery_--_2022_--_1923.jpg), cached `artifacts/local/robson-realism-reference/rabich-gallery-2022-1923.jpg` (3840 × 2880). The courtyard-facing gabled end behind the UBC trees shows **three wide window bays in two rows, four engaged flat Ionic pilasters, a substantial horizontal entablature and raking cornice**. Research crop `gallery-hooper-bay-detail.jpg` is source pixels x1520–2540, y1510–2300. The projecting portico farther left belongs to the other elevation and is not copied here.
+- [Gallery official exterior photograph, 2023](https://www.vanartgallery.bc.ca/wp-content/uploads/2025/07/VAG_exterior_2023_15-5-edited-1.jpg), cached `vag-official-robson-exterior.jpg`, corroborates mass/stone context, but planting obscures the bay count. The 2022 image supplies that count.
+- Cached aerial `gallery-west-plan-registration.png` supports the orthogonal roof ridge at this gabled end. This is mapped Hooper hall part 380105931, not the main rear portico or long-wing end near v63.
+- Licensed Codriver CC BY 4.0 [Gallery geometry source](https://github.com/codriver-io/codriver-3d-assets/blob/main/src/peregrine/landmarks/top-cities/vancouver-art-gallery/geometry.js) and retained `public/models/vancouver/vancouver-art-gallery.glb`, SHA256 `bb1698be78e258a3da8bb0fe8953d8561748be9925dc9011be10fe49584f7a32`. Runtime uses original authored geometry and existing materials, no photographic texture or new asset.
+
+In the existing Gallery source frame (rotation 0.7769452205671321), the selected edge runs from u/v (−8.820, 33.806) to (−8.756, 49.355), length 15.5491 m, outward approximately +u. Wall datum 3.2–13.15 m and retained gable spring/apex 14/18 m come from the asset. The measured source identity manifest records every selected decoded coordinate and ordered triangle: stone vertices 4956–5267 (210 triangles), glass vertices 976–1015 (20 triangles). Global compatibility checks validate all of these after decoding/baking before allowing the facade operation; material counts alone are insufficient. A same-count coordinate change or missing selected triangle fails closed.
+
+## Authored interpretation and limits
+
+Three bays are equally spaced between four engaged pilasters. Windows are 2.65 m wide, retaining source row elevations 4.35–7.85 / 9.05–12.2 m. The original source's five narrow 1.65 m openings and heavy pale crosses are removed completely. New closed glass lies 0.38 m behind the wall, with physical four-sided reveals, slim dark sashes and projecting sills/architraves. Existing global-environment source glass is reused, avoiding the other elevation's direction-specific local probe.
+
+The 0.76 m flat pilaster shafts project 0.26 m; stepped capitals reach 0.43 m and the entablature reaches 0.53 m. Small modeled volutes suggest the visible Ionic order. Raking profiles stay inside the retained triangle and finish at its unchanged 18 m apex. These widths/projections/profile sections are bounded photographic estimates, not survey measurements. Sculpted ornament, inscription and exact historic capital carving are not reproduced. The source body's approximate row heights and the slight wall/gable plan offset remain. Native comparison is still required to assess proportions and reflection appearance at the saved ordinary Gallery arrival.
+
+## Geometry and cost evidence
+
+- Exactly 210 original stone + 20 glass triangles removed; every nonselected ordered triangle and every original vertex value remains identical, including foundation, roof/copper, trim, wall ends and opposite facades.
+- New isolated assembly: **2,998 triangles**, three existing material roles. Bounds u −9.193..−8.2260, v33.704..49.3652, y3.2000..18.0. Source glass creates one additional batch in the combined facade; no material/texture/probe/light allocation is added by this module.
+- Complete Gallery detail assembly: **35,190 triangles / 10 draws**, previously 32,192 / 9. Net scene change including source removal: **+2,768 triangles / +1 draw**. Counts are submitted geometry counts, not a performance benchmark.
+- Focused decoded-asset tests establish exact source cuts, fail-closed/idempotent behavior, six single glass hits at 0.38 m without old panes, all four outward-visible reveals, four engaged shaft hits, projected horizontal/raking cornice hits, finite/bounded geometry and retained preexisting facade/stair checks.
+
+Expected visible benefit: a legible three-bay classical end elevation with actual shadow-producing pilaster/cornice hierarchy, replacing the broad blank wall and five generic narrow window stacks in the same walking view. Lighting, exposure, materials elsewhere and navigation are unchanged. No build or native acceptance is claimed by these source checks.
