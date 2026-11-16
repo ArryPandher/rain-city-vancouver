@@ -1,0 +1,18 @@
+[
+  {
+    "file": "textures/gallery-hedge/color.webp",
+    "source": "https://polyhaven.com/a/shrub_04",
+    "author": "Rico Cilliers",
+    "license": "CC0-1.0",
+    "sha256": "5143c6a2dac977f65670a51562131809c71a4365cfa5cd72375f4c23a4bda9a3",
+    "changes": "Byte-identical embedded texture extracted from retained shrub_04.glb; seven individual leaf regions reused. No species identity asserted."
+  },
+  {
+    "file": "textures/gallery-hedge/normal.webp",
+    "source": "https://polyhaven.com/a/shrub_04",
+    "author": "Rico Cilliers",
+    "license": "CC0-1.0",
+    "sha256": "59efbed386a7516cc3666e339a84aab971a744511787b7ecff88685751700131",
+    "changes": "Byte-identical embedded texture extracted from retained shrub_04.glb; seven individual leaf regions reused. No species identity asserted."
+  }
+]

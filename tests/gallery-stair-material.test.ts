@@ -105,8 +105,8 @@ test("actual facade assigns the new finish only to the complete unchanged metric
   assert.equal(selected.length, 1);
   assert.equal(
     chunks.length,
-    10,
-    "one Hooper source-glass batch, one stair finish batch, two bistro batches and two west foliage materials; no per-step draws",
+    11,
+    "one hedge leaf batch, one Hooper source-glass batch, one stair finish batch, two bistro batches and two west foliage materials; no per-step draws",
   );
   assert.ok(
     chunks.some((m) => m.material === base),

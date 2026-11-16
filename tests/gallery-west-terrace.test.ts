@@ -370,7 +370,7 @@ test("actual route and complete stair mouth remain clear with grounded supports 
   }
 });
 
-test("registered finite camera spheres preserve corners and compact five-batch budget", () => {
+test("registered finite camera spheres preserve corners and compact six-batch budget", () => {
   assert.equal(
     blockedA(D.minU - 0.2, D.frontV + 0.2, 0.25, 2.8 + D.datum, true),
     false,
@@ -381,10 +381,10 @@ test("registered finite camera spheres preserve corners and compact five-batch b
   );
   assert.equal(blocked(NaN, 27, 0.36, 0, false), false);
   const { chunks } = assembly();
-  assert.equal(chunks.length, 5);
+  assert.equal(chunks.length, 6);
   assert.equal(
     chunks.reduce((n, m) => n + m.geometry.index!.count / 3, 0),
-    13006,
+    13006 + 17180, // One merged clipped hedge leaf surface.
   );
   for (const m of chunks)
     for (const a of Object.values(m.geometry.attributes))

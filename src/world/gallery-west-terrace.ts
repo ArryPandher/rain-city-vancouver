@@ -1,4 +1,9 @@
 import * as T from "three";
+import type { Materials } from "./materials";
+import {
+  galleryHedgeFoliageGeometry,
+  createGalleryHedgeMaterial,
+} from "./gallery-hedge-foliage";
 import {
   createGalleryWestFoliageMaterial,
   galleryWestSprayGeometry,
@@ -155,6 +160,7 @@ export function addGalleryWestTerrace(
   metal: T.Material,
   glass: T.Material,
   concrete: T.Material = stone,
+  textureLibrary?: Pick<Materials, "texture">,
 ) {
   const leaf = new T.MeshStandardMaterial({
     name: "Gallery west columnar conifers and hedge",
@@ -173,7 +179,14 @@ export function addGalleryWestTerrace(
   mesh.add(registered(galleryWestPavingGeometry()), stone);
   for (const b of galleryWestTerraceBoxes())
     mesh.add(registered(galleryWestBoxGeometry(b)), materials[b.role]);
-  mesh.add(registered(galleryWestHedgeGeometry()), leaf);
+  const originalHedge = galleryWestHedgeGeometry();
+  const hedge = galleryHedgeFoliageGeometry(originalHedge);
+  originalHedge.dispose();
+  mesh.add(registered(hedge.backing), leaf);
+  mesh.add(
+    registered(hedge.leaves),
+    createGalleryHedgeMaterial(textureLibrary),
+  );
   const sprays = createGalleryWestFoliageMaterial();
   for (let i = 0; i < D.trees.length; i++) {
     mesh.add(registered(galleryWestConiferGeometry(i, 0.68)), leaf);
