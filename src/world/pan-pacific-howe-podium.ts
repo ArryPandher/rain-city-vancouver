@@ -334,35 +334,99 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
     -D.recess - 0.46,
     -D.recess + 0.04,
   );
+  // Only the narrow lower window strip is glazing. The upper gallery in
+  // Handford20 is predominantly pale panelled wall, not a curtain wall ribbon.
   for (let i = 1; i < D.paneBoundaries.length; i++) {
     const l = D.paneBoundaries[i - 1],
       r = D.paneBoundaries[i];
-    for (const [low, high] of [
-      [9.12, 10.58],
-      [11.02, 13.48],
-    ]) {
-      face(
-        "glass",
-        "lower",
-        l + 0.0006,
-        r - 0.0006,
-        low,
-        high,
-        -D.recess - 0.025,
-      );
-      panes++;
-    }
+    face(
+      "glass",
+      "lower",
+      l + 0.0006,
+      r - 0.0006,
+      9.12,
+      10.58,
+      -D.recess - 0.025,
+    );
+    panes++;
     box(
       "frame",
       "lower",
       Math.max(0, l - 0.0006),
       Math.min(1, l + 0.0006),
       9.12,
-      13.48,
+      10.58,
       -D.recess - 0.06,
       -D.recess + 0.05,
     );
   }
+  const wall = D.galleryWall,
+    opening = wall.recess;
+  const wallSections: [number, number, number, number][] = [
+    [0, opening.start, wall.bottom, wall.top],
+    [opening.end, 1, wall.bottom, wall.top],
+    [opening.start, opening.end, wall.bottom, opening.bottom],
+    [opening.start, opening.end, opening.top, wall.top],
+  ];
+  for (const [l, r, low, high] of wallSections) {
+    // A closed pale substrate behind 18mm joints; 65mm face-to-joint depth
+    // makes the narrow panel rhythm read through actual occlusion and light.
+    box("soffit", "lower", l, r, low, high, -D.recess - 0.1, -D.recess - 0.025);
+    const cuts = [l, ...wall.panelBoundaries.filter((u) => u > l && u < r), r];
+    for (let i = 1; i < cuts.length; i++) {
+      const gap = 0.009 / LENGTH;
+      box(
+        "concrete",
+        "lower",
+        cuts[i - 1] + gap,
+        cuts[i] - gap,
+        low,
+        high,
+        -D.recess - 0.026,
+        -D.recess + 0.04,
+      );
+    }
+  }
+  // Only this bounded dark upper rectangle is confidently visible. Its
+  // neutral opaque recessed closure does not invent a glazed room or door.
+  box(
+    "backing",
+    "lower",
+    opening.start,
+    opening.end,
+    opening.bottom,
+    opening.top,
+    -D.recess - 0.39,
+    -D.recess - 0.36,
+  );
+  for (const [l, r] of [
+    [opening.start, opening.start + 0.045 / LENGTH],
+    [opening.end - 0.045 / LENGTH, opening.end],
+  ])
+    box(
+      "concrete",
+      "lower",
+      l,
+      r,
+      opening.bottom,
+      opening.top,
+      -D.recess - 0.36,
+      -D.recess + 0.04,
+    );
+  for (const [low, high] of [
+    [opening.bottom, opening.bottom + 0.045],
+    [opening.top - 0.045, opening.top],
+  ])
+    box(
+      "concrete",
+      "lower",
+      opening.start,
+      opening.end,
+      low,
+      high,
+      -D.recess - 0.36,
+      -D.recess + 0.04,
+    );
   // Shallow intermediate terrace slab visible in the reference, supported by
   // the same columns/back wall; this is above the retained PIER, not its copy.
   box(

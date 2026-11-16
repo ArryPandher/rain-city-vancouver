@@ -80,7 +80,7 @@ test("bounded merged geometry closes lower and upper apertures behind actual gla
   assert.ok(parts.stats.triangles < 20_000, JSON.stringify(parts.stats));
   assert.ok(parts.stats.panes > 200);
   const cases: [number, number, "lower" | "middle" | "upper"][] = [
-    [0.31, 12.03, "lower"],
+    [0.31, 9.8, "lower"],
     [0.148, 16.1, "middle"],
     [0.51, 19.1, "middle"],
     [0.61, 21.1, "upper"],
@@ -179,4 +179,41 @@ test("each cut end has a full height physical return and all batches are finite"
     assert.ok(Array.from(g.attributes.normal.array).every(Number.isFinite));
     assert.equal(g.attributes.position.count, g.attributes.uv.count);
   }
+});
+
+test("upper gallery is pale closed panelling with only the photo-bounded dark recess", () => {
+  for (const u of [0.08, 0.25, 0.4, 0.6, 0.78, 0.92]) {
+    const r = ray(u, 12.5);
+    assert.equal(
+      r.intersectObject(mesh("glass")).length,
+      0,
+      "no invented upper glass ribbon",
+    );
+    const stone = r.intersectObject(mesh("concrete"));
+    const substrate = r.intersectObject(mesh("soffit"));
+    assert.ok(
+      stone.length + substrate.length > 0,
+      `closed pale upper wall at ${u}`,
+    );
+  }
+  const opening = D.galleryWall.recess;
+  const r = ray((opening.start + opening.end) / 2, 12.5);
+  assert.equal(r.intersectObject(mesh("glass")).length, 0);
+  assert.equal(r.intersectObject(mesh("concrete")).length, 0);
+  const back = r.intersectObject(mesh("backing"));
+  assert.ok(back.length > 0);
+  assert.ok(Math.abs(back[0].distance - (4 + D.recess + 0.36)) < 0.002);
+  assert.ok(
+    opening.end - opening.start < 0.02,
+    "bounded recess cannot replace whole gallery",
+  );
+  assert.ok(
+    D.galleryWall.panelBoundaries.length > 70,
+    "fine panel rhythm differs from large lower panes",
+  );
+  // Lower gallery windows and traced upper podium apertures remain glazed.
+  assert.ok(ray(0.31, 9.8).intersectObject(mesh("glass")).length > 0);
+  assert.ok(
+    ray(0.15, 16.4, "middle").intersectObject(mesh("glass")).length > 0,
+  );
 });

@@ -32,6 +32,22 @@ export const PAN_PACIFIC_HOWE_PHOTO_TRACE = {
     1257, 1273, 1288, 1302, 1316, 1330, 1344, 1357, 1369, 1381, 1393, 1404,
     1415, 1425, 1435, 1445, 1455, 1464, 1473, 1481, 1489, 1497,
   ],
+  // Recessed gallery wall has fine pale vertical panels. Samples are from
+  // unobstructed patches; gaps behind columns/planters are inferred below.
+  galleryWallEndpointsX: [970, 1484],
+  galleryPanelSeamPixelsX: [
+    970, 979, 987, 995, 1003, 1011, 1019, 1027, 1035, 1043, 1051, 1059, 1067,
+    1096, 1104, 1112, 1120, 1127, 1134, 1141, 1148, 1155, 1162, 1169, 1176,
+    1227, 1233, 1239, 1245, 1251, 1257, 1263, 1269, 1275, 1310, 1315, 1320,
+    1325, 1330, 1335, 1377, 1382, 1387, 1392, 1397, 1402, 1407, 1412, 1417,
+    1446, 1450, 1454, 1458, 1462, 1466, 1470, 1474, 1478, 1484,
+  ],
+  // Visible dark upper rectangle only. Its bottom/possible door continuation
+  // is obscured by terrace masonry, so no door or transparent pane is inferred.
+  galleryServiceRecessPixels: [
+    [1072, 1233],
+    [1084, 1256],
+  ],
   lowerWindowPixelsX: [
     [1078, 1120],
     [1135, 1174],
@@ -52,6 +68,31 @@ export function panPacificPhotoStation(
     (v - x) /
     ((endpoints[1] - endpoints[0]) / (v - endpoints[1]))
   );
+}
+
+/** Fill only occluded panel intervals at the median rectified seam pitch.
+ * These inferred seams carry no claim of an exact hidden panel count. */
+function galleryPanelStations(): number[] {
+  const observed = PAN_PACIFIC_HOWE_PHOTO_TRACE.galleryPanelSeamPixelsX.map(
+    (x) =>
+      panPacificPhotoStation(
+        x,
+        PAN_PACIFIC_HOWE_PHOTO_TRACE.galleryWallEndpointsX,
+      ),
+  );
+  const gaps = observed
+    .slice(1)
+    .map((u, i) => u - observed[i])
+    .sort((a, b) => a - b);
+  const pitch = gaps[Math.floor(gaps.length / 2)];
+  return observed.flatMap((u, i) => {
+    if (i === observed.length - 1) return [u];
+    const count = Math.max(1, Math.round((observed[i + 1] - u) / pitch));
+    return Array.from(
+      { length: count },
+      (_, j) => u + ((observed[i + 1] - u) * j) / count,
+    );
+  });
 }
 
 export const PAN_PACIFIC_HOWE_RUN = [
@@ -77,6 +118,23 @@ export const PAN_PACIFIC_HOWE_PODIUM = {
   galleryY: 10.85,
   galleryInset: 1.08,
   guardHeight: 1.08,
+  galleryWall: {
+    bottom: 11.02,
+    top: 13.48,
+    panelBoundaries: galleryPanelStations(),
+    recess: {
+      start: panPacificPhotoStation(
+        1072,
+        PAN_PACIFIC_HOWE_PHOTO_TRACE.galleryWallEndpointsX,
+      ),
+      end: panPacificPhotoStation(
+        1084,
+        PAN_PACIFIC_HOWE_PHOTO_TRACE.galleryWallEndpointsX,
+      ),
+      bottom: 11.95,
+      top: 13.3,
+    },
+  },
   lowerBeamBottom: 14.26,
   tiers: {
     lower: { scale: 1, bottom: 7.653739, top: 14.802531 },
