@@ -1,3 +1,4 @@
+import { createNorthShorePhotoHorizon, NORTH_SHORE_PHOTO_HORIZON } from "./north-shore-photo-horizon";
 import { createNorthShoreDemGroup } from "./north-shore-dem";
 import { createNorthShoreUrbanHorizon } from "./north-shore-urban-horizon";
 import { readNorthShoreDiagnostics } from "./north-shore-diagnostics";
@@ -1525,32 +1526,10 @@ export class World {
       return;
     }
     const photo = new T.TextureLoader().load(
-      `${BASE}textures/vancouver/north-shore.webp`,
+      `${BASE}${NORTH_SHORE_PHOTO_HORIZON.texture}`,
     );
-    photo.colorSpace = T.SRGBColorSpace;
-    photo.name = "North Shore Selmo panorama photograph";
-    photo.anisotropy = 8;
-    this.northShore = new T.MeshBasicMaterial({
-      name: "North Shore photographic horizon",
-      map: photo,
-      transparent: true,
-      depthWrite: false,
-      fog: false,
-      toneMapped: false,
-    });
-    this.northShore.onBeforeCompile = (shader) => {
-      shader.fragmentShader = shader.fragmentShader.replace(
-        "#include <map_fragment>",
-        "#include <map_fragment>\ndiffuseColor.a *= smoothstep(0.0,0.13,vMapUv.x)*(1.0-smoothstep(0.87,1.0,vMapUv.x));",
-      );
-    };
-    const horizon = new T.Mesh(
-      new T.PlaneGeometry(24000, 1977),
-      this.northShore,
-    );
-    horizon.position.set(400, 480, -7000);
-    horizon.renderOrder = -1;
-    horizon.name = "Photographic North Shore mountain horizon";
+    const horizon = createNorthShorePhotoHorizon(photo);
+    this.northShore = horizon.material;
     this.root.add(horizon);
   }
   createRain() {
