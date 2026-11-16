@@ -20,7 +20,9 @@ export const PAN_PACIFIC_NEAR_PODIUM_FINISH = {
   // Effective sheet Fresnel: about 8.16% normal reflection approximates
   // multiple glazing interfaces. This is not a measured bulk glass IOR.
   glassIor: 1.8,
-  glassRoughness: 0.12,
+  // Controlled near-only polished-glass comparison: preserve the existing
+  // probe detail through PMREM without increasing reflected energy.
+  glassRoughness: 0.06,
   probeIntensity: 0.85,
 } as const;
 

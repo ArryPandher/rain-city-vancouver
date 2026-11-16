@@ -7,6 +7,8 @@ import {
 } from "../src/world/pan-pacific-near-podium-materials";
 import { createPanPacificTowerMaterials } from "../src/world/pan-pacific-tower-materials";
 import { createPanPacificHowePodiumMaterials } from "../src/world/pan-pacific-howe-podium-materials";
+import { createPanPacificNearPodium } from "../src/world/pan-pacific-near-podium-install";
+import { createCanadaPlaceHotelGlazingPair } from "../src/world/canada-place-hotel-glass";
 import { batchStaticChunks } from "../src/world/static-chunk-batch";
 
 test("near podium shares licensed image data without changing other Pan Pacific finishes", () => {
@@ -106,4 +108,71 @@ test("near podium optics retain shared ordered draws and no emissive or painted 
   assert.equal(m.glassPair.reflection.metalness, 0);
   assert.equal(m.glassPair.reflection.transmission, 0);
   assert.equal(m.glassPair.reflection.map, null);
+});
+
+test("installed near reflection uses candidate roughness without changing paired extinction or other hotel optics", () => {
+  const library = { texture: () => new T.Texture() };
+  const tower = createPanPacificTowerMaterials(library),
+    howe = createPanPacificHowePodiumMaterials(library),
+    hotel = createCanadaPlaceHotelGlazingPair(),
+    installed = createPanPacificNearPodium(library);
+  const pane = installed.group.getObjectByName(
+    "pan-pacific-near-podium-glass",
+  ) as T.Mesh<T.BufferGeometry, [T.ShaderMaterial, T.MeshPhysicalMaterial]>;
+  assert.ok(pane);
+  const [extinction, reflection] = pane.material;
+  assert.equal(
+    installed.glass,
+    reflection,
+    "probe receiver is the same reflection pass installed on every merged pane",
+  );
+  assert.equal(reflection.roughness, 0.06);
+  assert.equal(reflection.roughnessMap, null);
+  assert.equal(reflection.normalMap, null);
+  assert.equal(reflection.ior, 1.8);
+  assert.equal(extinction.uniforms.sheetIor.value, 1.8);
+  assert.deepEqual(
+    extinction.uniforms.sheetThroughput.value.toArray(),
+    [0.55, 0.74, 0.8],
+  );
+  assert.equal(reflection.envMapIntensity, 0.85);
+  assert.equal(extinction.blendSrc, T.ZeroFactor);
+  assert.equal(extinction.blendDst, T.SrcColorFactor);
+  assert.equal(reflection.blendSrc, T.OneFactor);
+  assert.equal(reflection.blendDst, T.OneFactor);
+  assert.equal(reflection.fog, false);
+  assert.equal(extinction.fog, false);
+  assert.deepEqual(
+    pane.geometry.groups.map((g) => [g.start, g.count, g.materialIndex]),
+    [
+      [0, pane.geometry.index!.count, 0],
+      [0, pane.geometry.index!.count, 1],
+    ],
+  );
+  assert.equal(
+    installed.group.children.length,
+    5,
+    "four opaque surfaces and one paired receiver; no separate proxy is left at old roughness",
+  );
+  const backing = installed.group.getObjectByName(
+    "pan-pacific-near-podium-backing",
+  ) as T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>;
+  assert.equal(backing.material.color.getHex(), 0x253339);
+  assert.equal(backing.material.roughness, 0.93);
+  assert.deepEqual(
+    [
+      tower.glassPair.reflection.roughness,
+      howe.glassPair.reflection.roughness,
+      hotel.reflection.roughness,
+    ],
+    [0.12, 0.14, 0.12],
+  );
+  assert.deepEqual(
+    [
+      tower.glassPair.reflection.ior,
+      howe.glassPair.reflection.ior,
+      hotel.reflection.ior,
+    ],
+    [1.5, 1.5, 1.5],
+  );
 });
