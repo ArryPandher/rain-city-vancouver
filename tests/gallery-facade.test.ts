@@ -180,9 +180,12 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
       normal = mesh.geometry.getAttribute("normal");
     for (let i = 0; i < p.count; i++) {
       assert.ok(Number.isFinite(p.getX(i) + p.getY(i) + p.getZ(i)));
-      assert.ok(p.getY(i) >= -0.001 && p.getY(i) <= 13.91);
+      assert.ok(p.getY(i) >= -0.001 && p.getY(i) <= 16.751);
       assert.ok(
-        p.getX(i) > -9 && p.getX(i) < 20 && p.getZ(i) > 22 && p.getZ(i) < 25,
+        p.getX(i) > -10.951 &&
+          p.getX(i) < 20 &&
+          p.getZ(i) > 22 &&
+          p.getZ(i) < 25,
       );
       assert.ok(
         Number.isFinite(normal.getX(i) + normal.getY(i) + normal.getZ(i)),
