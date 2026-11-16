@@ -95,3 +95,28 @@ geometry, exact bindings, disabled/far cases, exclusion gates, nested camera and
 probe scopes, failure restoration, target refresh and native-profile callback
 attribution. Existing source extent/alpha-coverage checks also pass. No browser,
 full build or default promotion is part of this scoped candidate.
+
+## Native comparison and retained default (2026-11-16)
+
+Root recorded the same Gallery player/camera/daylight in
+`artifacts/local/gallery-shadow-{original,compact}-profile.json`. Actual canopy
+shadow attribution changed **569,034 → 45,540 triangles**, with **12 calls** in
+both frames. Canopy beauty stayed exactly **326,972 triangles / 23 calls**.
+Whole-frame shadows changed **3,061,302 → 2,627,206 triangles**, but actor draws
+also changed, so this total is not isolated canopy arithmetic. The instrumented
+single-frame submissions were **64.3 → 39.6 ms**, not a sustained benchmark.
+
+The static left-ground crop (285×94 pixels) had MAE **0.0163**, maximum channel
+difference **6**; restoring original geometry reproduced the baseline crop
+exactly (MAE/max **0**). This local edge/restore evidence does not prove every
+shadow or view is identical. See `gallery-shadow-comparison-pixels.json`.
+
+The subsequent stationary 20-second samples showed **no demonstrated FPS gain**:
+original **274 frames / 20.0000 s = 13.70 FPS**; compact **275 / 20.0509 s =
+13.715 FPS**. Both p95 frame times were **100 ms**. Median frame times were
+66.8 ms original and 81.5 ms compact, further reason not to infer a performance
+win from the one instrumented submission. Other unrelated background jobs were
+uncontrolled. Evidence: `gallery-shadow-original-timing.json` and
+`gallery-shadow-compact-timing.json`. **Keep the diagnostic default OFF.** The
+triangle reduction is real; a useful sustained performance improvement is not
+established by these measurements.
