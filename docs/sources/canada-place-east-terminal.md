@@ -1,6 +1,6 @@
 # Near east Canada Place terminal elevation
 
-This candidate replaces only the first sail bay's east-facing vertical terminal wall. It preserves the retained PIER floor, roof cap, mast/fabric/rigging, other four east bays, completed west concourse, hotel, ship and all public movement policy. No extra capture or downloaded texture is introduced. Native appearance remains pending.
+This candidate replaces only the first sail bay's east-facing vertical terminal wall. It preserves the retained PIER floor, roof cap, mast/fabric/rigging, other four east bays, completed west concourse, hotel, ship and all public movement policy. No extra capture or downloaded texture is introduced. Native visibility has been checked from the existing public apron; the distance and occlusion limits are recorded below.
 
 ## Registration and evidence
 
@@ -32,4 +32,11 @@ Geometry cost: **2,708 triangles / four batches** (stone178, metal2,280, glass12
 
 Root loader owns integration. Before mutations call `canadaPlaceEastTerminalCompatible(gltf.scene)`. After mandatory paving extraction and Howe/hotel/canopy/west cuts, run the existing atomic tower (3,140) and near-podium (70) transactions, then call atomic `replaceCanadaPlaceEastTerminalSource(canadaReplacementSource)` and require22. Collect both required baked primitives whenever this preflight is enabled. The lower-level per-primitive helper is available but not needed for this atomic loader integration. On failure retain source and do not install candidate. Add `createCanadaPlaceEastTerminal(materials).group` beneath the existing Canada Place parent with its existing origin and +0.08Y only after successful source replacement. No World, support, camera or probe hook is required.
 
-Tests decode the actual GLB and verify exact removal/preservation, preflight, atomic failure, commuting prior cuts, retained floor/roof contact across the inset strip, no duplicate upward cap, first-hit recessed backs/columns/slab tops and every vertex within the existing collision envelope. Native close/arrival/drive views still need root acceptance; source uncertainty and estimated service levels remain explicit.
+Tests decode the actual GLB and verify exact removal/preservation, preflight, atomic failure, commuting prior cuts, retained floor/roof contact across the inset strip, no duplicate upward cap, first-hit recessed backs/columns/slab tops and every vertex within the existing collision envelope. Source uncertainty and estimated service levels remain explicit; the native check below establishes distant public visibility, not close-range finish acceptance.
+
+
+## Native public-view check
+
+The native review used the existing public apron at world **[519.31, 7.88, −498.58]**, camera yaw **2.32 rad**. The visible render profile verified all **four beauty batches / 2,708 triangles** of the east-terminal assembly. The source face is approximately **112 m** away in this oblique view; the nearest bays remain partly occluded by the hotel. This verifies installation and distant public visibility, not close material or reveal quality.
+
+No valid existing public standing location was found 10–25 m in front of the face. The near east service apron is outside the current public support masks; farther outward is harbour. The north approach is on the opposite side of the exhibition volumes. Public collision/support and rail boundaries were preserved for this review. The separately retained CC0 roller-shutter donor remains uninstalled, with no demonstrated player-distance benefit yet.

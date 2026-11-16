@@ -141,7 +141,11 @@ export function makeDetailedCharacterFromTemplate(
             ],
           );
         m.roughness = 0.66;
-        m.normalScale?.setScalar(0.55);
+        // GLTFLoader flips Y for derivative tangents; retain that convention.
+        m.normalScale?.set(
+          Math.sign(m.normalScale.x) * 0.55,
+          Math.sign(m.normalScale.y) * 0.55,
+        );
       } else if (m.name.startsWith("Hair")) m.roughness = 0.88;
       return m;
     });

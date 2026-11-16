@@ -1,3 +1,4 @@
+import { nextNearbyReflection } from "./startup-reflections";
 import { ShadowCasterVolume } from "./shadow-caster-volume";
 import { installPmremRefreshCompatibility } from "./pmrem-refresh";
 import * as T from "three";
@@ -104,14 +105,7 @@ export class SceneReflections {
   }
   update(renderer: T.WebGLRenderer, viewer: T.Vector3) {
     if (this.disposed || !this.pmremRefreshSupported) return;
-    const probe = this.probes.find(
-      (p) =>
-        p.dirty &&
-        Math.hypot(
-          viewer.x - p.spec.position[0],
-          viewer.z - p.spec.position[2],
-        ) < 180,
-    );
+    const probe = nextNearbyReflection(this.probes, viewer);
     if (!probe) return;
     const captureGeneration = this.generation;
     const started = performance.now();

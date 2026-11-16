@@ -1,3 +1,4 @@
+import { cathedralPlace } from "./cathedral-place";
 import { createG3TerminalAssembly } from "./g3-terminal";
 import { createIronworkersYardAssembly } from "./ironworkers-yard";
 import { createRepairShedAssembly } from "./ironworkers-repair-shed";
@@ -183,6 +184,7 @@ export function architecture(
       );
 
     if (
+      cathedralPlace(b, shell, m, reflections) ||
       lawCourts(b, shell, m) ||
       robsonSquare(b, shell, m) ||
       theatres(b, shell, m) ||

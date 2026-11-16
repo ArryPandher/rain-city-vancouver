@@ -1,0 +1,68 @@
+{
+  "asset": "Poly Haven Modular Factory Facade",
+  "author": "James Ray Cock",
+  "listing": "https://polyhaven.com/a/modular_factory_facade",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "providerLicense": "https://polyhaven.com/license",
+  "manifest": "https://api.polyhaven.com/files/modular_factory_facade",
+  "sourceNode": "door_garage_centered_01",
+  "selectedPrimitiveMaterial": "modular_factory_facade_garage",
+  "excluded": "Separate 126-triangle header plus all other kit geometry, including brick walls",
+  "changes": "Selected primitive; original vertex/index/normal/UV arrays and embedded JPEG images preserved. Node translation changed from library layout [-10.000003814697266,0,0] to [3,0,0]; unit scale/identity rotation retained. Unused resources pruned.",
+  "geometry": {
+    "triangles": 342,
+    "vertices": 514,
+    "materials": 1,
+    "textures": 3,
+    "attributeSha256": {
+      "POSITION": "2a30ce8c4ae3228aa0b4ac336215b3a6d730bd0a5d294bba9aae0cb17a823271",
+      "NORMAL": "bbf2605890212ebcee5a1c355fc385de0ae72c30873a9a13940a5197a1ac21bd",
+      "TEXCOORD_0": "1bfe8764759c82807db3df7afb459c2814a4cd1bbd8dc986b1e9042f1b099c0c",
+      "indices": "592244ed981498cc045b1dda79657309321a2df416005acf7d052348b1f40dc1"
+    }
+  },
+  "output": {
+    "file": "roller-shutter-source.glb",
+    "bytes": 2043100,
+    "sha256": "6356b6a30ae828ff817d52a1dca4aee40bca388fceffcf068058b1200e860847"
+  },
+  "sourceFiles": [
+    {
+      "name": "modular_factory_facade_1k.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/modular_factory_facade/modular_factory_facade_1k.gltf",
+      "size": 372666,
+      "md5": "0633b294fcc02eac73cfd7be32ab5dce",
+      "sha256": "41ff58b722f9cb3e9db8bcacae3163946603ae99a1d42bb6f9045d7c4ec0f179"
+    },
+    {
+      "name": "textures/modular_factory_facade_garage_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_factory_facade/modular_factory_facade_garage_nor_gl_1k.jpg",
+      "size": 752068,
+      "md5": "8633fc5d96f268b36a16a7f081270a81",
+      "sha256": "e8ac6265622fb8c8df454ae02a75746bc37ded0d4533dbe65fa275d0e40f28ba"
+    },
+    {
+      "name": "textures/modular_factory_facade_garage_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_factory_facade/modular_factory_facade_garage_diff_1k.jpg",
+      "size": 588149,
+      "md5": "792087136344341d1f7e9d84ea7c7ed4",
+      "sha256": "d1cf6239c7364900b02279600937a4c9bf0a21d315efabf18f16d5637020e39f"
+    },
+    {
+      "name": "modular_factory_facade.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/modular_factory_facade/modular_factory_facade.bin",
+      "size": 6269260,
+      "md5": "225eee006759007851584344b0b22847",
+      "sha256": "12702fb065a838695e0621e1aac3947af92d32c439fb965c8b0563ad691fed70"
+    },
+    {
+      "name": "textures/modular_factory_facade_garage_arm_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_factory_facade/modular_factory_facade_garage_arm_1k.jpg",
+      "size": 682331,
+      "md5": "4949c0a6096a8f9ba3017239f1a4249f",
+      "sha256": "a72cfa9020a0a7aad2476b2ceb3c60dc21ac69d4e9026dcddc82710e6784b40f"
+    }
+  ],
+  "status": "Research donor only. Not installed. Grey rolling-shutter type is photo-supported; exact Vancouver opening placement, size and weathering are not verified."
+}

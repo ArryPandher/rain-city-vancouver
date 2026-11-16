@@ -1,3 +1,7 @@
+import {
+  prepareStartupReflections,
+  type StartupReflectionSummary,
+} from "./rendering/startup-reflections";
 import { sweepVehiclePedestrians } from "./game/vehicle-pedestrian-contact";
 import { walkingCameraLookHeight } from "./game/walking-camera-look";
 import { changeDebugDaylightOrientation } from "./world/daylight-orientation";
@@ -56,6 +60,7 @@ class Game {
   contactOcclusion: ContactOcclusion;
   reflections?: SceneReflections;
   private carStreetReflections?: CarStreetReflections;
+  private startupReflectionSummary?: StartupReflectionSummary;
   private carStreetReflectionsEnabled = true;
   private reflectionFrameTime = 0;
   world!: World;
@@ -481,19 +486,25 @@ class Game {
     const w = localStorage.getItem("rain-city-weather");
     if (w && ["day", "golden", "overcast", "night"].includes(w))
       this.setWeather(w as Weather);
-    if (this.quality !== "low" && this.reflections) {
-      for (const [index, probe] of this.world.reflections.entries()) {
-        await this.startupStage(
-          `Preparing local reflections ${index + 1}/${this.world.reflections.length}: ${probe.name}`,
-          0.94 + (0.02 * index) / this.world.reflections.length,
-        );
-        const started = performance.now();
-        this.reflections.update(
-          this.renderer,
-          new T.Vector3(...probe.position),
-        );
-        this.startupTimings.invocation(performance.now() - started);
-      }
+    if (this.reflections) {
+      this.startupReflectionSummary = await prepareStartupReflections({
+        reflections: this.reflections,
+        viewer: () => this.player,
+        enabled: () => this.quality !== "low",
+        beforeCapture: (name, index, count) =>
+          this.startupStage(
+            `Preparing nearby reflections ${index}/${count}: ${name}`,
+            0.94 + (0.02 * (index - 1)) / count,
+          ),
+        capture: (viewer) => {
+          const started = performance.now();
+          this.reflections!.update(
+            this.renderer,
+            new T.Vector3(viewer.x, viewer.y, viewer.z),
+          );
+          this.startupTimings.invocation(performance.now() - started);
+        },
+      });
     }
     // Filter existing street captures and compile the same car shaders that play uses.
     await this.startupStage("Filtering street reflections for vehicles", 0.965);
@@ -679,6 +690,7 @@ class Game {
               sharedSkyEnvironment:
                 this.scene.background === this.scene.environment,
               reflectionCaptures: this.reflections?.captures,
+              startupReflections: this.startupReflectionSummary,
               reflectionProbeSizes: this.reflections?.probes.map((probe) => ({
                 name: probe.spec.name,
                 size: probe.target.width,
