@@ -199,8 +199,7 @@ test("upper gallery is pale closed panelling with only the photo-bounded dark re
   const opening = D.galleryWall.recess;
   const r = ray((opening.start + opening.end) / 2, 12.5);
   assert.equal(r.intersectObject(mesh("glass")).length, 0);
-  assert.equal(r.intersectObject(mesh("concrete")).length, 0);
-  const back = r.intersectObject(mesh("backing"));
+  const back = r.intersectObject(mesh("concrete"));
   assert.ok(back.length > 0);
   assert.ok(Math.abs(back[0].distance - (4 + D.recess + 0.36)) < 0.002);
   assert.ok(
@@ -243,4 +242,43 @@ test("new retaining skirt stops exactly where original PIER wall begins", () => 
     if (new T.Vector3().fromBufferAttribute(pos, i).distanceTo(target) < 1e-5)
       found = true;
   assert.ok(found, "new vertical face meets decoded original PIER endpoint");
+});
+
+test("photographic gallery fascia keeps floor fixed and clears lower glazing head", () => {
+  assert.equal(D.galleryY, 10.85);
+  assert.equal(D.galleryThickness, 0.6);
+  const underside = D.galleryY - D.galleryThickness;
+  const columnFreeU = 0.31;
+  const hit = ray(columnFreeU, underside + 0.1).intersectObject(
+    mesh("concrete"),
+  );
+  assert.ok(hit.length > 0);
+  assert.ok(
+    Math.abs(hit[0].distance - (4 + D.galleryInset)) < 0.002,
+    "fascia has real front face",
+  );
+  assert.equal(
+    ray(columnFreeU, underside + 0.1).intersectObject(mesh("glass")).length,
+    0,
+  );
+  assert.ok(
+    ray(columnFreeU, underside - 0.04).intersectObject(mesh("glass")).length >
+      0,
+    "lower window ends below fascia without an opaque overlap",
+  );
+  const below = point(columnFreeU, underside - 0.1, -1.8);
+  const up = new T.Raycaster(
+    below,
+    new T.Vector3(0, 1, 0),
+    0,
+    0.8,
+  ).intersectObject(mesh("concrete"));
+  assert.ok(
+    up.some((h) => Math.abs(h.point.y - underside) < 0.001),
+    "physical soffit at lowered underside",
+  );
+  assert.ok(
+    up.some((h) => Math.abs(h.point.y - D.galleryY) < 0.001),
+    "gallery floor unchanged",
+  );
 });

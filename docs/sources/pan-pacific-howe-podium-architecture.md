@@ -60,7 +60,7 @@ The raised original boundary remains legible as a retaining face and thin open t
 
 ## Verification and budget
 
-`tests/pan-pacific-howe-podium.test.ts` verifies perspective-derived nonuniform support spacing; preservation of all source tier vertices; continuous mitered bends; rays through glass to closed backing with physical cavity depth; the opaque gaps between isolated window groups; no broad upward-facing added floor at PIER elevation; column-floor contact; and full-height near/far end closures. All seven geometry tests passed. Type checking passed at authoring.
+`tests/pan-pacific-howe-podium.test.ts` verifies perspective-derived nonuniform support spacing; preservation of all source tier vertices; continuous mitered bends; rays through glass to closed backing with physical cavity depth; the opaque gaps between isolated window groups; no broad upward-facing added floor at PIER elevation; column-floor contact; and full-height near/far end closures. All eight geometry tests passed. Type checking passed at authoring.
 
 Measured geometry factory result: **10,806 unique triangles**, **300 panes**, **six long-face supports**, **five merged geometry batches**. The material owner's paired glass requires two optical submissions, making six material draws before shadows/integrated batching. This is a factory budget, not a complete scene performance measurement.
 
@@ -85,3 +85,15 @@ Decoded source audit identified original concrete triangles80–85 (ordered IDs2
 The added retaining face now stops at u.4100776860725485; only edges36/37 need new skirt. Its terminal x/z uses the decoded original wall endpoint `(-108.36808776855469,94.16445922851562)` so the vertical seam meets exactly. The far skirt return was also removed because that added skirt no longer exists. Every original PIER wall and floor triangle remains untouched; no depth-offset workaround or new floor is used. Source audit evidence is retained in `artifacts/local/pan-pacific-source-pier-overlap.json`.
 
 The added contact test verifies absence of new low wall hits across the preserved original-wall interval, presence across the near missing interval, and the exact decoded seam endpoint. Nine combined geometry/material tests pass; current factory geometry is10,806 triangles and300 panes in five merged batches.
+
+## Gallery fascia and conservative recess finish
+
+The final-near native screenshot still flattened the intermediate gallery edge into a hairline. In the Handford20 crop, the gallery fascia in the far visible bays is approximately10–12pixels high, against roughly110–125pixels for the corresponding column from bearing to low base (some bases are partially obscured). Scaling that ratio against the retained source column height of approximately6.46m gives a broad inferred thickness of about.52–.70m. The prior.25m fascia was substantially below this proportion. The revised **.60m** fascia is a conservative fit within that interval, not a surveyed dimension; the source envelope and photo endpoint uncertainty remain.
+
+The gallery's top stays fixed at local **y10.85**. Only its underside moves fromy10.60 toy10.25. Its plan footprint remains inset1.08→2.8m. The lower window head and its rear opaque wall transition move toy10.22, leaving30mm below the fascia soffit instead of placing glass behind the thickened opaque beam. The continuous structural slab remains supported by the existing wall/columns and has a real underside. Neither the source PIER floor nor any column, upper tier or source wall cut changes.
+
+`galleryThickness` is shared between the geometry factory and the camera-clearance helper. Camera spheres intersecting the newly occupiedy10.25–10.60 interval are blocked; clear space below and forward remains available under the existing capability gate. The camera test also checks admitted spheres against actual authored triangles, including the revised fascia.
+
+The service rectangle's rear closure now uses the pale concrete material. The photograph proves a shadowed recess, not black glazing; its existing40cm physical depth and lighting now provide the shadow instead of a dark painted backing. It stays closed and opaque, with no added door or window interpretation.
+
+Thirteen focused geometry, camera and material tests pass. Added checks verify the fascia front and underside, unchanged gallery top, lower glass head clearance, pale recess closure and camera exclusion for the added thickness. Factory triangle/pane/batch counts are unchanged.

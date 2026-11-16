@@ -113,3 +113,24 @@ test("every sampled allowed sphere clears actual authored triangles, including b
   ] as const)
     geometry[role].dispose();
 });
+
+test("camera clearance follows the shared thicker gallery fascia", () => {
+  const underside = D.galleryY - D.galleryThickness;
+  for (const u of [0.1, 0.31, 0.51, 0.71]) {
+    assert.equal(
+      allowed(u, underside + 0.15, -1.8, 0.1),
+      false,
+      "new fascia extension is solid",
+    );
+    assert.equal(
+      allowed(u, underside - 0.2, -1.8, 0.1),
+      true,
+      "clear below fascia remains open",
+    );
+    assert.equal(
+      allowed(u, underside + 0.15, -0.3, 0.1),
+      true,
+      "outside fascia remains open",
+    );
+  }
+});

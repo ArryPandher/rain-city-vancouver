@@ -81,7 +81,7 @@ export function panPacificHowePodiumCameraClearance(
   const galleryFront = -D.galleryInset;
   if (
     low <= D.galleryY &&
-    high >= D.galleryY - 0.25 &&
+    high >= D.galleryY - D.galleryThickness &&
     out <= galleryFront + clearance
   )
     return false;

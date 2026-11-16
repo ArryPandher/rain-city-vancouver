@@ -120,6 +120,8 @@ export const PAN_PACIFIC_HOWE_PODIUM = {
   columnInset: 0.69,
   columnRadius: 0.43,
   galleryY: 10.85,
+  // Approximate photo fascia/column ratio fitted to retained source heights.
+  galleryThickness: 0.6,
   galleryInset: 1.08,
   guardHeight: 1.08,
   galleryWall: {

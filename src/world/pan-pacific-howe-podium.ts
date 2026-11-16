@@ -306,6 +306,8 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
     );
   }
   rail(D.floor, 0.14);
+  // Fixed gallery top; window head clears the thicker fascia underside by30mm.
+  const lowerGlazingTop = D.galleryY - D.galleryThickness - 0.03;
   // Closed lower exterior, physically behind the pillars. No implied interior.
   box(
     "backing",
@@ -332,7 +334,7 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
     "lower",
     0,
     1,
-    10.58,
+    lowerGlazingTop,
     11.02,
     -D.recess - 0.46,
     -D.recess + 0.04,
@@ -358,7 +360,7 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
       l + 0.0006,
       r - 0.0006,
       9.12,
-      10.58,
+      lowerGlazingTop,
       -D.recess - 0.025,
     );
     panes++;
@@ -368,7 +370,7 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
       Math.max(0, l - 0.0006),
       Math.min(1, l + 0.0006),
       9.12,
-      10.58,
+      lowerGlazingTop,
       -D.recess - 0.06,
       -D.recess + 0.05,
     );
@@ -400,10 +402,10 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
       );
     }
   }
-  // Only this bounded dark upper rectangle is confidently visible. Its
-  // neutral opaque recessed closure does not invent a glazed room or door.
+  // The photo proves a shadowed rectangle, not a black window. A pale opaque
+  // closure uses physical depth/lighting for shadow, without inventing glazing.
   box(
-    "backing",
+    "concrete",
     "lower",
     opening.start,
     opening.end,
@@ -447,7 +449,7 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
     "lower",
     0,
     1,
-    D.galleryY - 0.25,
+    D.galleryY - D.galleryThickness,
     D.galleryY,
     -D.recess,
     -D.galleryInset,
