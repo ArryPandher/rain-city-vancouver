@@ -1,6 +1,6 @@
 # Howe station forecourt paving
 
-**Native acceptance is pending.** This pass replaces generic concrete inside
+**Native daylight acceptance completed.** This pass replaces generic concrete inside
 the observed patterned forecourt with a source-fitted pale grid and warm infill.
 It changes surface appearance without changing the existing walking elevation.
 The source dimensions are estimates, not a paving survey or confirmation of
@@ -81,7 +81,7 @@ introduced. This mineral grain does not establish that the real infill is
 granite. Its samplers are cloned so the 0.72 m grain repeat cannot change other
 paving materials.
 
-The initial infill/band tints are `#8c756d` and `#b5afa2`, multiplied by the
+The accepted infill/band tints are `#978175` and `#9d998f`, multiplied by the
 existing mineral map. These are art estimates, not calibrated photo colors.
 The opaque, nonmetallic material clamps roughness to **0.76–0.90**. Broad bands
 use box-filtered periodic coverage; 6 mm seam color and 1.5 mm normal-shading
@@ -90,7 +90,7 @@ vertices, add wet reflections/emission, or alter the normal lighting/shadow
 pipeline. It preserves one unique field material rather than overriding static
 batch eligibility.
 
-## Verification and pending acceptance
+## Verification and native acceptance
 
 Focused geometry checks cover total-area/layer conservation, original-plane
 heights and normals, stair/landing exclusions and continuous metric UVs. Material
@@ -100,8 +100,36 @@ of vertex displacement. JavaScript arithmetic checks do not certify GPU
 precision or visible quality. The approach integration permits the original
 bounded batches plus one patterned field.
 
-Native daylight acceptance must still compare ordinary third-person views from
-the Howe corner, along the street-side forecourt and at the station landing.
-Check color in sun/shadow, scale beside the pavilion/car, restrained seams while
-moving, and joins/cutouts at grazing angles. Preserve normal FOV and gameplay;
-this source fit does not establish AAA realism or a measured performance gain.
+The first native comparison exposed dark triangular patches: the independent
+mapped footway `w338228126` crossed the finished approach surface by up to
+6.78 mm. `createHoweStationRoadFinishClipper` now removes only the duplicate
++0.15 m pedestrian finish inside the intersection of the observed field and
+existing sidewalk masks. It preserves lower paths, stairs and outside geometry;
+vehicle support indexes the resulting rendered road geometry. It does not raise
+the paving or use a depth offset. The regression samples 1,638 field locations:
+348 prior duplicate hits become zero. All 596 outside samples remain within
+0.00000026 m of their prior heights. This removes 35 road triangles, giving a
+net local change of +330 triangles and +31,680 vertex bytes with the field split.
+
+Matched ordinary third-person screenshots retain the baseline player/camera
+position and FOV 62 (floating-point differences below 1e-12 m). The corrected
+candidate removes the dark wedges and lowers the excessive band/infill contrast
+seen with the initial #8c756d/#b5afa2 tints. Oblique walking, crossing the field
+edge beside the pavilion, driving/braking along Howe, vehicle exit and pistol
+15→14 were checked in the same Codex tab. No browser warnings/errors were
+recorded. Stair/landing exclusions have geometry regression coverage; this is
+not a claim of traversing every stair flight. Local evidence:
+
+- `artifacts/local/howe-paving-baseline-walk.png`
+- `artifacts/local/howe-paving-candidate-walk.png` (rejected overlap/contrast)
+- `artifacts/local/howe-paving-corrected-walk.png` and corresponding profile JSON
+- `artifacts/local/howe-paving-corrected-oblique.png`
+- `artifacts/local/howe-paving-station-edge.png`
+- `artifacts/local/howe-paving-drive.png` and corresponding profile JSON
+- `artifacts/local/howe-paving-overlap-proof.json`
+
+This is a bounded source-grounded improvement, not AAA acceptance. Mineral
+grain, calibrated albedo, wear and surrounding architectural detail remain
+approximate. No performance gain, ray tracing, photo-mode output or photographic
+match is claimed. Pan Pacific's flat Howe-facing podium remains a much larger
+scene-fidelity issue than the finished paving detail.

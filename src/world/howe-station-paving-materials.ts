@@ -63,8 +63,8 @@ export function createHoweStationPavingMaterials(
   const map = mineral("color", true),
     normalMap = mineral("normal", false),
     roughnessMap = mineral("roughness", false);
-  const infillColor = new T.Color(0x8c756d),
-    bandColor = new T.Color(0xb5afa2);
+  const infillColor = new T.Color(0x978175),
+    bandColor = new T.Color(0x9d998f);
   const options = {
     map,
     normalMap,
@@ -87,8 +87,8 @@ export function createHoweStationPavingMaterials(
     jointMetres: 0.006,
     reliefMetres: 0.0015,
     mineralRepeatMetres: 0.72,
-    infillColor: "#8c756d",
-    bandColor: "#b5afa2",
+    infillColor: "#978175",
+    bandColor: "#9d998f",
     interpretation:
       "Source-visible warm infill within broad pale square bands. No checkerboard or invented damage.",
   };

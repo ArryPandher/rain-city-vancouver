@@ -89,14 +89,29 @@ test("bounded approach has upward surfaces, actual support walls, and a small st
   const chunks = buildCanadaPlaceApproach(
     root,
     data,
-    { concrete: shared, stone: shared, dark: shared } as Materials,
+    {
+      concrete: shared,
+      stone: shared,
+      dark: shared,
+      texture: () => new T.Texture(),
+    } as unknown as Materials,
     site,
     () => 0,
   );
   assert.ok(
-    chunks.length <= 4,
-    "four bounded material batches, not a mesh per tread/edge",
+    chunks.length <= 5,
+    "bounded original batches plus one merged source-paving field",
   );
+  const pattern = chunks.filter(
+    (mesh) =>
+      !Array.isArray(mesh.material) && mesh.material.userData.howeStationPaving,
+  );
+  assert.equal(
+    pattern.length,
+    1,
+    "source paving uses one merged field, not one mesh per square",
+  );
+  assert.ok(pattern[0].geometry.getAttribute("position").count > 0);
 });
 test("real building interiors and source Canada Place pier receive no new top surface", () => {
   for (const id of ["w363651936", "w138256216", "w208599553", "w143683980"]) {

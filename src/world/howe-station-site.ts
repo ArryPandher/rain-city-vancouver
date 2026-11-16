@@ -25,3 +25,13 @@ export const HOWE_FORECOURT: Point[] = [
   [484.5486, -422.13],
   [479.0486, -411.13],
 ];
+
+/** City 2022 orthophoto two-axis fit: 1.43m repeat ±.10m; band width
+ * .40m is an interpretation (plausible .30–.55), not survey geometry. */
+export const HOWE_STATION_PAVING = {
+  origin: [478.71652, -432.33508] as Point,
+  uAxis: HOWE_STATION.axis,
+  vAxis: HOWE_STATION.right,
+  moduleMetres: 1.43,
+  bandMetres: 0.4,
+};

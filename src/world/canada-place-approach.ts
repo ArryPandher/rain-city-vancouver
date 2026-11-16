@@ -1,3 +1,6 @@
+import { HOWE_STATION_PAVING } from "./howe-station-site";
+import { splitHoweStationPaving } from "./howe-station-paving";
+import { createHoweStationPavingMaterials } from "./howe-station-paving-materials";
 import { canadaPlaceGuardSegments } from "./canada-place-guards";
 import * as T from "three";
 import clipping from "polygon-clipping";
@@ -444,13 +447,34 @@ export function buildCanadaPlaceApproach(
     batch = new Batcher(parent, 160),
     x = (site.bounds.minX + site.bounds.maxX) / 2,
     z = (site.bounds.minZ + site.bounds.maxZ) / 2;
-  batch.add(
+  const paving = splitHoweStationPaving(
     parts.pavement,
+    (x, z) => site.supportHeight(x, z) + CANADA_PLACE_WALK_OFFSET,
+    HOWE_STATION_PAVING,
+  );
+  parts.pavement.dispose();
+  batch.add(
+    paving.remainder,
     materials.concrete,
     x,
     z,
     "canada-place-support-paving",
   );
+  if (paving.field.getAttribute("position").count) {
+    const material = createHoweStationPavingMaterials(
+      materials,
+      HOWE_STATION_PAVING,
+    );
+    // The source's rear polygon edges are visibility limits, not border courses.
+    material.border.dispose();
+    batch.add(
+      paving.field,
+      material.field,
+      490,
+      -445,
+      "howe-station-patterned-paving",
+    );
+  } else paving.field.dispose();
   batch.add(
     parts.retaining,
     materials.stone,

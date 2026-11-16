@@ -519,18 +519,18 @@ class Game {
       title.textContent = "Render diagnostics";
       const button = document.createElement("button");
       button.textContent = "Profile one frame";
-      const howeButtons = (["corner", "apron", "sidewalk"] as const).map(
-        (check) => {
-          const button = document.createElement("button");
-          button.textContent = `Walk at Howe ${check}`;
-          button.addEventListener("click", () => {
-            this.walkAtHoweCheck(check);
-            panel.open = false;
-            button.blur();
-          });
-          return button;
-        },
-      );
+      const howeButtons = (
+        ["corner", "apron", "sidewalk", "forecourt"] as const
+      ).map((check) => {
+        const button = document.createElement("button");
+        button.textContent = `Walk at Howe ${check}`;
+        button.addEventListener("click", () => {
+          this.walkAtHoweCheck(check);
+          panel.open = false;
+          button.blur();
+        });
+        return button;
+      });
       const report = document.createElement("pre");
       report.style.cssText =
         "white-space:pre-wrap;margin:8px 0;max-width:550px";
@@ -890,27 +890,36 @@ class Game {
         : (p?.heading ?? l.heading),
     };
   }
-  private walkAtHoweCheck(check: "corner" | "apron" | "sidewalk") {
+  private walkAtHoweCheck(
+    check: "corner" | "apron" | "sidewalk" | "forecourt",
+  ) {
     if (!this.ready || !new URLSearchParams(location.search).has("debug"))
       return;
     // Recorded ordinary street comparison, cordova-geometry-baseline-profile.
     // Use live walking support and the normal collision-shortened chase boom.
     const { x, z, yaw, pitch } =
-      check === "apron"
-        ? { x: 421.2023, z: -388.0413, yaw: 2.35619449, pitch: -0.18 }
-        : check === "sidewalk"
-          ? {
-              x: 424.90576707774363,
-              z: -389.90909834218024,
-              yaw: -1.2648368979710893,
-              pitch: -0.39049999999999996,
-            }
-          : {
-              x: 450.2797011432693,
-              z: -407.32055060898534,
-              yaw: -1.2648368979710893,
-              pitch: -0.39049999999999996,
-            };
+      check === "forecourt"
+        ? {
+            x: 486.06376139308657,
+            z: -436.3726305675954,
+            yaw: 2.4443631020289107,
+            pitch: 0.19,
+          }
+        : check === "apron"
+          ? { x: 421.2023, z: -388.0413, yaw: 2.35619449, pitch: -0.18 }
+          : check === "sidewalk"
+            ? {
+                x: 424.90576707774363,
+                z: -389.90909834218024,
+                yaw: -1.2648368979710893,
+                pitch: -0.39049999999999996,
+              }
+            : {
+                x: 450.2797011432693,
+                z: -407.32055060898534,
+                yaw: -1.2648368979710893,
+                pitch: -0.39049999999999996,
+              };
     const collision = this.world.collision,
       y = collision.walkingHeight(x, z);
     if (
