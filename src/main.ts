@@ -1,5 +1,6 @@
 import { sweepVehiclePedestrians } from "./game/vehicle-pedestrian-contact";
 import { walkingCameraLookHeight } from "./game/walking-camera-look";
+import { robsonWalkingArrival } from "./game/robson-walking-arrival";
 import {
   contactMotionClearance,
   resolveVehicleContacts,
@@ -1404,12 +1405,22 @@ class Game {
     ui.toast("Back on the road.");
   }
   travel(id: string) {
-    const p = this.spawnPoint(id);
-    this.player.set(p.x, this.world.collision.height(p.x, p.z), p.z);
+    const walking = robsonWalkingArrival(id, !this.vehicle, this.world.collision);
+    const p = walking ?? this.spawnPoint(id);
+    this.player.set(p.x, walking?.y ?? this.world.collision.height(p.x, p.z), p.z);
     this.heading = p.heading;
     this.mouseYaw = p.heading;
-    this.pitch = 0.19;
+    this.pitch = walking?.pitch ?? 0.19;
     this.velocityY = 0;
+    if (walking) {
+      this.clearPointerInput();
+      this.photo = false;
+      ui.show("photo-ui", false);
+      this.cameraMode = 0;
+      this.camera.fov = walking.fov;
+      this.camera.updateProjectionMatrix();
+      this.footSpeed = this.footstepDistance = 0;
+    }
     this.lastSafe.copy(this.player);
     if (this.vehicle) {
       Object.assign(this.vehicle.state, {

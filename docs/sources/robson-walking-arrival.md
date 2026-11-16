@@ -1,0 +1,13 @@
+# Robson on-foot map arrival
+
+2026-11-17. The map's Robson destination previously used the road-nearest spawn at approximately x−152.65,z60.51 and road heading2.3604. At ordinary third-person height this initially framed a generic street rather than the named gallery/square. Road placement remains appropriate for vehicle arrivals.
+
+The on-foot arrival now reuses the existing gallery comparison pose: **x−68.7851132912,z51.5227604104**, heading2.35545942835, pitch−0.1583. Height comes from the live walking surface rather than a fixed elevation. It is on the public level forecourt facing the gallery's Robson exterior, with eight metres of clear approach before the stairs. The gallery's architectural registration and photographic sources are documented in [gallery-entry-cornice.md](gallery-entry-cornice.md). No terrain, source mesh, road, stairs or public route changes.
+
+This is the exact ordinary pose already recorded in `artifacts/local/gallery-ashlar-corrected-native.png` and `gallery-ashlar-corrected-profile.json`: feet y0, camera [−71.8279066277,2.07,54.5610837493], cameraMode0, FOV62 and visible character. The image shows the full entrance, pediment, columns and steps. This is a scene arrival/view choice, not a new claim about measured historic architecture. Terraces remain reachable using normal walking controls; the initial view prioritizes the recognizable gallery.
+
+`robsonWalkingArrival` applies only to the Robson destination while on foot. It checks finite support, full body collision and water at the landing; eight foot-perimeter support samples reject ledges. It also checks the full ordinary 4.3m chase boom with the existing25cm camera collision radius and character near-plane clearance. If any condition fails, the original road placement handles arrival. Vehicles and all other destinations skip these extra queries entirely.
+
+The arrival resets photo/first-person/aim state to ordinary third-person FOV62 and zeroes walking/jump motion. Subsequent camera movement and camera modes remain unrestricted. The original car position, road heading, ground-height synchronization and actor recycle flow are unchanged. No camera hiding, photo mode or elevated debug route is used.
+
+Focused verification executes the actual production `travel` method in a browser-free harness for walking, vehicles, other destinations and failed safety checks. Full unchanged city data verifies y0 support, body/water clearance along the first8m of approach, the complete normal boom and exact match to the saved native camera position. New map-arrival native acceptance is still required by the coordinator; the reused pose already has an ordinary gameplay reference.
