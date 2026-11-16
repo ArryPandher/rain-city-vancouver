@@ -21,6 +21,7 @@ const materials = {
   brick: new T.MeshStandardMaterial(),
   trim: new T.MeshStandardMaterial(),
   glass: new T.MeshStandardMaterial(),
+  glassHowe: new T.MeshStandardMaterial(),
   frame: new T.MeshStandardMaterial(),
   roof: new T.MeshStandardMaterial(),
   lining: new T.MeshStandardMaterial(),
@@ -77,7 +78,10 @@ test("all six upper courses on both street faces have clear physical recesses an
         const u = b.left + (b.right - b.left) * 0.28,
           y = row.sill + 0.38;
         const hits = ray(vec(f.p(u, y, -0.5)), vec(f.p(u, y, 0.6)));
-        assert.equal(mat(hits[0]), materials.glass);
+        assert.equal(
+          mat(hits[0]),
+          edge === 0 ? materials.glass : materials.glassHowe,
+        );
         near(hits[0].distance, 0.5 + s.windowRecess - 0.018);
         assert.equal(
           ray(vec(f.p(u, y, 0.02)), vec(f.p(u, y, s.windowRecess - 0.08)))
@@ -142,7 +146,7 @@ test("grounded closed Howe entrances and Cordova windows stay clear of opaque ba
     const u = b.left + 0.6,
       y = threshold + 0.4;
     const hit = ray(vec(howe.p(u, y, -0.5)), vec(howe.p(u, y, 0.7)))[0];
-    assert.equal(mat(hit), materials.glass);
+    assert.equal(mat(hit), materials.glassHowe);
     near(hit.distance, 0.5 + s.baseRecess - 0.018);
     const sill = ray(
       vec(howe.p(u, threshold + 0.15, 0.2)),
@@ -197,7 +201,7 @@ test("simple current parapet and flat roof close the footprint; only the small s
   for (const p of plantRing) assert.ok(pointInPoly(...p, ring.flat()));
 });
 
-test("nine batches have finite outward geometry, continuous metric facade UVs and bounded projection/cost", () => {
+test("ten batches have finite outward geometry, continuous metric facade UVs and bounded projection/cost", () => {
   let triangles = 0;
   for (const mesh of meshes) {
     const g = mesh.geometry,
@@ -248,7 +252,7 @@ test("nine batches have finite outward geometry, continuous metric facade UVs an
       );
     }
   }
-  assert.equal(meshes.length, 9);
+  assert.equal(meshes.length, 10);
   assert.ok(
     triangles <= 15248 + 900,
     `${triangles} triangles: bounded shaped street-base addition`,
@@ -301,7 +305,7 @@ test("modern proportions retain the taller street base and uninterrupted top fri
     const upper = ray(vec(f.p(u, 21.45, -0.5)), vec(f.p(u, 21.45, 0.7)))[0];
     assert.equal(
       mat(upper),
-      materials.glass,
+      edge === 0 ? materials.glass : materials.glassHowe,
       "stringcourse does not cut through the revised top window",
     );
   }
@@ -494,7 +498,7 @@ test("ground top lights use82 percent while door height and upper sash proportio
         const oldSplit = lo + (4.25 - lo) * 0.66;
         assert.equal(
           mat(ray(vec(f.p(u, oldSplit, -0.5)), vec(f.p(u, oldSplit, 0.7)))[0]),
-          materials.glass,
+          edge === 0 ? materials.glass : materials.glassHowe,
         );
       }
       const row = s.rows[0],
@@ -510,7 +514,7 @@ test("ground top lights use82 percent while door height and upper sash proportio
         mat(
           ray(vec(f.p(u, unusedSplit, -0.5)), vec(f.p(u, unusedSplit, 0.7)))[0],
         ),
-        materials.glass,
+        edge === 0 ? materials.glass : materials.glassHowe,
       );
     }
   }

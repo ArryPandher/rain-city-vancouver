@@ -163,17 +163,23 @@ export class World {
   }
   treeDetailStream?: TreeDetailStream;
   onDetailReady = () => {};
-  async build(report: (text: string, n: number) => void) {
-    report("Loading Vancouver’s streets", 0.12);
+  async build(
+    report: (text: string, n: number) => void | Promise<void>,
+    mark: (text: string, n: number) => void = () => {},
+  ) {
+    await report("Preparing Vancouver collision and ground", 0.12);
     this.collision = new CollisionWorld(this.data);
     addProspectGeology(this.data, this.collision);
     this.forestHabitat = new ForestHabitat(this.data, this.collision);
+    await report("Building terrain and ground batches", 0.15);
     this.terrain();
     if (this.collision.robsonGarden)
       this.chunks.push(
         ...buildRobsonMound(this.root, this.materials, this.data.roads),
       );
+    await report("Building streets and pavement batches", 0.19);
     this.roads();
+    await report("Building waterfront paths and approaches", 0.23);
     if (this.collision.canada)
       this.chunks.push(
         ...buildCanadaPlaceApproach(
@@ -243,7 +249,7 @@ export class World {
       ),
     );
     await new Promise((r) => setTimeout(r, 20));
-    report("Raising the downtown skyline", 0.3);
+    await report("Loading Vancouver landmark models", 0.3);
     const accurateLandmarks = new T.Group();
     this.root.add(accurateLandmarks);
     const loadedLandmarks = await loadVancouverLandmarks(
@@ -252,8 +258,11 @@ export class World {
       this.reflections,
     );
     this.collision.setCanadaPlaceCapabilities(loadedLandmarks.canadaPlace);
+    await report("Merging Vancouver landmark geometry", 0.35);
     this.mergeStatic(accurateLandmarks);
-    this.buildings();
+    await report("Generating and merging downtown geometry", 0.38);
+    this.buildings(() => mark("Packing downtown draw batches", 0.42));
+    await report("Loading detailed architecture", 0.46);
     try {
       this.detailedArchitecture = await DetailedArchitecture.load(this.scene);
       this.detailedArchitecture.samples = this.architecturalDetails;
@@ -264,8 +273,9 @@ export class World {
       );
     }
     await new Promise((r) => setTimeout(r, 20));
-    report("Planting Stanley Park", 0.49);
+    await report("Placing Vancouver trees", 0.49);
     this.vegetation();
+    await report("Loading and installing tree canopies", 0.54);
     try {
       this.broadleafVolume = installBroadleafVolumes(
         this.treeSamples,
@@ -280,6 +290,7 @@ export class World {
       );
     }
     await new Promise((r) => setTimeout(r, 20));
+    await report("Loading coastal planting", 0.61);
     try {
       this.coastalVegetation = await CoastalVegetation.load(
         this.root,
@@ -289,14 +300,15 @@ export class World {
     } catch (error) {
       console.warn("Coastal planting unavailable", error);
     }
-    report("Building the waterfront", 0.68);
+    await report("Building and merging waterfront landmarks", 0.68);
     const landmarkRoot = new T.Group();
     this.root.add(landmarkRoot);
     buildLandmarks(landmarkRoot, this.materials, this.collision);
     this.mergeStatic(landmarkRoot);
+    await report("Building street furniture and detail batches", 0.76);
     this.streetDetails();
     await new Promise((r) => setTimeout(r, 20));
-    report("Lighting the coast", 0.84);
+    await report("Preparing mountains and sky", 0.84);
     this.mountains();
     this.createRain();
     try {
@@ -310,6 +322,7 @@ export class World {
           "night-reflections",
         ].map((name) => loader.loadAsync(`${BASE}textures/${name}.hdr`)),
       );
+      await report("Preparing daylight environment pixels", 0.92);
       for (const t of [sunset, overcast, env, daylight, nightEnv])
         t.mapping = T.EquirectangularReflectionMapping;
       // Keep very bright HDR emitters localized in reflections and bloom.
@@ -358,6 +371,7 @@ export class World {
       this.scene.background = new T.Color(0xb6ccd7);
     }
 
+    await report("Finalizing static world transforms", 0.98);
     this.root.updateMatrixWorld(true);
     this.root.traverse((object) => {
       object.matrixAutoUpdate = false;
@@ -388,7 +402,7 @@ export class World {
           error,
         ),
     );
-    report("Ready to explore", 1);
+    await report("World geometry ready", 1);
   }
   addEasternRoad() {
     // Authored connector outside the extracted downtown map. The core map remains OSM geometry.
@@ -822,13 +836,15 @@ export class World {
     });
     this.chunks.push(...chunks);
   }
-  buildings() {
+  buildings(beforePacking: () => void = () => {}) {
     const result = architecture(
       this.root,
       this.data,
       this.materials,
       this.collision,
     );
+    // Synchronous marker only: direct generator callers retain their old contract.
+    beforePacking();
     batchPhotographicFacades(
       this.root,
       result.chunks,

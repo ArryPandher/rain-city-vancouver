@@ -144,20 +144,31 @@ test("street tree detail respects budgets, canopy elevation and hysteresis", () 
   const s = samples();
   let selected = selectStreetTrees(s, 0, 0, 0, 24, new Set());
   assert.equal(selected.length, 24);
-  assert.equal(selected.filter((p) => p.near).length, 8);
+  assert.equal(
+    selected.filter((p) => p.near).length,
+    0,
+    "high canopies keep individual medium leaves when their leaf surfaces are not within 4m",
+  );
+  const crowded = s.map((t, i) => ({ ...t, x: i * 0.35 }));
+  selected = selectStreetTrees(crowded, 0, 0, 15, 24, new Set());
+  assert.equal(
+    selected.filter((p) => p.near).length,
+    8,
+    "the original one-third near budget remains",
+  );
   const tree = s[0];
   assert.equal(streetTreeDistance(tree, 0, 0, 15), 0);
   assert.equal(streetTreeDistance(tree, 0, 0, 120), 100);
   assert.equal(
-    selectStreetTrees([tree], 30, 0, 15, 24, new Set()).at(0)!.near,
+    selectStreetTrees([tree], 5, 0, 15, 24, new Set()).at(0)!.near,
     false,
   );
   assert.equal(
-    selectStreetTrees([tree], 30, 0, 15, 24, new Set([tree])).at(0)!.near,
+    selectStreetTrees([tree], 5, 0, 15, 24, new Set([tree])).at(0)!.near,
     true,
   );
   assert.equal(
-    selectStreetTrees([tree], 36, 0, 15, 24, new Set([tree])).at(0)!.near,
+    selectStreetTrees([tree], 6, 0, 15, 24, new Set([tree])).at(0)!.near,
     false,
   );
   assert.equal(selectStreetTrees(s, 0, 0, 0, 0, new Set()).length, 0);
@@ -175,8 +186,8 @@ test("street tree slots share vertex data, keep independent culling and restore 
     d = DetailedTrees.fromModels(scene, [model(0), model(0.18)]),
     s = samples();
   d.samples = s;
-  d.update(0, 0, 0);
-  assert.deepEqual(d.lodState, { near: 8, medium: 16 });
+  d.update(0, 0, 15);
+  assert.deepEqual(d.lodState, { near: 2, medium: 22 });
   const slots = (d as any).slots;
   assert.equal(slots.filter((s: any) => s.group.visible).length, 24);
   const a = slots[0].levels[0][0] as T.InstancedMesh,
@@ -324,4 +335,41 @@ test("masked medium tree retains the complete near trunk and branches", async ()
       .map((n) => ({ name: n.getName(), matrix: n.getMatrix() })),
   );
   assert.deepEqual(transforms[0], transforms[1]);
+});
+
+test("stationary FOV changes switch curved versus medium leaves without dropping the mapped tree", () => {
+  const source = new T.Group();
+  const geometry = new T.BoxGeometry(1, 4, 1);
+  geometry.translate(0, 2, 0);
+  source.add(
+    new T.Mesh(geometry, new T.MeshStandardMaterial({ name: "test leaves" })),
+  );
+  const detail = DetailedTrees.fromModels(new T.Scene(), [
+    source,
+    source.clone(),
+  ]);
+  const tree = samples()[2];
+  tree.height = 10.7;
+  detail.samples = [tree];
+  const camera = new T.PerspectiveCamera(62);
+  camera.position.set(0, 4, 0);
+  camera.lookAt(6, 4, 0);
+  camera.updateMatrixWorld(true);
+  detail.update(0, 0, 4, camera);
+  assert.deepEqual(detail.lodState, { near: 0, medium: 1 });
+  camera.fov = 35;
+  camera.updateProjectionMatrix();
+  detail.update(0, 0, 4, camera);
+  assert.deepEqual(detail.lodState, { near: 1, medium: 0 });
+  camera.fov = 62;
+  camera.updateProjectionMatrix();
+  detail.update(0, 0, 4, camera);
+  assert.deepEqual(detail.lodState, { near: 0, medium: 1 });
+  const matrix = new T.Matrix4();
+  tree.crown.getMatrixAt(tree.crownIndex, matrix);
+  assert.equal(
+    matrix.determinant(),
+    0,
+    "the detailed tree remains selected rather than exposing duplicate fallback leaves",
+  );
 });

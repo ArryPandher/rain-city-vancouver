@@ -4,6 +4,7 @@ import {
   resolveVehicleContacts,
 } from "./game/vehicle-contact";
 import { FrameSample, type FrameSampleContext } from "./rendering/frame-sample";
+import { StartupTimings } from "./rendering/startup-timings";
 import * as T from "three";
 import { StaticShadowCache } from "./rendering/static-shadow-cache";
 import { LiveShadowCache } from "./rendering/live-shadow-cache";
@@ -102,6 +103,8 @@ class Game {
   private frameSample?: FrameSample;
   private frameSampleReport?: HTMLPreElement;
   private frameSampleButton?: HTMLButtonElement;
+  private startupTimings = new StartupTimings();
+  private startupReport?: HTMLPreElement;
   shadowCache = new StaticShadowCache();
   private liveShadowCache = new LiveShadowCache();
   footstepDistance = 0;
@@ -290,7 +293,53 @@ class Game {
       );
     });
   }
+  private markStartup(name: string, progress: number) {
+    this.startupTimings.begin(name);
+    const message = new URLSearchParams(location.search).has("debug")
+      ? name
+      : progress < 0.1
+        ? "Finding Vancouver…"
+        : progress < 0.3
+          ? "Preparing the streets…"
+          : progress < 0.84
+            ? "Bringing Vancouver to life…"
+            : progress < 0.94
+              ? "Getting your ride ready…"
+              : progress < 0.97
+                ? "Lighting the city…"
+                : "Almost ready…";
+    ui.loading(message, progress);
+    if (this.startupReport) {
+      this.startupReport.textContent = this.startupTimings.text();
+      this.startupReport.scrollTop = this.startupReport.scrollHeight;
+    }
+  }
+  private async startupStage(name: string, progress: number) {
+    this.markStartup(name, progress);
+    // Only yield between complete stages, never inside temporary renderer state.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  }
+  startupFailed(error: unknown) {
+    this.startupTimings.finish(error);
+    if (this.startupReport)
+      this.startupReport.textContent = this.startupTimings.text();
+  }
   async init() {
+    let startupDisclosure: HTMLDetailsElement | undefined;
+    if (new URLSearchParams(location.search).has("debug")) {
+      startupDisclosure = document.createElement("details");
+      startupDisclosure.id = "startup-timings";
+      startupDisclosure.open = true;
+      startupDisclosure.style.cssText = "font:11px monospace;max-width:580px";
+      const summary = document.createElement("summary");
+      summary.textContent = "Startup timings";
+      this.startupReport = document.createElement("pre");
+      this.startupReport.style.cssText =
+        "white-space:pre-wrap;max-height:150px;overflow:auto";
+      startupDisclosure.append(summary, this.startupReport);
+      ui.$("loading-text").after(startupDisclosure);
+    }
+    await this.startupStage("Loading Vancouver map data", 0.02);
     const data = await loadCity();
     ui.data = data;
     // Fetch actor assets while the independent city geometry and textures prepare.
@@ -302,6 +351,7 @@ class Game {
         console.warn("Detailed character unavailable; using built-in model", e),
       ),
     ]);
+    await this.startupStage("Preparing Vancouver ground and materials", 0.07);
     this.world = new World(
       this.scene,
       data,
@@ -309,7 +359,11 @@ class Game {
       new URLSearchParams(location.search).has("debug") &&
         new URLSearchParams(location.search).has("tree-batch-experiment"),
     );
-    await this.world.build((s, n) => ui.loading(s, n * 0.82));
+    await this.world.build(
+      (s, n) => this.startupStage(s, n * 0.82),
+      (s, n) => this.markStartup(s, n * 0.82),
+    );
+    await this.startupStage("Preparing reflection resources", 0.84);
     this.reflections = new SceneReflections(
       this.scene,
       this.world.root,
@@ -326,8 +380,9 @@ class Game {
       () => this.carStreetReflections?.dispose(),
       { once: true },
     );
-    ui.loading("Preparing your ride and character", 0.89);
+    await this.startupStage("Loading your ride and character", 0.87);
     await actorAssets;
+    await this.startupStage("Preparing actors and safe street placement", 0.89);
     this.actors = new Actors(
       this.world,
       this.renderer.extensions.has("WEBGL_multi_draw"),
@@ -401,41 +456,42 @@ class Game {
     if (w && ["day", "golden", "overcast", "night"].includes(w))
       this.setWeather(w as Weather);
     if (this.quality !== "low" && this.reflections) {
-      ui.loading("Preparing local reflections", 0.94);
-      await new Promise<void>((resolve) =>
-        requestAnimationFrame(() => resolve()),
-      );
       for (const [index, probe] of this.world.reflections.entries()) {
+        await this.startupStage(
+          `Preparing local reflections ${index + 1}/${this.world.reflections.length}: ${probe.name}`,
+          0.94 + (0.02 * index) / this.world.reflections.length,
+        );
+        const started = performance.now();
         this.reflections.update(
           this.renderer,
           new T.Vector3(...probe.position),
         );
-        ui.loading(
-          `Preparing local reflections (${index + 1}/${this.world.reflections.length})`,
-          0.94 + (0.02 * (index + 1)) / this.world.reflections.length,
-        );
-        // Each update is atomic and restores renderer/scene state in finally.
-        // Yield only BETWEEN captures, preserving their existing order/content
-        // while allowing input/loading UI to run between costly six-face draws.
-        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+        this.startupTimings.invocation(performance.now() - started);
       }
     }
     // Filter existing street captures and compile the same car shaders that play uses.
+    await this.startupStage("Filtering street reflections for vehicles", 0.965);
     this.carStreetReflections?.update(
       this.actors.vehicles.map((v) => v.model),
       0.25,
     );
-    ui.loading("Warming up the renderer", 0.97);
+    await this.startupStage("Initializing renderer shaders", 0.97);
     this.setCamera(true);
     // The scene renders into the composer's HDR target before OutputPass applies
     // tone mapping. Warm the same shader variants used during gameplay.
     const previousTarget = this.renderer.getRenderTarget();
     this.renderer.setRenderTarget(this.composer.readBuffer);
     try {
-      await this.renderer.compileAsync(this.scene, this.camera);
+      const started = performance.now();
+      // r182 does synchronous scene/material traversal before returning its Promise.
+      const compiled = this.renderer.compileAsync(this.scene, this.camera);
+      this.startupTimings.invocation(performance.now() - started);
+      this.markStartup("Waiting for renderer shaders", 0.98);
+      await compiled;
     } finally {
       this.renderer.setRenderTarget(previousTarget);
     }
+    await this.startupStage("Finishing game setup", 0.99);
     if (new URLSearchParams(location.search).has("debug")) {
       const panel = document.createElement("details");
       panel.id = "render-profile";
@@ -445,22 +501,25 @@ class Game {
       title.textContent = "Render diagnostics";
       const button = document.createElement("button");
       button.textContent = "Profile one frame";
-      const howeButtons = (["corner", "apron"] as const).map((check) => {
-        const button = document.createElement("button");
-        button.textContent = `Walk at Howe ${check}`;
-        button.addEventListener("click", () => {
-          this.walkAtHoweCheck(check);
-          panel.open = false;
-          button.blur();
-        });
-        return button;
-      });
+      const howeButtons = (["corner", "apron", "sidewalk"] as const).map(
+        (check) => {
+          const button = document.createElement("button");
+          button.textContent = `Walk at Howe ${check}`;
+          button.addEventListener("click", () => {
+            this.walkAtHoweCheck(check);
+            panel.open = false;
+            button.blur();
+          });
+          return button;
+        },
+      );
       const report = document.createElement("pre");
       report.style.cssText =
         "white-space:pre-wrap;margin:8px 0;max-width:550px";
       button.addEventListener("click", () => {
         report.textContent = JSON.stringify(
           {
+            startup: this.startupTimings.snapshot(),
             ...profileRender(this.renderer, this.scene, this.camera, () =>
               this.render(),
             ),
@@ -745,7 +804,11 @@ class Game {
         sampleReport,
       );
       document.body.append(panel);
+      if (startupDisclosure) panel.append(startupDisclosure);
     }
+    this.startupTimings.finish();
+    if (this.startupReport)
+      this.startupReport.textContent = this.startupTimings.text();
     this.ready = true;
     this.lastSafe.copy(this.player);
     this.last = performance.now();
@@ -777,7 +840,7 @@ class Game {
         : (p?.heading ?? l.heading),
     };
   }
-  private walkAtHoweCheck(check: "corner" | "apron") {
+  private walkAtHoweCheck(check: "corner" | "apron" | "sidewalk") {
     if (!this.ready || !new URLSearchParams(location.search).has("debug"))
       return;
     // Recorded ordinary street comparison, cordova-geometry-baseline-profile.
@@ -785,12 +848,19 @@ class Game {
     const { x, z, yaw, pitch } =
       check === "apron"
         ? { x: 421.2023, z: -388.0413, yaw: 2.35619449, pitch: -0.18 }
-        : {
-            x: 450.2797011432693,
-            z: -407.32055060898534,
-            yaw: -1.2648368979710893,
-            pitch: -0.39049999999999996,
-          };
+        : check === "sidewalk"
+          ? {
+              x: 424.90576707774363,
+              z: -389.90909834218024,
+              yaw: -1.2648368979710893,
+              pitch: -0.39049999999999996,
+            }
+          : {
+              x: 450.2797011432693,
+              z: -407.32055060898534,
+              yaw: -1.2648368979710893,
+              pitch: -0.39049999999999996,
+            };
     const collision = this.world.collision,
       y = collision.walkingHeight(x, z);
     if (
@@ -1993,10 +2063,12 @@ class Game {
   }
 }
 async function boot() {
+  let game: Game | undefined;
   try {
-    const game = new Game();
+    game = new Game();
     await game.init();
   } catch (e) {
+    game?.startupFailed(e);
     console.error(e);
     ui.error(
       e instanceof Error

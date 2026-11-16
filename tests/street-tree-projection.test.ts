@@ -11,9 +11,11 @@ import type { TreeInstance } from "../src/world/detailed-trees";
 const tree = (height: number) =>
   ({ height, width: height * 0.7, x: 0, z: 0, y: 0 }) as TreeInstance;
 const projection = 1 / Math.tan((31 * Math.PI) / 180);
-test("same distance preserves large-screen crown detail and uses source cards for smaller crown", () => {
+test("large projected crowns do not promote full curved leaves beyond the close gate", () => {
   assert.equal(nearStreetTree(tree(10.7), 20, false, projection), false);
-  assert.equal(nearStreetTree(tree(20), 20, false, projection), true);
+  assert.equal(nearStreetTree(tree(20), 20, false, projection), false);
+  assert.equal(nearStreetTree(tree(100), 20, false, projection), false);
+  assert.ok(projectedCrownHeight(tree(20), 20, projection) > 0.45);
   assert.ok(projectedCrownHeight(tree(10.7), 20, projection) < 0.45);
 });
 test("small distant crowns use the retained depth canopy while nearby or enlarged crowns keep individual leaves", () => {
@@ -65,17 +67,36 @@ test("detail-to-depth-canopy transition has a stable overlap band", () => {
     1,
   );
 });
-test("close leaf detail is retained and size/distance hysteresis suppresses walking toggles", () => {
-  assert.equal(nearStreetTree(tree(3), 9.9, false, projection), true);
-  assert.equal(nearStreetTree(tree(3), 11, true, projection), true);
-  assert.equal(nearStreetTree(tree(3), 12.1, true, projection), false);
-  const d = (10 * 0.7 * projection) / (2 * 0.41);
-  assert.equal(nearStreetTree(tree(10), d, false, projection), false);
-  assert.equal(nearStreetTree(tree(10), d, true, projection), true);
-  assert.equal(nearStreetTree(tree(100), 35, true, projection), false);
+test("ordinary FOV enters full curvature below 4m and exits at 6m with stable hysteresis", () => {
+  for (const height of [3, 10.7, 20, 100]) {
+    assert.equal(nearStreetTree(tree(height), 3.99, false, projection), true);
+    assert.equal(nearStreetTree(tree(height), 4, false, projection), false);
+    assert.equal(nearStreetTree(tree(height), 5.99, true, projection), true);
+    assert.equal(nearStreetTree(tree(height), 6, true, projection), false);
+  }
+  let previous = false;
+  const sequence = [5, 3.9, 4.2, 5.9, 6.1, 5.5, 3.99].map((distance) => {
+    previous = nearStreetTree(tree(10), distance, previous, projection);
+    return previous;
+  });
+  assert.deepEqual(sequence, [false, true, true, true, false, false, true]);
+});
+test("wide and missing projections preserve close detail; extreme zoom remains bounded", () => {
+  const wide = new T.PerspectiveCamera(90).projectionMatrix.elements[5];
+  for (const scale of [wide, undefined, NaN, Infinity, 0, -1]) {
+    assert.equal(nearStreetTree(tree(10), 3.99, false, scale), true);
+    assert.equal(nearStreetTree(tree(10), 5, false, scale), false);
+    assert.equal(nearStreetTree(tree(10), 5, true, scale), true);
+    assert.equal(nearStreetTree(tree(10), 6, true, scale), false);
+  }
+  const tele = new T.PerspectiveCamera(1).projectionMatrix.elements[5];
+  assert.equal(nearStreetTree(tree(10), 26.99, false, tele), true);
+  assert.equal(nearStreetTree(tree(10), 27, false, tele), false);
+  assert.equal(nearStreetTree(tree(10), 33.99, true, tele), true);
+  assert.equal(nearStreetTree(tree(10), 34, true, tele), false);
 });
 test("narrow FOV promotes resolvable leaf geometry without changing tree count", () => {
-  const t = { ...tree(10.7), x: 20 };
+  const t = { ...tree(10.7), x: 7 };
   const wide = selectStreetTrees(
     [t],
     0,
@@ -100,4 +121,50 @@ test("narrow FOV promotes resolvable leaf geometry without changing tree count",
   assert.equal(tele.length, 1);
   assert.equal(wide[0].near, false);
   assert.equal(tele[0].near, true);
+});
+
+test("zoomed full-leaf selection retains a magnified hysteresis band without changing medium eligibility", () => {
+  const tele = new T.PerspectiveCamera(35).projectionMatrix.elements[5];
+  assert.equal(nearStreetTree(tree(10), 7, false, tele), true);
+  assert.equal(nearStreetTree(tree(10), 10, false, tele), false);
+  assert.equal(nearStreetTree(tree(10), 10, true, tele), true);
+  assert.equal(nearStreetTree(tree(10), 11.5, true, tele), false);
+  const trees = [3, 5, 10, 20, 29].map((x) => ({ ...tree(10.7), x }));
+  const selected = selectStreetTrees(
+    trees,
+    0,
+    0,
+    4,
+    24,
+    new Set(),
+    undefined,
+    projection,
+  );
+  assert.deepEqual(
+    selected.map((p) => p.tree),
+    trees,
+  );
+  assert.deepEqual(
+    selected.map((p) => p.near),
+    [true, false, false, false, false],
+  );
+  const retained = selectStreetTrees(
+    trees,
+    0,
+    0,
+    4,
+    24,
+    new Set([trees[1]]),
+    undefined,
+    projection,
+    new Set(trees),
+  );
+  assert.deepEqual(
+    retained.map((p) => p.tree),
+    trees,
+  );
+  assert.deepEqual(
+    retained.map((p) => p.near),
+    [true, true, false, false, false],
+  );
 });

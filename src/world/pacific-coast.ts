@@ -21,6 +21,7 @@ export type PacificCoastGeometryMaterials = Record<
   | "brick"
   | "trim"
   | "glass"
+  | "glassHowe"
   | "frame"
   | "roof"
   | "lining"
@@ -311,6 +312,7 @@ export function buildPacificCoast(
   };
   const window = (
     f: Frame,
+    glazing: T.Material,
     a: number,
     b: number,
     lo: number,
@@ -332,7 +334,7 @@ export function buildPacificCoast(
     face(f, m.frame, b - trim, b, lo + trim, hi - trim, depth);
     face(f, m.frame, a, b, lo, lo + trim, depth);
     face(f, m.frame, a, b, hi - trim, hi, depth);
-    face(f, m.glass, a + trim, b - trim, lo + trim, hi - trim, depth - 0.018);
+    face(f, glazing, a + trim, b - trim, lo + trim, hi - trim, depth - 0.018);
 
     // One shallow, genuinely closed cavity supplies parallax, occlusion and
     // shaded returns behind the original exterior glazing. No furniture,
@@ -487,6 +489,7 @@ export function buildPacificCoast(
       face(f, m.stone, 0, f.length, s.baseTop, s.roof);
       continue;
     }
+    const glazing = edge === 0 ? m.glass : m.glassHowe;
     const bays = pacificCoastBays(edge),
       baseBays = bays.map((b, i) => ({
         ...b,
@@ -517,7 +520,7 @@ export function buildPacificCoast(
       } else pier(f, b.left, b.right, s.baseBottom, sill, m.base, 0.5);
       face(f, m.base, b.left, b.right, head, s.baseTop);
       if (edge === 0) stoneHead(f, b.left, b.right);
-      window(f, b.left, b.right, sill, head, true, b.door, edge === 0);
+      window(f, glazing, b.left, b.right, sill, head, true, b.door, edge === 0);
       previous = b.right;
     }
     pier(f, previous, f.length, s.baseBottom, s.baseTop, m.base, 0.85);
@@ -538,7 +541,7 @@ export function buildPacificCoast(
           row.sill,
           edge === 1 ? m.brick : m.stone,
         );
-        window(f, b.left, b.right, row.sill, row.head);
+        window(f, glazing, b.left, b.right, row.sill, row.head);
         low = row.head;
       }
       spandrel(f, b.left, b.right, low, s.roof, edge === 1 ? m.brick : m.stone);

@@ -59,16 +59,23 @@ export function createPacificCoastMaterials(
   const facadeMineral = { map: facadeColor, normalMap: mineral.normalMap };
   // A dielectric sheet over closed window recesses. The lining supplies actual
   // visible depth; reflected radiance is no longer mixed with opaque paint.
-  const glass = createExteriorLobbyGlass(
-    "325 Howe recessed paired window glazing",
-    0.8,
-    2,
-  );
-  // Effective Fresnel fit for the reflective glazing seen in the reference,
-  // not a measurement of its coating/index. The slab uses the same IOR for
-  // reflected BRDF and transmitted energy, retaining a closed recess behind it.
-  glass.ior = 2.3;
-  glass.roughness = 0.045;
+  const windowGlass = (street: "Cordova" | "Howe") => {
+    // Construct each receiver through the factory. Three material.clone() does
+    // not copy the custom dielectric shader hook, so it is not suitable here.
+    const glass = createExteriorLobbyGlass(
+      `325 Howe ${street} recessed paired window glazing`,
+      0.8,
+      2,
+    );
+    // Effective Fresnel fit, not a measurement of its coating/index. Both
+    // facades retain identical BRDF/transmission while their capture origins
+    // follow the two distinct street-facing planes.
+    glass.ior = 2.3;
+    glass.roughness = 0.045;
+    return glass;
+  };
+  const glass = windowGlass("Cordova");
+  const glassHowe = windowGlass("Howe");
   return {
     stone: new T.MeshStandardMaterial({
       name: "325 Howe pale warm mineral piers and Cordova spandrels",
@@ -106,6 +113,7 @@ export function createPacificCoastMaterials(
       roughness: 0.76,
     }),
     glass,
+    glassHowe,
     lining: new T.MeshStandardMaterial({
       name: "325 Howe closed window recess lining",
       color: 0x333936,

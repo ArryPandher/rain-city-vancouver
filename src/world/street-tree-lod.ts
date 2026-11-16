@@ -13,7 +13,7 @@ export function streetTreeDistance(
   return Math.hypot(t.x - x, t.z - z, Math.max(bottom - y, 0, y - top));
 }
 /** Fraction of vertical view occupied by the source crown (upper70% of tree).
- * This governs leaf curvature detail, not whether the tree itself is present. */
+ * This selects individual patches versus the retained source-depth canopy. */
 export function projectedCrownHeight(
   tree: TreeInstance,
   distance: number,
@@ -21,22 +21,24 @@ export function projectedCrownHeight(
 ) {
   return (tree.height * 0.7 * projectionScale) / (2 * Math.max(0.1, distance));
 }
+const ORDINARY_PROJECTION_SCALE = 1 / Math.tan((62 * Math.PI) / 360);
 export function nearStreetTree(
-  tree: TreeInstance,
+  _tree: TreeInstance,
   distance: number,
   previous: boolean,
   projectionScale?: number,
 ) {
-  if (distance >= (previous ? 34 : 27)) return false;
-  if (projectionScale === undefined) return true;
-  // Preserve full3D leaf curvature at arm's-length/close walking distances.
-  // Large crowns still retain it farther away; smaller crowns use all-patch
-  // source-derived leaf cards with unchanged original woody geometry.
-  return (
-    distance < (previous ? 12 : 10) ||
-    projectedCrownHeight(tree, distance, projectionScale) >
-      (previous ? 0.38 : 0.45)
-  );
+  // Resolve individual leaf curvature only close to the camera. A large crown
+  // alone must not promote hundreds of thousands of curved leaf triangles.
+  // Narrow FOV extends the range by magnification; wide/unknown FOV preserves
+  // the same arm's-length detail. Extreme zoom retains the existing hard caps.
+  const zoom =
+    projectionScale !== undefined &&
+    Number.isFinite(projectionScale) &&
+    projectionScale > 0
+      ? Math.max(1, projectionScale / ORDINARY_PROJECTION_SCALE)
+      : 1;
+  return distance < Math.min(previous ? 34 : 27, (previous ? 6 : 4) * zoom);
 }
 /** Use the existing source-depth canopy when individual leaf cards are no
  * longer resolvable. The tree, calibrated trunk and source silhouette remain;

@@ -59,13 +59,23 @@ export function pacificCoast(
     });
   if (!buildPacificCoast(batch, building, materials)) return false;
   if (apron) buildPacificCoastApron(batch, apron, materials);
-  reflections.push({
-    name: "325 Howe Cordova paired windows",
-    resolution: 256,
-    // Outside the street corner; a shared static environment approximation.
-    position: [431.2, batch.offsetY + 10.8, -398.8],
-    materials: [materials.glass],
-    intensity: { day: 0.8, night: 0.75 },
-  });
+  for (const edge of [0, 1]) {
+    const frame = facadeFrame(
+      PACIFIC_COAST_RING[edge],
+      PACIFIC_COAST_RING[edge + 1],
+    );
+    // Keep the previous capture height and resolution. Each receiver now
+    // samples the actual street outside its own facade instead of sharing an
+    // origin beyond the common corner. This reduces nearby-source parallax
+    // error; it does not provide exact reflection parallax for every window.
+    const position = frame.p(frame.length / 2, batch.offsetY + 10.8, -1.2);
+    reflections.push({
+      name: `325 Howe ${edge === 0 ? "Cordova" : "Howe"} paired windows`,
+      resolution: 256,
+      position,
+      materials: [edge === 0 ? materials.glass : materials.glassHowe],
+      intensity: { day: 0.8, night: 0.75 },
+    });
+  }
   return true;
 }
