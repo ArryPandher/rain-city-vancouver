@@ -1,11 +1,12 @@
-/** Official 2023 Gallery exterior: five narrow columnar conifers above a
- * recessed lower frontage. Locations/heights are bounded photographic fits. */
+/** Assembly-frame coordinates for five columnar conifers and the recessed
+ * lower frontage. galleryWestPoint registers this longitudinal strip outside
+ * the east side of the retained Hooper wing; dimensions remain interpreted. */
 export const GALLERY_WEST_TERRACE = {
   minU: -27.8,
   maxU: -9.4,
   frontV: 28.3,
   beamBackV: 27.15,
-  rearV: 24.15,
+  rearV: 24.65,
   capY: 3.199517011642456,
   datum: 0.08,
   bottom: -0.08,
@@ -47,7 +48,7 @@ export function galleryWestTerraceBoxes(): GalleryWestBox[] {
       bottom: d.beamBottom,
       top: d.capY,
       role: "stone",
-      openTop: true,
+      openTop: false,
     },
     {
       minU: d.minU,
@@ -57,7 +58,7 @@ export function galleryWestTerraceBoxes(): GalleryWestBox[] {
       bottom: d.ceilingBottom,
       top: d.capY,
       role: "stone",
-      openTop: true,
+      openTop: false,
     },
     {
       minU: d.minU,
@@ -145,4 +146,16 @@ export function galleryWestCrownProfile(f: number) {
     : f < 0.65
       ? 1 - (0.14 * (f - 0.07)) / 0.58
       : Math.max(0.035, 0.86 * Math.pow((1 - f) / 0.35, 0.7));
+}
+
+/** Proper90° rotation, preserving winding and atlas UVs. The new cap lies
+ * outside the retained wing, u[-8.5,-4.85],v[34.5,52.9], not on its buried floor. */
+export function galleryWestPoint(along: number, out: number): [number, number] {
+  return [out - 33.15, 25.1 - along];
+}
+export function galleryWestAssemblyPoint(
+  u: number,
+  v: number,
+): [number, number] {
+  return [25.1 - v, u + 33.15];
 }

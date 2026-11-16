@@ -8,6 +8,7 @@ import {
   GALLERY_WEST_TERRACE as D,
   galleryWestTerraceBoxes,
   galleryWestCrownProfile,
+  galleryWestPoint,
   type GalleryWestBox,
 } from "./gallery-west-terrace-data";
 
@@ -153,12 +154,18 @@ export function addGalleryWestTerrace(
     metalness: 0,
   });
   const materials = { stone, metal, glass };
+  const registered = (geometry: T.BufferGeometry) => {
+    geometry.rotateY(Math.PI / 2);
+    const [u, v] = galleryWestPoint(0, 0);
+    geometry.translate(u, 0, v);
+    return geometry;
+  };
   for (const b of galleryWestTerraceBoxes())
-    mesh.add(galleryWestBoxGeometry(b), materials[b.role]);
-  mesh.add(galleryWestHedgeGeometry(), leaf);
+    mesh.add(registered(galleryWestBoxGeometry(b)), materials[b.role]);
+  mesh.add(registered(galleryWestHedgeGeometry()), leaf);
   const sprays = createGalleryWestFoliageMaterial();
   for (let i = 0; i < D.trees.length; i++) {
-    mesh.add(galleryWestConiferGeometry(i, 0.68), leaf);
-    mesh.add(galleryWestSprayGeometry(i), sprays);
+    mesh.add(registered(galleryWestConiferGeometry(i, 0.68)), leaf);
+    mesh.add(registered(galleryWestSprayGeometry(i)), sprays);
   }
 }

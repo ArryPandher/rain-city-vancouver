@@ -13,47 +13,42 @@ The Gallery reference is used to interpret architecture, not shipped as a textur
 
 The bounded addition comprises five crowns, their continuous hedge/planter, the edge fascia, four finite piers, and a recessed closed glazed service front. Existing mapped broadleaf trees, Gallery walls/roof, stairs, main portico, eastern bistro, roads and terrain remain separately owned and unchanged. This does not create a navigable service interior.
 
-## Actual source cap and void
+## Rejected first registration and corrected exterior strip
 
-Original model: `public/models/vancouver/vancouver-art-gallery.glb`.
-SHA-256: `bb1698be78e258a3da8bb0fe8953d8561748be9925dc9011be10fe49584f7a32`.
+The first implementation (9e8a77c/4619b0d, integrated d269) placed a transverse row at u−26.4..−11.4/v27.58. **Native review rejected this placement.** It was inside the retained southwest Hooper wing, hidden behind the long side wall and below copper roofs. The earlier cap audit started just above y3.2 and established only floor support; it did not test the overhead enclosure. The earlier support conclusion must not be interpreted as proof of a valid exterior position.
 
-Audit decoded normalized POSITION attributes and applied each glTF node's world matrix, then the existing rear-entry repair and original-stair removal. Rotating by the registered entry angle 0.7769452205671321 gives the common authored u/y/v frame. The loaded Gallery later rotates by the opposite angle and adds the existing 0.08m datum.
+Original model: `public/models/vancouver/vancouver-art-gallery.glb`, SHA-256 `bb1698be78e258a3da8bb0fe8953d8561748be9925dc9011be10fe49584f7a32`. The full decoded source, after current entry/facade/stair cuts, shows:
 
-The retained foundation already has a top cap at **local y3.199517011642456** across the entire new strip. No new terrace floor and no source removal are needed. Source triangle 2278 after the existing stair removal has vertex IDs 3277/3267/3314:
+- The real west-wing side lies near u−8.8 and extends to v58, with the projecting western end around v63. Its mapped source parts380105927/380105931 carry stone y13.15–14 and copper roofs y14–18.
+- Arrival sight rays from u0.814/y1.6/v51.3 to every old crown hit retained stone/glass at u≈−8.8, v32.6–42.9.
+- Top rays over old roots hit source copper y14.76–17.30 or stone y13.15/14.00. Those roofs and side walls are valid retained geometry, not disposable occluders.
+- Native evidence: `artifacts/local/gallery-west-approach-obstruction-native.png`; exact ray/vertex evidence: `gallery-west-occlusion-audit.json`.
 
-| Vertex |                   u |           local y |                  v |
-| ------ | ------------------: | ----------------: | -----------------: |
-| 3277   | -28.102706909179688 | 3.199517011642456 |  23.86869239807129 |
-| 3267   | -21.030731201171875 | 3.199517011642456 | 63.001930236816406 |
-| 3314   |  -8.872893333435059 | 3.199517011642456 |  23.81922721862793 |
+The cached georeferenced aerial `artifacts/local/robson-realism-reference/esri-garden-context.jpg` and its EPSG3857 extent in `esri-garden-export.json` confirm the long wing. The registered overlay `artifacts/local/gallery-west-plan-registration.png` shows the first red row over its roof, and the planted/terrace strip outside its east side. The official oblique photograph's row and recessed service frontage are interpreted as running longitudinally along that exterior strip toward the stairs. An independent architecture-agent read agreed with this orientation. Individual centres and extent remain inferred from imagery, not surveyed.
 
-Adjacent cap triangle 2261 uses 3277/3273/3271; triangle 2271 uses 3267/3266/3314. These are audit identifiers, not runtime offsets. Runtime neither mutates nor selects source indices. The source cap extends much farther back than this intervention; its entire existing extent is preserved.
+The correction uses a proper90° assembly rotation and translation; it does **not** remove, hide, shorten or exempt the existing wing. The service strip now occupies Gallery-local **u−8.5..−4.85, v34.5..52.9**. The source wing side remains approximately0.2–0.3m west of the strip's back. It is a new closed exterior platform at the existing Gallery terrace datum, not the old buried source cap. Source geometry and original positions/indices remain untouched.
 
-Actual rays beneath the cap at u−25/−22/−19/−16/−13 and y1.5 reach a distant rear wall around v−22, rather than a near wall at v24–28. Therefore the new lower facade is set back to v24.15–24.25 and remains visibly recessed through the gaps between columns. Source cap audit artifacts: `artifacts/local/gallery-west-cap-audit.mts` and `.json`.
+## Corrected construction and gameplay contact
 
-## Registered construction and contact
+The authoring helpers retain their internal assembly coordinates. `galleryWestPoint(along,out)` converts them to Gallery coordinates as `[out−33.15,25.1−along]`; its inverse is used by collision. Rendering applies the same rigid transform, preserving normal winding and atlas UVs. The Gallery's existing final rotation and +0.08m datum remain unchanged.
 
-All figures below are local u/y/v except the explicit world datum. Horizontal placement uses the retained cap as a hard bound, while appearance dimensions remain estimated.
+- New cap: local y3.199517011642456 (world3.279517), matching the existing Gallery terrace datum. Beam and soffit boxes now include their upward faces; the two adjoining regions have no overlapping floor area.
+- Front edge: u−4.85; beam underside y2.42. Ceiling underside y2.94. Side returns, rear closure and four square0.65m piers join the cap/beam without gaps.
+- Every ground-reaching member starts at local−0.08, exactly world y0. Actual full-city ground samples at the four feet match that plane.
+- Closed service glazing is at u−8.5..−8.4, approximately3.55m behind the east edge, with closed end returns and metal framing. Gaps remain between the piers; no full-height blind front wall is added.
+- Planter walls start on the new cap and rise0.64m. Roots are buried0.18m below the top and overlap the low hedge. No floating trees or new navigable interior are introduced.
+- Corrected tree centres: u−5.57, with v51.5/47.75/44/40.25/36.5 and estimated heights5.5/6.5/7.3/6.1/9.5m. The tallest tree is nearest the stairs. Widths remain0.98/1.08/1.2/1.05/1.48m. Heights and botanical detail are interpretations; perspective in the source does not establish a precise tree inventory.
+- The northern end atv34.5 leaves **1.13m beyond the existing stair footv33.37**, enough for the0.36m player to turn laterally across the entire stair mouth. It does not consume any tread width.
 
-- Edge: u−27.8..−9.4, front v28.3, beam back v27.15, beam bottom y2.42, beam top exact source cap.
-- Underside: v24.15..27.15, bottom y2.94, top exact cap. Beam/soffit boxes omit their upward face at the cap to retain a single visible floor owner.
-- Four piers: u−27.25/−21.55/−15.85/−10.15, width0.65m, v27.5..28.15, local bottom−0.08 to y2.42. Their world bottoms are exactly y0; the beam meets each pier without a gap.
-- Closed lower glazing: v24.15..24.25, local bottom−0.08 to y2.94, with finite side returns and framing. It is approximately4.05m behind the edge face. No front-spanning blind wall or new support route is introduced.
-- Planter: u−27.8..−9.4/v27.05..28.1, height0.64m above the retained cap, walls0.12m. Crown roots are buried0.18m below its top and overlap the low hedge; no floating/exposed tree bases.
-- Five crowns: local u−26.4/−22.65/−18.9/−15.15/−11.4, v27.58; estimated heights5.5/6.5/7.3/6.1/9.5m and widths0.98/1.08/1.2/1.05/1.48m. These give the visible alternating silhouette without claiming measured botany.
+`galleryWestTerraceBoxes()` continues to supply both render and finite contact. Camera contact uses sphere-to-box distance; actors use their existing vertical interval and horizontal radius. No foliage collision, ground-height override, private-building exemption or infinitely high wall is added. Full widths of mapped footways w263530524 and w749560067 remain clear. Existing mapped broadleaf trees remain untouched.
 
-`galleryWestTerraceBoxes()` supplies both geometry and hard contact. Camera contact is sphere-to-finite-box distance; actor contact uses the existing foot/body interval and a horizontal circle. There is no infinitely high barrier and no foliage collision. The contact helper only adds finite obstacles; it does not exempt existing private Gallery mass or change support heights.
+A normal inspection route runs from Gallery-local `(0.814,51.3)` through `(0.8,43)`, `(0.8,36)` to `(0.8,34)`, looking west toward the row. These points are east of the new edge, so they do not require crossing the old wing wall. Full-city movement/support and ordinary4.3m chase-boom checks pass along this route. Native visual review remains required.
 
-Exact existing footways w263530524 and w749560067 are tested over their full stored widths, with player/camera clearance. The arrival and central stair corridor are outside this addition. Existing broadleaf/tree arrays are never read or mutated by the addition.
+## Integration and cost
 
-## Integration contract
+Existing root hooks remain valid: `addGalleryWestTerrace(mesh,base,frame,glass)` before `mesh.finish()`, and `galleryWestTerraceBlocked(u,v,radius,y,camera)` after world-to-Gallery coordinate conversion. Keep the independent bistro/portico delegates. There is no support hook. Preserve atlas UVs only for `galleryFoliageAtlas` material.
 
-- In `addGalleryFacade`, call `addGalleryWestTerrace(mesh, base, frame, glass)` before `mesh.finish()`. It reuses the owning materials, including the existing rear-facing glass receiver.
-- Preserve atlas UVs for the single material marked `galleryFoliageAtlas`; all stone/other facade UV handling remains unchanged.
-- In `galleryStairFramingBlocked`, immediately after converting world x/z to u/v, return true when `galleryWestTerraceBlocked(u, v, radius, y, camera)` is true. Preserve the independent bistro/portico delegates. There is no support hook.
-
-The complete addition is **13,000 triangles / 14,932 vertices in five material batches**: 23 hard members (272 triangles), five compact inner crowns plus hedge (5,000), and folded needle sprays (7,728). Stone/metal/glass reuse the owning instances; the backing and needle finish add two materials. No new model download, custom shader, animation, or per-frame update is needed.
+The complete correction is **13,004 triangles / 14,932 vertices in five material batches**: hard members276 triangles, backing/hedge5,000 and folded sprays7,728. The four-triangle increase closes the previously omitted cap faces. The full current Gallery facade factory totals31,694triangles/nine batches. No new textures, captures or per-frame work are added by this registration repair.
 
 ## Licensed close foliage finish
 
@@ -75,6 +70,6 @@ An offline front-view alpha ray preview is recorded at `artifacts/local/gallery-
 
 ## Verification and acceptance
 
-`npx tsx --test tests/gallery-west-terrace.test.ts tests/gallery-west-foliage.test.ts` verifies the real decoded GLB cap across a750-sample grid; unchanged source arrays; no duplicate cap-height upward faces; original and new lower frontage depth; closed front-side rays; all five crown orientation/closure/root contact; world-ground pier contact; finite rendered/contact member parity; actual source route clearance; a bounded five-material geometry budget; image provenance and actual alpha gaps; atlas orientation and normal convention; load failure/disposal; and actual Gallery batch UV/contact integration. TypeScript checking is separate from native visual acceptance.
+`npx tsx --test tests/gallery-west-terrace.test.ts tests/gallery-west-foliage.test.ts` verifies750 full-height source rays over the corrected strip; regression rejection of the roof-enclosed old placement; crown-volume and ordinary-arrival source sightlines; unchanged source arrays; a single new closed cap; recessed lower frontage depth; closed front-side rays; all five crown orientation/closure/root contact; actual world-ground pier contact; finite rendered/contact member parity; full-width mapped route and stair-mouth clearance; walking/chase-camera integration; a bounded five-material geometry budget; image provenance and actual alpha gaps; atlas orientation and normal convention; load failure/disposal; and actual Gallery batch UV/contact integration. TypeScript checking is separate from native visual acceptance.
 
 Native ordinary walking-view review is still required. Metric plant/frontage fits and shadow appearance are not claimed as surveyed or visually accepted by these source tests.

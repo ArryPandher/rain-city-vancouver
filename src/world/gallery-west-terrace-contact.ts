@@ -1,6 +1,7 @@
 import {
   GALLERY_WEST_TERRACE as D,
   galleryWestTerraceBoxes,
+  galleryWestAssemblyPoint,
 } from "./gallery-west-terrace-data";
 const boxes = galleryWestTerraceBoxes();
 /** Addition only: does not exempt or open the existing private gallery mass. */
@@ -13,6 +14,7 @@ export function galleryWestTerraceBlocked(
 ) {
   if (![u, v, radius, worldY].every(Number.isFinite) || radius < 0)
     return false;
+  [u, v] = galleryWestAssemblyPoint(u, v);
   if (
     u < D.minU - radius ||
     u > D.maxU + radius ||

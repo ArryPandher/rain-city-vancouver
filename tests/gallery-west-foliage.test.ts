@@ -12,6 +12,7 @@ import {
 import {
   GALLERY_WEST_TERRACE as D,
   galleryWestCrownProfile,
+  galleryWestPoint,
 } from "../src/world/gallery-west-terrace-data";
 import { addGalleryFacade } from "../src/world/gallery-facade";
 import { galleryStairFramingBlocked } from "../src/world/gallery-stair-framing-contact";
@@ -148,7 +149,7 @@ test("actual Gallery facade batching preserves atlas UVs and delegates physical 
     "metric stone UVs must never replace actual twig atlas UVs",
   );
   for (const u of D.piers) {
-    const [x, z] = galleryStairWorld(u, 27.8);
+    const [x, z] = galleryStairWorld(...galleryWestPoint(u, 27.8));
     assert.equal(galleryStairFramingBlocked(x, z, 0.36, 0, false), true);
     assert.equal(galleryStairFramingBlocked(x, z, 0.25, 20, true), false);
   }

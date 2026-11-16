@@ -219,13 +219,13 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
     for (let i = 0; i < p.count; i++) {
       assert.ok(Number.isFinite(p.getX(i) + p.getY(i) + p.getZ(i)));
       assert.ok(p.getY(i) >= -0.081 && p.getY(i) <= 16.751);
-      // The source-supported west edge and fitted five-crown envelope are
+      // The exterior west edge and fitted five-crown envelope are
       // the sole extension of the prior portico/bistro construction bounds.
       const westTerrace =
-        p.getX(i) >= -27.801 &&
-        p.getX(i) <= -9.399 &&
-        p.getZ(i) >= 24.149 &&
-        p.getZ(i) <= 28.44 &&
+        p.getX(i) >= -8.501 &&
+        p.getX(i) <= -4.7 &&
+        p.getZ(i) >= 34.499 &&
+        p.getZ(i) <= 52.901 &&
         p.getY(i) <= 13.161;
       assert.ok(
         westTerrace ||
@@ -250,7 +250,7 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
   t.diagnostic(`${triangles} added triangles in ${chunks.length} draws`);
   assert.ok(
     triangles < 33500,
-    `${triangles} added triangles including 13,000-triangle west planting and frontage`,
+    `${triangles} added triangles including 13,004-triangle west planting and frontage`,
   );
   const hit = wingRay((0.5 * GALLERY_FACADE.length) / 6, 4.25, root)[0];
   assert.ok(
