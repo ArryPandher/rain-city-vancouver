@@ -106,7 +106,8 @@ test("DEM material scales only standard fog depth and keeps physical lighting an
   assert.ok(shader.fragmentShader.includes("#include <fog_fragment>"));
   const originalVertex = shader.vertexShader;
   material.onBeforeCompile(
-    shader as Parameters<typeof material.onBeforeCompile>[0],
+    // This hook only reads shader sources; no renderer/program state is exercised.
+    shader as unknown as Parameters<typeof material.onBeforeCompile>[0],
     {} as T.WebGLRenderer,
   );
   assert.equal(shader.vertexShader, originalVertex);
