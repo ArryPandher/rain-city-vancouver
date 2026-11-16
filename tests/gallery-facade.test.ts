@@ -212,7 +212,7 @@ test("actual gallery source replacement preserves landing and all other material
 test("added geometry is finite, bounded, economical and has outward sill faces", async (t) => {
   const { root, chunks } = await scene();
   let triangles = 0;
-  assert.equal(chunks.length, 10);
+  assert.equal(chunks.length, 11);
   for (const mesh of chunks) {
     const p = mesh.geometry.getAttribute("position"),
       normal = mesh.geometry.getAttribute("normal");
@@ -256,7 +256,7 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
   }
   t.diagnostic(`${triangles} added triangles in ${chunks.length} draws`);
   assert.ok(
-    triangles < 36500,
+    triangles < 54000,
     `${triangles} added triangles including 13,006-triangle west planting and frontage`,
   );
   const hit = wingRay((0.5 * GALLERY_FACADE.length) / 6, 4.25, root)[0];

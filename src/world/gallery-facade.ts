@@ -341,6 +341,7 @@ export function addGalleryFacade(
     textureLibrary
       ? createGalleryWestConcreteMaterial(base, textureLibrary)
       : base,
+    textureLibrary,
   );
   mesh.finish();
   const chunks = batch.finish();
