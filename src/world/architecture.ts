@@ -1,5 +1,6 @@
 import { createG3TerminalAssembly } from "./g3-terminal";
 import { createIronworkersYardAssembly } from "./ironworkers-yard";
+import { createRepairShedAssembly } from "./ironworkers-repair-shed";
 import { buildHoweBuildingFoundation } from "./howe-building-foundations";
 import { CACTUS_ID } from "./jack-poole-site";
 import * as T from "three";
@@ -85,6 +86,7 @@ export function architecture(
     collision.groundHeight.bind(collision),
   );
   const ironworkersYard = createIronworkersYardAssembly(data.buildings);
+  const repairShed = createRepairShedAssembly(data.buildings);
   const shopNames = [
     ["PACIFIC COFFEE", "THE CORNER CAFÉ", "WEST COAST COFFEE"],
     ["WATER STREET LIVING", "HARBOUR HOME", "COASTAL INTERIORS"],
@@ -191,6 +193,7 @@ export function architecture(
       continue;
     }
     if (
+      repairShed(b, shell) ||
       ironworkersYard(b, shell) ||
       g3Terminal(b, shell) ||
       terminalCity(b, shell) ||

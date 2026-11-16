@@ -1,0 +1,35 @@
+{
+  "id": "w23776220",
+  "source": "public/data/vancouver-east.json",
+  "sha256": "1977b623c82edabe032b5524e3f951d7ef466a94bae4b0f436cccd0a94a7f295",
+  "pts": [
+    6825.1, -1902.9, 6855, -1902.3, 6855, -1932.6, 6858.7, -1932.6, 6857.5,
+    -1964.2, 6822.6, -1963.5
+  ],
+  "profile": [
+    [0, 6.4],
+    [7.75, 9.5],
+    [15.5, 6.4],
+    [22.85, 9.5],
+    [30.2, 6.4],
+    [36, 5.4]
+  ],
+  "roofLights": [
+    [2, 3.2],
+    [8, 9.2],
+    [14, 15.2],
+    [20, 21.2],
+    [26, 27.2],
+    [32, 33.2],
+    [38, 39.2],
+    [44, 45.2],
+    [50, 51.2],
+    [56, 57.2]
+  ],
+  "references": [
+    "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2024/MapServer",
+    "https://www.grahambuilds.com/ironworkers-memorial-bridge-improvements/"
+  ],
+  "attribution": "Original footprint © OpenStreetMap contributors, ODbL 1.0. References used for geometric observation only; no reference image redistributed.",
+  "note": "Two observed longitudinal pitched halls and eastern lean-to. Roof profile dimensions, roof-light intervals and facade heights are photo estimates; original ordered footprint is exact. No business identity inferred."
+}
