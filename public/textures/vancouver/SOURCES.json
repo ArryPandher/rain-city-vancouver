@@ -7,10 +7,11 @@
     "license": "CC BY-SA 3.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
     "derivatives": [
-      "north-shore.webp"
+      "north-shore.webp",
+      "north-shore-ridge.webp"
     ],
     "source": "https://commons.wikimedia.org/wiki/File:North_shore_pan.JPG",
-    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask."
+    "changes": "Perspective correction, cropping, colour balancing; horizon also has a feathered alpha mask. Ridge refinement derivative restores source-visible peaks and removes coarse-mask sky wedges; dense image-space trace with explicitly approximate cloud intervals, unchanged photographic RGB processing apart from resize/re-encoding. See docs/sources/north-shore-photo-ridge.md."
   },
   {
     "id": "vogue",
