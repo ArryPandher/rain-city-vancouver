@@ -8,7 +8,7 @@ import type {
   JunctionSurface,
 } from "./howe-cordova-junction-site";
 
-/** Reuses the existing credited mineral maps: geometry supplies the actual
+/** Reuses existing credited pavement/mineral maps: geometry supplies the
  * curb profile, slab edge and street grade. No new assets or baked facade art. */
 export function createHoweCordovaJunctionMaterials(
   library: Pick<Materials, "texture">,
@@ -30,8 +30,29 @@ export function createHoweCordovaJunctionMaterials(
       roughness: 0.9,
       metalness: 0,
     });
+  const sidewalkMap = library.texture("concrete_pavement-color.jpg", true).clone();
+  const sidewalkNormal = library.texture("concrete_pavement-normal.jpg").clone();
+  const sidewalkRoughness = library.texture("concrete_pavement-roughness.jpg").clone();
+  // The photograph spans three slabs across and six courses vertically.
+  // A 3.6m tile gives approximately 1.2 x 0.6m slabs: a visual scale estimate,
+  // not surveyed Howe/Cordova paving dimensions. Geometry UVs are local metres.
+  for (const texture of [sidewalkMap, sidewalkNormal, sidewalkRoughness]) {
+    texture.wrapS = texture.wrapT = T.RepeatWrapping;
+    texture.repeat.set(1 / 3.6, 1 / 3.6);
+    texture.updateMatrix();
+  }
   return {
-    sidewalk: material("Howe Cordova cast concrete sidewalk", 0xa5aaa1),
+    sidewalk: new T.MeshStandardMaterial({
+      name: "Howe Cordova cast concrete sidewalk",
+      color: 0xe1e4e7,
+      map: sidewalkMap,
+      normalMap: sidewalkNormal,
+      roughnessMap: sidewalkRoughness,
+      normalScale: new T.Vector2(0.3, 0.3),
+      // The existing roughness image averages .862, giving ~.845 when dry.
+      roughness: 0.98,
+      metalness: 0,
+    }),
     curb: material("Howe Cordova formed curb", 0xb6b8ac),
     gutter: material("Howe Cordova shallow concrete gutter", 0x8e958c),
   };

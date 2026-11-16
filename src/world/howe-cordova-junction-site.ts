@@ -10,7 +10,7 @@ import {
   type Point,
   type Road,
 } from "./data";
-import { subdividePath } from "./geometry";
+import { ribbon, subdividePath } from "./geometry";
 import { PACIFIC_COAST_RING } from "./pacific-coast-site";
 import type { PacificCoastApronSite } from "./pacific-coast-apron-site";
 
@@ -56,6 +56,8 @@ export const HOWE_CORDOVA_JUNCTION = {
   roadFinish: 0.094,
   surfaceSeparation: 0.003,
   sampleStep: 0.9,
+  roadContactFullDistance: 8,
+  roadContactFadeDistance: 8,
 } as const;
 
 /** Same sampled edge directions as world.ts's terrain-following road ribbon.
@@ -81,6 +83,104 @@ function ribbonPlan(r: Road, offset: number): Multi {
     ]);
   }
   return [[a.concat(b.reverse())]];
+}
+
+/** Read-only contact copies of the already rendered road triangles. Full
+ * parity beside the gutter; a gentle outer tie preserves older support beyond
+ * this one junction. This never changes road geometry or construction grade. */
+function adjacentRoadContact(
+  roads: Road[],
+  gutter: Multi,
+  baseline: (x: number, z: number) => number,
+) {
+  const rings = gutter.flat().map(open),
+    points = rings.flat();
+  const radius =
+    HOWE_CORDOVA_JUNCTION.roadContactFullDistance +
+    HOWE_CORDOVA_JUNCTION.roadContactFadeDistance;
+  const bounds = {
+    minX: Math.min(...points.map((p) => p[0])) - radius,
+    maxX: Math.max(...points.map((p) => p[0])) + radius,
+    minZ: Math.min(...points.map((p) => p[1])) - radius,
+    maxZ: Math.max(...points.map((p) => p[1])) + radius,
+  };
+  const containsBounds = (x: number, z: number) =>
+    x >= bounds.minX &&
+    x <= bounds.maxX &&
+    z >= bounds.minZ &&
+    z <= bounds.maxZ;
+  const triangles: [Vertex3, Vertex3, Vertex3][] = [];
+  const buckets = new Map<string, number[]>(),
+    key = (x: number, z: number) => `${Math.floor(x / 4)},${Math.floor(z / 4)}`;
+  if (points.length)
+    for (const road of roads) {
+      const g = ribbon(
+        subdividePath(road.pts),
+        roadWidth(road),
+        isStreet(road) ? 0.092 : road.walkway ? 0.15 : 0.07,
+        baseline,
+        5,
+        true,
+      );
+      const p = g.getAttribute("position"),
+        ix = g.getIndex()!;
+      for (let i = 0; i < ix.count; i += 3) {
+        const tri = [0, 1, 2].map((k) => {
+          const n = ix.getX(i + k);
+          return [p.getX(n), p.getY(n), p.getZ(n)] as Vertex3;
+        }) as [Vertex3, Vertex3, Vertex3];
+        const xs = tri.map((p) => p[0]),
+          zs = tri.map((p) => p[2]),
+          minX = Math.min(...xs),
+          maxX = Math.max(...xs),
+          minZ = Math.min(...zs),
+          maxZ = Math.max(...zs);
+        if (
+          maxX < bounds.minX ||
+          minX > bounds.maxX ||
+          maxZ < bounds.minZ ||
+          minZ > bounds.maxZ
+        )
+          continue;
+        const id = triangles.length;
+        triangles.push(tri);
+        for (let x = Math.floor(minX / 4); x <= Math.floor(maxX / 4); x++)
+          for (let z = Math.floor(minZ / 4); z <= Math.floor(maxZ / 4); z++) {
+            const k = `${x},${z}`,
+              bucket = buckets.get(k) ?? [];
+            bucket.push(id);
+            buckets.set(k, bucket);
+          }
+      }
+      g.dispose();
+    }
+  const height = (x: number, z: number): number | undefined => {
+    if (!containsBounds(x, z)) return undefined;
+    const bucket = buckets.get(key(x, z));
+    if (!bucket) return undefined;
+    let sourceY = -Infinity;
+    for (const i of bucket) {
+      const [a, b, c] = triangles[i],
+        det = (b[2] - c[2]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[2] - c[2]);
+      if (Math.abs(det) < 1e-8) continue;
+      const u = ((b[2] - c[2]) * (x - c[0]) + (c[0] - b[0]) * (z - c[2])) / det,
+        v = ((c[2] - a[2]) * (x - c[0]) + (a[0] - c[0]) * (z - c[2])) / det;
+      if (u >= -1e-7 && v >= -1e-7 && u + v <= 1.0000001)
+        sourceY = Math.max(sourceY, u * a[1] + v * b[1] + (1 - u - v) * c[1]);
+    }
+    if (!Number.isFinite(sourceY)) return undefined;
+    const weight =
+      1 -
+      smooth(
+        (distance(x, z, rings) -
+          HOWE_CORDOVA_JUNCTION.roadContactFullDistance) /
+          HOWE_CORDOVA_JUNCTION.roadContactFadeDistance,
+      );
+    if (weight <= 0) return undefined;
+    const ground = baseline(x, z);
+    return ground + (sourceY - ground) * weight;
+  };
+  return { height, containsBounds, triangleCount: triangles.length };
 }
 
 export function createHoweCordovaJunctionSite(
@@ -175,6 +275,7 @@ export function createHoweCordovaJunctionSite(
       clipping.difference(roads, inset),
     ) as Multi,
   };
+  const roadContact = adjacentRoadContact(nearby, masks.gutter, baseline);
   // Explicit profile break lines retain the 35mm bevel and 10mm gutter
   // depression even when the surrounding terrain tessellation is much coarser.
   const profileMasks: Record<JunctionSurface, Multi[]> = {
@@ -410,6 +511,9 @@ export function createHoweCordovaJunctionSite(
     triangles,
     curbFaces,
     height,
+    roadHeight: roadContact.height,
+    containsRoadSupportBounds: roadContact.containsBounds,
+    roadSupportTriangleCount: roadContact.triangleCount,
     world,
     local,
     ramp,

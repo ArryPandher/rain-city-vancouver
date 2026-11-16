@@ -523,7 +523,12 @@ export class CollisionWorld {
       this.canada,
       (road, x, z) => this.roadHeight(road, x, z),
     );
-    return this.canadaWalking.height(x, z) ?? base;
+    const previousWalking = this.canadaWalking.height(x, z);
+    // Keep Canada's existing finished walking contact wherever it is already
+    // higher than the local road provider's outer blend to historical grade.
+    return this.howeCordovaJunction?.roadHeight(x, z) !== undefined
+      ? Math.max(previousWalking ?? base, base)
+      : (previousWalking ?? base);
   }
   groundHeight(x: number, z: number): number {
     for (const recess of this.exteriorRecesses.values()) {
@@ -579,7 +584,7 @@ export class CollisionWorld {
   roadHeight(road: Road, x: number, z: number) {
     // The new local finish must not feed back into the original road ribbons.
     // Their exact gutter band is replaced by matching supported geometry.
-    if (this.howeCordovaJunction?.containsBounds(x, z))
+    if (this.howeCordovaJunction?.containsRoadSupportBounds(x, z))
       return this.groundHeight(x, z);
     if (this.canada && road.id && CANADA_PLACE_SERVICE_IDS.has(road.id))
       return this.existingGroundHeight(x, z);
@@ -608,6 +613,7 @@ export class CollisionWorld {
       ? this.bridgeHeight(b.bridge, b.t)
       : (this.pacificApron?.height(x, z) ??
           this.howeCordovaJunction?.height(x, z) ??
+          this.howeCordovaJunction?.roadHeight(x, z) ??
           this.groundHeight(x, z));
   }
   water(x: number, z: number, referenceY = Infinity) {

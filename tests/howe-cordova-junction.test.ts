@@ -301,3 +301,128 @@ test("curb face normals point toward the lower gutter and slab top is physically
   }
   assert.ok(checked > 8);
 });
+
+test("Cordova crossing has continuous road-to-gutter contact for walkers and vehicles", () => {
+  let previous:
+    | { vehicle: number; walking: number; onFinish: boolean }
+    | undefined;
+  let transitions = 0;
+  for (let i = 0; i <= 1050; i++) {
+    const t = i / 1050,
+      x = 436.6 - 5.5 * t,
+      z = -408.9 + 9 * t;
+    const vehicle = collision.height(x, z),
+      walking = collision.walkingHeight(x, z);
+    const onFinish = site.height(x, z) !== undefined;
+    if (previous) {
+      assert.ok(
+        Math.abs(vehicle - previous.vehicle) < 0.006,
+        `vehicle contact step at ${x},${z}`,
+      );
+      assert.ok(
+        Math.abs(walking - previous.walking) < 0.006,
+        `walking contact step at ${x},${z}`,
+      );
+      if (previous.onFinish !== onFinish) transitions++;
+    }
+    if (onFinish) {
+      near(vehicle, site.height(x, z)!);
+      near(walking, site.height(x, z)!);
+    }
+    previous = { vehicle, walking, onFinish };
+  }
+  assert.equal(transitions, 1, "the actual gutter boundary was crossed");
+});
+
+test("adjacent road contact uses original rendered triangles without feeding finish back into road geometry", () => {
+  const roadScene = new T.Group(),
+    material = new T.MeshBasicMaterial();
+  for (const id of ["w50162809", "w1255588459", "w232195213", "w1153403243"]) {
+    const r = data.roads.find((r) => r.id === id)!;
+    const original = ribbon(
+      subdividePath(r.pts),
+      roadWidth(r),
+      0.092,
+      collision.groundHeight.bind(collision),
+      5,
+      true,
+    );
+    const current = ribbon(
+      subdividePath(r.pts),
+      roadWidth(r),
+      0.092,
+      (x, z) => collision.roadHeight(r, x, z),
+      5,
+      true,
+    );
+    assert.deepEqual(
+      current.getAttribute("position").array,
+      original.getAttribute("position").array,
+      "road render remains unchanged across the support blend",
+    );
+    original.dispose();
+    roadScene.add(new T.Mesh(current, material));
+  }
+  roadScene.updateMatrixWorld(true);
+  for (const [x, z] of [
+    [436.6, -408.9],
+    [434.4, -405.3],
+    [435.2, -390.3],
+    [433.7, -388.8],
+  ]) {
+    const ray = new T.Raycaster(
+      new T.Vector3(x, 15, z),
+      new T.Vector3(0, -1, 0),
+      0,
+      10,
+    ).intersectObject(roadScene, true)[0];
+    assert.ok(ray);
+    assert.equal(site.height(x, z), undefined);
+    near(collision.height(x, z), ray.point.y, 0.00002);
+    near(collision.walkingHeight(x, z), ray.point.y, 0.00002);
+  }
+  assert.ok(
+    site.roadSupportTriangleCount > 100 && site.roadSupportTriangleCount < 5000,
+  );
+});
+
+test("the outer road correction fades continuously to old grade away from the junction", () => {
+  let previous: number | undefined,
+    maxCorrection = 0,
+    blend = 0,
+    outside = 0;
+  const road = data.roads.find((r) => r.id === "w50162809")!;
+  for (const [ax, az, bx, bz] of [
+    [432.9, -388, 407.9, -362.8],
+    [407.9, -362.8, 381.5, -336.2],
+  ]) {
+    const count = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.1);
+    for (let i = 0; i <= count; i++) {
+      const x = ax + ((bx - ax) * i) / count,
+        z = az + ((bz - az) * i) / count,
+        ground = collision.groundHeight(x, z);
+      const delta = collision.height(x, z) - ground;
+      assert.ok(delta > -0.001 && delta < 0.096);
+      if (previous !== undefined)
+        assert.ok(
+          Math.abs(delta - previous) < 0.004,
+          "no displaced outer-boundary step",
+        );
+      previous = delta;
+      maxCorrection = Math.max(maxCorrection, delta);
+      if (delta > 0.001) blend++;
+      else outside++;
+      near(collision.roadHeight(road, x, z), ground);
+    }
+  }
+  assert.ok(
+    maxCorrection > 0.075 && blend > 30 && outside > 30,
+    `positive finish correction, extended blend and unchanged outer road were sampled: ${JSON.stringify({ maxCorrection, blend, outside })}`,
+  );
+  for (const [x, z] of [
+    [0, 0],
+    [500, -460],
+    [380, -335],
+  ])
+    assert.equal(site.roadHeight(x, z), undefined);
+});
