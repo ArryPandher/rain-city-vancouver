@@ -12,9 +12,14 @@ export function createRailContextMeshes(
   library: Pick<Materials, "texture">,
 ) {
   const texture = (name: string, color = false, repeat = 1) => {
-    const map = library.texture(name, color).clone();
+    // Materials.texture already returns a consumer-owned wrapper sharing its Source.
+    const map = library.texture(name, color);
     map.wrapS = map.wrapT = T.RepeatWrapping;
     map.repeat.setScalar(repeat);
+    map.offset.set(0, 0);
+    map.center.set(0, 0);
+    map.rotation = 0;
+    map.colorSpace = color ? T.SRGBColorSpace : T.NoColorSpace;
     map.updateMatrix();
     return map;
   };
@@ -24,6 +29,7 @@ export function createRailContextMeshes(
     roughness: 1,
     map: texture("aerial_grass_rock-color.jpg", true, 0.25),
     normalMap: texture("aerial_grass_rock-normal.jpg", false, 0.25),
+    roughnessMap: texture("aerial_grass_rock-roughness.jpg", false, 0.25),
     normalScale: new T.Vector2(0.4, 0.4),
   });
   const ballast = new T.MeshStandardMaterial({
@@ -52,8 +58,24 @@ export function createRailContextMeshes(
       name: "Rail context bearing abutment",
       color: 0x96988c,
       roughness: 0.94,
+      normalMap: texture("landmarks/mineral-normal.webp", false, 1.25),
+      roughnessMap: texture("landmarks/mineral-roughness.webp", false, 1.25),
+      normalScale: new T.Vector2(0.22, 0.22),
     }),
   };
+  for (const material of Object.values(materials)) {
+    const owned = [
+      material.map,
+      material.normalMap,
+      material.roughnessMap,
+    ].filter((map): map is T.Texture => !!map);
+    let disposed = false;
+    material.addEventListener("dispose", () => {
+      if (disposed) return;
+      disposed = true;
+      for (const map of owned) map.dispose();
+    });
+  }
   return (Object.keys(context.parts) as RailContextRole[]).map((role) => {
     const mesh = new T.Mesh(context.parts[role], materials[role]);
     mesh.name = materials[role].name;
