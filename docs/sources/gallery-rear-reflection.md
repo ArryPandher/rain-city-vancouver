@@ -20,5 +20,13 @@ roughness and metalness remain unchanged for a controlled visual comparison.
 
 Actual-source facade tests verify independent rear-pane ownership, outside-face
 capture position and landmark translation, alongside the existing aperture,
-geometry and support checks. Four tests pass. Native image comparison, valid
-capture confirmation and weather-cycle review remain pending before acceptance.
+geometry and support checks. Four tests pass.
+
+Native `0c5dad7` review confirmed a valid 256 px capture and inspected its raw
+faces. The visual gain is modest: the panes still read dark at terrace distance.
+With exactly unchanged player and camera, a South → Southeast → South daylight
+cycle returned a 138 × 88 px window crop pixel-identically (MAE 0). Evidence:
+`artifacts/local/gallery-reflection-{after-profile,cycle-profile,cycle-pixels}.json`
+and the accompanying native images. This verifies daylight refresh, not a
+night-weather cycle or a major realism improvement. Further material and
+architectural work is still needed.
