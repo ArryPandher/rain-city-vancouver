@@ -1,3 +1,4 @@
+import { WaterWavesComparison } from "./water-waves";
 import { WaterOpticsComparison } from "./water-optics";
 import { galleryWestTreeExcluded } from "./gallery-west-tree-placement";
 import { createNorthShorePhotoHorizon, NORTH_SHORE_PHOTO_HORIZON } from "./north-shore-photo-horizon";
@@ -176,6 +177,7 @@ export class World {
   water!: T.ShaderMaterial;
   private waterOpticsComparison?: WaterOpticsComparison;
   private waterOpticsError: string | null = null;
+  private waterWavesComparison?: WaterWavesComparison;
   weather: Weather = "day";
   rain!: T.Points;
   time = 0;
@@ -1575,6 +1577,26 @@ export class World {
     );
     this.scene.add(this.rain);
   }
+  setDebugWaterWaves(enabled: boolean) {
+    if (!enabled) {
+      this.waterWavesComparison?.dispose();
+      this.waterWavesComparison = undefined;
+      return true;
+    }
+    if (
+      typeof location === "undefined" ||
+      !new URLSearchParams(location.search).has("debug") ||
+      !this.water
+    ) return false;
+    this.waterWavesComparison ??= new WaterWavesComparison(this.water);
+    this.waterWavesComparison.update(this.weather);
+    return true;
+  }
+  waterWavesDiagnostics() {
+    return this.waterWavesComparison?.diagnostics() ?? {
+      requested: false, active: false, components: 0,
+    };
+  }
   setDebugWaterOptics(renderer: T.WebGLRenderer, enabled: boolean) {
     if (!enabled) {
       this.waterOpticsComparison?.dispose();
@@ -1680,6 +1702,7 @@ export class World {
       .sub(this.sun.target.position)
       .normalize();
     this.water.uniforms.night.value = night ? 1 : 0;
+    this.waterWavesComparison?.update(w);
     this.waterOpticsComparison?.update(
       w, this.scene.backgroundRotation, this.scene.backgroundIntensity,
     );
