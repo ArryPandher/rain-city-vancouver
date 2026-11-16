@@ -1,0 +1,42 @@
+# Second Narrows railway lift bridge exterior
+
+This candidate replaces two office-looking procedural shells in the inlet with an original open steel railway assembly. It does not add land, alter the ocean, migrate North Shore ground, change railway source records, or change walking/driving collision. Native acceptance remains a separate integration check.
+
+## Identification and registration
+
+The retained `public/data/vancouver-east.json` buildings `w195058432` and `w195058435` are the lift towers, not occupied office buildings. Their original roof-outline centroids are `[6932.7,-1216.8]` and `[6936.85,-1368.675]`; both have `levels:9.375`. The retained raw OSM tag audit identifies `man_made=tower`, `height=30`, and explicitly `note=height approximate`. Their water setting is correct. Actual pre-candidate World terrain rays find ocean at approximately y0.065, with cityBase beneath it; adding land would incorrectly fill the navigable inlet.
+
+A bounded OSM map request on 2026-11-16 retained railway way [210638529](https://www.openstreetmap.org/way/210638529), tagged `railway=rail`, `bridge=movable`, `bridge:movable=lift`, `gauge=1435`, and `bridge:name=Second Narrows Rail Bridge`. Its four geographic controls are retained in `second-narrows-rail-source.json`, converted by the existing `data.geo` origin/scales. They define a 657.895 m bridge route. No outside railway network is generated. The two tower stations are 135.697 m and 287.632 m; their 151.935 m separation agrees with the published estimated 152.4 m main span. Fourteen-metre fender length leaves approximately 137.935 m between the tower fenders, consistent with the official 137 m navigable gap.
+
+The more recent railway centreline is about 2.5 m west of the older roof-outline centroid line. Frames centre on the verified railway at the two retained longitudinal tower stations. This is an explicit plan-registration approximation, not a claim that old roof outlines locate foundation centres exactly. Every emitted span vertex follows the same piecewise centreline, including the small approach direction changes. Gauge is 1.435 m. Overall source endpoints and the two original tower records are retained unchanged.
+
+## Photographic and elevation evidence
+
+Research photographs by **C. Hanchey**, documented August 9, 2010, are listed as **CC BY-NC 2.0** by [HistoricBridges](https://historicbridges.org/bridges/browser/?bridgebrowser=britishcolumbia/secondnarrowsrailbridge/). They are research references only: neither photograph, crop, derived texture nor pixel data is shipped in runtime assets.
+
+- [0533, lowered bridge with train](https://historicbridges.org/britishcolumbia/secondnarrowsrailbridge/second_narrows_-0533.jpg): open four-leg green towers; broad suspended reddish counterweights high in the frame; twin concrete piers; small overhead drive houses; single-track Parker through truss. This is the selected static operational configuration.
+- [0534, whole bridge with lift partly raised](https://historicbridges.org/britishcolumbia/secondnarrowsrailbridge/second_narrows_-0534.jpg): complete near/far tower silhouettes, drive-house rounded roof shoulders, fixed approaches, and main-span polygonal top chord. The lift span in this image is visibly above the approach rails; it is not a level/datum reference for the lowered deck.
+
+At a 1400 px-wide review copy of0534 (4272×2848 original), the near drive house occupies roughly x602–711/y367–433, tower concrete cap y766–788, fixed approach rail y780, and lifted main rail near its tower approximately y634. These are observed perspective image controls, not metric survey measurements. They distinguish a small machinery enclosure over a tall open frame from the former uniform office block.
+
+HistoricBridges identifies a **16-panel Parker** main through truss, **10-panel Pratt** fixed approaches, one main plus seven approach spans, estimated total662.9 m. The candidate uses two south and five north approach spans within the mapped endpoints. Individual fixed bearing stations divide each approach evenly; their exact spacing is an authored approximation, not independently surveyed. It does not extend an invented rail corridor beyond the mapped bridge.
+
+The [Port of Vancouver information guide](https://www.portvancouver.com/media/documents/port-information-guide-0) gives the fully raised span underside as 46 m above Higher High Water, the first fixed span immediately south of the south tower as 10.8 m above Higher High Water, and 137 m clear horizontal channel. These are constraints, not game-world vertical survey datums. The old approximate 30 m tower cannot accommodate the documented raised bridge.
+
+The bounded exterior synthesis uses rail top 13 m, pier cap 10.8 m, machinery underside 58 m and roof 64 m in the existing game datum. Main truss depth varies 6–10.5 m above the lower chord; its actual beam envelope can clear 46 m below while remaining under the machinery house. A focused test verifies that envelope. Rail-to-HHW offset and member thicknesses remain source-constrained estimates; no tide conversion, structural engineering accuracy, lift animation, train, electrical equipment or tunnel interior is claimed. The static lowered bridge has an unobstructed train envelope and continuous rails/sleepers through both tower portals.
+
+## Geometry and materials
+
+`createSecondNarrowsRailGeometry()` emits 27016 triangles in 38 unmerged parts. Four shared opaque materials become 11 draw chunks through the actual 270 m architecture Batcher. Major tower columns/chords use three closed pieces forming I-sections; slimmer diagonals preserve open views. Five braced tower stages, transverse truss ties, overhead diagonals, suspended counterweights, hoist cable pairs, machinery roofs, piers, bearings and an open waterline fender ring create the industrial silhouette. There is no opaque window facade, billboard or fake terrain skirt.
+
+Green steel is painted nonmetallic surface, roughness .76. Dark exposed hardware uses metalness .45; concrete is roughness .93. Restrained reddish counterweights follow the source; no random corrosion noise, emissive windows, extra lights, reflection captures or downloaded textures are introduced. The four materials are unique to this assembly. Existing batching and shadow policies apply.
+
+## Integration and checks
+
+Instantiate `createSecondNarrowsRailAssembly(data.buildings)` once in `architecture()`, then call its returned `(building, shellBatcher)=>boolean` before generic shell generation. It preflights both exact IDs, kinds, levels, optional metadata height 30 and complete retained footprint arrays. If either record is missing, duplicated or changed, it returns false for both and leaves the generic fallback available. It emits once regardless of which matching building appears first; no other ID is suppressed. The root agent owns this shared-file hook.
+
+Four focused tests use the actual east source buildings merged with the real building metadata using the loader’s level-preservation rule, and actual Batcher. They verify atomic source gating and repeat-call behavior, all geographic controls, gauge, span/raised-clearance constraints, finite geometry/budget, source-data immutability, highway separation, every 2.5 m rail-portal clearance sample, open tower rays, and solid outward-facing roofs/piers. No renderer timing or FPS benefit is claimed. The replacement adds a real assembly; its purpose is source fidelity.
+
+Native review: use the same Ironworkers northbound arrival and uphill camera as `ironworkers-light-standards-grade-native.png` and `ironworkers-light-standards-uphill-native.png`. The two near/right office blocks should become open green frames with the inlet visible through them, tied together by a low industrial through truss. Check 64 m height against the highway and mountains, the small machinery houses, approach endpoint placement, concrete pier/water intersections and normal distance/shadow culling. Reject floating bearings, opaque tower faces or any highway/camera contact regression before publishing.
+
+Source data credit: ©OpenStreetMap contributors, ODbL 1.0, [copyright/licence](https://www.openstreetmap.org/copyright). Local research cache: `artifacts/local/second-narrows-rail/`; source diagnoses: `artifacts/local/ironworkers-water-audit/`. The downloaded 1.04MB map response contains more returned way nodes than the small requested bbox; only the single bridge centreline is retained in runtime data. No bulk data download was used.

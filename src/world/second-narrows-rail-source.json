@@ -1,0 +1,53 @@
+{
+  "source": "OpenStreetMap contributors, ODbL; way210638529 retrieved2026-11-16, retained tower records from vancouver-east.json",
+  "railId": "w210638529",
+  "railGeo": [
+    {
+      "lat": 49.2927806,
+      "lon": -123.024592
+    },
+    {
+      "lat": 49.2933286,
+      "lon": -123.0245735
+    },
+    {
+      "lat": 49.298167,
+      "lon": -123.0243667
+    },
+    {
+      "lat": 49.2987299,
+      "lon": -123.0243384
+    }
+  ],
+  "railPoints": [
+    [6926.732257, -1081.147524],
+    [6928.075379, -1141.723444],
+    [6943.0893, -1676.56018],
+    [6945.143913, -1738.783146]
+  ],
+  "towers": [
+    {
+      "id": "w195058432",
+      "kind": "yes",
+      "levels": 9.375,
+      "pts": [6939, -1223.4, 6939, -1210.2, 6926.4, -1210.2, 6926.4, -1223.4]
+    },
+    {
+      "id": "w195058435",
+      "kind": "yes",
+      "levels": 9.375,
+      "pts": [6931.1, -1375.5, 6930.7, -1362.2, 6942.6, -1361.7, 6943, -1375.3]
+    }
+  ],
+  "elevation": {
+    "railTop": 13,
+    "pierTop": 10.8,
+    "frameTop": 58,
+    "houseTop": 64,
+    "sourceStatus": "Authored source-constrained exterior approximation, not surveyed elevations; official adjacent fixed-span underside10.8m and raised lift underside46m above HHW."
+  },
+  "mainPanels": 16,
+  "approachPanels": 10,
+  "southApproachSpans": 2,
+  "northApproachSpans": 5
+}
