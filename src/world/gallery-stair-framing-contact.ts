@@ -1,4 +1,5 @@
 import { galleryPorticoBlocked } from "./gallery-portico-contact";
+import { galleryWestTerraceBlocked } from "./gallery-west-terrace-contact";
 import {
   galleryBistroBlocked,
   galleryBistroHeight,
@@ -24,6 +25,7 @@ export function galleryStairFramingBlocked(
 ) {
   const [u, v] = galleryStairLocal(x, z);
   if (galleryPorticoBlocked(u, v, radius, y, camera)) return true;
+  if (galleryWestTerraceBlocked(u, v, radius, y, camera)) return true;
   if (galleryBistroBlocked(u, v, radius, y, camera)) return true;
   if (
     v < D.minV - radius - 0.5 ||

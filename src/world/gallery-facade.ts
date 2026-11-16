@@ -1,4 +1,5 @@
 import * as T from "three";
+import { addGalleryWestTerrace } from "./gallery-west-terrace";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import { addGalleryBistro } from "./gallery-bistro";
 import { ArchitecturalMesh, type Vertex3 } from "./architectural-mesh";
@@ -304,10 +305,12 @@ export function addGalleryFacade(
   addGalleryStairFraming(mesh, base, frame);
   addGalleryEntryStairs(mesh, createGalleryStairMaterial(base));
   addGalleryBistro(mesh, base, frame);
+  addGalleryWestTerrace(mesh, base, frame, glass);
   mesh.finish();
   const chunks = batch.finish();
   for (const chunk of chunks) {
-    landmarkSurfaceUV(chunk.geometry, [1, 1]);
+    if (![chunk.material].flat().some((m) => m.userData.galleryFoliageAtlas))
+      landmarkSurfaceUV(chunk.geometry, [1, 1]);
     chunk.name = root.name;
   }
   return chunks;
