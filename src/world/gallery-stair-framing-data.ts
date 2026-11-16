@@ -46,9 +46,14 @@ export function galleryStairRails(): GalleryRail[] {
     ];
     const centre = (s: (typeof SURFACES)[number]) =>
       point((s.minV + s.maxV) / 2, s.y);
+    const terraceEntry = u > 0;
+    // Fitted ~1.10m passage from the decoded facade to this second-tread
+    // terminal. The public upper landing joins the terrace without a rail
+    // across it; every lower flight and outer exposed edge remains guarded.
     const path = [
-      point(S.startV + 0.2, S.top),
-      centre(upper[0]),
+      ...(terraceEntry
+        ? [centre(upper[1])]
+        : [point(S.startV + 0.2, S.top), centre(upper[0])]),
       centre(upper.at(-1)!),
       point(landing.minV + 0.1, landing.y),
       point(landing.maxV - 0.1, landing.y),
@@ -58,8 +63,11 @@ export function galleryStairRails(): GalleryRail[] {
     ];
     for (let i = 1; i < path.length; i++) add(path[i - 1], path[i]);
     const supports = [
-      SURFACES[0],
-      ...upper.filter((_, i) => i % 5 === 0 || i === upper.length - 1),
+      ...(terraceEntry ? [upper[1]] : [SURFACES[0]]),
+      ...upper.filter(
+        (_, i) =>
+          (!terraceEntry || i > 1) && (i % 5 === 0 || i === upper.length - 1),
+      ),
       landing,
       lower[0],
       lower.at(-1)!,

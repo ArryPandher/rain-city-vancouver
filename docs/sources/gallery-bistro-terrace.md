@@ -79,3 +79,20 @@ finite contact bounds, reduces geometry by2,648 triangles, and adds no material,
 texture or draw. Dedicated tests verify connectivity, gap-free upward top rays,
 restrained irregularity, planter containment and the unchanged contact envelope.
 Native review of this correction remains pending.
+
+## Native upper-landing access correction
+
+The native side-step from world[-49.348976,3.28,32.15286] stopped at
+[-47.85,3.28,33.62], localu3.190/v23.860. Its obstruction was the original right
+stair handrail at u3.600, beginningv23.630, rather than a floor-height or building
+collision error. The right handrail now terminates at the second upper tread's
+centre v24.64 with a physical supported post. This leaves a fitted approximately
+1.10m gap to the decoded facade, permitting lateral access from the upperlanding.
+That gap is an authored access fit, not a measured photographic rail station.
+The left handrail, remaining right flight and outer edge guards remain intact.
+
+The actual full-city movement test reproduces both the nativev23.864404 line and
+v24.05 at80mm steps across the former barrier, without a jump, collision bypass or
+floor promotion. Ordinary chase-camera clearance and rail-foot support are also
+checked. Seven bistro/framing tests and scoped TypeScript pass. Native confirmation
+of the physical gap remains pending.

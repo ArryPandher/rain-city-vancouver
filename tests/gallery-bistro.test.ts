@@ -22,6 +22,7 @@ import {
   galleryStairBackV,
 } from "../src/world/gallery-entry-stairs-data";
 import { CollisionWorld } from "../src/world/collision";
+import { shortenChaseBoom } from "../src/game/chase-camera";
 import { loadCity } from "./helpers/full-city-data";
 import { roadWidth, type CityData, type Road } from "../src/world/data";
 function assembly(furniture = true) {
@@ -168,6 +169,36 @@ test("actual full-city transverse path and steps retain ribbon clearance, source
   }
   assert.ok(count > 200);
   assert.ok(minGap > 0.75);
+  // Exact native upper-landing pose: D at yaw2.355 follows positive localu.
+  // Reproduce movement across the formerly continuous right-hand rail.
+  for (const v of [23.864404129264646, 24.05]) {
+    let previous = galleryStairWorld(1.0924789358402052, v);
+    for (let u = 1.1724789358402052; u < 7; u += 0.08) {
+      const p = galleryStairWorld(u, v),
+        move = c.move(
+          ...previous,
+          p[0] - previous[0],
+          p[1] - previous[1],
+          0.36,
+          3.28,
+        );
+      assert.equal(move.hit, false, `native lateral entry at u${u}/v${v}`);
+      assert.ok(Math.hypot(move.x - p[0], move.z - p[1]) < 1e-6);
+      assert.ok(
+        Math.abs(c.walkingHeight(...p, 3.28) - 3.28) < 1e-9,
+        "no forced floor promotion",
+      );
+      const behind = galleryStairWorld(u - 4.3, v),
+        focus = new T.Vector3(p[0], 4.8, p[1]),
+        camera = new T.Vector3(behind[0], 5.35, behind[1]);
+      const fraction = shortenChaseBoom(focus, camera, (q) =>
+        c.cameraBlocked(q.x, q.z, 0.25, q.y),
+      );
+      assert.ok(fraction >= 0.4, `usable ordinary chase camera ${fraction}`);
+      assert.equal(c.cameraBlocked(focus.x, focus.z, 0.25, focus.y), false);
+      previous = p;
+    }
+  }
   for (let u = 4.4; u < 17.8; u += 0.2) {
     const v = 24.05,
       [x, z] = galleryStairWorld(u, v);
