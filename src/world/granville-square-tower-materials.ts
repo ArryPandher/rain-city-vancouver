@@ -1,6 +1,7 @@
 import * as T from "three";
 import type { Materials } from "./materials";
 import { createExteriorLobbyGlass } from "./exterior-lobby-glass";
+import { createGranvilleSquareOfficeGlass } from "./granville-square-tower-glazing";
 
 /** Mineral finish and coated-window approximation, not sampled photo textures.
  * The substantial facade structure belongs to geometry, not a painted grid. */
@@ -34,15 +35,7 @@ export function createGranvilleSquareTowerMaterials(
       metalness: 0.3,
       roughness: 0.48,
     }),
-    glass: new T.MeshPhysicalMaterial({
-      name: "Granville Square recessed coated office glass",
-      color: 0x263c3d,
-      metalness: 0,
-      roughness: 0.13,
-      ior: 1.8,
-      clearcoat: 0,
-      envMapIntensity: 0.8,
-    }),
+    glass: createGranvilleSquareOfficeGlass(),
     lobbyGlass: createExteriorLobbyGlass(
       "Granville Square closed base glazing",
       0.84,

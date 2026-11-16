@@ -5,6 +5,7 @@ import type { Materials } from "./materials";
 import { buildGranvilleSquareTower } from "./granville-square-tower";
 import { createGranvilleSquareTowerMaterials } from "./granville-square-tower-materials";
 import { GRANVILLE_SQUARE_TOWER_ID as ID } from "./granville-square-tower-data";
+import { GRANVILLE_SQUARE_OFFICE_PROBE } from "./granville-square-tower-glazing";
 
 /** Root calls before the generic fallback. Does not replace the parkade or wing. */
 export function granvilleSquareTower(
@@ -19,8 +20,8 @@ export function granvilleSquareTower(
   if (!buildGranvilleSquareTower(batch, building, m, groundHeight))
     return false;
   reflections.push({
-    name: "Granville Square south exterior",
-    position: [526, 52, -410],
+    name: "Granville Square southeast exterior",
+    position: [...GRANVILLE_SQUARE_OFFICE_PROBE],
     materials: [m.glass, m.lobbyGlass, m.frame],
     intensity: { day: 0.85, night: 0.85 },
   });

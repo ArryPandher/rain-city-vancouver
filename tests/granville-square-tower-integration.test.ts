@@ -90,7 +90,7 @@ test("live architecture dispatch emits one tower wrapper and suppresses its gene
     result = run([tower]);
   assert.equal(result.count, 1);
   assert.equal(result.reflections.length, 1);
-  assert.equal(result.reflections[0].name, "Granville Square south exterior");
+  assert.equal(result.reflections[0].name, "Granville Square southeast exterior");
   assert.equal(result.chunks.length, 6);
   assert.ok(
     result.chunks.every((c) =>
