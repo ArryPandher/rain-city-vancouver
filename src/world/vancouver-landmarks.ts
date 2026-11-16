@@ -1,3 +1,4 @@
+import { addCanadaPlaceNorthSeating } from "./canada-place-north-seating";
 import { canadaPlaceCapabilities } from "./canada-place-capabilities";
 import { loadLandmarkWithRetry } from "./landmark-load-retry";
 import {
@@ -315,6 +316,7 @@ export async function loadVancouverLandmarks(
     }
     if (refineCanadaCanopy) {
       addCanadaPlacePromenadeFixtures(group, CANADA_PLACE_PROMENADE_FIXTURES);
+      addCanadaPlaceNorthSeating(group);
       const canopy = addCanadaPlaceCanopy(group, canadaMaterials);
       if (refineCanadaHotel) {
         const hotel = createCanadaPlaceHotelJunction(canadaMaterials);

@@ -1,3 +1,4 @@
+import { canadaPlaceNorthSeatHeight } from "./canada-place-north-seating-data";
 import {
   createRobsonStreetEdgeSite,
   type RobsonStreetEdgeSite,
@@ -541,6 +542,11 @@ export class CollisionWorld {
   }
   /** On-foot contact includes the finish; the baseline remains the construction datum. */
   walkingHeight(x: number, z: number, referenceY = Infinity): number {
+    const northSeat =
+      this.canada && this.canadaGeometry.promenadeFixtures
+        ? canadaPlaceNorthSeatHeight(x, z, referenceY)
+        : undefined;
+    if (northSeat !== undefined) return northSeat;
     const galleryTerrace = this.gallery
       ? galleryStairFramingHeight(x, z, referenceY)
       : undefined;
@@ -668,6 +674,11 @@ export class CollisionWorld {
     return null;
   }
   height(x: number, z: number, referenceY = Infinity) {
+    const northSeat =
+      this.canada && this.canadaGeometry.promenadeFixtures
+        ? canadaPlaceNorthSeatHeight(x, z, referenceY)
+        : undefined;
+    if (northSeat !== undefined) return northSeat;
     const galleryTerrace = this.gallery
       ? galleryStairFramingHeight(x, z, referenceY)
       : undefined;

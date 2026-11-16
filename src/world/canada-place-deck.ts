@@ -1,3 +1,4 @@
+import { CANADA_PLACE_NORTH_FORECOURT } from "./canada-place-north-seating-data";
 import {
   CANADA_PLACE_ENTRANCE,
   CANADA_PLACE_ENTRANCE_GROUND_WORLD,
@@ -77,6 +78,7 @@ export const CANADA_PLACE_EAST_FRONT_APRON = worldRing([
 export const CANADA_PLACE_PUBLIC_MASKS = [
   front,
   trail,
+  worldRing(CANADA_PLACE_NORTH_FORECOURT),
   CANADA_PLACE_EAST_FRONT_APRON,
 ];
 const apronRailA = source.pier[25],

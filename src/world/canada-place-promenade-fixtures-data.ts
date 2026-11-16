@@ -1,3 +1,4 @@
+import { canadaPlaceNorthSeatAt } from "./canada-place-north-seating-data";
 import source from "./canada-place-deck-data.json";
 import { geo } from "./data";
 
@@ -70,10 +71,13 @@ export function canadaPlacePromenadeFixtureAt(
     bodyHeight < 0
   )
     return false;
-  return CANADA_PLACE_PROMENADE_FIXTURE_COLLIDERS.some(
-    (p) =>
-      referenceY <= p.maxY &&
-      referenceY + bodyHeight >= p.minY - 0.001 &&
-      Math.hypot(x - p.x, z - p.z) <= radius + p.radius,
+  return (
+    canadaPlaceNorthSeatAt(x, z, radius, referenceY, bodyHeight) ||
+    CANADA_PLACE_PROMENADE_FIXTURE_COLLIDERS.some(
+      (p) =>
+        referenceY <= p.maxY &&
+        referenceY + bodyHeight >= p.minY - 0.001 &&
+        Math.hypot(x - p.x, z - p.z) <= radius + p.radius,
+    )
   );
 }
