@@ -1,3 +1,4 @@
+import { WaterOpticsComparison } from "./water-optics";
 import { galleryWestTreeExcluded } from "./gallery-west-tree-placement";
 import { createNorthShorePhotoHorizon, NORTH_SHORE_PHOTO_HORIZON } from "./north-shore-photo-horizon";
 import { createNorthShoreDemGroup } from "./north-shore-dem";
@@ -173,6 +174,8 @@ export class World {
   sun = new T.DirectionalLight(0xffe0b3, 3.2);
   ambient = new T.HemisphereLight(0xc6dfed, 0x697265, 2.0);
   water!: T.ShaderMaterial;
+  private waterOpticsComparison?: WaterOpticsComparison;
+  private waterOpticsError: string | null = null;
   weather: Weather = "day";
   rain!: T.Points;
   time = 0;
@@ -1572,9 +1575,45 @@ export class World {
     );
     this.scene.add(this.rain);
   }
+  setDebugWaterOptics(renderer: T.WebGLRenderer, enabled: boolean) {
+    if (!enabled) {
+      this.waterOpticsComparison?.dispose();
+      this.waterOpticsComparison = undefined;
+      this.waterOpticsError = null;
+      return true;
+    }
+    if (
+      typeof location === "undefined" ||
+      !new URLSearchParams(location.search).has("debug")
+    ) return false;
+    if (this.waterOpticsComparison) return true;
+    if (!this.water || !this.skyTextures.day) return false;
+    try {
+      this.waterOpticsComparison = new WaterOpticsComparison(
+        this.water, this.skyTextures.day, renderer,
+      );
+      this.waterOpticsComparison.update(
+        this.weather, this.scene.backgroundRotation, this.scene.backgroundIntensity,
+      );
+      this.waterOpticsError = null;
+      return true;
+    } catch (error) {
+      this.waterOpticsError = error instanceof Error ? error.message : String(error);
+      return false;
+    }
+  }
+  waterOpticsDiagnostics() {
+    return this.waterOpticsComparison?.diagnostics() ?? {
+      requested: false, active: false, status: this.waterOpticsError ? "error" : "original",
+      retainedGpuBytes: 0, error: this.waterOpticsError,
+    };
+  }
   setDebugDaylightOrientation(orientation: DebugDaylightOrientation) {
     this.debugDaylightOrientation = orientation;
     applyDaylightOrientation(this, orientation);
+    this.waterOpticsComparison?.update(
+      this.weather, this.scene.backgroundRotation, this.scene.backgroundIntensity,
+    );
   }
   daylightOrientationProfile() {
     return daylightOrientationProfile(this, this.debugDaylightOrientation);
@@ -1641,6 +1680,9 @@ export class World {
       .sub(this.sun.target.position)
       .normalize();
     this.water.uniforms.night.value = night ? 1 : 0;
+    this.waterOpticsComparison?.update(
+      w, this.scene.backgroundRotation, this.scene.backgroundIntensity,
+    );
     this.nightLights.forEach((m) => (m.emissiveIntensity = night ? 2.0 : 0.25));
   }
 
