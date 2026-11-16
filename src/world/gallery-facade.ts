@@ -1,4 +1,5 @@
 import * as T from "three";
+import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import { addGalleryBistro } from "./gallery-bistro";
 import { ArchitecturalMesh, type Vertex3 } from "./architectural-mesh";
 import { Batcher } from "./geometry";
@@ -25,6 +26,39 @@ export const GALLERY_FACADE_EDGES = [
   edge([0.413, 23.62], [-8.872, 23.82], 3),
 ];
 export const GALLERY_FACADE = GALLERY_FACADE_EDGES[0];
+/** Rear-window capture outside the actual sloping facade, in the same asset
+ * frame as its panes. The probe does not assign its view to other elevations. */
+export function galleryFacadeReflection(
+  chunks: readonly T.Mesh[],
+  x: number,
+  z: number,
+): ReflectionProbeSpec | undefined {
+  const materials = [
+    ...new Set(
+      chunks.flatMap((mesh) =>
+        Array.isArray(mesh.material) ? mesh.material : [mesh.material],
+      ),
+    ),
+  ].filter(
+    (material): material is T.MeshStandardMaterial =>
+      material instanceof T.MeshStandardMaterial &&
+      !!material.userData.galleryRearPane,
+  );
+  if (!materials.length) return;
+  const face = GALLERY_FACADE,
+    along = face.length / 2;
+  const point = new T.Vector3(
+    face.a[0] + face.dx * along + face.nx * 2.5,
+    7,
+    face.a[1] + face.dz * along + face.nz * 2.5,
+  ).applyAxisAngle(new T.Vector3(0, 1, 0), -entry.angle);
+  return {
+    name: "Gallery Robson facade",
+    position: [point.x + x, point.y + 0.08, point.z + z],
+    materials,
+    resolution: 256,
+  };
+}
 function local(x: number, z: number) {
   const c = Math.cos(entry.angle),
     s = Math.sin(entry.angle);
@@ -110,8 +144,10 @@ export function addGalleryFacade(
 ) {
   const stone = materials.get("stone"),
     base = materials.get("foundation"),
-    glass = materials.get("glass");
-  if (!stone || !base || !glass) return [];
+    sourceGlass = materials.get("glass");
+  if (!stone || !base || !sourceGlass) return [];
+  const glass = sourceGlass.clone();
+  glass.userData.galleryRearPane = true;
   const wallStone = createGalleryAshlarMaterial(stone);
   const root = new T.Group();
   root.name = "Gallery southeast wing and engaged entrance";

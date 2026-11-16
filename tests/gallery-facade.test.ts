@@ -11,6 +11,7 @@ import {
   GALLERY_FACADE_EDGES,
   galleryFacadeCompatible,
   addGalleryFacade,
+  galleryFacadeReflection,
   replaceGalleryWingFaces,
 } from "../src/world/gallery-facade";
 import { repairGalleryRearEntry } from "../src/world/gallery-rear-entry";
@@ -88,6 +89,28 @@ async function scene() {
     }
   assert.equal(galleryFacadeCompatible(before), true);
   const chunks = addGalleryFacade(root, materials);
+  const probe = galleryFacadeReflection(chunks, 0, 0)!;
+  assert.equal(probe.materials.length, 1);
+  assert.notEqual(probe.materials[0], materials.get("glass"));
+  assert.equal(materials.get("glass")!.userData.galleryRearPane, undefined);
+  const localProbe = new T.Vector3(...probe.position).applyAxisAngle(
+    new T.Vector3(0, 1, 0),
+    GALLERY_FACADE.angle,
+  );
+  const face = GALLERY_FACADE;
+  assert.ok(
+    Math.abs(
+      (localProbe.x - face.a[0]) * face.nx +
+        (localProbe.z - face.a[1]) * face.nz -
+        2.5,
+    ) < 1e-8,
+    "capture is outside the rear facade in its actual rotated source frame",
+  );
+  assert.deepEqual(galleryFacadeReflection(chunks, 100, -200)!.position, [
+    probe.position[0] + 100,
+    probe.position[1],
+    probe.position[2] - 200,
+  ]);
   root.updateMatrixWorld(true);
   before.updateMatrixWorld(true);
   return { root, before, chunks, removed };

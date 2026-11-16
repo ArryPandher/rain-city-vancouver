@@ -28,6 +28,7 @@ import {
 } from "./canada-place-primary-supports";
 import {
   addGalleryFacade,
+  galleryFacadeReflection,
   galleryFacadeCompatible,
   replaceGalleryWingFaces,
 } from "./gallery-facade";
@@ -333,7 +334,9 @@ export async function loadVancouverLandmarks(
       );
     }
     if (refineGallery) {
-      addGalleryFacade(group, galleryMaterials);
+      const facade = addGalleryFacade(group, galleryMaterials);
+      const reflection = galleryFacadeReflection(facade, x, z);
+      if (reflection) reflections.push(reflection);
       addGalleryBanners(group);
     }
     if (refineHowePodium) {
