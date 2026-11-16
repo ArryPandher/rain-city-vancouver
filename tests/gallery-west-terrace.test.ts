@@ -327,11 +327,11 @@ test("actual public footway widths and central arrival remain clear without chan
   assert.equal(blocked(-20, 27, -1, 0, false), false);
 });
 
-test("bounded static geometry reuses stone/metal/glass plus one opaque foliage batch", () => {
+test("bounded static geometry reuses stone/metal/glass plus compact backing and one licensed needle batch", () => {
   const { chunks } = assembly();
-  assert.equal(chunks.length, 4);
+  assert.equal(chunks.length, 5);
   const triangles = chunks.reduce((n, m) => n + m.geometry.index!.count / 3, 0);
-  assert.ok(triangles < 5500, `${triangles} triangles`);
+  assert.ok(triangles < 14000, `${triangles} triangles`);
   const foliage = chunks.find((m) =>
     (m.material as T.Material).name.startsWith("Gallery west"),
   )!;

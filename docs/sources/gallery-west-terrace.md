@@ -9,7 +9,7 @@ The Gallery's official 2023 exterior photograph shows five narrow columnar conif
 - Detail: `artifacts/local/gallery-west-planting-reference.png`, cropped from x45/y290/w235/h310 and enlarged for inspection. The five crowns are separately visible; the rightmost is tallest.
 - Prior native baseline: `artifacts/local/gallery-terrace-corrected-arrival.png`.
 
-The reference is used to interpret architecture, not shipped as a texture. No image-reuse licence is asserted. All new meshes are original geometry. Tree species, metric heights, precise plant positions and service-bay dimensions are **photographic estimates**, not survey measurements. The construction deliberately names these columnar conifers rather than asserting a species.
+The Gallery reference is used to interpret architecture, not shipped as a texture. No image-reuse licence is asserted for that reference. All new meshes are original geometry; the separate licensed generic twig atlas is described below. Tree species, metric heights, precise plant positions and service-bay dimensions are **photographic estimates**, not survey measurements. The construction deliberately names these columnar conifers rather than asserting a species.
 
 The bounded addition comprises five crowns, their continuous hedge/planter, the edge fascia, four finite piers, and a recessed closed glazed service front. Existing mapped broadleaf trees, Gallery walls/roof, stairs, main portico, eastern bistro, roads and terrain remain separately owned and unchanged. This does not create a navigable service interior.
 
@@ -50,14 +50,31 @@ Exact existing footways w263530524 and w749560067 are tested over their full sto
 ## Integration contract
 
 - In `addGalleryFacade`, call `addGalleryWestTerrace(mesh, base, frame, glass)` before `mesh.finish()`. It reuses the owning materials, including the existing rear-facing glass receiver.
+- Preserve atlas UVs for the single material marked `galleryFoliageAtlas`; all stone/other facade UV handling remains unchanged.
 - In `galleryStairFramingBlocked`, immediately after converting world x/z to u/v, return true when `galleryWestTerraceBlocked(u, v, radius, y, camera)` is true. Preserve the independent bistro/portico delegates. There is no support hook.
 
-The complete addition is5,272triangles/3,340vertices in four material batches, comprising23hard members, five696-triangle crowns and a1,520-triangle hedge. Only the foliage material is new.
+The complete addition is **13,000 triangles / 14,932 vertices in five material batches**: 23 hard members (272 triangles), five compact inner crowns plus hedge (5,000), and folded needle sprays (7,728). Stone/metal/glass reuse the owning instances; the backing and needle finish add two materials. No new model download, custom shader, animation, or per-frame update is needed.
 
-Static foliage has connected closed lobed crowns rather than stacked spheres or billboards. It uses one opaque, rough, vertex-coloured material, without new textures, downloads, custom shaders, animation, or per-frame work. Stone/metal/glass reuse the existing instances and batching.
+## Licensed close foliage finish
+
+The initial closed spindle meshes were retained only as compact internal backing, scaled to 68% of the fitted radial envelope. They are not the final visible foliage surface. Small upward folded branch sprays surround them, preserving the narrow photographic silhouette while giving the surface and outer edge actual needle alpha/normal detail. Each branch card is at most 0.48m wide and 0.76m tall; the twelve-sided arrangement changes phase every row and remains within the explicit crown bound. It does not stretch an entire fir-tree model into a different species.
+
+The separate RGBA and OpenGL normal atlas are extracted **byte-for-byte** from the already committed `fir_tree_01_twig` material in `public/models/forest/fir_tree_01-medium.glb`. Source: [Fir Tree 01](https://polyhaven.com/a/fir_tree_01), photography Rob Tuytel, modelling Rico Cilliers, **CC0**. This is a generic fir-needle approximation for columnar conifers; exact scale foliage/species scanning remains unresolved. Source geometry is not copied.
+
+- RGBA atlas: 1024×1024, 153,126 bytes.
+- Normal atlas: 1024×1024, 93,372 bytes.
+- Total added image files: **246,498 bytes**, extracted locally without network requests.
+- Exact source/derived SHA-256, attribution and reproduction: `public/textures/gallery-conifers/SOURCES.json`.
+- Reproduce with `node scripts/prepare-gallery-conifer-foliage.mjs`.
+
+Four selected image regions contain actual alpha-connected sprigs plus six-pixel filtering margins. Their coverage is approximately 14–30%, excluding the opaque trunk strip and unrelated atlas areas. Upward card tips sample smaller image rows. Both textures use `flipY=false`, matching glTF image orientation, with sRGB color, linear normal data and derivative normal scale `(0.75, -0.75)`. A white material leaves the photographed needle color intact. Standard double-sided rough material uses alpha cutoff 0.12 and alpha-to-coverage; Three's existing shadow pass approximates the latter using its normal 0.5 shadow cutoff.
+
+The material marks `userData.galleryFoliageAtlas=true`; the final Gallery batching loop must skip metric `landmarkSurfaceUV` only for this material. That actual integration is regression-tested. Incomplete/failed texture loads hide the cards and leave the compact geometric backing; they never show opaque untextured rectangles. Owned image textures are disposed with the material.
+
+An offline front-view alpha ray preview is recorded at `artifacts/local/gallery-conifer-alpha-preview.png`. Among 24,875 rendered tree samples, 17,660 first hit real twig alpha and 7,215 reached inner backing. It checks needle-edge coverage, not native shader lighting or visual acceptance. The ordinary native view remains decisive.
 
 ## Verification and acceptance
 
-`npx tsx --test tests/gallery-west-terrace.test.ts` verifies the real decoded GLB cap across a750-sample grid; unchanged source arrays; no duplicate cap-height upward faces; original and new lower frontage depth; closed front-side rays; all five crown orientation/closure/root contact; world-ground pier contact; finite rendered/contact member parity; actual source route clearance; and a<5500-triangle/four-material-batch budget. TypeScript checking is separate from native visual acceptance.
+`npx tsx --test tests/gallery-west-terrace.test.ts tests/gallery-west-foliage.test.ts` verifies the real decoded GLB cap across a750-sample grid; unchanged source arrays; no duplicate cap-height upward faces; original and new lower frontage depth; closed front-side rays; all five crown orientation/closure/root contact; world-ground pier contact; finite rendered/contact member parity; actual source route clearance; a bounded five-material geometry budget; image provenance and actual alpha gaps; atlas orientation and normal convention; load failure/disposal; and actual Gallery batch UV/contact integration. TypeScript checking is separate from native visual acceptance.
 
 Native ordinary walking-view review is still required. Metric plant/frontage fits and shadow appearance are not claimed as surveyed or visually accepted by these source tests.

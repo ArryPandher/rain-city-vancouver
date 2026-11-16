@@ -136,3 +136,13 @@ export function galleryWestTerraceBoxes(): GalleryWestBox[] {
     });
   return boxes;
 }
+
+/** Fitted columnar crown radius, shared by compact backing and needle sprays. */
+export function galleryWestCrownProfile(f: number) {
+  f = Math.max(0, Math.min(1, f));
+  return f < 0.07
+    ? 0.38 + 0.62 * Math.sin(((f / 0.07) * Math.PI) / 2)
+    : f < 0.65
+      ? 1 - (0.14 * (f - 0.07)) / 0.58
+      : Math.max(0.035, 0.86 * Math.pow((1 - f) / 0.35, 0.7));
+}

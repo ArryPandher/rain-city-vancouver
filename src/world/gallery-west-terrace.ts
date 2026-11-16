@@ -1,8 +1,13 @@
 import * as T from "three";
+import {
+  createGalleryWestFoliageMaterial,
+  galleryWestSprayGeometry,
+} from "./gallery-west-foliage";
 import type { ArchitecturalMesh } from "./architectural-mesh";
 import {
   GALLERY_WEST_TERRACE as D,
   galleryWestTerraceBoxes,
+  galleryWestCrownProfile,
   type GalleryWestBox,
 } from "./gallery-west-terrace-data";
 
@@ -49,7 +54,7 @@ function tint(g: T.BufferGeometry, seed: number) {
 }
 /** Dense narrow columnar crown; species is deliberately unclaimed. The
  * connected lobed surface avoids a repeated pile of spheres or flat billboards. */
-export function galleryWestConiferGeometry(index: number) {
+export function galleryWestConiferGeometry(index: number, radialScale = 1) {
   const t = D.trees[index],
     rings = 29,
     sides = 12,
@@ -59,19 +64,14 @@ export function galleryWestConiferGeometry(index: number) {
   const base = D.capY + D.planterHeight - 0.18;
   for (let i = 0; i < rings; i++) {
     const f = i / (rings - 1),
-      profile =
-        f < 0.07
-          ? 0.38 + 0.62 * Math.sin(((f / 0.07) * Math.PI) / 2)
-          : f < 0.65
-            ? 1 - (0.14 * (f - 0.07)) / 0.58
-            : Math.max(0.035, 0.86 * Math.pow((1 - f) / 0.35, 0.7));
+      profile = galleryWestCrownProfile(f);
     for (let j = 0; j < sides; j++) {
       const a = (j / sides) * Math.PI * 2,
         rough =
           1 +
           0.12 * Math.sin(i * 1.7 + j * 2.4 + index) +
           0.065 * Math.sin(i * 0.43 + j * 0.91 + index),
-        r = (t.width / 2) * profile * rough;
+        r = (t.width / 2) * profile * rough * radialScale;
       p.push(
         t.u + Math.cos(a) * r + 0.025 * Math.sin(f * 8 + index),
         base + f * t.height,
@@ -156,6 +156,9 @@ export function addGalleryWestTerrace(
   for (const b of galleryWestTerraceBoxes())
     mesh.add(galleryWestBoxGeometry(b), materials[b.role]);
   mesh.add(galleryWestHedgeGeometry(), leaf);
-  for (let i = 0; i < D.trees.length; i++)
-    mesh.add(galleryWestConiferGeometry(i), leaf);
+  const sprays = createGalleryWestFoliageMaterial();
+  for (let i = 0; i < D.trees.length; i++) {
+    mesh.add(galleryWestConiferGeometry(i, 0.68), leaf);
+    mesh.add(galleryWestSprayGeometry(i), sprays);
+  }
 }

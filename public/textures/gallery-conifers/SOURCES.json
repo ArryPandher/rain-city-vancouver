@@ -1,0 +1,30 @@
+{
+  "asset": "Fir Tree 01",
+  "authors": [
+    "Rob Tuytel",
+    "Rico Cilliers"
+  ],
+  "url": "https://polyhaven.com/a/fir_tree_01",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://polyhaven.com/license",
+  "sourceModel": "public/models/forest/fir_tree_01-medium.glb",
+  "sourceSha256": "30e4d3d7cfb92c973b631449ce0cda93a381be0c656894a7a466ea20768e5cb6",
+  "modification": "Exact embedded image extraction without resampling; original static branch-spray geometry uses selected UV subregions. Fir needle detail is a botanical approximation for photographically registered columnar conifers, not a species identification.",
+  "regenerate": "node scripts/prepare-gallery-conifer-foliage.mjs",
+  "images": [
+    {
+      "role": "color",
+      "file": "textures/gallery-conifers/color.webp",
+      "bytes": 153126,
+      "sha256": "ddbf00ad4f4771c18f8798467bc807f9a9a2568de97ad945c0a2fd6632b5278e",
+      "sourceTexture": "fir_tree_01_twig_diff-fir_tree_01_twig_alpha"
+    },
+    {
+      "role": "normal",
+      "file": "textures/gallery-conifers/normal.webp",
+      "bytes": 93372,
+      "sha256": "0c54bdd9bc61afbbf7150b9e2d0e826d857d1878e00d09da6d3b27db066887e9",
+      "sourceTexture": "fir_tree_01_twig_nor_gl"
+    }
+  ]
+}
