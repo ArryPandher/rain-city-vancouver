@@ -1,0 +1,38 @@
+{
+  "title": "325 Howe restrained mineral albedo",
+  "source": "https://polyhaven.com/a/granite_tile",
+  "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/granite_tile/granite_tile_diff_2k.jpg",
+  "authors": {
+    "Charlotte Baglioni": "All"
+  },
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "input": "public/textures/harbour-green/granite_tile-color.webp",
+  "inputSha256": "8ed283cda936258cb70c1e469ef05558ffea6845fb37d3118f96723f4c7f2375",
+  "meanReference": "public/textures/landmarks/mineral-color.webp",
+  "meanReferenceSha256": "9bc5467d9b00d9d11aeb63d8bf78db144acf121cc81e173d9bcb049bc9faeae3",
+  "crop": {
+    "left": 32,
+    "top": 32,
+    "width": 448,
+    "height": 448
+  },
+  "sourceDimensionsMetres": [2.299999952316284, 2.299999952316284],
+  "mirroredSourceSpanMetres": 1.0062499791383743,
+  "runtimeRepeatMetres": [0.85, 0.85],
+  "changes": "Existing converted CC0 granite diffuse, not a Vancouver stone scan. Joint-free crop mirrored in registration with the existing landmark mineral normal. Original-relative linear luminance is smoothly bounded to +/-8% then mean-normalized to the previous albedo. Neutral sRGB output resized to 512px WebP quality96. No downloads, reference-photo texture, generated dirt, new normal or roughness map.",
+  "preparation": "node scripts/prepare-pacific-coast-mineral.mjs",
+  "file": "textures/pacific-coast/mineral-color.webp",
+  "outputSha256": "6cb14155c0c78db4077261f6259b365ec428761fc32426de04e174aca937f288",
+  "bytes": 78146,
+  "decoded": {
+    "width": 512,
+    "height": 512,
+    "channels": 3,
+    "targetMeanLinear": 0.8238738892992181,
+    "meanLinear": 0.8247394402285839,
+    "meanByte": 234.15609741210938,
+    "stdevByte": 5.621366588310232,
+    "rangeByte": [220, 249]
+  }
+}

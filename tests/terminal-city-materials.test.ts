@@ -4,9 +4,50 @@ import fs from "node:fs";
 import * as T from "three";
 import {
   createTerminalCityMaterials,
+  createTerminalCityClubMaterials,
   TERMINAL_CITY_MINERAL_REPEAT_METRES,
 } from "../src/world/terminal-city-materials";
 import { bakeGeometry } from "../src/world/geometry";
+
+test("club copies only environment receivers, preserving tower surface parameters", () => {
+  const tower = createTerminalCityMaterials({ texture: () => new T.Texture() });
+  const borrowed = new T.CubeTexture();
+  tower.glass.envMap = tower.spandrel.envMap = borrowed;
+  const club = createTerminalCityClubMaterials(tower);
+  for (const key of ["stone", "metal", "dark", "roof"] as const)
+    assert.equal(club[key], tower[key]);
+  for (const key of ["glass", "spandrel"] as const) {
+    assert.notEqual(club[key], tower[key]);
+    assert.equal(club[key].envMap, null);
+    assert.equal(tower[key].envMap, borrowed);
+    assert.ok(club[key].color.equals(tower[key].color));
+    for (const value of [
+      "roughness",
+      "metalness",
+      "envMapIntensity",
+      "opacity",
+      "transparent",
+      "depthWrite",
+      "side",
+    ] as const)
+      assert.equal(club[key][value], tower[key][value]);
+    assert.equal(club[key].map, tower[key].map);
+    assert.equal(club[key].normalMap, tower[key].normalMap);
+  }
+  for (const key of [
+    "clearcoat",
+    "clearcoatRoughness",
+    "ior",
+    "transmission",
+    "specularIntensity",
+  ] as const)
+    assert.equal(club.glass[key], tower.glass[key]);
+  club.glass.color.set(0xff0000);
+  assert.ok(
+    !club.glass.color.equals(tower.glass.color),
+    "mutable color state is independent",
+  );
+});
 
 test("dedicated materials preserve shared library state and use the licensed granular crop", () => {
   const shared = new T.Texture<HTMLImageElement>();

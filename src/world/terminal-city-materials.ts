@@ -78,3 +78,20 @@ export function createTerminalCityMaterials(
     }),
   };
 }
+
+/** Only the club's environment receivers need independent ownership. Keep the
+ * accepted tower's optical parameters and shared mineral/metal samplers intact.
+ * No new image assets or independent copies of non-reflecting finishes. */
+export function createTerminalCityClubMaterials(
+  shared: TerminalCityMaterials,
+): TerminalCityMaterials {
+  const glass = shared.glass.clone(),
+    spandrel = shared.spandrel.clone();
+  glass.name = "Terminal City — Cordova club coated glass";
+  spandrel.name = "Terminal City — Cordova club spandrel";
+  // Assembly creates these before capturing, but also avoid inheriting a
+  // borrowed tower environment if this helper receives an already-bound set.
+  glass.envMap = null;
+  spandrel.envMap = null;
+  return { ...shared, glass, spandrel };
+}

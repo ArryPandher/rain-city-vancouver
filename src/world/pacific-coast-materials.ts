@@ -12,7 +12,9 @@ export const PACIFIC_COAST_MINERAL_REPEAT_METRES = [0.85, 0.85] as const;
  * docs/sources/howe-325-howe-audit.md. Those photographs are reference only.
  * The narrow Cordova end uses stone spandrels, not the orange brick material.
  * Existing generic CC0 maps: Rob Tuytel's Red Brick and Charlotte Baglioni's
- * Granite Tile crop, credited in public/textures/landmarks/SOURCES.json.
+ * Granite Tile crop, credited in public/textures/landmarks/SOURCES.json and
+ * public/textures/pacific-coast/SOURCES.json. The facade-only albedo preserves
+ * restrained original grain; the shared roof maps retain their previous look.
  * Fine joint-free mineral maps supplement the geometry's reveals and joints;
  * they do not establish the actual building's stone species or measured finish.
  */
@@ -43,6 +45,18 @@ export function createPacificCoastMaterials(
     roughnessMap: texture(surface, "roughness", metres),
   });
   const mineral = maps("mineral", PACIFIC_COAST_MINERAL_REPEAT_METRES);
+  const facadeColor = library
+    .texture("pacific-coast/mineral-color.webp", true)
+    .clone();
+  facadeColor.name = "325 Howe source-grain mineral albedo";
+  facadeColor.wrapS = facadeColor.wrapT = T.RepeatWrapping;
+  facadeColor.colorSpace = T.SRGBColorSpace;
+  facadeColor.repeat.copy(mineral.map.repeat);
+  facadeColor.updateMatrix();
+  // The original granite roughness averages ~0.54 before multiplication,
+  // producing a much smoother facade than the scalar alone suggests. These
+  // dry-mineral finish candidates keep the existing normal/weathering detail.
+  const facadeMineral = { map: facadeColor, normalMap: mineral.normalMap };
   // A dielectric sheet over closed window recesses. The lining supplies actual
   // visible depth; reflected radiance is no longer mixed with opaque paint.
   const glass = createExteriorLobbyGlass(
@@ -58,20 +72,20 @@ export function createPacificCoastMaterials(
   return {
     stone: new T.MeshStandardMaterial({
       name: "325 Howe pale warm mineral piers and Cordova spandrels",
-      ...mineral,
+      ...facadeMineral,
       // Kept below white to retain shading in the existing bright HDR daylight.
       color: 0xb0ad9f,
       normalScale: new T.Vector2(0.14, 0.14),
       metalness: 0,
-      roughness: 0.91,
+      roughness: 0.8,
     }),
     base: new T.MeshStandardMaterial({
       name: "325 Howe grey stone street base",
-      ...mineral,
+      ...facadeMineral,
       color: 0x727870,
       normalScale: new T.Vector2(0.21, 0.21),
       metalness: 0,
-      roughness: 0.88,
+      roughness: 0.84,
     }),
     brick: new T.MeshStandardMaterial({
       name: "325 Howe warm buff-orange Howe spandrel brick",
@@ -85,11 +99,11 @@ export function createPacificCoastMaterials(
     }),
     trim: new T.MeshStandardMaterial({
       name: "325 Howe mineral sills and narrow projecting bands",
-      ...mineral,
+      ...facadeMineral,
       color: 0xa4a293,
       normalScale: new T.Vector2(0.12, 0.12),
       metalness: 0,
-      roughness: 0.89,
+      roughness: 0.76,
     }),
     glass,
     lining: new T.MeshStandardMaterial({
