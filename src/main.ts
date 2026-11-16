@@ -557,11 +557,14 @@ class Game {
           "hornby-tower",
           "terrace",
           "north-point",
+          "rail-north-bank",
         ] as const
       ).map((check) => {
         const button = document.createElement("button");
         button.textContent =
-          check === "north-point"
+          check === "rail-north-bank"
+            ? "Walk at north railway bank"
+            : check === "north-point"
             ? "Walk at Canada Place north approach"
             : check === "gallery" ||
                 check === "hornby-tower" ||
@@ -1084,14 +1087,18 @@ class Game {
       | "gallery"
       | "hornby-tower"
       | "terrace"
-      | "north-point",
+      | "north-point"
+      | "rail-north-bank",
   ) {
     if (!this.ready || !new URLSearchParams(location.search).has("debug"))
       return;
-    // Recorded ordinary street comparison, cordova-geometry-baseline-profile.
-    // Use live walking support and the normal collision-shortened chase boom.
+    // Review points use live walking support and the normal collision-shortened
+    // chase boom. Source-selected inspection points are labelled below; visiting
+    // one does not establish a walked route from another location.
     const place =
-      check === "north-point"
+      check === "rail-north-bank"
+        ? "Ironworkers"
+        : check === "north-point"
         ? "Canada Place"
         : check === "gallery" ||
             check === "hornby-tower" ||
@@ -1100,7 +1107,17 @@ class Game {
           ? "Robson"
           : "Howe";
     const { x, z, yaw, pitch } =
-      check === "north-point"
+      check === "rail-north-bank"
+        ? {
+            // Retained service-road node for ground-level inspection. This is
+            // not evidence of a walked connection from the highway. Live body,
+            // water and walking-height checks below remain authoritative.
+            x: 6957.8,
+            z: -1732.9,
+            yaw: 3.588,
+            pitch: -0.12,
+          }
+        : check === "north-point"
         ? {
             x: canadaPlaceWorld(42, -75)[0],
             z: canadaPlaceWorld(42, -75)[1],
