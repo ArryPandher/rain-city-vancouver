@@ -10,6 +10,8 @@ import {
 } from "./ironworkers-alignment";
 import { createHoweSceneTerrain } from "./howe-scene-terrain";
 import { createRobsonRinkContact } from "./robson-rink-contact";
+import { createGranvilleSquareEntranceSite } from "./granville-square-entrance";
+import { GRANVILLE_SQUARE_TOWER_ID } from "./granville-square-tower-data";
 import { panPacificHowePodiumCameraClearance } from "./pan-pacific-howe-podium-camera";
 import {
   createHoweCordovaJunctionSite,
@@ -297,6 +299,7 @@ export class CollisionWorld {
   robsonGarden?: Building;
   ironworkersPaths?: ReturnType<typeof createIronworkersPathBoundary>;
   robsonRink?: ReturnType<typeof createRobsonRinkContact>;
+  granvilleEntrance?: ReturnType<typeof createGranvilleSquareEntranceSite>;
   robsonStreetEdge?: RobsonStreetEdgeSite;
   convention?: ConventionSite;
   canada?: CanadaPlaceSite;
@@ -527,9 +530,15 @@ export class CollisionWorld {
         data,
         this.baselineGroundHeight.bind(this),
       );
+    if (data.buildings.some((b) => b.id === GRANVILLE_SQUARE_TOWER_ID))
+      this.granvilleEntrance = createGranvilleSquareEntranceSite(
+        this.baselineGroundHeight.bind(this),
+      );
   }
   /** On-foot contact includes the finish; the baseline remains the construction datum. */
   walkingHeight(x: number, z: number, referenceY = Infinity): number {
+    const entrance = this.granvilleEntrance?.support(x, z, referenceY);
+    if (entrance !== undefined) return entrance;
     const rink = this.robsonRink?.support(x, z, referenceY);
     if (rink !== undefined) return rink;
     const streetEdge = this.robsonStreetEdge?.height(x, z);
@@ -651,6 +660,8 @@ export class CollisionWorld {
     return null;
   }
   height(x: number, z: number, referenceY = Infinity) {
+    const entrance = this.granvilleEntrance?.support(x, z, referenceY);
+    if (entrance !== undefined) return entrance;
     const path = this.ironworkersPaths?.supportAt(x, z);
     if (path !== undefined && path <= referenceY + 3) return path;
     const rink = this.robsonRink?.support(x, z, referenceY);
@@ -701,6 +712,7 @@ export class CollisionWorld {
     referenceY: number,
     camera: boolean,
   ) {
+    if (this.granvilleEntrance?.blocked(x, z, r, referenceY, camera)) return true;
     if (this.robsonRink?.blocked(x, z, r, referenceY, camera)) return true;
     if (
       this.canada &&

@@ -90,8 +90,11 @@ test("live architecture dispatch emits one tower wrapper and suppresses its gene
     result = run([tower]);
   assert.equal(result.count, 1);
   assert.equal(result.reflections.length, 1);
-  assert.equal(result.reflections[0].name, "Granville Square southeast exterior");
-  assert.equal(result.chunks.length, 6);
+  assert.equal(
+    result.reflections[0].name,
+    "Granville Square southeast exterior",
+  );
+  assert.equal(result.chunks.length, 7);
   assert.ok(
     result.chunks.every((c) =>
       (c.material as T.Material).name.startsWith("Granville Square"),
@@ -99,7 +102,7 @@ test("live architecture dispatch emits one tower wrapper and suppresses its gene
   );
   assert.equal(
     result.chunks.reduce((n, c) => n + c.geometry.index!.count / 3, 0),
-    45138,
+    45540,
   );
   assert.equal(result.chunks.filter((c) => c.userData.detail).length, 0);
   assert.deepEqual(
@@ -149,4 +152,42 @@ test("adding the tower leaves the finished Howe wing and unrelated generic build
       Object.defineProperty(globalThis, "document", priorDocument);
     else Reflect.deleteProperty(globalThis, "document");
   }
+});
+
+test("live canopy collision preserves the under-canopy route and adds only finite posts and roof support", () => {
+  const site = collision.granvilleEntrance;
+  assert.ok(site);
+  for (const roof of site.roofs) {
+    for (const d of [-1.25, -3.3]) {
+      const [x, , z] = site.point((roof.left + roof.right) / 2, 0, d),
+        floor = collision.baselineGroundHeight(x, z),
+        original = collision.granvilleEntrance;
+      collision.granvilleEntrance = undefined;
+      const oldBlocked = collision.blocked(x, z, 0.35, floor),
+        oldHeight = collision.walkingHeight(x, z, floor),
+        oldDefault = collision.height(x, z);
+      collision.granvilleEntrance = original;
+      assert.equal(
+        oldBlocked,
+        false,
+        "source walking strip must be open before adding the canopy",
+      );
+      assert.equal(collision.blocked(x, z, 0.35, floor), oldBlocked);
+      assert.equal(collision.walkingHeight(x, z, floor), oldHeight);
+      assert.equal(collision.height(x, z), oldDefault);
+      if (d > roof.front) {
+        const y = site.roofY(d);
+        assert.equal(collision.cameraBlocked(x, z, 0.15, y), true);
+        assert.equal(collision.blocked(x, z, 0.35, y - 0.3), true);
+        assert.ok(Math.abs(collision.walkingHeight(x, z, y) - y) < 1e-10);
+        assert.ok(Math.abs(collision.height(x, z, y) - y) < 1e-10);
+      }
+    }
+  }
+  for (const post of site.posts) {
+    const [x, , z] = site.point(post.u, 0, post.d);
+    assert.equal(collision.blocked(x, z, 0.3, post.low + 0.025), true);
+  }
+  const withoutTower = new CollisionWorld({ ...data, buildings: [] });
+  assert.equal(withoutTower.granvilleEntrance, undefined);
 });
