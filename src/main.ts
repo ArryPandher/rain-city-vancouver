@@ -125,6 +125,7 @@ class Game {
   private liveShadowCache = new LiveShadowCache();
   private broadleafShadowGeometry = new BroadleafShadowGeometry();
   private compactBroadleafShadows = false;
+  private debugHalfDaylightFill = false;
   footstepDistance = 0;
   headlights: T.SpotLight[] = [];
   constructor() {
@@ -679,6 +680,7 @@ class Game {
                 this.world.water.uniforms.sunDir.value.toArray(),
               sunIntensity: this.world.sun.intensity,
               ambientIntensity: this.world.ambient.intensity,
+              halfDaylightFill: this.debugHalfDaylightFill,
               exposure: this.renderer.toneMappingExposure,
               bloom: {
                 enabled: this.bloom.enabled,
@@ -770,6 +772,19 @@ class Game {
       const comparisons = document.createElement("div");
       comparisons.style.cssText =
         "display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center";
+      const daylightFillLabel = document.createElement("label");
+      const daylightFillCheckbox = document.createElement("input");
+      daylightFillCheckbox.type = "checkbox";
+      daylightFillCheckbox.addEventListener("change", () => {
+        this.finishFrameSample("daylight fill comparison changed");
+        this.debugHalfDaylightFill = daylightFillCheckbox.checked;
+        this.setWeather(this.world.weather);
+      });
+      daylightFillLabel.append(
+        daylightFillCheckbox,
+        " Half daylight fill (comparison)",
+      );
+      comparisons.append(daylightFillLabel);
       const daylightDirectionLabel = document.createElement("label"),
         daylightDirectionSelect = document.createElement("select");
       daylightDirectionSelect.setAttribute(
@@ -1637,6 +1652,8 @@ class Game {
   setWeather(w: Weather) {
     if (!this.world) return;
     this.world.setWeather(w);
+    if (w === "day" && this.debugHalfDaylightFill)
+      this.world.ambient.intensity *= 0.5;
     this.reflections?.setNight(w === "night");
     this.reflections?.invalidate();
     this.bloom.threshold = w === "night" ? 1.15 : w === "golden" ? 1.7 : 2.2;
