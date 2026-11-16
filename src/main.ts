@@ -594,6 +594,10 @@ class Game {
             ...profileRender(this.renderer, this.scene, this.camera, () =>
               this.render(),
             ),
+            staticTextureSources: {
+              ...this.world.materials.textureSourceStats(),
+              note: "Static image source allocations and requests; not GPU residency or network traffic",
+            },
             treeDetail: this.world.treeDetailStream?.status,
             streetTreeLOD: this.world.detailedTrees?.lodState,
             streetTreeShadowReceivers: this.renderer.shadowMap.enabled
