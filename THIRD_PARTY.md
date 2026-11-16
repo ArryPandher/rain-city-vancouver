@@ -159,3 +159,7 @@ The near and medium street/park trees derive from [Poly Haven Tree Small 02](htt
 The medium street tree also uses a source-UV alpha mask and fitted leaf cards, with original connected patches retained where fitting fails; the full near trunk and branches remain unchanged. This derivative retains Poly Haven CC0. Reproduction and coverage limitations are in [street-tree sources](docs/sources/street-trees.md).
 
 The source-derived broadleaf volume atlases and both simplified woody models retain Poly Haven Tree Small 02's CC0 license. Atlas baking, normal transformation, source-root anchoring and runtime geometry are documented in [broadleaf volume sources](docs/sources/broadleaf-volume.md). The model is generic foliage, not a scanned Vancouver species.
+
+## Ironworkers eastern bridgehead workshop
+
+The source-registered workshop w23776223 preserves its OpenStreetMap outline (© OpenStreetMap contributors, ODbL1.0). Its roof registration uses District of North Vancouver 2024 orthophotography: **Contains information licensed under the Open Government Licence - North Vancouver.** No aerial or contractor photograph is shipped as a texture. [Sources, bounded export, model estimates and checks](docs/sources/ironworkers-eastern-workshop.md).

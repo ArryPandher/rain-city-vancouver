@@ -1,0 +1,13 @@
+{
+  "id": "w23776223",
+  "source": "public/data/vancouver-east.json",
+  "sha256": "1977b623c82edabe032b5524e3f951d7ef466a94bae4b0f436cccd0a94a7f295",
+  "pts": [6884.3, -1921.5, 6903.6, -1929.5, 6884.9, -1971, 6865.6, -1963.5],
+  "attribution": "© OpenStreetMap contributors, ODbL 1.0. Contains information licensed under the Open Government Licence - North Vancouver.",
+  "ortho": "https://geoweb.dnv.org/arcgis/rest/services/Basemap_Ortho2024/MapServer",
+  "reference": "https://www.grahambuilds.com/ironworkers-memorial-bridge-improvements/",
+  "eave": 6.4,
+  "ridge": 9.6,
+  "longSideBays": 11,
+  "note": "Exact original OSM ring and aerial-confirmed longitudinal gable. Heights and facade bay proportions are photo estimates, not surveyed. Closed workshop shell; no business identity inferred."
+}
