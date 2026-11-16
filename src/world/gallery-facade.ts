@@ -5,6 +5,7 @@ import { landmarkSurfaceUV } from "./landmark-surfaces";
 import entry from "./gallery-rear-entry-data.json";
 import { addGalleryEntryCornice } from "./gallery-entry-cornice";
 import { createGalleryAshlarMaterial } from "./gallery-ashlar-material";
+import { createGalleryStairMaterial } from "./gallery-stair-material";
 import { addGalleryStairFraming } from "./gallery-stair-framing";
 import {
   addGalleryEntryStairs,
@@ -281,7 +282,7 @@ export function addGalleryFacade(
   }
   addGalleryEntryCornice(mesh, stone);
   addGalleryStairFraming(mesh, base, frame);
-  addGalleryEntryStairs(mesh, base);
+  addGalleryEntryStairs(mesh, createGalleryStairMaterial(base));
   mesh.finish();
   const chunks = batch.finish();
   for (const chunk of chunks) {

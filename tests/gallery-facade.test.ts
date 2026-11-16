@@ -186,7 +186,7 @@ test("actual gallery source replacement preserves landing and all other material
 test("added geometry is finite, bounded, economical and has outward sill faces", async (t) => {
   const { root, chunks } = await scene();
   let triangles = 0;
-  assert.equal(chunks.length, 4);
+  assert.equal(chunks.length, 5);
   for (const mesh of chunks) {
     const p = mesh.geometry.getAttribute("position"),
       normal = mesh.geometry.getAttribute("normal");
