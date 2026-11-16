@@ -1,5 +1,6 @@
 import * as T from "three";
 import type { Materials } from "./materials";
+import { addNearPodiumPanelJoints } from "./pan-pacific-near-podium-joints";
 import {
   createCanadaPlaceHotelGlazingPair,
   createCanadaPlaceHotelGlazingMesh,
@@ -55,6 +56,7 @@ export function createPanPacificNearPodiumMaterials(
   const soffit = concrete.clone();
   soffit.name = "pan-pacific-near-podium-soffit";
   soffit.color.setHex(q.soffit);
+  addNearPodiumPanelJoints(concrete);
   const frame = new T.MeshStandardMaterial({
     name: "pan-pacific-near-podium-frame",
     color: q.frame,
