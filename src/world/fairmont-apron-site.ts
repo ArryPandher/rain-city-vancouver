@@ -1,3 +1,4 @@
+import { buildingsOverlappingPolygon } from "./local-building-broadphase";
 import clipping from "polygon-clipping";
 import {
   pointInPoly,
@@ -74,7 +75,9 @@ export function createFairmontApronSite(options: {
   ];
   const clipped = clipping.difference(
       [boundary],
-      ...options.buildings.map((b) => [points(b.pts)]),
+      ...buildingsOverlappingPolygon(options.buildings, boundary).map((b) => [
+        points(b.pts),
+      ]),
     ),
     supportPolygons: Polygon[] = clipped.map((p) => ({
       outer: p[0].slice(0, -1) as Point[],

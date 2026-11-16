@@ -1,3 +1,4 @@
+import { buildingsOverlappingPolygon } from "./local-building-broadphase";
 import polygonClipping from "polygon-clipping";
 import { createPwcApronSite } from "./pwc-apron-site";
 import {
@@ -181,16 +182,17 @@ export function createCanadaPlaceSite(options: CanadaPlaceSiteOptions) {
     .filter((r) => r.id && roadIds.has(r.id))
     .flatMap(bufferRoad);
   const union = polygonClipping.union(parts[0], ...parts.slice(1));
-  let clipped = buildings.length
+  const localBuildings = buildingsOverlappingPolygon(buildings, union.flat(2));
+  let clipped = localBuildings.length
     ? polygonClipping.difference(
         union,
-        ...buildings.map((b) => [points(b.pts)]),
+        ...localBuildings.map((b) => [points(b.pts)]),
       )
     : union;
   for (const connector of options.connectors ?? []) {
     // The coarse OSM whole-pier parent protrudes beyond the modeled edge.
     // Only explicit entry support may cross it; actual hotel/hall solids stay.
-    const cuts = buildings
+    const cuts = buildingsOverlappingPolygon(buildings, connector)
       .filter((b) => b.id !== "w223635729")
       .map((b) => [points(b.pts)]);
     if (options.existingDeck) cuts.push([options.existingDeck]);
