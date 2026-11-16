@@ -1,6 +1,6 @@
 # Ironworkers vehicle arrival and ordinary lane-following route
 
-2026-11-17. Bounded vehicle-only fast-travel correction using the current immutable OSM road layer. It does not change traffic flow, bridge geometry, driving physics or steering. Walking arrivals and every other destination retain their existing behavior.
+2026-11-16. Bounded vehicle-only fast-travel correction using the current immutable OSM road layer. It does not change traffic flow, bridge geometry, driving physics or steering. Walking arrivals and every other destination retain their existing behavior.
 
 ## Diagnosis from full city data
 
