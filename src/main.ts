@@ -2240,6 +2240,7 @@ class Game {
         this.camera,
         this.world.sun,
         draw,
+        this.renderer,
       );
     else draw();
   }
