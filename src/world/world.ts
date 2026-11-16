@@ -1,3 +1,4 @@
+import { createNorthShoreDemGroup } from "./north-shore-dem";
 import { buildRobsonStreetEdge } from "./robson-street-edge-materials";
 import { clipRobsonStreetPaths } from "./robson-street-edge-paths";
 import {
@@ -1453,6 +1454,13 @@ export class World {
     this.chunks.push(...batch.finish());
   }
   mountains() {
+    const params = new URLSearchParams(
+      typeof location === "undefined" ? "" : location.search,
+    );
+    if (params.has("debug") && params.get("terrain") === "dem") {
+      this.root.add(createNorthShoreDemGroup());
+      return;
+    }
     const photo = new T.TextureLoader().load(
       `${BASE}textures/vancouver/north-shore.webp`,
     );

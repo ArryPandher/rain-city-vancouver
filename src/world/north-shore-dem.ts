@@ -9,6 +9,8 @@ const [maxX, maxZ] = geo(data.bounds.south, data.bounds.east);
 export const NORTH_SHORE_DEM_BOUNDS = { minX, maxX, minZ, maxZ };
 export const NORTH_SHORE_DEM_PROFILE = {
   chunkCells: 64,
+  // Experimental far-terrain haze, retaining the scene's weather fog uniforms.
+  fogDepthScale: 0.35,
   // The bounded visual terrain meets existing flat ground beyond all loaded roads.
   // Interior measured heights and ridgelines are unchanged, without exaggeration.
   southTransition: 1200,
@@ -139,6 +141,17 @@ export function createNorthShoreDemGroup() {
     metalness: 0,
     fog: true,
   });
+  material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <fog_fragment>",
+      T.ShaderChunk.fog_fragment.replaceAll(
+        "vFogDepth",
+        `(vFogDepth * ${NORTH_SHORE_DEM_PROFILE.fogDepthScale})`,
+      ),
+    );
+  };
+  material.customProgramCacheKey = () =>
+    `north-shore-dem-fog-depth-${NORTH_SHORE_DEM_PROFILE.fogDepthScale}-v1`;
   for (const chunk of createNorthShoreDemGeometry()) {
     const mesh = new T.Mesh(chunk.geometry, material);
     mesh.position.set(chunk.origin[0], 0, chunk.origin[1]);
