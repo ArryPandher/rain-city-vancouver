@@ -1,3 +1,4 @@
+import { createG3TerminalAssembly } from "./g3-terminal";
 import { buildHoweBuildingFoundation } from "./howe-building-foundations";
 import { CACTUS_ID } from "./jack-poole-site";
 import * as T from "three";
@@ -78,6 +79,10 @@ export function architecture(
   const architecturalDetails: ArchitecturalDetail[] = [];
   const reflections: ReflectionProbeSpec[] = [];
   const terminalCity = createTerminalCityAssembly(m, reflections);
+  const g3Terminal = createG3TerminalAssembly(
+    data.buildings,
+    collision.groundHeight.bind(collision),
+  );
   const shopNames = [
     ["PACIFIC COFFEE", "THE CORNER CAFÉ", "WEST COAST COFFEE"],
     ["WATER STREET LIVING", "HARBOUR HOME", "COASTAL INTERIORS"],
@@ -184,6 +189,7 @@ export function architecture(
       continue;
     }
     if (
+      g3Terminal(b, shell) ||
       terminalCity(b, shell) ||
       granvilleSquareHowe(b, shell, m, reflections) ||
       granvilleSquareTower(
