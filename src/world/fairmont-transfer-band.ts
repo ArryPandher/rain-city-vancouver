@@ -103,13 +103,57 @@ export function fairmontTransferProfile(
   return points;
 }
 
+/** Smooth normal of the authored ellipse, including its graded longitudinal
+ * tangent. Only cove strips use it; adjoining web/ledge normals stay hard. */
+export function fairmontTransferCoveNormal(
+  section: Section,
+  site: FairmontArcadeSite,
+  t: number,
+  vertex: number,
+): T.Vector3 {
+  const d = FAIRMONT_TRANSFER_BAND,
+    angle = ((vertex / d.coveSegments) * Math.PI) / 2,
+    profile = fairmontTransferProfile(section, site, t),
+    end = profile[d.coveSegments + 1],
+    rise = profile[1].point[1] - end.point[1],
+    front = fairmontTransferPoint(section, t, 0, 0),
+    inward = new T.Vector3(...fairmontTransferPoint(section, t, 0, 1)).sub(
+      new T.Vector3(...front),
+    ),
+    around = inward.multiplyScalar(end.depth * Math.sin(angle));
+  around.y = -rise * Math.cos(angle);
+  // Profile parameters vary linearly with the fitted canopy plane within each
+  // section; this symmetric tangent also handles bounded graded callers.
+  const h = 1e-5,
+    along = new T.Vector3(
+      ...fairmontTransferProfile(section, site, t + h)[vertex + 1].point,
+    ).sub(
+      new T.Vector3(
+        ...fairmontTransferProfile(section, site, t - h)[vertex + 1].point,
+      ),
+    ),
+    normal = along.cross(around).normalize(),
+    f = facadeFrame(section.a, section.b),
+    expected = new T.Vector3(
+      f.outward[0] * Math.cos(angle),
+      -Math.sin(angle),
+      f.outward[1] * Math.cos(angle),
+    );
+  if (normal.dot(expected) < 0) normal.negate();
+  return normal;
+}
+
 export function buildFairmontTransferBand(
   mesh: ArchitecturalMesh,
   material: T.Material,
   site: FairmontArcadeSite,
 ) {
   const d = FAIRMONT_TRANSFER_BAND;
-  const quad = (points: Vertex3[], desired: T.Vector3) => {
+  const quad = (
+    points: Vertex3[],
+    desired: T.Vector3,
+    smooth?: T.Vector3[],
+  ) => {
     const w = new T.Vector3(...points[0]).distanceTo(
         new T.Vector3(...points[1]),
       ),
@@ -121,7 +165,8 @@ export function buildFairmontTransferBand(
         [0, h],
       ],
       positions: number[] = [],
-      coordinates: number[] = [];
+      coordinates: number[] = [],
+      normals: number[] = [];
     // A web cheek tapers to a point at the cove spring. Keep its valid
     // triangle, but never emit the collapsed half of that nominal quad.
     for (let face of [
@@ -140,13 +185,16 @@ export function buildFairmontTransferBand(
       for (const i of face) {
         positions.push(...points[i]);
         coordinates.push(...uv[i]);
+        if (smooth) normals.push(...smooth[i].toArray());
       }
     }
     if (!positions.length) return;
     const g = new T.BufferGeometry();
     g.setAttribute("position", new T.Float32BufferAttribute(positions, 3));
     g.setAttribute("uv", new T.Float32BufferAttribute(coordinates, 2));
-    g.computeVertexNormals();
+    if (smooth)
+      g.setAttribute("normal", new T.Float32BufferAttribute(normals, 3));
+    else g.computeVertexNormals();
     mesh.add(g, material);
   };
   for (const section of site.sections) {
@@ -182,6 +230,14 @@ export function buildFairmontTransferBand(
             left[j].point,
           ],
           direction,
+          !web && j >= 2 && j <= d.coveSegments + 1
+            ? [
+                fairmontTransferCoveNormal(section, site, l, j - 2),
+                fairmontTransferCoveNormal(section, site, r, j - 2),
+                fairmontTransferCoveNormal(section, site, r, j - 1),
+                fairmontTransferCoveNormal(section, site, l, j - 1),
+              ]
+            : undefined,
         );
       }
       // Web cheeks close the change in depth; do not add a false web at a plan bend.

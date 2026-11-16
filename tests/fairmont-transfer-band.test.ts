@@ -175,3 +175,69 @@ test("every new surface stays above public clearance, inside mapped envelope and
   assert.ok(triangles < 800);
   t.diagnostic(`${triangles} profile triangles in the existing panel material`);
 });
+
+test("continuous cove normals remove facet steps while keeping the lower ledge and web cheeks sharp", () => {
+  const section = site.sections[1],
+    stations = webs(section, site).sort((a, b) => a.left - b.left),
+    t = stations[0].right,
+    curve = profile(section, site, t),
+    f = facadeFrame(section.a, section.b),
+    outward = new T.Vector3(f.outward[0], 0, f.outward[1]),
+    depthDirection = new T.Vector3(...at(section, t, 0, 1)).sub(
+      new T.Vector3(...at(section, t, 0, 0)),
+    ),
+    cheekNormal = new T.Vector3(
+      -depthDirection.z,
+      0,
+      depthDirection.x,
+    ).normalize();
+  const normalsAt = (point: number[]) =>
+    chunks.flatMap((chunk) => {
+      const p = chunk.geometry.getAttribute("position"),
+        n = chunk.geometry.getAttribute("normal"),
+        found: T.Vector3[] = [];
+      for (let i = 0; i < p.count; i++)
+        if (
+          new T.Vector3(p.getX(i), p.getY(i), p.getZ(i)).distanceTo(
+            new T.Vector3(...point),
+          ) < 0.00005
+        )
+          found.push(new T.Vector3(n.getX(i), n.getY(i), n.getZ(i)));
+      return found;
+    });
+  let previousY = 0;
+  for (let j = 2; j <= D.coveSegments; j++) {
+    const all = normalsAt(curve[j].point),
+      cove = all.filter((n) => n.y < -0.001 && n.dot(outward) > 0.01);
+    assert.ok(
+      cove.length >= 2,
+      "both strips retain their coincident curve vertices",
+    );
+    assert.ok(
+      cove.every((n) => n.distanceTo(cove[0]) < 0.00001),
+      "no shading jump between curved strips",
+    );
+    assert.ok(cove[0].y < previousY, "normal turns progressively downward");
+    previousY = cove[0].y;
+    assert.ok(
+      all.some(
+        (n) => Math.abs(n.dot(cheekNormal)) > 0.999 && Math.abs(n.y) < 0.001,
+      ),
+      "web cheek remains a separate hard face",
+    );
+  }
+  const lower = normalsAt(curve[D.coveSegments + 1].point);
+  assert.ok(
+    lower.some((n) => n.y < -0.999),
+    "ellipse ends at its horizontal tangent",
+  );
+  assert.ok(
+    lower.some((n) => n.dot(outward) > 0.999 && Math.abs(n.y) < 0.001),
+    "vertical rear strip keeps the physical lower crease",
+  );
+  assert.equal(
+    chunks.reduce((n, c) => n + c.geometry.index!.count / 3, 0),
+    590,
+    "normals add no faces or material batches",
+  );
+});
