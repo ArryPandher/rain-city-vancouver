@@ -1,5 +1,9 @@
 import * as T from "three";
 import { makeDetailedCharacter } from "./detailed-character";
+import type {
+  CharacterLocomotionSnapshot,
+  WalkingVelocity,
+} from "./locomotion";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { mesh, box, Materials, beam } from "../world/materials";
 export interface Character {
@@ -15,7 +19,9 @@ export interface Character {
     aim: boolean,
     bike?: boolean,
     cyclePhase?: number,
+    velocity?: WalkingVelocity,
   ) => void;
+  locomotion?: () => CharacterLocomotionSnapshot;
 }
 const fabricCache = new Map<string, T.CanvasTexture>();
 function fabric(kind: string) {

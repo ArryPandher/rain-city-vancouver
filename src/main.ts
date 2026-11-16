@@ -29,6 +29,7 @@ import { Actors, Vehicle } from "./game/actors";
 import { makeCharacter, makeWeapon, Character } from "./game/character";
 import { drive, damp, angleDelta } from "./game/physics";
 import { startupBikeSpot, summonedVehicleSpot } from "./game/vehicle-placement";
+import { walkingLocomotion } from "./game/locomotion";
 import { GameAudio } from "./game/audio";
 import { PointerInput } from "./game/pointer-input";
 import { chaseCharacterHidden, shortenChaseBoom } from "./game/chase-camera";
@@ -92,6 +93,10 @@ class Game {
     stopped: { x: number; z: number; heading: number };
   } | null = null;
   footSpeed = 0;
+  private lastWalkingMotion: Record<string, unknown> | null = null;
+  private readonly recordLocomotion = new URLSearchParams(location.search).has(
+    "debug",
+  );
   autoCameraTimer = 0;
   lastSafe = new T.Vector3();
   photoPos = new T.Vector3();
@@ -520,6 +525,15 @@ class Game {
         report.textContent = JSON.stringify(
           {
             startup: this.startupTimings.snapshot(),
+            locomotion: {
+              onFoot: !this.vehicle,
+              actualSpeed: this.vehicle ? null : this.footSpeed,
+              aiming: this.aiming,
+              grounded: !this.vehicle && this.velocityY === 0,
+              armed: !this.combat.holstered,
+              animation: this.character.locomotion?.(),
+              lastNonzeroMovement: this.lastWalkingMotion,
+            },
             ...profileRender(this.renderer, this.scene, this.camera, () =>
               this.render(),
             ),
@@ -1721,6 +1735,7 @@ class Game {
           .multiplyScalar(throttle)
           .add(right.multiplyScalar(steer));
       if (move.lengthSq() > 0) move.normalize().multiplyScalar(speed * dt);
+      const previous = { x: this.player.x, z: this.player.z };
       const moved = this.world.collision.move(
         this.player.x,
         this.player.z,
@@ -1739,7 +1754,14 @@ class Game {
       this.velocityY -= 17 * dt;
       this.player.y = Math.max(ground, this.player.y + this.velocityY * dt);
       if (this.player.y <= ground) this.velocityY = 0;
-      this.footSpeed = move.length() / dt;
+      const locomotion = walkingLocomotion(
+        previous,
+        moved,
+        dt,
+        this.velocityY === 0,
+        this.footstepDistance,
+      );
+      this.footSpeed = locomotion.speed;
       this.heading +=
         angleDelta(
           this.heading,
@@ -1751,19 +1773,32 @@ class Game {
         ) * Math.min(1, dt * 12);
       this.character.group.position.copy(this.player);
       this.character.group.rotation.set(0, this.heading, 0);
-      this.character.update(this.time, this.footSpeed, !this.combat.holstered);
+      this.character.update(
+        this.time,
+        this.footSpeed,
+        !this.combat.holstered,
+        false,
+        0,
+        this.aiming || !this.combat.holstered ? locomotion : undefined,
+      );
+      if (this.recordLocomotion && locomotion.speed > 1e-6)
+        this.lastWalkingMotion = {
+          from: previous,
+          to: { x: moved.x, z: moved.z },
+          speed: locomotion.speed,
+          velocity: { x: locomotion.x, z: locomotion.z },
+          heading: this.heading,
+          grounded: locomotion.grounded,
+          armed: !this.combat.holstered,
+          animation: this.character.locomotion?.(),
+        };
       if (this.mouseDown && this.combat.shoot(this.camera)) {
         this.pitch -= WEAPONS[this.combat.selected].recoil;
         this.autoCameraTimer = 1;
       }
       this.audio.update(this.footSpeed, false, false, 0);
-      if (this.velocityY === 0) {
-        this.footstepDistance += move.length();
-        if (this.footstepDistance > 0.85) {
-          this.footstepDistance = 0;
-          this.audio.step();
-        }
-      }
+      this.footstepDistance = locomotion.footstepDistance;
+      if (locomotion.step) this.audio.step();
     }
     if (
       this.world.collision.water(this.player.x, this.player.z, this.player.y)

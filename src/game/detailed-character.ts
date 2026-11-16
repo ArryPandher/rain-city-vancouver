@@ -4,6 +4,11 @@ import { clone } from "three/addons/utils/SkeletonUtils.js";
 import type { Character } from "./character";
 import { animationPose } from "./animation-pose";
 import { installCharacterBounds } from "./character-bounds";
+import {
+  CharacterLocomotion,
+  type WalkingVelocity,
+  type LocomotionRig,
+} from "./locomotion";
 
 const templates: { male?: GLTF; female?: GLTF } = {};
 export async function loadDetailedCharacter() {
@@ -77,12 +82,17 @@ export function makeDetailedCharacter(variant = 0): Character | undefined {
   const template =
     (female ? templates.female : templates.male) ?? templates.male;
   if (!template) return;
-  return makeDetailedCharacterFromTemplate(template, variant);
+  return makeDetailedCharacterFromTemplate(
+    template,
+    variant,
+    template === templates.female ? "female" : "male",
+  );
 }
 
 export function makeDetailedCharacterFromTemplate(
   template: GLTF,
   variant = 0,
+  sourceRig?: LocomotionRig,
 ): Character {
   const female = variant > 0 && variant % 3 === 0;
   const group = new T.Group();
@@ -201,8 +211,7 @@ export function makeDetailedCharacterFromTemplate(
   const actions = new Map(
     template.animations.map((clip) => [clip.name, mixer.clipAction(clip)]),
   );
-  let current = actions.get("idle")!;
-  current.play();
+  const locomotion = new CharacterLocomotion(actions, variant, sourceRig);
   let last = NaN;
   const pose = animationPose(bones.values());
   const rightHand = new T.Group();
@@ -225,31 +234,13 @@ export function makeDetailedCharacterFromTemplate(
     aiming: boolean,
     bike = false,
     cyclePhase = 0,
+    velocity?: WalkingVelocity,
   ) => {
     const dt = Number.isFinite(last)
       ? T.MathUtils.clamp(time - last, 0, 0.1)
       : 1 / 60;
     last = time;
-    const name = bike
-      ? "idle"
-      : speed > 4.2
-        ? "run"
-        : speed > 0.15
-          ? "walk"
-          : "idle";
-    const next = actions.get(name)!;
-    if (next !== current) {
-      current.fadeOut(0.18);
-      next.reset().setEffectiveWeight(1).fadeIn(0.18).play();
-      next.time = (variant * 0.173) % next.getClip().duration;
-      current = next;
-    }
-    current.timeScale =
-      name === "walk"
-        ? T.MathUtils.clamp(speed / 2.2, 0.6, 1.65)
-        : name === "run"
-          ? speed / 5.2
-          : 1;
+    locomotion.update(dt, speed, bike, velocity, group.rotation.y);
     pose.restore();
     mixer.update(dt);
     pose.capture();
@@ -409,5 +400,14 @@ export function makeDetailedCharacterFromTemplate(
   };
   update(0, 0, false);
   installCharacterBounds(group, height);
-  return { group, hips, head, arms, legs, rightHand, update };
+  return {
+    group,
+    hips,
+    head,
+    arms,
+    legs,
+    rightHand,
+    update,
+    locomotion: () => locomotion.snapshot(),
+  };
 }
