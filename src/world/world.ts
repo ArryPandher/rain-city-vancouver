@@ -1,6 +1,12 @@
 import { HOWE_STATION_SPEC } from "./howe-station-site";
 import { buildCordovaStreetDetails } from "./cordova-street-details";
 import {
+  buildHoweCordovaJunction,
+  clipHoweCordovaPaths,
+  clipHoweCordovaRoadEdges,
+  createHoweCordovaJunctionMaterials,
+} from "./howe-cordova-junction";
+import {
   createCordovaPavementMaterial,
   hasCordovaPavement,
 } from "./cordova-pavement-material";
@@ -735,14 +741,27 @@ export class World {
             );
           }
         }
+      let surface = roadRibbon(
+        r.pts,
+        width,
+        street ? 0.092 : r.walkway ? 0.15 : 0.07,
+        height,
+        historic ? 1.6 : 5,
+      );
+      if (this.collision.howeCordovaJunction) {
+        if (street || r.kind === "service")
+          surface = clipHoweCordovaRoadEdges(
+            surface,
+            this.collision.howeCordovaJunction,
+          );
+        else if (["footway", "path", "pedestrian", "steps"].includes(r.kind))
+          surface = clipHoweCordovaPaths(
+            surface,
+            this.collision.howeCordovaJunction,
+          );
+      }
       b.add(
-        roadRibbon(
-          r.pts,
-          width,
-          street ? 0.092 : r.walkway ? 0.15 : 0.07,
-          height,
-          historic ? 1.6 : 5,
-        ),
+        surface,
         seawall && r.surface === "paving_stones"
           ? seawallPavers(m)
           : historic
@@ -783,7 +802,21 @@ export class World {
         for (let i = 0; i < p.count; i++)
           uv.setXY(i, p.getX(i) / scale, p.getZ(i) / scale);
       }
+    const junctionMaterials = this.collision.howeCordovaJunction
+      ? createHoweCordovaJunctionMaterials(m)
+      : undefined;
+    // After legacy road UV normalization: this geometry carries metre UVs.
+    if (this.collision.howeCordovaJunction && junctionMaterials)
+      buildHoweCordovaJunction(
+        b,
+        this.collision.howeCordovaJunction,
+        junctionMaterials,
+      );
     const chunks = b.finish(false);
+    if (junctionMaterials)
+      for (const chunk of chunks)
+        if (chunk.material === junctionMaterials.curb)
+          chunk.castShadow = chunk.userData.allowShadow = true;
     batchStaticChunks(this.root, chunks, this.facadeMultiDraw, {
       releaseOwnedPreRenderGeometry: true,
     });
@@ -1229,7 +1262,18 @@ export class World {
       }
     }
     this.streetFurniture.push(
-      ...buildCordovaStreetDetails(b, this.collision, this.streetFurniture),
+      ...buildCordovaStreetDetails(
+        b,
+        {
+          groundHeight: (x, z) =>
+            this.collision.howeCordovaJunction?.height(x, z) ??
+            this.collision.groundHeight(x, z),
+          blocked: this.collision.blocked.bind(this.collision),
+          onStreet: this.collision.onStreet.bind(this.collision),
+          water: this.collision.water.bind(this.collision),
+        },
+        this.streetFurniture,
+      ),
     );
     const chunks = b.finish();
     batchStaticChunks(this.root, chunks, this.facadeMultiDraw, {

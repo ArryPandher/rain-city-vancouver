@@ -61,7 +61,7 @@ export function pacificCoast(
   if (apron) buildPacificCoastApron(batch, apron, materials);
   reflections.push({
     name: "325 Howe Cordova paired windows",
-    resolution: 512,
+    resolution: 256,
     // Outside the street corner; a shared static environment approximation.
     position: [431.2, batch.offsetY + 10.8, -398.8],
     materials: [materials.glass],

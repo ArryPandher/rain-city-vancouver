@@ -1208,23 +1208,29 @@
     "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_diff_1k.jpg",
     "license": "CC0-1.0",
     "credit": "Poly Haven",
-    "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
-    "provenance": "textures/cordova-pavement/SOURCES.json"
+    "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Broad source gradients removed before mirroring to prevent repeated dark bands; fine aggregate amplitude is unchanged. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
+    "provenance": "textures/cordova-pavement/SOURCES.json",
+    "sha256": "9b64e56d204100067945d70847d226e855111ea35d911d3b4b0de75c77f0de1f",
+    "bytes": 150556
   },
   {
     "file": "textures/cordova-pavement/normal.webp",
     "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_nor_gl_1k.jpg",
     "license": "CC0-1.0",
     "credit": "Poly Haven",
-    "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
-    "provenance": "textures/cordova-pavement/SOURCES.json"
+    "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Broad source gradients removed before mirroring to prevent repeated dark bands; fine aggregate amplitude is unchanged. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
+    "provenance": "textures/cordova-pavement/SOURCES.json",
+    "sha256": "5a24c6f6ba98904d735d81e3da54b2fe9c378260555b07bc279472c2cfc62048",
+    "bytes": 172230
   },
   {
     "file": "textures/cordova-pavement/roughness.webp",
     "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_rough_1k.jpg",
     "license": "CC0-1.0",
     "credit": "Poly Haven",
-    "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
-    "provenance": "textures/cordova-pavement/SOURCES.json"
+    "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Broad source gradients removed before mirroring to prevent repeated dark bands; fine aggregate amplitude is unchanged. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
+    "provenance": "textures/cordova-pavement/SOURCES.json",
+    "sha256": "4f717a8ed0584206caf9971787b6c3c073ec33c6dfae89591c8c9f5f2887e0f1",
+    "bytes": 124500
   }
 ]

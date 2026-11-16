@@ -77,7 +77,13 @@ test("apron is source-bounded outside the unchanged footprint and stops before b
   for (const [index, threshold] of Object.entries(thresholds)) {
     const p = h.p(pacificCoastBays(1)[Number(index)].centre, 0, -0.3);
     assert.equal(site.height(p[0], p[2]), undefined);
-    near(collision.height(p[0], p[2]), collision.groundHeight(p[0], p[2]));
+    // The source-fitted sidewalk adds only a 3mm separation beside doors;
+    // their original surveyed/shared grade and threshold clearance remain.
+    near(
+      collision.height(p[0], p[2]),
+      collision.groundHeight(p[0], p[2]),
+      0.004,
+    );
     assert.ok(datum + threshold - collision.height(p[0], p[2]) < 0.055);
   }
   near(collision.groundHeight(...centre), datum);

@@ -1,7 +1,73 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Vector3 } from "three";
-import { shortenChaseBoom } from "../src/game/chase-camera";
+import {
+  chaseCharacterHidden,
+  shortenChaseBoom,
+} from "../src/game/chase-camera";
+
+test("near-body hiding accounts for head/torso and near plane with hysteresis", () => {
+  const feet = new Vector3(425.95, 9.16, -397.77);
+  const at = (distance: number, height = 1.6) =>
+    feet.clone().add(new Vector3(distance, height, 0));
+  assert.equal(chaseCharacterHidden(at(0.5), feet, 0.35, false), true);
+  assert.equal(chaseCharacterHidden(at(0.6, 0.8), feet, 0.35, false), true);
+  assert.equal(chaseCharacterHidden(at(0.8), feet, 0.35, false), false);
+  assert.equal(chaseCharacterHidden(at(0.8), feet, 0.35, true), true);
+  assert.equal(chaseCharacterHidden(at(0.95), feet, 0.35, true), false);
+  assert.equal(
+    chaseCharacterHidden(at(0, 3), feet, 0.35, true),
+    false,
+    "clear camera above the body restores visibility",
+  );
+});
+
+test("recorded apron wall turn hides the body without moving the solved camera through the wall", async () => {
+  const { CollisionWorld } = await import("../src/world/collision");
+  const { PACIFIC_COAST_RING } = await import(
+    "../src/world/pacific-coast-site"
+  );
+  const collision = new CollisionWorld({
+    buildings: [{ id: "w143683962", pts: PACIFIC_COAST_RING.flat() }],
+    roads: [],
+    areas: [],
+    ocean: [],
+    trees: [],
+  } as unknown as import("../src/world/data").CityData);
+  const feet = new Vector3(425.95, 9.16, -397.77);
+  const focus = feet.clone().add(new Vector3(0, 1.52, 0));
+  const yaw = 2.35619449;
+  const desired = focus
+    .clone()
+    .add(new Vector3(-Math.sin(yaw) * 4.3, 0.55, -Math.cos(yaw) * 4.3));
+  const blocked = (p: Vector3) => collision.cameraBlocked(p.x, p.z, 0.25, p.y);
+  assert.ok(shortenChaseBoom(focus, desired, blocked) < 0.2);
+  assert.equal(blocked(desired), false);
+  const solved = desired.clone();
+  assert.equal(
+    chaseCharacterHidden(desired, feet, 0.35, false),
+    true,
+    "the collision-safe short boom must not reveal the inside of the head",
+  );
+  assert.ok(
+    desired.equals(solved),
+    "visibility policy cannot move the physical camera",
+  );
+  // A clear destination alone must not restore the body while the real camera
+  // is still interpolating out of the capsule. Ordinary aim/chase then restore.
+  const clear = focus.clone().add(new Vector3(1.2, 0.55, 0.55));
+  assert.equal(chaseCharacterHidden(desired, feet, 0.35, true), true);
+  assert.equal(chaseCharacterHidden(clear, feet, 0.35, true), false);
+  assert.equal(
+    chaseCharacterHidden(
+      focus.clone().add(new Vector3(4.3, 0.55, 0)),
+      feet,
+      0.35,
+      true,
+    ),
+    false,
+  );
+});
 
 test("wall contact shortens the chase boom while retaining its direction and focus", () => {
   const focus = new Vector3(10, 1.52, 20);

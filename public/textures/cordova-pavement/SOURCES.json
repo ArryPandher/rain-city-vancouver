@@ -10,11 +10,25 @@
     "width": 300,
     "height": 300
   },
-  "runtimeRepeatMetres": [1.2, 1.2],
+  "runtimeRepeatMetres": [
+    1.2,
+    1.2
+  ],
+  "broadGradientRemoval": {
+    "gaussianSigmaSourcePixels": 16,
+    "gaussianRadiusSourcePixels": 48,
+    "estimatedSigmaMetres": 0.032,
+    "treatment": "Subtract reflected-boundary Gaussian gradient in linear albedo/data space before mirroring; retain fine residual at unity gain, recenter albedo and roughness to original full-source means. Remove normal XY broad tilt, recenter XY to neutral, rebuild unit normal Z. No generated texture detail."
+  },
   "scaleInterpretation": "Visual aggregate scale estimate; the committed source manifest has no surveyed physical dimensions. The 600px mirrored source region repeats over 1.2m, approximately 2mm per source pixel before output resizing.",
-  "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
+  "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Broad source gradients removed before mirroring to prevent repeated dark bands; fine aggregate amplitude is unchanged. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
   "preparation": "node scripts/prepare-cordova-pavement.mjs",
-  "roads": ["w50162809", "w232195213", "w1153403243", "w1255588459"],
+  "roads": [
+    "w50162809",
+    "w232195213",
+    "w1153403243",
+    "w1255588459"
+  ],
   "files": [
     {
       "kind": "color",
@@ -23,15 +37,22 @@
       "credit": "Poly Haven",
       "input": "public/textures/asphalt_02-color.jpg",
       "inputSha256": "1aa5ce99f58a625c71d48cfc3e68b65ca85ccb00f39e045c0a928608a0ea25ed",
-      "outputSha256": "beb43bec59ef7997db60d5428f291bbc8e1aad9451a69caf0b9c020a3a49b23e",
-      "bytes": 149492,
+      "outputSha256": "9b64e56d204100067945d70847d226e855111ea35d911d3b4b0de75c77f0de1f",
+      "bytes": 150556,
+      "preparationClippedChannels": 9,
       "decoded": {
         "width": 512,
         "height": 512,
         "channels": 3,
-        "mean": [0.11103142470445636, 0.10950140080604956, 0.09732303548498755],
+        "mean": [
+          0.11225319477957509,
+          0.11065223722041784,
+          0.09856198171922999
+        ],
         "targetMean": [
-          0.11197785168728575, 0.11035664902983777, 0.09824387268949122
+          0.11197785168728575,
+          0.11035664902983777,
+          0.09824387268949122
         ],
         "meanConvention": "linear RGB"
       }
@@ -43,13 +64,18 @@
       "credit": "Poly Haven",
       "input": "public/textures/asphalt_02-normal.jpg",
       "inputSha256": "42a1c381b53204e83a982db2864479a30bc127bbdeebb1006f8ee51bff099df3",
-      "outputSha256": "b727d3245bd014fe1434f80b7e69e5b7b6f85ac9c934901a4715904282f808a6",
-      "bytes": 168956,
+      "outputSha256": "5a24c6f6ba98904d735d81e3da54b2fe9c378260555b07bc279472c2cfc62048",
+      "bytes": 172230,
+      "preparationClippedChannels": 0,
       "decoded": {
         "width": 512,
         "height": 512,
         "channels": 3,
-        "mean": [0.5001393486471837, 0.5001376282935013, 0.9691250071817413],
+        "mean": [
+          0.5000665851668059,
+          0.5000986286238313,
+          0.9806461857824212
+        ],
         "meanConvention": "linear data"
       }
     },
@@ -60,15 +86,22 @@
       "credit": "Poly Haven",
       "input": "public/textures/asphalt_02-roughness.jpg",
       "inputSha256": "70ba3edc65525eb4dc366cf010ca7ae0bd34e0251ff0225c2dad627a873d0712",
-      "outputSha256": "2dd987b6dc01d3582135b3a014bb4420403e8f9163a4586841c740dc044e2924",
-      "bytes": 125322,
+      "outputSha256": "4f717a8ed0584206caf9971787b6c3c073ec33c6dfae89591c8c9f5f2887e0f1",
+      "bytes": 124500,
+      "preparationClippedChannels": 0,
       "decoded": {
         "width": 512,
         "height": 512,
         "channels": 3,
-        "mean": [0.7688587263511849, 0.7688429439762264, 0.7688587263511849],
+        "mean": [
+          0.770496009377204,
+          0.7704806009921735,
+          0.770496009377204
+        ],
         "targetMean": [
-          0.7703158696536871, 0.7703158696536871, 0.7703158696536871
+          0.7703158696536871,
+          0.7703158696536871,
+          0.7703158696536871
         ],
         "meanConvention": "linear data"
       }

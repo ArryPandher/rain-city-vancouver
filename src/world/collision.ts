@@ -1,5 +1,9 @@
 import { createHoweSceneTerrain } from "./howe-scene-terrain";
 import {
+  createHoweCordovaJunctionSite,
+  type HoweCordovaJunctionSite,
+} from "./howe-cordova-junction-site";
+import {
   createPacificCoastApronSite,
   type PacificCoastApronSite,
 } from "./pacific-coast-apron-site";
@@ -279,6 +283,7 @@ export class CollisionWorld {
   howeTerrainCutouts: number[][] = [];
   fairmontArrivalIsland?: FairmontArrivalIsland;
   pacificApron?: PacificCoastApronSite;
+  howeCordovaJunction?: HoweCordovaJunctionSite;
   private canadaWalking?: ReturnType<typeof createCanadaWalkingSurface>;
   private exteriorRecesses = new Map<string, ExteriorRecessCollision>();
   buildings = new SpatialHash<Building>();
@@ -478,6 +483,11 @@ export class CollisionWorld {
         this.baselineGroundHeight.bind(this),
         this.baselineGroundHeight(...PACIFIC_COAST_CENTRE),
       );
+      this.howeCordovaJunction = createHoweCordovaJunctionSite(
+        data,
+        this.baselineGroundHeight.bind(this),
+        this.pacificApron,
+      );
       for (const rail of this.pacificApron.rails)
         this.addBarrier(
           rail.a[0],
@@ -493,6 +503,8 @@ export class CollisionWorld {
   walkingHeight(x: number, z: number, referenceY = Infinity): number {
     const apron = this.pacificApron?.height(x, z);
     if (apron !== undefined) return apron;
+    const junction = this.howeCordovaJunction?.height(x, z);
+    if (junction !== undefined) return junction;
     if (this.canada && pointInPoly(x, z, HOWE_STATION.landing.flat()))
       return HOWE_STATION.landingHeight;
     const base = this.height(x, z, referenceY);
@@ -565,6 +577,10 @@ export class CollisionWorld {
       : (this.data.terrain?.height(x, z) ?? 0);
   }
   roadHeight(road: Road, x: number, z: number) {
+    // The new local finish must not feed back into the original road ribbons.
+    // Their exact gutter band is replaced by matching supported geometry.
+    if (this.howeCordovaJunction?.containsBounds(x, z))
+      return this.groundHeight(x, z);
     if (this.canada && road.id && CANADA_PLACE_SERVICE_IDS.has(road.id))
       return this.existingGroundHeight(x, z);
     return this.data.terrain?.contains(x, z) &&
@@ -590,7 +606,9 @@ export class CollisionWorld {
     const b = this.bridgeAt(x, z, referenceY);
     return b
       ? this.bridgeHeight(b.bridge, b.t)
-      : (this.pacificApron?.height(x, z) ?? this.groundHeight(x, z));
+      : (this.pacificApron?.height(x, z) ??
+          this.howeCordovaJunction?.height(x, z) ??
+          this.groundHeight(x, z));
   }
   water(x: number, z: number, referenceY = Infinity) {
     if (

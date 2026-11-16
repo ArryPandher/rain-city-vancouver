@@ -30,7 +30,7 @@ import { drive, damp, angleDelta } from "./game/physics";
 import { startupBikeSpot, summonedVehicleSpot } from "./game/vehicle-placement";
 import { GameAudio } from "./game/audio";
 import { PointerInput } from "./game/pointer-input";
-import { shortenChaseBoom } from "./game/chase-camera";
+import { chaseCharacterHidden, shortenChaseBoom } from "./game/chase-camera";
 import { Combat, WEAPONS } from "./game/combat";
 import { Missions, formatTime } from "./game/missions";
 import "./ui/style.css";
@@ -76,6 +76,7 @@ class Game {
   pitch = 0.19;
   sensitivity = 0.75;
   cameraMode = 0;
+  private characterNearCameraHidden = false;
   quality = "balanced";
   time = 0;
   last = 0;
@@ -404,11 +405,20 @@ class Game {
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => resolve()),
       );
-      for (const probe of this.world.reflections)
+      for (const [index, probe] of this.world.reflections.entries()) {
         this.reflections.update(
           this.renderer,
           new T.Vector3(...probe.position),
         );
+        ui.loading(
+          `Preparing local reflections (${index + 1}/${this.world.reflections.length})`,
+          0.94 + (0.02 * (index + 1)) / this.world.reflections.length,
+        );
+        // Each update is atomic and restores renderer/scene state in finally.
+        // Yield only BETWEEN captures, preserving their existing order/content
+        // while allowing input/loading UI to run between costly six-face draws.
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      }
     }
     // Filter existing street captures and compile the same car shaders that play uses.
     this.carStreetReflections?.update(
@@ -480,6 +490,7 @@ class Game {
               yaw: this.mouseYaw,
               pitch: this.pitch,
               mode: this.cameraMode,
+              characterHiddenForNearCamera: this.characterNearCameraHidden,
             },
             player: this.player.toArray(),
             activeVehicle: this.vehicle
@@ -1304,6 +1315,11 @@ class Game {
     if (ui.mapOpen) ui.drawMap();
   }
   setCamera(immediate = false, dt = 0.016) {
+    if ((ui.introOpen || this.photo) && this.characterNearCameraHidden) {
+      this.characterNearCameraHidden = false;
+      this.character.group.visible =
+        !this.vehicle || this.vehicle.kind === "bike";
+    }
     // Aerial views need depth precision for water/road layers separated by centimetres.
     const near = ui.introOpen
       ? 8
@@ -1450,7 +1466,16 @@ class Game {
         );
       this.camera.lookAt(look);
     }
-    this.character.group.visible = (!veh || veh.kind === "bike") && !first;
+    const showBody = (!veh || veh.kind === "bike") && !first;
+    this.characterNearCameraHidden =
+      showBody &&
+      chaseCharacterHidden(
+        this.camera.position,
+        this.player,
+        this.camera.near,
+        this.characterNearCameraHidden,
+      );
+    this.character.group.visible = showBody && !this.characterNearCameraHidden;
     const targetFov =
       this.aiming && !veh
         ? 48

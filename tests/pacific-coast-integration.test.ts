@@ -103,7 +103,7 @@ test("325 Howe base meets the real shared street along both sloping public faces
 test("the dedicated facade dispatch has one external static reflection and does not affect neighbours", () => {
   assert.equal(reflections.length, 1);
   const probe = reflections[0];
-  assert.equal(probe.resolution, 512);
+  assert.equal(probe.resolution, 256);
   assert.ok(probe.position.every(Number.isFinite));
   assert.equal(
     collision.blocked(

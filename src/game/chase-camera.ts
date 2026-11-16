@@ -1,5 +1,25 @@
 import { Vector3 } from "three";
 
+/** A conservative capsule around the 1.84m protagonist, expanded by the
+ * camera's near plane. Use the actual interpolated camera, not its desired
+ * endpoint: otherwise the body can reappear while the boom is still inside it.
+ * The 20cm release margin avoids flickering as a wall-shortened boom jitters.
+ * This only controls body visibility; it never moves a camera through a wall. */
+export function chaseCharacterHidden(
+  camera: Vector3,
+  feet: Vector3,
+  near: number,
+  previouslyHidden: boolean,
+) {
+  const bodyY = Math.max(feet.y + 0.25, Math.min(feet.y + 1.65, camera.y));
+  const distance = Math.hypot(
+    camera.x - feet.x,
+    camera.y - bodyY,
+    camera.z - feet.z,
+  );
+  return distance < 0.35 + near + (previouslyHidden ? 0.2 : 0);
+}
+
 /** Shorten a camera boom without overwriting the endpoint we interpolate from. */
 export function shortenChaseBoom(
   focus: Vector3,

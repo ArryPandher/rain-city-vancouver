@@ -84,7 +84,7 @@ for (const clubFirst of [false, true]) {
     );
     assert.deepEqual([x, z], [309, -399]);
     assert.equal(towerProbe.resolution ?? 128, 128);
-    assert.equal(clubProbe.resolution, 512);
+    assert.equal(clubProbe.resolution, 256);
     assert.equal(clubProbe.position[1], 6.2 + 9);
     for (const building of buildings)
       assert.equal(pointInPoly(x, z, building.pts), false);
