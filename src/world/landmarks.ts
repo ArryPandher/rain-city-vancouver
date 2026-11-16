@@ -52,6 +52,9 @@ export function buildLandmarks(
   // Cruise ship beside the real Canada Place landmark model.
   {
     const g = place(49.28845, -123.1118, -0.39);
+    // The hull's local y=0 ring is its modeled waterline. This parent origin is
+    // on land before the berth offset; use the ocean surface, not its ground.
+    g.position.y = 0.065;
     // Harbour cruise ship, in-world scale with deck railings and lifeboats.
     const ship = new T.Group();
     ship.position.set(122, 0, -25);
