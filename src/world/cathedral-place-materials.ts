@@ -1,3 +1,4 @@
+import { addCathedralStonePanels } from "./cathedral-place-stone";
 import * as T from "three";
 import type { Materials } from "./materials";
 import { createExteriorLobbyGlass } from "./exterior-lobby-glass";
@@ -26,15 +27,17 @@ export function createCathedralPlaceMaterials(
   glass.roughness = 0.15;
   glass.envMapIntensity = 0.85;
   return {
-    stone: new T.MeshStandardMaterial({
-      name: "Cathedral Place pale limestone",
-      color: 0xd2cdc1,
-      map: mineral("color", true),
-      normalMap: mineral("normal", false),
-      roughnessMap: mineral("roughness", false),
-      normalScale: new T.Vector2(0.08, 0.08),
-      roughness: 0.94,
-    }),
+    stone: addCathedralStonePanels(
+      new T.MeshStandardMaterial({
+        name: "Cathedral Place pale limestone",
+        color: 0xd2cdc1,
+        map: mineral("color", true),
+        normalMap: mineral("normal", false),
+        roughnessMap: mineral("roughness", false),
+        normalScale: new T.Vector2(0.08, 0.08),
+        roughness: 0.94,
+      }),
+    ),
     frame: new T.MeshStandardMaterial({
       name: "Cathedral Place bluegreen metal frames",
       color: 0x63858b,

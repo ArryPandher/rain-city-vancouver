@@ -1,7 +1,7 @@
 # Cathedral Place — registered exterior candidate
 
 2026-11-16 UTC. Exact mapped building `w114505109`, 925 West Georgia Street.
-Local verification is complete; ordinary-camera native acceptance is pending.
+Registered geometry and open crown have passed ordinary-camera native review. The subsequent stone-finish candidate described below awaits matched native review.
 
 ## Why this building
 
@@ -66,4 +66,15 @@ Seven focused tests cover:
 
 A one-off comparison against the `fd421f6` factory proved identical position/normal/UV hashes for all stone, backing, glazing and sub99m frame geometry. Only the crown changed.
 
-Strict scoped TypeScript passes. No browser, production build or push was run by this owner. Root's first combined snapshot contains the superseded closed crown; the corrected ridge/lattice requires a new build and native acceptance.
+Strict scoped TypeScript passes. No browser, production build or push was run by this owner. Root subsequently inspected the corrected open crown from the Gallery and the full tower from the public Hornby/Georgia approach; the latter is saved as `artifacts/local/cathedral-clear-street-native.png`.
+
+
+## Stone finish follow-up — 2026-11-16 UTC
+
+The accepted street view still reads as a uniform pale grid. The owner's daylight corner detail shows aligned cut-stone panels with narrow recessed seams and mild variation between slabs, rather than pronounced brick mortar or generalized grime. The fitted finish therefore uses aligned **1.10×0.95m panels**, **6mm joints** and **2mm normal relief** on vertical stone faces. These are bounded visual estimates from the pier/glazed-bay proportions, not measured stone dimensions or a claim about stone species. The photograph's apparent panel-row height is roughly89px beside a139px pier and194px glazed bay; perspective prevents treating those pixel ratios as a survey. The metric choice remains approximately±25% uncertain and should be judged at the ordinary street viewpoint.
+
+`cathedral-place-stone.ts` changes only the existing stone material. Slab reflectance ranges from.94 to1.04 of the retained warm base, with roughness variation limited to±.025. The existing licensed mineral maps and their cloned samplers remain intact. No dirt streaks, photographic textures, displacement, new geometry or fake interiors were added. The glass response, all physical recesses/corner returns, closed caps and twin-finial crown are unchanged.
+
+The shader reads the geometry's **raw metric UVs**, independent of the mineral map's.5 repeat. Horizontal cap and soffit normals suppress the panel treatment; the normal relief layers over the existing mineral normal. Derivative filtering attenuates subpixel joints rather than widening them into dark bands, and panel-tone variation fades when a panel becomes smaller than a pixel. This retains a restrained distant silhouette; the source does not support artificially large black seams to make them visible from the Gallery.
+
+The actual `Batcher` applies the live grade offset to positions and preserves UVs. The custom material is excluded from the current stock-shader static-consolidation policy, retaining its single stone draw; the complete assembly remains five material batches and36,795 triangles. The new focused tests check every vertical stone triangle's UV/physical metre correspondence, exact UV preservation through the real grade/batch path, source sampler isolation, unchanged optical settings, no duplicate shader injection, inherited shader hooks, derivative filtering and horizontal-surface selection. Existing crown/source geometry checks remain passing. Scoped TypeScript passes. The finish is **locally verified, not yet native accepted**; compare the next build at the saved clear-street pose before considering it finished.
