@@ -10,7 +10,7 @@ import { CollisionWorld } from "../src/world/collision";
 import { KX, ORIGIN, type CityData, type Road } from "../src/world/data";
 import { ROBSON_ASPHALT_ROADS } from "../src/world/robson-road-material";
 
-test("actual Robson roads preserve pre-material geometry, UVs and paint while assigning only the four asphalt ways", (t) => {
+function renderRoads(enabled: boolean) {
   const data: CityData = JSON.parse(
       fs.readFileSync("public/data/vancouver.json", "utf8"),
     ),
@@ -65,6 +65,15 @@ test("actual Robson roads preserve pre-material geometry, UVs and paint while as
     vehicleSurfaceSupport: true,
     stats: { roads: 0 },
   }) as World;
+  // Test-only material selection override. Execute the current owning roads()
+  // with identical source IDs and clipping/contact pipeline in both cases.
+  // No runtime feature flag or edited road identity is needed.
+  if (!enabled)
+    Object.defineProperty(world, "robsonRoadMaterial", {
+      configurable: true,
+      get: () => material.asphalt,
+      set: () => {},
+    });
   const add = Batcher.prototype.add,
     finish = Batcher.prototype.finish,
     labels = new WeakMap<T.BufferGeometry, string>(),
@@ -99,26 +108,51 @@ test("actual Robson roads preserve pre-material geometry, UVs and paint while as
   const hash = createHash("sha256")
     .update(geometry.sort().join("\n"))
     .digest("hex");
-  t.diagnostic(
-    `${geometry.length} source/paint batches; geometry SHA256 ${hash}`,
-  );
-  // Captured from the actual World.roads implementation before the scoped
-  // material substitution, with this same source fixture and final UV pass.
-  assert.equal(geometry.length, 341);
-  assert.equal(
-    hash,
-    "06073369f97ab9b14fdcd7bd66fee62d9f75ccc5bb6c5c7e627a862520821144",
-  );
   const changed = new Set<string>();
   for (const [id, key, m] of assignments) {
-    const selected = ROBSON_ASPHALT_ROADS.has(id) && key === "road";
+    const selected = enabled && ROBSON_ASPHALT_ROADS.has(id) && key === "road";
     assert.equal(m.userData.robsonAsphalt === true, selected, `${id}/${key}`);
     if (selected) changed.add(id);
+    if (!enabled && ROBSON_ASPHALT_ROADS.has(id) && key === "road")
+      assert.equal(
+        m,
+        material.asphalt,
+        "disabled control uses generic asphalt",
+      );
   }
-  assert.deepEqual([...changed].sort(), [...ROBSON_ASPHALT_ROADS].sort());
+  assert.deepEqual(
+    [...changed].sort(),
+    enabled ? [...ROBSON_ASPHALT_ROADS].sort() : [],
+  );
   const roadChunks = world.chunks.filter(
     (mesh) => (mesh.material as T.Material).userData.robsonAsphalt === true,
   );
-  assert.ok(roadChunks.length > 0 && roadChunks.length <= 2);
+  if (enabled) assert.ok(roadChunks.length > 0 && roadChunks.length <= 2);
+  else assert.equal(roadChunks.length, 0);
   assert.deepEqual(data.roads, before);
+  const unchangedMaterials = assignments
+    .filter(([id, key]) => !(ROBSON_ASPHALT_ROADS.has(id) && key === "road"))
+    .map(([id, key, m]) => `${id}/${key}/${m.name}`)
+    .sort();
+  return { hash, geometry: geometry.sort(), unchangedMaterials };
+}
+
+test("current Robson geometry, UVs, paint and outside materials are identical with the four-way material disabled/enabled", (t) => {
+  const control = renderRoads(false),
+    candidate = renderRoads(true);
+  assert.ok(control.geometry.length > 0);
+  assert.deepEqual(
+    candidate.geometry,
+    control.geometry,
+    "compare every labelled attribute/index digest, including current Gallery footway cuts",
+  );
+  assert.deepEqual(
+    candidate.unchangedMaterials,
+    control.unchangedMaterials,
+    "paint, curbs, footways and outside road assignments remain unchanged",
+  );
+  assert.equal(candidate.hash, control.hash);
+  t.diagnostic(
+    `${candidate.geometry.length} identical source/paint records; current SHA256 ${candidate.hash}`,
+  );
 });
