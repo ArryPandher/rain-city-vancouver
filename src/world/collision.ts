@@ -1,3 +1,4 @@
+import type { createIronworkersPathBoundary } from "./ironworkers-path-boundary";
 import {
   ironworkersPoint,
   ironworkersSample,
@@ -290,6 +291,7 @@ export class CollisionWorld {
   harbour = false;
   gallery = false;
   robsonGarden?: Building;
+  ironworkersPaths?: ReturnType<typeof createIronworkersPathBoundary>;
   robsonRink?: ReturnType<typeof createRobsonRinkContact>;
   convention?: ConventionSite;
   canada?: CanadaPlaceSite;
@@ -634,6 +636,8 @@ export class CollisionWorld {
     return null;
   }
   height(x: number, z: number, referenceY = Infinity) {
+    const path = this.ironworkersPaths?.supportAt(x, z);
+    if (path !== undefined && path <= referenceY + 3) return path;
     const rink = this.robsonRink?.support(x, z, referenceY);
     if (rink !== undefined) return rink;
     const b = this.bridgeAt(x, z, referenceY);
@@ -645,6 +649,8 @@ export class CollisionWorld {
           this.groundHeight(x, z));
   }
   water(x: number, z: number, referenceY = Infinity) {
+    const path = this.ironworkersPaths?.supportAt(x, z);
+    if (path !== undefined && path <= referenceY + 3) return false;
     if (
       this.canada &&
       referenceY >= CANADA_PLACE_DECK_Y - 0.5 &&
@@ -752,6 +758,16 @@ export class CollisionWorld {
       this.robsonGarden &&
       (robsonObstacle(x, z, r) ||
         robsonMoundCirculationBlocked(x, z, r, referenceY, camera))
+    )
+      return true;
+    if (
+      this.ironworkersPaths?.blockedAt(
+        x,
+        z,
+        r,
+        Number.isFinite(referenceY) ? referenceY : this.height(x, z),
+        camera,
+      )
     )
       return true;
     const bridge = this.bridgeAt(x, z, referenceY);

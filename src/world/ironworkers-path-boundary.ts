@@ -569,6 +569,12 @@ export function createIronworkersPathBoundary(
     };
   };
   return {
+    walkingCentres: [-1, 1].map((side) => ({
+      side,
+      points: stations.map((t) =>
+        ironworkersPoint(t, (side * (d.inner + d.outer)) / 2),
+      ),
+    })),
     topTriangles: top,
     members,
     ties,

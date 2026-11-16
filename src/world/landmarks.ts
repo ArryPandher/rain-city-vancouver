@@ -298,7 +298,9 @@ export function buildLandmarks(
     for (let i = 0; i < n; i++) {
       const t = station(i),
         tt = station(i + 1);
-      for (const s of [-1, 1]) {
+      for (const s of b.id === "ironworkers" && collision?.ironworkersPaths
+        ? []
+        : [-1, 1]) {
         const edge = (b.width / 2) * s;
         beam(
           g,

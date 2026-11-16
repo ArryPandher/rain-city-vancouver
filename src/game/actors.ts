@@ -1,3 +1,4 @@
+import { ironworkersPedestrianRoad } from "./ironworkers-pedestrians";
 import {
   createCanadaPedestrianCircuit,
   canadaPedestrianPoint,
@@ -169,7 +170,11 @@ export class Actors {
     const roads = this.world.collision.roads.query(x, z, 440);
     const trafficSpans = nearbyRoadSpans(roads.filter(isStreet), x, z, 420);
     const walkingSpans = nearbyRoadSpans(
-      roads.filter(pedestrianRoute),
+      roads
+        .filter(pedestrianRoute)
+        .map((r) =>
+          ironworkersPedestrianRoad(r, this.world.collision.ironworkersPaths),
+        ),
       x,
       z,
       240,
@@ -386,7 +391,11 @@ export class Actors {
       420,
     );
     const walkingSpans = nearbyRoadSpans(
-      roads.filter(pedestrianRoute),
+      roads
+        .filter(pedestrianRoute)
+        .map((r) =>
+          ironworkersPedestrianRoad(r, this.world.collision.ironworkersPaths),
+        ),
       player.x,
       player.z,
       250,

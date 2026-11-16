@@ -1,3 +1,11 @@
+import {
+  createIronworkersPathBoundary,
+  IRONWORKERS_PATH,
+} from "./ironworkers-path-boundary";
+import {
+  createIronworkersApproachClipper,
+  IRONWORKERS_APPROACH_IDS,
+} from "./ironworkers-approach-finish";
 import { createHoweStationRoadFinishClipper } from "./howe-station-road-finish";
 import {
   clipRobsonRinkOpenings,
@@ -213,6 +221,22 @@ export class World {
     this.forestHabitat = new ForestHabitat(this.data, this.collision);
     await report("Building terrain and ground batches", 0.15);
     this.terrain();
+    const ironworkers = BRIDGES.find((b) => b.id === "ironworkers")!;
+    const pathBoundary = createIronworkersPathBoundary(
+      (t) => this.collision.bridgeHeight(ironworkers, t),
+      (x, z) => this.collision.groundHeight(x, z) + 0.07,
+    );
+    const pathMeshes = pathBoundary.createRenderGroup(
+      new T.MeshStandardMaterial({ color: 0x92958e, roughness: 0.82 }),
+      new T.MeshStandardMaterial({
+        color: 0xa7afac,
+        roughness: 0.5,
+        metalness: 0.75,
+      }),
+    );
+    pathMeshes.group.name = "Ironworkers shared paths and finite safety fence";
+    this.root.add(pathMeshes.group);
+    this.collision.ironworkersPaths = pathBoundary;
     if (this.collision.robsonRink) {
       const rink = createRobsonRinkExteriorMeshes(this.materials);
       this.root.add(...rink);
@@ -669,6 +693,9 @@ export class World {
     oceanRect(bounds.minX, 15000, -18000, -8500);
   }
   roads() {
+    const clipIronworkers =
+      this.collision.ironworkersPaths &&
+      createIronworkersApproachClipper(this.collision.ironworkersPaths);
     const clipStationFinish = this.collision.canada
       ? createHoweStationRoadFinishClipper(this.data, this.collision.canada)
       : undefined;
@@ -703,6 +730,11 @@ export class World {
         this.stats.roads++;
         continue;
       }
+      if (
+        clipIronworkers &&
+        IRONWORKERS_PATH.replacedCycleways.some((id) => id === r.id)
+      )
+        continue;
       const [x, z] = centroid(r.pts),
         width = roadWidth(r),
         street = isStreet(r),
@@ -731,9 +763,18 @@ export class World {
         );
       const seawall = /^Stanley Park Seawall/.test(r.name ?? "");
       const bridgeRoute = /Lions Gate Bridge/.test(r.name ?? "");
-      const height = (x: number, z: number) =>
-        (moundRoad ? robsonMoundCirculationTerrainHeight(x, z) : undefined) ??
-        this.collision.roadHeight(r, x, z);
+      const height = (x: number, z: number) => {
+        if (clipIronworkers && IRONWORKERS_APPROACH_IDS.has(r.id ?? "")) {
+          const b = this.collision.bridgeAt(x, z);
+          return b
+            ? this.collision.bridgeHeight(b.bridge, b.t)
+            : this.collision.groundHeight(x, z);
+        }
+        return (
+          (moundRoad ? robsonMoundCirculationTerrainHeight(x, z) : undefined) ??
+          this.collision.roadHeight(r, x, z)
+        );
+      };
       const roadRibbon = (
         points: number[],
         width: number,
@@ -749,6 +790,7 @@ export class World {
           scale,
           onTerrain && !bridgeRoute,
         );
+        if (clipIronworkers) geometry = clipIronworkers(geometry, r);
         if (moundRoad) {
           geometry = clipRobsonMoundCirculation(geometry, height, y);
           geometry = fitRobsonMoundPath(geometry, height, y);
