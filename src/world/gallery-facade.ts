@@ -327,7 +327,7 @@ export function addGalleryFacade(
       }
     }
   }
-  addGalleryHooperFacade(mesh, wallStone, frame, sourceGlass);
+  addGalleryHooperFacade(mesh, stone, frame, sourceGlass, wallStone);
   addGalleryPortico(mesh, stone);
   addGalleryEntryCornice(mesh, stone);
   addGalleryStairFraming(mesh, base, frame);

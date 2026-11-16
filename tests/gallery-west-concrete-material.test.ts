@@ -87,13 +87,16 @@ test("final Gallery batching changes only exact west concrete boxes, preserving 
   for (const m of old.filter(
     (m) => m.material !== materials.get("foundation"),
   )) {
-    const name = (m.material as T.Material).name;
-    assert.deepEqual(
-      triangleKeys(
-        next.find((q) => (q.material as T.Material).name === name)!.geometry,
-      ),
-      triangleKeys(m.geometry),
-    );
+    // The retained Hooper glass and the rear-pane clone share a source name,
+    // but use different reflection ownership. Match that semantic role too.
+    const material = m.material as T.Material;
+    const matches = next.filter((q) => {
+      const other = q.material as T.Material;
+      return other.name === material.name &&
+        !!other.userData.galleryRearPane === !!material.userData.galleryRearPane;
+    });
+    assert.equal(matches.length, 1, "each material role resolves unambiguously");
+    assert.deepEqual(triangleKeys(matches[0].geometry), triangleKeys(m.geometry));
   }
   assert.equal(next.length, old.length + 1);
   const g = concrete[0].geometry,

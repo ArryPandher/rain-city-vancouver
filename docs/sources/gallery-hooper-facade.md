@@ -25,3 +25,7 @@ The 0.76 m flat pilaster shafts project 0.26 m; stepped capitals reach 0.43 m an
 - Focused decoded-asset tests establish exact source cuts, fail-closed/idempotent behavior, six single glass hits at 0.38 m without old panes, all four outward-visible reveals, four engaged shaft hits, projected horizontal/raking cornice hits, finite/bounded geometry and retained preexisting facade/stair checks.
 
 Expected visible benefit: a legible three-bay classical end elevation with actual shadow-producing pilaster/cornice hierarchy, replacing the broad blank wall and five generic narrow window stacks in the same walking view. Lighting, exposure, materials elsewhere and navigation are unchanged. No build or native acceptance is claimed by these source checks.
+
+## Material integration correction
+
+Release CI43903500941 caught the wall-joint material being passed to every Hooper stone element, including pilasters and the pediment. The factory now passes original stone for trim and a separate ashlar material only for flat wall infill. Geometry and source removal are unchanged. The existing ashlar height-bound check now passes without widening its bounds. Two unrelated integration assumptions were corrected: the full Gallery batch budget includes Hooper/foliage, and rear-reflection versus retained-source glass must be matched by semantic role rather than their shared source name. Fifteen focused tests pass.
