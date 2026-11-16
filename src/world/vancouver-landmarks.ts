@@ -1,4 +1,10 @@
 import { canadaPlaceCapabilities } from "./canada-place-capabilities";
+import { loadLandmarkWithRetry } from "./landmark-load-retry";
+import {
+  panPacificHowePodiumCompatible,
+  replacePanPacificHowePodiumFaces,
+} from "./pan-pacific-howe-podium-source";
+import { createPanPacificHowePodium } from "./pan-pacific-howe-podium-install";
 import { addCanadaPlacePromenadeFixtures } from "./canada-place-promenade-fixtures";
 import { CANADA_PLACE_PROMENADE_FIXTURES } from "./canada-place-promenade-fixtures-data";
 import { createCanadaPlaceDoorGlass } from "./canada-place-door-glass";
@@ -121,7 +127,9 @@ export async function loadVancouverLandmarks(
   footprints.length = 0;
   const surfaces = new LandmarkSurfaces(materials);
   const models = await Promise.all(
-    assets.map((asset) => loader.loadAsync(`${BASE}${asset.file}`)),
+    assets.map((asset) =>
+      loadLandmarkWithRetry(() => loader.loadAsync(`${BASE}${asset.file}`)),
+    ),
   );
   for (const [index, asset] of assets.entries()) {
     const gltf = models[index];
@@ -142,6 +150,8 @@ export async function loadVancouverLandmarks(
       asset.id === "canada-place" && canadaPlaceCanopyCompatible(gltf.scene);
     const refineCanadaHotel =
       refineCanadaCanopy && canadaPlaceHotelCompatible(gltf.scene);
+    const refineHowePodium =
+      asset.id === "canada-place" && panPacificHowePodiumCompatible(gltf.scene);
     const cache = new Map<T.Material, T.MeshStandardMaterial>();
     const galleryMaterials = new Map<string, T.MeshStandardMaterial>();
     const canadaMaterials = new Map<string, T.MeshStandardMaterial>();
@@ -155,6 +165,8 @@ export async function loadVancouverLandmarks(
           : null;
       if (asset.id === "vancouver-art-gallery")
         repairGalleryRearEntry(geometry, original.name);
+      if (refineHowePodium)
+        replacePanPacificHowePodiumFaces(geometry, original.name);
       if (refineGallery) replaceGalleryWingFaces(geometry, original.name);
       if (refineGalleryRoof) replaceGalleryRoofFaces(geometry, original.name);
       if (refineCanadaHotel)
@@ -294,6 +306,20 @@ export async function loadVancouverLandmarks(
       addGalleryFacade(group, galleryMaterials);
       addGalleryBanners(group);
     }
+    if (refineHowePodium) {
+      const podium = createPanPacificHowePodium(materials);
+      group.add(podium.group);
+      reflections.push({
+        name: "Pan Pacific Howe podium",
+        position: [
+          podium.capture.x + x,
+          podium.capture.y + 0.08,
+          podium.capture.z + z,
+        ],
+        materials: [podium.glass],
+        resolution: 256,
+      });
+    }
     if (refineGalleryRoof) {
       const copper = galleryMaterials.get("copper");
       if (copper)
@@ -307,6 +333,7 @@ export async function loadVancouverLandmarks(
         refineCanada,
         refineCanadaCanopy,
         refineCanadaCanopy,
+        refineHowePodium,
       );
   }
   return { count: assets.length, canadaPlace };

@@ -1,4 +1,5 @@
 import { createHoweSceneTerrain } from "./howe-scene-terrain";
+import { panPacificHowePodiumCameraClearance } from "./pan-pacific-howe-podium-camera";
 import {
   createHoweCordovaJunctionSite,
   type HoweCordovaJunctionSite,
@@ -46,10 +47,13 @@ import {
 } from "./canada-place-site";
 import {
   CANADA_PLACE_DECK_Y,
+  CANADA_PLACE_ORIGIN,
   CANADA_PLACE_PIER,
   CANADA_PLACE_PIER_ID,
+  CANADA_PLACE_HOTEL_ID,
   CANADA_PLACE_ENTRY_CONNECTOR,
   CANADA_PLACE_DECK_COLLIDER_IDS,
+  canadaPlaceEastFrontRailAt,
   supportedDeck,
   solidAt,
   canadaPlaceGroundStayAt,
@@ -248,6 +252,7 @@ export class CollisionWorld {
       capabilities.concourse,
       capabilities.entranceCanopy,
       capabilities.promenadeFixtures,
+      capabilities.howePodium,
     );
   }
   barriers = new SpatialHash<{
@@ -671,6 +676,18 @@ export class CollisionWorld {
       this.canada &&
       this.canadaGeometry.loaded &&
       referenceY >= CANADA_PLACE_DECK_Y - 0.5;
+    // Only the chase camera may enter the source-validated podium recess.
+    // The raised guard/private terrace does not become an actor route.
+    const podiumCameraClear =
+      camera &&
+      this.canadaGeometry.loaded &&
+      this.canadaGeometry.howePodium &&
+      panPacificHowePodiumCameraClearance(
+        x - CANADA_PLACE_ORIGIN[0],
+        z - CANADA_PLACE_ORIGIN[1],
+        r,
+        referenceY - 0.08,
+      );
     if (this.canada && this.canadaGeometry.promenadeFixtures) {
       const y = Number.isFinite(referenceY)
         ? referenceY
@@ -686,6 +703,13 @@ export class CollisionWorld {
       )
         return true;
     }
+    // The exact east apron rail is outside parts of the coarser mapped pier.
+    // Keep its visible finite-height barrier when source-backed support is live.
+    if (
+      this.canadaGeometry.loaded &&
+      canadaPlaceEastFrontRailAt(x, z, r, referenceY, camera)
+    )
+      return true;
     // Public deck eligibility never opens the closed hotel/exhibition volumes.
     if (
       this.canada &&
@@ -696,6 +720,7 @@ export class CollisionWorld {
     if (
       canadaLevel &&
       inCanadaPlacePier(x, z) &&
+      !podiumCameraClear &&
       solidAt(x, z, r, referenceY, this.canadaGeometry)
     )
       return true;
@@ -721,10 +746,14 @@ export class CollisionWorld {
       )
         return true;
     for (const b of this.buildings.query(x, z, r)) {
+      // The mapped hotel relation overlaps the source HOTEL proxy near the
+      // far bays. Both may yield only inside the same validated camera void.
+      if (podiumCameraClear && b.id === CANADA_PLACE_HOTEL_ID) continue;
       if (
         canadaLevel &&
         CANADA_PLACE_DECK_COLLIDER_IDS.has(b.id) &&
-        !solidAt(x, z, r, referenceY, this.canadaGeometry) &&
+        (podiumCameraClear ||
+          !solidAt(x, z, r, referenceY, this.canadaGeometry)) &&
         // Source west rail top is 8.802 + .05 + .08 = 8.932 m.
         // Keep the proxy for lower cameras; only a sphere wholly above a
         // conservative 8.98 m rail envelope may ignore actor support margins.

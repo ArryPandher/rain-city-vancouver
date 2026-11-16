@@ -13,7 +13,7 @@ export const PAN_PACIFIC_HOWE_PODIUM_FINISH = {
   concrete: 0xd7d3c7,
   soffit: 0xbab9b0,
   frame: 0xc6c8bf,
-  backing: 0x4c5554,
+  backing: 0x303b3b,
   normalStrength: 0.1,
   glassThroughput: [0.6, 0.8, 0.82] as const,
   glassRoughness: 0.14,
@@ -24,7 +24,7 @@ export const PAN_PACIFIC_HOWE_PODIUM_FINISH = {
 /** Four opaque material batches plus one ordered two-draw glazing batch.
  * Reuses the committed CC0 concrete crop and existing hotel optical stack;
  * no capture, light, room texture, emission, or facade-wide pane pattern.
- * The caller assigns the existing local environment to glassPair.reflection.
+ * The caller assigns the southeast local environment to glassPair.reflection.
  */
 export function createPanPacificHowePodiumMaterials(
   library: Pick<Materials, "texture">,
