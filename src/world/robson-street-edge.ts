@@ -1,4 +1,5 @@
 import * as T from "three";
+import { robsonGridCandidates } from "./robson-grid-candidates";
 import {
   VehicleRoadSurfaceBuilder,
   type VehicleRoadSurface,
@@ -269,6 +270,7 @@ export function createRobsonStreetEdgeSite(
   };
   for (const surface of ["sidewalk", "curb", "gutter", "soil"] as const) {
     for (const poly of masks[surface]) {
+      const candidate = robsonGridCandidates(poly, step);
       const pts = poly.flat(),
         xs = pts.map((p) => p[0]),
         zs = pts.map((p) => p[1]);
@@ -282,6 +284,7 @@ export function createRobsonStreetEdgeSite(
           iz <= Math.floor(Math.max(...zs) / step);
           iz++
         ) {
+          if (!candidate(ix, iz)) continue;
           const x = ix * step,
             z = iz * step;
           for (const grid of [
