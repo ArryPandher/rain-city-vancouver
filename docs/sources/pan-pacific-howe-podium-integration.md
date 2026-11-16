@@ -56,11 +56,27 @@ Local evidence under `artifacts/local/` includes the rejected and corrected
 podium screenshots/profiles, `podium-deck-height-bug.png` and its profile,
 `podium-candidate-driving.png`, source contact audits and test logs. Native
 candidate driving reached 42km/h, braking reached zero, exit worked and the
-pistol counter changed from15 to14. The final deck/fascia candidate requires
-its own native walking check before release.
+pistol counter changed from15 to14.
+
+The final candidate (`index-D93BEesj.js`) loaded in the same Codex tab. Replayed
+ordinary movement from the saved podium comparison position reached
+`(517.81, 7.88, -492.27)`, then `(520.62, 7.88, -498.90)` with the feet visibly
+on the floor. Lateral movement stopped at the visible rail at
+`(523.169856, 7.88, -497.801064)`; another 1.5 seconds of held input left that
+position unchanged. The normal camera remained clear. Saved native evidence:
+`podium-release-apron.png`, `podium-release-rail.png`,
+`podium-release-rail-profile.json`, and `podium-release-forecourt.png`.
+The profile confirms a valid 256px podium capture; recorded warnings/errors
+were empty. The fascia and pale service recess were reviewed from the same
+ordinary FOV62 walking view. No special presentation camera was used.
 
 The earlier integrated suite passed730 tests before the apron/fascia follow-up.
-Subsequent focused tests and the publication workflow provide final validation.
+Subsequent focused geometry/camera/material tests passed13 checks. The final
+source/apron checks include3,060 actual floor rays and complete source rail
+bounds. A failed rail-width assertion exposed decoded steel extending beyond
+the initial proxy; measured extrema plus6mm tolerance corrected it and the
+focused rail rerun passed. The publication workflow supplies final full-suite
+validation.
 Six base material draws and four opaque shadow draws describe this assembly,
 not whole-scene performance. Native view still has substantial visual and
 smoothness limitations; this checkpoint is not GTA6/AAA parity.
