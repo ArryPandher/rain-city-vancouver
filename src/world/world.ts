@@ -268,10 +268,13 @@ export class World {
         metalness: 0.75,
       }),
       {
-        filterTrial:
+        // Preserve close physical bars, integrate distant projected coverage.
+        // The old all-physical path remains available for explicit comparisons.
+        filterTrial: !(
           typeof location !== "undefined" &&
           new URLSearchParams(location.search).has("debug") &&
-          new URLSearchParams(location.search).get("fence") === "filtered",
+          new URLSearchParams(location.search).get("fence") === "physical"
+        ),
       },
     );
     pathMeshes.group.name = "Ironworkers shared paths and finite safety fence";
