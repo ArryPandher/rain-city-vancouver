@@ -753,6 +753,9 @@ class Game {
         new Option("SE 135° · baseline", "southeast"),
       );
       daylightDirectionSelect.add(
+        new Option("S 180° · comparison", "south"),
+      );
+      daylightDirectionSelect.add(
         new Option("SW 225° · comparison", "southwest"),
       );
       daylightDirectionSelect.value = this.world.debugDaylightOrientation;
@@ -762,7 +765,9 @@ class Game {
           this.world,
           daylightDirectionSelect.value === "southwest"
             ? "southwest"
-            : "southeast",
+            : daylightDirectionSelect.value === "south"
+              ? "south"
+              : "southeast",
           this.renderer.shadowMap,
           this.reflections,
         );

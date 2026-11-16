@@ -106,7 +106,7 @@ test("unclamped photographic HDR solar disc aligns with the daylight sun using o
     sun: new T.DirectionalLight(),
     water: { uniforms: { sunDir: { value: new T.Vector3() } } },
   };
-  for (const mode of ["southeast", "southwest"] as const) {
+  for (const mode of ["southeast", "south", "southwest"] as const) {
     applyDaylightOrientation(state, mode);
     const disc = centroid
       .clone()
@@ -121,6 +121,9 @@ test("unclamped photographic HDR solar disc aligns with the daylight sun using o
       state.scene.environmentRotation.y,
     );
     assert.equal(disc.y, centroid.y);
+    const expectedAzimuth = mode === "southeast" ? 135 : mode === "south" ? 180 : 225;
+    const actualAzimuth = (T.MathUtils.radToDeg(Math.atan2(disc.x, -disc.z)) + 360) % 360;
+    assert.ok(Math.abs(actualAzimuth - expectedAzimuth) < 1e-8);
   }
   t.diagnostic(
     `${pixels} half-peak pixels; azimuth ${azimuth.toFixed(6)} / elevation ${elevation.toFixed(6)} degrees; peak ${peak.toFixed(2)}`,

@@ -1,10 +1,10 @@
 import * as T from "three";
 import { DAYLIGHT_SKY_ROTATION, sunOffset } from "./daylight";
 
-export type DebugDaylightOrientation = "southeast" | "southwest";
+export type DebugDaylightOrientation = "southeast" | "south" | "southwest";
 const up = new T.Vector3(0, 1, 0);
 const yaw = (orientation: DebugDaylightOrientation = "southeast") =>
-  orientation === "southwest" ? -Math.PI / 2 : 0;
+  orientation === "southwest" ? -Math.PI / 2 : orientation === "south" ? -Math.PI / 4 : 0;
 
 /** Debug comparison only. The existing authored SE baseline is unchanged;
  * SW rotates the same measured HDR disc and direct light around vertical. */
@@ -14,7 +14,7 @@ export function comparisonSunOffset(
   orientation: DebugDaylightOrientation = "southeast",
 ) {
   sunOffset(weather, target);
-  if (weather === "day" && orientation === "southwest")
+  if (weather === "day" && orientation !== "southeast")
     target.applyAxisAngle(up, yaw(orientation));
   return target;
 }

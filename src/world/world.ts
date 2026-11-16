@@ -263,6 +263,12 @@ export class World {
         roughness: 0.5,
         metalness: 0.75,
       }),
+      {
+        filterTrial:
+          typeof location !== "undefined" &&
+          new URLSearchParams(location.search).has("debug") &&
+          new URLSearchParams(location.search).get("fence") === "filtered",
+      },
     );
     pathMeshes.group.name = "Ironworkers shared paths and finite safety fence";
     this.root.add(pathMeshes.group);
