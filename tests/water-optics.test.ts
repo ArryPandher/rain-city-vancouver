@@ -77,7 +77,7 @@ function target() {
   return t;
 }
 
-test("original water remains exact; candidate crossfades the complete lighting lobe before unchanged noise/fog/tone mapping", () => {
+test("original water remains exact; candidate replaces the complete lighting lobe before unchanged noise/fog/tone mapping", () => {
   const shader = waterOpticsFragment(original);
   for (const part of [
     "float wave(vec2 p)",
@@ -91,10 +91,12 @@ test("original water remains exact; candidate crossfades the complete lighting l
   assert.equal(shader.match(/color\+=sunColor\*spec\*2.3/g)?.length, 1);
   assert.ok(
     shader.includes(
-      "color = mix(color,mix(deep,waterRadiance,fres*.85),waterHdrWeight)",
+      "color = mix(deep,waterRadiance,fres*.85)",
     ),
   );
-  assert.ok(shader.includes("smoothstep(0.0, 0.05, waterReflection.y)"));
+  assert.ok(shader.includes("if (waterHdrEnabled > 0.0)"));
+  assert.ok(!shader.includes("waterReflection.y"));
+  assert.ok(!shader.includes("waterHdrWeight"));
   assert.ok(
     shader.includes(
       T.ShaderChunk.cube_uv_reflection_fragment
@@ -142,7 +144,7 @@ test("real clamped daytime HDR is bounded, orientation-preserving and energy-fil
   const energy = (data: Uint16Array, w: number, h: number) => {
     let sum = 0,
       weight = 0;
-    for (let y = 0; y < h; y++) {
+    for (let y = 0; y < h / 2; y++) {
       const a = Math.sin((Math.PI * (y + 0.5)) / h);
       for (let x = 0; x < w; x++) {
         const i = (y * w + x) * 4;
@@ -156,6 +158,10 @@ test("real clamped daytime HDR is bounded, orientation-preserving and energy-fil
     }
     return sum / weight;
   };
+  // Compare only the actual upper sky: lower-source energy intentionally goes.
+  const horizon = filtered.image.data.subarray(127 * 512 * 4, 128 * 512 * 4);
+  for (let row = 128; row < 256; row++)
+    assert.deepEqual(filtered.image.data.subarray(row * 512 * 4, (row + 1) * 512 * 4), horizon);
   const oldEnergy = energy(pixels, hdr.width, hdr.height),
     newEnergy = energy(filtered.image.data as Uint16Array, 512, 256);
   assert.ok(Math.abs(newEnergy / oldEnergy - 1) < 0.001);
@@ -372,4 +378,38 @@ test("actual World weather/orientation hooks switch only the diagnostic lobe and
     );
   }
   comparison.dispose();
+});
+
+
+test("pre-PMREM continuation preserves upper solar radiance and azimuth but excludes lower mirrored emitters in both pixel orientations", () => {
+  for (const flipY of [true, false]) {
+    const width = 512, height = 256;
+    const pixels = new Float32Array(width * height * 4);
+    // Independent latitude-based source: upper sky varies by longitude, one
+    // real solar texel at +28 degrees, and a fictitious lower solar image.
+    const rowAt = (elevation: number) => Math.floor(height * (flipY ? .5 - elevation / 180 : .5 + elevation / 180));
+    for (let row = 0; row < height; row++) {
+      const elevation = (flipY ? .5 - (row + .5) / height : (row + .5) / height - .5) * 180;
+      for (let x = 0; x < width; x++) {
+        const i = (row * width + x) * 4;
+        pixels.set(elevation > 0 ? [1 + x / width, .5, .25, 1] : [32, 32, 32, 1], i);
+      }
+    }
+    pixels.set([16, 12, 8, 1], (rowAt(28) * width + 320) * 4);
+    const source = new T.DataTexture(pixels, width, height, T.RGBAFormat, T.FloatType);
+    source.flipY = flipY;
+    const filtered = waterOpticsInput(source);
+    const result = filtered.image.data as Uint16Array;
+    const rgb = (row: number, x: number) => Array.from(result.subarray((row * width + x) * 4, (row * width + x) * 4 + 3), T.DataUtils.fromHalfFloat);
+    assert.deepEqual(rgb(rowAt(28), 320), [16, 12, 8]);
+    for (const x of [0, 128, 320, 511]) {
+      const upper = rgb(rowAt(.35), x);
+      for (const elevation of [-.35, -1, -10, -28, -80])
+        assert.deepEqual(rgb(rowAt(elevation), x), upper);
+      assert.ok(upper[0] < 2 && upper[1] === .5 && upper[2] === .25);
+    }
+    assert.notDeepEqual(rgb(rowAt(-28), 0), rgb(rowAt(-28), 511));
+    assert.equal(pixels[(rowAt(-28) * width + 320) * 4], 32);
+    source.dispose(); filtered.dispose();
+  }
 });

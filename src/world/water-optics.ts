@@ -7,13 +7,15 @@ export const WATER_OPTICS = {
   atlasWidth: 384,
   atlasHeight: 512,
   roughness: 0.1,
-  horizonBlend: 0.05,
+  horizonBandDegrees: 180 / 256,
   retainedBytes: 384 * 512 * 8,
   temporaryInputBytes: 512 * 256 * 8,
 } as const;
 
 /** A bounded derivative of the already loaded/clamped HDR; never mutate it.
- * Area-weighted box filtering retains radiance without point-sampling the sun. */
+ * Area-weighted box filtering retains upper-sky radiance without point-sampling
+ * the sun. The first upper-horizon row continues below, excluding the source
+ * HDR's edited lower-hemisphere mirror before any PMREM filtering. */
 export function waterOpticsInput(source: T.Texture): T.DataTexture {
   const image = source.image as {
     width: number;
@@ -56,6 +58,14 @@ export function waterOpticsInput(source: T.Texture): T.DataTexture {
         pixels[j + c] = T.DataUtils.toHalfFloat(rgb[c] / weight);
       pixels[j + 3] = T.DataUtils.toHalfFloat(1);
     }
+  // HDRLoader is flipY=true: stored rows above height/2 are the upper sky.
+  // Also honor bottom-up textures. Copy the nearest entirely upper-sky band
+  // (0..0.703125 degrees) by azimuth, including alpha; no new solar image.
+  const horizonRow = source.flipY ? height / 2 - 1 : height / 2;
+  const horizon = pixels.subarray(horizonRow * width * 4, (horizonRow + 1) * width * 4);
+  const firstLower = source.flipY ? height / 2 : 0;
+  const lastLower = source.flipY ? height : height / 2;
+  for (let y = firstLower; y < lastLower; y++) pixels.set(horizon, y * width * 4);
   const texture = new T.DataTexture(
     pixels,
     width,
@@ -104,11 +114,11 @@ export function waterOpticsFragment(original: string) {
     NOISE,
     `
   vec3 waterReflection = reflect(-v,n);
-  float waterHdrWeight = waterHdrEnabled * smoothstep(0.0, ${WATER_OPTICS.horizonBlend}, waterReflection.y);
-  if (waterHdrWeight > 0.0) {
+  if (waterHdrEnabled > 0.0) {
     vec3 waterRadiance = textureCubeUV(waterHdrMap,waterHdrRotation*waterReflection,${WATER_OPTICS.roughness}).rgb * waterHdrIntensity;
-    // Crossfade complete alternatives: the HDR already contains its solar disc.
-    color = mix(color,mix(deep,waterRadiance,fres*.85),waterHdrWeight);
+    // One complete lobe at every elevation; the input continues the horizon.
+    // The original analytic sun is replaced, not added to the HDR solar disc.
+    color = mix(deep,waterRadiance,fres*.85);
   }
   ${NOISE}`,
   )}`;
@@ -214,7 +224,8 @@ export class WaterOpticsComparison {
       rotation: this.uniforms.waterHdrRotation.value.toArray(),
       intensity: this.uniforms.waterHdrIntensity.value,
       belowHorizon:
-        "original water fallback; blend over upper 0.05 direction.y",
+        "directional upper-horizon continuation before PMREM; no scene reflection",
+      horizonBandDegrees: WATER_OPTICS.horizonBandDegrees,
       sceneCapture: false,
     };
   }
