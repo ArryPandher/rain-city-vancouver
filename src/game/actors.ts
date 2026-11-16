@@ -17,6 +17,16 @@ import {
   HOWE_PEDESTRIAN_SLOTS,
   type HowePedestrianCircuit,
 } from "./howe-pedestrians";
+import {
+  createRobsonPedestrianCircuit,
+  robsonPedestrianAssignment,
+  robsonPedestrianPoint,
+  robsonPedestrianHeight,
+  advanceRobsonPedestrian,
+  findRobsonPedestrianSpawn,
+  ROBSON_PEDESTRIAN_SLOTS,
+  type RobsonPedestrianCircuit,
+} from "./robson-pedestrians";
 import { updateCarLOD, syncCarLOD } from "../world/car-lod";
 import { batchCarWheels, syncCarWheelBatches } from "../world/wheel-batching";
 import * as T from "three";
@@ -49,6 +59,7 @@ export interface Vehicle {
   health: number;
 }
 export interface Pedestrian {
+  robson?: { distance: number; pace: number; speed: number };
   howe?: { route: number; distance: number; pace: number; speed: number };
   canadaDistance?: number;
   canadaSpeed?: number;
@@ -106,6 +117,7 @@ export class Actors {
   timer = 0;
   canadaCircuit: CanadaPedestrianCircuit | null = null;
   howeCircuits: HowePedestrianCircuit[] | null = null;
+  robsonCircuit: RobsonPedestrianCircuit | null = null;
   constructor(
     public world: World,
     private readonly wheelMultiDraw = false,
@@ -204,7 +216,38 @@ export class Actors {
     }
     this.canadaCircuit ??= createCanadaPedestrianCircuit(this.world.collision);
     this.howeCircuits ??= createHowePedestrianCircuits(this.world.collision);
+    this.robsonCircuit ??= createRobsonPedestrianCircuit(this.world.collision);
     for (let i = this.peds.length; i < PEDESTRIAN_POOL_LIMIT; i++) {
+      let robson: Pedestrian["robson"];
+      const robsonSlot = i - CANADA_PEDESTRIAN_SLOTS - HOWE_PEDESTRIAN_SLOTS;
+      if (
+        this.robsonCircuit &&
+        robsonSlot >= 0 &&
+        robsonSlot < ROBSON_PEDESTRIAN_SLOTS
+      ) {
+        const assignment = robsonPedestrianAssignment(
+          this.robsonCircuit,
+          robsonSlot,
+        )!;
+        const distance = findRobsonPedestrianSpawn(
+          this.robsonCircuit,
+          assignment.distance,
+          this.world.collision,
+          [
+            ...this.pedestrianBodies(),
+            {
+              x,
+              z,
+              y: this.world.collision.walkingHeight(x, z, 0),
+              radius: 0.55,
+              height: 1.8,
+            },
+          ],
+          this.pedestrianVehicleObstacles(),
+        );
+        if (distance !== undefined)
+          robson = { ...assignment, distance, speed: 0 };
+      }
       let howe: Pedestrian["howe"];
       const howeSlot = i - CANADA_PEDESTRIAN_SLOTS;
       if (
@@ -221,7 +264,7 @@ export class Actors {
           assignment.distance,
           this.world.collision,
           this.pedestrianBodies(),
-          this.howeVehicleObstacles(),
+          this.pedestrianVehicleObstacles(),
         );
         if (distance !== undefined)
           howe = { ...assignment, distance, speed: 0 };
@@ -230,8 +273,9 @@ export class Actors {
         this.canadaCircuit && i < CANADA_PEDESTRIAN_SLOTS
           ? (i * this.canadaCircuit.length) / CANADA_PEDESTRIAN_SLOTS
           : undefined;
-      const fixed =
-        canadaDistance !== undefined
+      const fixed = robson
+        ? robsonPedestrianPoint(this.robsonCircuit!, robson.distance)
+        : canadaDistance !== undefined
           ? canadaPedestrianPoint(this.canadaCircuit!, canadaDistance)
           : howe
             ? howePedestrianPoint(this.howeCircuits![howe.route], howe.distance)
@@ -242,9 +286,11 @@ export class Actors {
             ...fixed,
             road: {
               kind: "footway",
-              pts: (howe
-                ? this.howeCircuits![howe.route]
-                : this.canadaCircuit!
+              pts: (robson
+                ? this.robsonCircuit!
+                : howe
+                  ? this.howeCircuits![howe.route]
+                  : this.canadaCircuit!
               ).points.flatMap((p) => [p.x, p.z]),
             } as Road,
             t: 0,
@@ -265,15 +311,18 @@ export class Actors {
       this.world.scene.add(p.group);
       p.group.position.set(
         at.x,
-        howe
-          ? howePedestrianHeight(this.world.collision, at)
-          : fixed
-            ? 7.88
-            : this.world.collision.roadHeight(at.road, at.x, at.z),
+        robson
+          ? robsonPedestrianHeight(this.world.collision, at)
+          : howe
+            ? howePedestrianHeight(this.world.collision, at)
+            : fixed
+              ? 7.88
+              : this.world.collision.roadHeight(at.road, at.x, at.z),
         at.z,
       );
       p.group.rotation.y = at.heading;
       const ped: Pedestrian = {
+        robson,
         howe,
         canadaDistance,
         character: p,
@@ -425,7 +474,7 @@ export class Actors {
       this.sync(v, 0);
     }
     for (const p of this.peds) {
-      if (p.canadaDistance !== undefined || p.howe) continue;
+      if (p.canadaDistance !== undefined || p.howe || p.robson) continue;
       if (!afterTravel && p.character.group.position.distanceTo(player) < 450)
         continue;
       const at = this.place(walkingSpans, player.x, player.z, {
@@ -467,7 +516,7 @@ export class Actors {
       };
     });
   }
-  private howeVehicleObstacles() {
+  private pedestrianVehicleObstacles() {
     return this.vehicles.map((v) => ({
       x: v.state.x,
       z: v.state.z,
@@ -476,6 +525,31 @@ export class Actors {
       kind: v.kind,
       speed: v.state.speed,
     }));
+  }
+  /** Read-only diagnostics for the three reused Gallery approach rigs. */
+  robsonPedestrianSummary() {
+    return {
+      totalPool: this.peds.length,
+      circuitLength: this.robsonCircuit?.length ?? null,
+      sourceRoad: this.robsonCircuit?.road.id ?? null,
+      assigned: this.peds
+        .filter((p) => p.robson)
+        .map((p) => ({
+          id: p.character.group.id,
+          distance: p.robson!.distance,
+          position: p.character.group.position.toArray(),
+          speed: p.robson!.speed,
+          state:
+            p.down > 0
+              ? "down"
+              : p.robson!.speed === 0
+                ? "waiting"
+                : p.panic > 0
+                  ? "panic"
+                  : "walking",
+          visible: p.character.group.visible,
+        })),
+    };
   }
   howePedestrianSummary() {
     return {
@@ -613,20 +687,51 @@ export class Actors {
       if (p.down > 0) {
         if (p.canadaDistance !== undefined) p.canadaSpeed = 0;
         if (p.howe) p.howe.speed = 0;
+        if (p.robson) p.robson.speed = 0;
         p.down -= dt;
         obj.rotation.z = Math.PI / 2;
         obj.position.y =
-          (p.howe
-            ? howePedestrianHeight(this.world.collision, obj.position)
-            : this.world.collision.height(
-                obj.position.x,
-                obj.position.z,
-                obj.position.y,
-              )) + 0.18;
+          (p.robson
+            ? robsonPedestrianHeight(this.world.collision, obj.position)
+            : p.howe
+              ? howePedestrianHeight(this.world.collision, obj.position)
+              : this.world.collision.height(
+                  obj.position.x,
+                  obj.position.z,
+                  obj.position.y,
+                )) + 0.18;
         continue;
       }
       obj.rotation.z = 0;
       p.panic = Math.max(0, p.panic - dt);
+      if (p.robson && this.robsonCircuit) {
+        const bodies = this.pedestrianBodies().filter(
+          (_, i) => this.peds[i] !== p,
+        );
+        bodies.push({
+          x: player.x,
+          z: player.z,
+          y: player.y,
+          radius: 0.55,
+          height: 1.8,
+        });
+        const next = advanceRobsonPedestrian(
+          this.robsonCircuit,
+          { ...p.robson, panic: p.panic, down: p.down },
+          dt,
+          this.world.collision,
+          bodies,
+          this.pedestrianVehicleObstacles(),
+        );
+        p.robson.distance = next.distance;
+        p.robson.speed = next.speed;
+        if (next.speed > 0)
+          obj.rotation.y +=
+            angleDelta(obj.rotation.y, next.heading) * (1 - Math.exp(-dt * 8));
+        obj.position.set(next.x, next.y, next.z);
+        if (obj.visible) p.character.update(this.timer, next.speed, false);
+        continue;
+      }
       if (p.howe && this.howeCircuits) {
         const bodies = this.pedestrianBodies().filter(
           (_, i) => this.peds[i] !== p,
@@ -644,7 +749,7 @@ export class Actors {
           dt,
           this.world.collision,
           bodies,
-          this.howeVehicleObstacles(),
+          this.pedestrianVehicleObstacles(),
         );
         p.howe.distance = next.distance;
         p.howe.speed = next.speed;
