@@ -1,6 +1,6 @@
 # Robson public-path walkers
 
-Standalone next-candidate module; central Actors integration and native review are separate. No new model, texture, animation, road or collision geometry.
+Integrated into the existing Actors pool in c603fa8. Native review below uses the built 8cce82b candidate. No new model, texture, animation, road or collision geometry.
 
 ## Source and registration
 
@@ -8,7 +8,7 @@ Standalone next-candidate module; central Actors integration and native review a
 
 Two lanes ±0.48 m around that centreline join with 16-segment semicircular ends. Including a 0.4 m pedestrian body requires 0.88 m of the mapped 0.9 m halfwidth. The 27.017 m circuit occupies approximately local v 36.52–49.48, ending more than 3 m before the stair foot at v 33.37. It is east of the corrected west terrace, whose street-facing edge is u−4.85. It does not enter either terrace, stairs, service recess, roadway or building. This is a gameplay walking circuit derived from the public map, not a claim that real people follow an oval.
 
-## Root integration contract
+## Actors integration contract
 
 - Reuse **three existing rigs at pool indices 9–11**, immediately after six Canada and three Howe allocations. Keep `PEDESTRIAN_POOL_LIMIT=34`; remaining generic walkers 22. Ironworkers source-route adapter remains unchanged.
 - Cache `createRobsonPedestrianCircuit(collision)`. Null means retain generic placement; do not create an invented fallback circuit.
@@ -28,4 +28,10 @@ Only 34 route points and lengths, three existing actors, no render batches or ne
 
 `tests/robson-pedestrians.test.ts` loads the same complete public city layers, including terrain, as production. 271 route samples verify actual 1.8 m footway containment, current world ground y0, no blocked/water points and clearance from **all** loaded carriageway segments. All three phased walkers complete two laps under mutual yielding. Tests cover blocked/closed/narrow/missing source, invalid/down ticks, car, bike and body yielding, elevated-body separation and occupied spawn alternatives.
 
-The ordinary local u 0.8 approach from v 51.3 to 33.45 and 4.3 m chase boom stay clear of fixed geometry, including the corrected west edge/stair mouth. NPCs intentionally occupy public walking space and yield to the player; this is not a guarantee that every camera ray through a moving character is unobstructed. Native composition, animation and central allocation remain root's next-candidate check.
+The ordinary local u 0.8 approach from v 51.3 to 33.45 and 4.3 m chase boom stay clear of fixed geometry, including the corrected west edge/stair mouth. NPCs intentionally occupy public walking space and yield to the player; this is not a guarantee that every camera ray through a moving character is unobstructed. Native composition and central allocation were checked below; the existing character art and animation remain far below the AAA target.
+
+## Native candidate review — 2026-11-16
+
+In the existing Codex browser at its native821×839 viewport and pixel ratio1.35, the ordinary Gallery arrival showed three clothed walkers on the mapped approach. Diagnostics confirmed totalPool34, sourcew749560067 and circuit27.017m. After the player walked forward to(-60.41,0,43.16), then stepped aside to(-57.25,0,46.33), all three resumed walking at1.08/1.16/1.12m/s. Their earlier waiting states therefore recovered without respawn or a route override. Foot placement and alternating walking motion were visible. No captured browser warnings/errors.
+
+Evidence: `artifacts/local/gallery-pedestrians-arrival.png`, `gallery-pedestrians-passing.png` and `robson-pedestrians-native.json`. This verifies one ordinary passage and recovery, not every possible crowd configuration or animation quality. Same-rig allocation tests and existing collision/yield tests cover the separate bounded cases. Public deployment verification remains a distinct release step.
