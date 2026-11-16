@@ -29,7 +29,10 @@ export const IRONWORKERS_PATH = {
   curbWidth: 0.45,
   curbHeight: 0.4,
   chunkLength: 64,
-  nearDistance: 48,
+  // Keep the real rectangular bars throughout ordinary bridge gameplay. The
+  // filtered plane prototype has a visible BRDF/coverage seam at short range;
+  // it is only an extreme-distance fallback until that seam is resolved.
+  nearDistance: 2000,
   nearHysteresis: 0.04,
   replacedCycleways: ["w35260598", "w62125826"],
 } as const;

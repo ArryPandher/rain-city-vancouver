@@ -190,7 +190,7 @@ test("installed far cells preserve physical member centres, near boxes and LOD/c
   materials.forEach((m) => m.dispose());
 });
 
-test("mid-distance LOD protects close physical bars across walking/car chunk phases, including hysteresis", () => {
+test("ordinary bridge cameras retain physical bars throughout the span, including hysteresis", () => {
   const bridge = BRIDGES.find((b) => b.id === "ironworkers")!;
   const height = (t: number) => bridgeY(bridge, t, [0, 0]);
   const boundary = createIronworkersPathBoundary(height, () => 0.07);
@@ -239,6 +239,7 @@ test("mid-distance LOD protects close physical bars across walking/car chunk pha
         camera.updateMatrixWorld(true);
         for (const lod of lods) {
           lod.update(camera);
+          assert.equal(lod.getCurrentLevel(), 0, "a distant plane seam must not enter ordinary bridge gameplay");
           if (lod.getCurrentLevel() !== 1) continue;
           const near = lod.levels[0].object as T.InstancedMesh;
           // First/last pickets bound the closest end of each unbent short cell.

@@ -1,5 +1,8 @@
 # Ironworkers distant picket coverage candidate
 
+**Current acceptance decision:** The 48 m shortcut was rejected in native driving and oblique walking: its planar shading creates visible bands at the representation boundary. Ordinary bridge gameplay now retains the actual rectangular bars, with the plane only an extreme-distance 2,000 m fallback. This trades additional bar triangles/shadows for continuous physical geometry; it is not a performance improvement or a claim to remove all subpixel aliasing. The historical trial below is retained as evidence, not the current distance setting.
+
+
 ## Problem and bounded scope
 
 `artifacts/local/ironworkers-fence-native-path.png` shows broad wave bands in the repeated pickets at a grazing walking view. The previous distant LOD replaced each physical box with an opaque bar-width plane. This reduced triangles but did not filter the subpixel spacing. Changing metal color or roughness would not remove that spatial aliasing.
@@ -42,3 +45,7 @@ The old10% hysteresis could delay return to physical bars until a bar was only8.
 This is a hard representation switch over a1.92m hysteresis band, **not a crossfade**. No double-render overlap or additional draw was introduced. Native slow movement must inspect the transition for bar-shading/coverage pop. Since the far proxy is excluded from shadows, picket shadow extent also follows this shorter physical tier; structural rails remain casters.
 
 Five coverage/LOD tests plus the path-shadow test pass; strict scoped TypeScript passes. The new regression uses actual LOD update/hysteresis across walking/car chunk phases and checks10m close-bar protection. The existing LOD-center shadow sampling now reports3casters/97,224triangles before light culling at its sampled centers, not a universal maximum; the denser phase sweep can retain1,970near pickets. No performance gain is claimed.
+
+## Rejected native trial and physical fallback
+
+Native screenshots `bridge-fence-48m-native.png`, `bridge-filtered-normal-native.png` and `bridge-filtered-normal-oblique-native.png` exposed the seam. Projected-area blended normals corrected the fixed-plane orientation but still do not equal the average rectangular-face BRDF. That approximation remains only in the remote fallback. All real member matrices, collision, materials, chunk sizes and draw ceilings remain unchanged. The actual LOD test now verifies physical bars across ordinary walking/car stations on both sides. Native review of this physical fallback is required before publication.

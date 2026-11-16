@@ -70,13 +70,14 @@ test("path receives live contact shadows and only visible physical fence geometr
     maxNearPickets = Math.max(maxNearPickets, nearPickets);
   }
   assert.ok(
-    maxCasters <= 10,
-    "visible near LODs plus two physical static batches bound submission",
+    maxCasters <= 23,
+    "21 physical bar chunks plus two static batches bound submission",
   );
   assert.ok(
-    maxNearPickets < view.stats.pickets / 2,
-    "distant majority never enters the shadow pass",
+    maxNearPickets === view.stats.pickets,
+    "physical fallback deliberately retains all bar geometry before light-frustum culling",
   );
+  assert.ok(maxTriangles < 350000, "full physical boundary stays within its explicit triangle ceiling");
   t.diagnostic(
     JSON.stringify({
       maxCasters,
