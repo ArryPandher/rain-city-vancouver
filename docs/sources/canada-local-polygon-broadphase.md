@@ -33,4 +33,5 @@ The whole-constructor comparison also includes the parallel Robson grid broadpha
 
 Raw local evidence lives in `artifacts/local/collision-performance/`: `full-constructor.cpuprofile`, `summary.json`, `unfiltered-summary.json`, `after-constructor.cpuprofile`, `after-summary.json`, `cut-counts.json` and `REPORT.md`. No browser/build/push is performed by this lane.
 
-Focused validation:18/18 tests pass across local-building broadphase, Canada Place site, Fairmont apron and PwC apron; TypeScript and diff whitespace checks pass. Native startup/visual acceptance remains with the root lane.
+Focused validation:18/18 tests pass across local-building broadphase, Canada Place site, Fairmont apron and PwC apron; Diff whitespace checks pass. The full TypeScript check reports only the concurrent north-shore-imagery test callback type mismatch at line118; the broadphase files produce no reported errors. A scoped compile is recorded separately below. Native startup/visual acceptance remains with the root lane.
+Scoped TypeScript compilation of all four changed runtime modules, the complete-data fixture loader and the broadphase integration test passes. The unrelated imagery-test error was reported to its owner and coordinator; it is not changed in this commit.
