@@ -20,6 +20,8 @@ import {
   galleryRearStepHeight,
 } from "../src/world/gallery-rear-entry";
 import entry from "../src/world/gallery-rear-entry-data.json";
+import { GALLERY_PORTICO as P } from "../src/world/gallery-portico-data";
+const galleryAisleU = (P.shaftU[2] + P.shaftU[3]) / 2;
 import { CollisionWorld } from "../src/world/collision";
 import { loadCity } from "./helpers/full-city-data";
 import { robsonWalkingArrival } from "../src/game/robson-walking-arrival";
@@ -198,15 +200,39 @@ test("matching finite contacts preserve tread width, ground approach and overhea
       );
       assert.equal(blocked(x, z, 0.36, 0, false), true);
       assert.equal(blocked(x, z, 0.25, 1.5, true), true);
-      assert.equal(blocked(x, z, 0.25, 6, true), false, "finite camera height");
+      assert.equal(
+        blocked(x, z, 0.25, 18.5, true),
+        false,
+        "clear above the complete portico, no infinite wall",
+      );
+      const outsideColumns = galleryStairWorld(
+        (t.minU + t.maxU) / 2,
+        Math.max(v, 24.7),
+      );
+      assert.equal(
+        blocked(...outsideColumns, 0.25, 6, true),
+        false,
+        "low terrace wall remains finite at ordinary camera height away from shafts",
+      );
     }
+  const column = galleryStairWorld(P.shaftU[2], P.shaftV + 0.35);
+  assert.equal(
+    blocked(...column, 0.25, 6, true),
+    true,
+    "visible central column blocks close camera",
+  );
+  assert.equal(
+    blocked(...column, 0.25, 18.5, true),
+    false,
+    "column is finite above its real envelope",
+  );
   for (let v = S.startV; v < S.endV + 0.8; v += 0.07) {
-    const [x, z] = galleryStairWorld((S.minU + S.maxU) / 2, v);
+    const [x, z] = galleryStairWorld(galleryAisleU, v);
     const y = galleryRearStepHeight(x, z) ?? 0;
     assert.equal(
       blocked(x, z, 0.36, y, false),
       false,
-      "central ascent preserved",
+      "full aisle between source columns remains clear",
     );
     assert.equal(blocked(x, z, 0.25, y + 1.52, true), false);
     assert.equal(height(x, z, y), undefined, "existing treads own support");
@@ -261,7 +287,7 @@ test("actual full-city arrival and central stair remain safe; new terraces touch
   }
   for (const [i, surface] of GALLERY_STAIR_SURFACES.entries()) {
     const [x, z] = galleryStairWorld(
-      (S.minU + S.maxU) / 2,
+      galleryAisleU,
       (surface.minV + surface.maxV) / 2,
     );
     const y = galleryRearStepHeight(x, z)!;

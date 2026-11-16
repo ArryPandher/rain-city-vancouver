@@ -20,6 +20,7 @@ import { CollisionWorld } from "../src/world/collision";
 import { loadCity } from "./helpers/full-city-data";
 import { robsonWalkingArrival } from "../src/game/robson-walking-arrival";
 import { shortenChaseBoom } from "../src/game/chase-camera";
+import { GALLERY_PORTICO as P } from "../src/world/gallery-portico-data";
 
 function assembly() {
   const root = new T.Group(),
@@ -167,7 +168,15 @@ test("full city ordinary ascent, normal chase camera and map arrival remain clea
   }
   const world = new CollisionWorld(data);
   assert.ok(robsonWalkingArrival("robson", true, world));
-  const u = (S.minU + S.maxU) / 2;
+  // The source-correct fifth column occupies the geometric stair centre.
+  // Exercise the full real aisle between it and the next column instead.
+  const u = (P.shaftU[2] + P.shaftU[3]) / 2;
+  const column = galleryStairWorld(P.shaftU[2], 24.05);
+  assert.equal(
+    world.blocked(...column, 0.36, 3.28),
+    true,
+    "new source-supported central shaft has real contact",
+  );
   let previous = galleryStairWorld(u, S.endV + 0.3),
     y = world.walkingHeight(...previous);
   for (let v = S.endV + 0.22; v > S.startV + 0.8; v -= 0.08) {
