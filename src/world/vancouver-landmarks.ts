@@ -16,6 +16,11 @@ import {
   replacePanPacificNearPodiumSource,
 } from "./pan-pacific-near-podium-source";
 import { createPanPacificNearPodium } from "./pan-pacific-near-podium-install";
+import {
+  canadaPlaceEastTerminalCompatible,
+  replaceCanadaPlaceEastTerminalSource,
+} from "./canada-place-east-terminal-source";
+import { createCanadaPlaceEastTerminal } from "./canada-place-east-terminal";
 import { addCanadaPlacePromenadeFixtures } from "./canada-place-promenade-fixtures";
 import { CANADA_PLACE_PROMENADE_FIXTURES } from "./canada-place-promenade-fixtures-data";
 import { createCanadaPlaceDoorGlass } from "./canada-place-door-glass";
@@ -169,6 +174,8 @@ export async function loadVancouverLandmarks(
       asset.id === "canada-place" && panPacificTowerCompatible(gltf.scene);
     const refineNearPodium =
       refineHowePodium && panPacificNearPodiumCompatible(gltf.scene);
+    const refineEastTerminal =
+      asset.id === "canada-place" && canadaPlaceEastTerminalCompatible(gltf.scene);
     const canadaReplacementSource: {
       geometry: T.BufferGeometry;
       material: string;
@@ -180,7 +187,7 @@ export async function loadVancouverLandmarks(
       if (!(object instanceof T.Mesh)) return;
       const geometry = bakeGeometry(object.geometry, object.matrixWorld);
       const original = object.material as T.MeshStandardMaterial;
-      if (refinePanPacificTower || refineNearPodium)
+      if (refinePanPacificTower || refineNearPodium || refineEastTerminal)
         canadaReplacementSource.push({ geometry, material: original.name });
       const paving =
         asset.id === "canada-place"
@@ -258,6 +265,9 @@ export async function loadVancouverLandmarks(
     const installNearPodium =
       refineNearPodium &&
       replacePanPacificNearPodiumSource(canadaReplacementSource) === 70;
+    const installEastTerminal =
+      refineEastTerminal &&
+      replaceCanadaPlaceEastTerminalSource(canadaReplacementSource) === 22;
     const hull = convexHull(points);
     if (hull.length > 2 && asset.id !== "gastown-steam-clock")
       footprints.push({
@@ -378,6 +388,8 @@ export async function loadVancouverLandmarks(
         resolution: 256,
       });
     }
+    if (installEastTerminal)
+      group.add(createCanadaPlaceEastTerminal(materials).group);
     if (refineGalleryRoof) {
       const copper = galleryMaterials.get("copper");
       if (copper)
