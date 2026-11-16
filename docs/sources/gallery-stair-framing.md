@@ -1,6 +1,6 @@
 # Gallery entrance terrace and stair framing
 
-2026-11-17. Bounded interpretation of the Robson-facing gallery entrance, visible from the new ordinary map arrival and on the walk toward the rink. This adds structural depth around the existing staircase; it is not a survey of the entire restaurant terrace or a reconstruction of its interior.
+2026-11-16. Bounded interpretation of the Robson-facing gallery entrance, visible from the new ordinary map arrival and on the walk toward the rink. This adds structural depth around the existing staircase; it is not a survey of the entire restaurant terrace or a reconstruction of its interior.
 
 ## Source and diagnosis
 
