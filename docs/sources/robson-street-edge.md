@@ -1,0 +1,29 @@
+# Hornby / Robson street edge
+
+2026-11-16. Bounded local candidate, pending native review. This addresses the normal walking view in `artifacts/local/three-scenes-public-scene.png`: the foreground street, adjoining paving and tree trunks lacked a legible physical street section. It does not reconstruct the entire plaza or replace the conspicuously generic nearby 777 Hornby storefront.
+
+## Registration and source limits
+
+The view looks northeast along Hornby through its Robson intersection at world **[-130.8,38.5]**. Current road records are `w543495974` and `w476504051` (Hornby), `w1255620279` and the adjoining `w74366445` (Robson west). These roads explicitly say `sidewalk:none`; separate footways and bikeways carry the pedestrian geometry. The generic sidewalk pass therefore supplies no curb section here. This candidate does not reinterpret that tag globally.
+
+- [City of Vancouver, 800 Robson Plaza](https://vancouver.ca/streets-transportation/robson-plaza-consultation.aspx) records the March2021 permanent plaza and improvements at Hornby/Robson for walking, rolling and cycling, including bicycle-lane safety features. Search-index text was available; direct City page retrieval returned403 in this pass.
+- [Nick Milkovich Architects, Robson Plaza](https://milkovicharchitects.com/robson-plaza) identifies the completed2021 scheme and preservation of Hornby's double maple row. Its five exterior photographs establish pale mineral paving, the retained tree avenue and the open crossing/plaza relationship. They do not measure curb heights or reveal every tree aperture.
+- [Daily Hive, opening29 March2021](https://dailyhive.com/vancouver/800-robson-square-plaza-open-design) supplies completed ground-level views and describes the all-walk signal at the west end. This candidate adds no signals or speculative traffic control.
+- Existing Esri georeferenced imagery: `artifacts/local/robson-realism-reference/esri-garden-context.jpg` and its `esri-garden-export.json` returned EPSG:3857 extent. The road/tree overlay is `artifacts/local/robson-street-registration-draft.png`; the candidate footprint overlay is `artifacts/local/robson-street-reference/candidate-plan-overlay.jpg`. Building roofs have aerial parallax and must not be used as ground curbs.
+- Actual source road and public-tree inventories are `public/data/vancouver-roads.json` and `vancouver-public-trees.json`. The scene retains their IDs and coordinates. The mapped northwest building `w139571595` is 777 Hornby, independently confirmed by [its owner listing](https://quadreal.findspace.com/building/777-hornby-st/).
+
+The fit follows the existing road widths, separate bikeways, actual building footprint and tree stations. **Section dimensions and tree-opening sizes are estimates, not surveyed or fully visible photo measurements.** A32cm gutter,18cm curb crown,14cm rise and1.44m square tree openings restore a physically plausible section without moving a tree. Hidden root pits and services are not modelled. Tree apertures have approximately±0.3m visual uncertainty; only openings wholly surrounded by the new sidewalk are authored. No photograph is a runtime texture; photo rights remain with their owners. Existing credited game mineral maps are reused.
+
+## Bounded geometry and contact
+
+Coordinates U=(X−X0−Z+Z0)/√2 along Hornby northeast, V=(X−X0+Z−Z0)/√2 toward the southeast plaza. Domain U[-43,38], V[-39,14], an81×53m envelope; actual geometry occupies only clipped street-edge strips. Maximum apron extent is6.6m outside the retained road envelope, clipped against buildings, all nearby cycle/service lanes and public plaza `w50098016`. Existing mound outline, custom mound circulation polygons and both rink opening polygons are explicitly excluded.
+
+The original four carriageways are untouched. The gutter sits outside their envelope; it does not widen/narrow the drivable surface. Protected cycleways include `w1207329136`, `w1208383237`, `w1208383238`, `w1208383241`, `w1208383242`. Mapped crossing mouths lower the curb over a bounded smooth ramp. Source parkade service exit remains open. Only duplicated, non-crossing **footway** finish is clipped under the new material; roads, cycleways, steps, public plaza and crosswalk paint retain their original buffers.
+
+Four merged roles: sidewalk, curb/reveals, gutter, soil. Formed curb faces and tree reveals close the higher surface down to the lower original finish; soil remains a closed recessed surface. The factory samples a shared triangular height grid, then clips each role against those planes. This avoids steep slivers caused by evaluating a nonlinear ramp independently at almost-collinear polygon vertices. Upward triangles use actual Float32 coordinates and outward/front-facing winding. The same triangles are spatially indexed for `walkingHeight`/`height` and vehicle contact; baseline ground and original road construction height do not change.
+
+## Validation and remaining review
+
+Five focused tests cover source gating/no mutation; zero material overlap into protected road, cycle/plaza and mound/well masks; front-facing downward ray equality with walking support; visible lateral curb/reveal closure; retained City-tree positions and recessed soil; actual CollisionWorld datum; unchanged protected geometry object identity; and clipping of old pedestrian finish. Boolean joins snap to a micrometre; sub0.1mm numerical slivers are omitted. Finite tolerances permit less than0.0001m² numerical plan overlap, not a widened physical route.
+
+Type checking is required before handoff. No browser, full build or broad suite is run by this lane. Native review must check the normal Robson arrival/approach view, curb ramp crossings, tree bases and uninterrupted bike/parkade access. This is a source-grounded estimated street section, not a survey-grade reconstruction or an AAA visual acceptance claim.

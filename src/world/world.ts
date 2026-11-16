@@ -1,3 +1,5 @@
+import { buildRobsonStreetEdge } from "./robson-street-edge-materials";
+import { clipRobsonStreetPaths } from "./robson-street-edge-paths";
 import {
   createIronworkersPathBoundary,
   IRONWORKERS_PATH,
@@ -196,6 +198,7 @@ export class World {
     if (collision.bridgeAt(x, z, referenceY))
       return collision.height(x, z, referenceY);
     const custom =
+      collision.robsonStreetEdge?.height(x, z) ??
       collision.pacificApron?.height(x, z) ??
       collision.howeCordovaJunction?.height(x, z);
     if (custom !== undefined) return custom;
@@ -867,6 +870,12 @@ export class World {
         height,
         historic ? 1.6 : 5,
       );
+      if (this.collision.robsonStreetEdge)
+        surface = clipRobsonStreetPaths(
+          surface,
+          this.collision.robsonStreetEdge,
+          r,
+        );
       if (this.collision.howeCordovaJunction) {
         if (street || r.kind === "service")
           surface = clipHoweCordovaRoadEdges(
@@ -936,10 +945,17 @@ export class World {
         this.collision.howeCordovaJunction,
         junctionMaterials,
       );
+    const robsonStreetMaterials = this.collision.robsonStreetEdge
+      ? buildRobsonStreetEdge(b, this.collision.robsonStreetEdge, m)
+      : undefined;
     const chunks = b.finish(false);
     if (junctionMaterials)
       for (const chunk of chunks)
         if (chunk.material === junctionMaterials.curb)
+          chunk.castShadow = chunk.userData.allowShadow = true;
+    if (robsonStreetMaterials)
+      for (const chunk of chunks)
+        if (chunk.material === robsonStreetMaterials.curb)
           chunk.castShadow = chunk.userData.allowShadow = true;
     batchStaticChunks(this.root, chunks, this.facadeMultiDraw, {
       releaseOwnedPreRenderGeometry: true,

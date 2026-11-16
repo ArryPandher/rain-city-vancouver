@@ -1,3 +1,7 @@
+import {
+  createRobsonStreetEdgeSite,
+  type RobsonStreetEdgeSite,
+} from "./robson-street-edge";
 import type { createIronworkersPathBoundary } from "./ironworkers-path-boundary";
 import {
   ironworkersPoint,
@@ -293,6 +297,7 @@ export class CollisionWorld {
   robsonGarden?: Building;
   ironworkersPaths?: ReturnType<typeof createIronworkersPathBoundary>;
   robsonRink?: ReturnType<typeof createRobsonRinkContact>;
+  robsonStreetEdge?: RobsonStreetEdgeSite;
   convention?: ConventionSite;
   canada?: CanadaPlaceSite;
   howeTerrain?: Terrain;
@@ -517,11 +522,18 @@ export class CollisionWorld {
           Math.max(rail.a[1], rail.b[1]),
         );
     }
+    if (this.robsonGarden)
+      this.robsonStreetEdge = createRobsonStreetEdgeSite(
+        data,
+        this.baselineGroundHeight.bind(this),
+      );
   }
   /** On-foot contact includes the finish; the baseline remains the construction datum. */
   walkingHeight(x: number, z: number, referenceY = Infinity): number {
     const rink = this.robsonRink?.support(x, z, referenceY);
     if (rink !== undefined) return rink;
+    const streetEdge = this.robsonStreetEdge?.height(x, z);
+    if (streetEdge !== undefined) return streetEdge;
     const apron = this.pacificApron?.height(x, z);
     if (apron !== undefined) return apron;
     const junction = this.howeCordovaJunction?.height(x, z);
@@ -643,7 +655,8 @@ export class CollisionWorld {
     const b = this.bridgeAt(x, z, referenceY);
     return b
       ? this.bridgeHeight(b.bridge, b.t)
-      : (this.pacificApron?.height(x, z) ??
+      : (this.robsonStreetEdge?.height(x, z) ??
+          this.pacificApron?.height(x, z) ??
           this.howeCordovaJunction?.height(x, z) ??
           this.howeCordovaJunction?.roadHeight(x, z) ??
           this.groundHeight(x, z));
