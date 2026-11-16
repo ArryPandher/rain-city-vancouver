@@ -435,6 +435,16 @@ class Game {
       title.textContent = "Render diagnostics";
       const button = document.createElement("button");
       button.textContent = "Profile one frame";
+      const howeButtons = (["corner", "apron"] as const).map((check) => {
+        const button = document.createElement("button");
+        button.textContent = `Walk at Howe ${check}`;
+        button.addEventListener("click", () => {
+          this.walkAtHoweCheck(check);
+          panel.open = false;
+          button.blur();
+        });
+        return button;
+      });
       const report = document.createElement("pre");
       report.style.cssText =
         "white-space:pre-wrap;margin:8px 0;max-width:550px";
@@ -714,6 +724,7 @@ class Game {
       panel.append(
         title,
         button,
+        ...howeButtons,
         sampleButton,
         probeSelect,
         probeButton,
@@ -754,6 +765,63 @@ class Game {
         ? l.heading
         : (p?.heading ?? l.heading),
     };
+  }
+  private walkAtHoweCheck(check: "corner" | "apron") {
+    if (!this.ready || !new URLSearchParams(location.search).has("debug"))
+      return;
+    // Recorded ordinary street comparison, cordova-geometry-baseline-profile.
+    // Use live walking support and the normal collision-shortened chase boom.
+    const { x, z, yaw, pitch } =
+      check === "apron"
+        ? { x: 421.2023, z: -388.0413, yaw: 2.35619449, pitch: -0.18 }
+        : {
+            x: 450.2797011432693,
+            z: -407.32055060898534,
+            yaw: -1.2648368979710893,
+            pitch: -0.39049999999999996,
+          };
+    const collision = this.world.collision,
+      y = collision.walkingHeight(x, z);
+    if (
+      !Number.isFinite(y) ||
+      collision.blocked(x, z, 0.36, y) ||
+      collision.water(x, z, y)
+    ) {
+      ui.toast(
+        "Howe comparison point is no longer clear. Walk there normally.",
+      );
+      return;
+    }
+    this.finishFrameSample("returned to Howe comparison point");
+    this.keys.clear();
+    this.clearPointerInput();
+    this.combat.holster();
+    const parkedVehicle = this.vehicle;
+    if (this.vehicle) {
+      this.vehicle.state.speed = 0;
+      this.exitVehicle();
+      if (this.vehicle) return; // Existing safe-exit checks may refuse the move.
+    }
+    this.mouseLocked = false;
+    if (document.pointerLockElement) document.exitPointerLock();
+    this.photo = false;
+    ui.show("photo-ui", false);
+    ui.started();
+    ui.resume();
+    this.running = true;
+    this.audio.init();
+    this.player.set(x, y, z);
+    this.heading = this.mouseYaw = yaw;
+    this.pitch = pitch;
+    this.cameraMode = 0;
+    this.camera.fov = 62;
+    this.velocityY = this.footSpeed = this.footstepDistance = 0;
+    this.lastSafe.copy(this.player);
+    this.character.group.position.copy(this.player);
+    this.character.group.rotation.set(0, this.heading, 0);
+    this.actors.recycle(this.player, parkedVehicle, true);
+    this.setCamera(true);
+    ui.toast(`Howe ${check} · normal walking controls · drag to look`);
   }
   start(mode: "drive" | "walk") {
     if (!this.ready) return;

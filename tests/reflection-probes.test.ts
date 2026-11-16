@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import * as T from "three";
 import { SceneReflections } from "../src/rendering/reflection-probes";
 
-test("focal captures use fixed 256 faces while ordinary probes retain 128 and weather reuses targets", () => {
+test("focal captures use fixed 256/512 faces while ordinary probes retain 128 and weather reuses targets", () => {
   const reflections = new SceneReflections(
     new T.Scene(),
     new T.Group(),
@@ -17,6 +17,12 @@ test("focal captures use fixed 256 faces while ordinary probes retain 128 and we
         materials: [],
         resolution: 256,
       },
+      {
+        name: "close street windows",
+        position: [8, 12, 0],
+        materials: [],
+        resolution: 512,
+      },
     ],
   );
   const targets = reflections.probes.map((probe) => probe.target);
@@ -25,8 +31,17 @@ test("focal captures use fixed 256 faces while ordinary probes retain 128 and we
     [
       [128, 128],
       [256, 256],
+      [512, 512],
     ],
   );
+  for (const target of targets) {
+    assert.equal(target.texture.type, T.HalfFloatType);
+    assert.equal(target.texture.format, T.RGBAFormat);
+    assert.equal(target.texture.generateMipmaps, true);
+    assert.equal(target.depthBuffer, true);
+    assert.equal(target.stencilBuffer, false);
+    assert.equal(target.samples, 0);
+  }
   for (let i = 0; i < 3; i++) reflections.invalidate();
   assert.deepEqual(
     reflections.probes.map((probe) => probe.target),
@@ -37,7 +52,7 @@ test("focal captures use fixed 256 faces while ordinary probes retain 128 and we
     target.addEventListener("dispose", () => disposed.push(String(i))),
   );
   reflections.dispose();
-  assert.deepEqual(disposed, ["0", "1"]);
+  assert.deepEqual(disposed, ["0", "1", "2"]);
 });
 
 test("authored reflection intensities follow night and restore daylight without changing other probes", () => {

@@ -1202,5 +1202,29 @@
     "credit": "Charlotte Baglioni / Poly Haven",
     "changes": "Existing converted CC0 granite diffuse, not a Vancouver stone scan. Joint-free crop mirrored in registration with the existing landmark mineral normal. Original-relative linear luminance is smoothly bounded to +/-8% then mean-normalized to the previous albedo. Neutral sRGB output resized to 512px WebP quality96. No downloads, reference-photo texture, generated dirt, new normal or roughness map.",
     "provenance": "textures/pacific-coast/SOURCES.json"
+  },
+  {
+    "file": "textures/cordova-pavement/color.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_diff_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven",
+    "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
+    "provenance": "textures/cordova-pavement/SOURCES.json"
+  },
+  {
+    "file": "textures/cordova-pavement/normal.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_nor_gl_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven",
+    "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
+    "provenance": "textures/cordova-pavement/SOURCES.json"
+  },
+  {
+    "file": "textures/cordova-pavement/roughness.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_rough_1k.jpg",
+    "license": "CC0-1.0",
+    "credit": "Poly Haven",
+    "changes": "Matched existing 1K albedo/OpenGL-normal/roughness crop excludes the source's full-height cracks. Mirrored with normal R/G sign correction. Per-channel albedo linear means and linear roughness mean match the existing full source. 512px WebP triplet; no invented repair seam, generated grain, downloaded source, light or road geometry change.",
+    "provenance": "textures/cordova-pavement/SOURCES.json"
   }
 ]

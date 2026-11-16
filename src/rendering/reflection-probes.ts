@@ -8,7 +8,7 @@ export interface ReflectionProbeSpec {
   materials: T.MeshStandardMaterial[];
   intensity?: { day: number; night: number };
   /** Fixed at construction. Only close-view architectural probes opt in. */
-  resolution?: 128 | 256;
+  resolution?: 128 | 256 | 512;
 }
 export interface SceneReflectionProbe {
   spec: ReflectionProbeSpec;

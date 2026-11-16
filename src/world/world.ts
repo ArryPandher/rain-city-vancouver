@@ -1,5 +1,9 @@
 import { HOWE_STATION_SPEC } from "./howe-station-site";
 import { buildCordovaStreetDetails } from "./cordova-street-details";
+import {
+  createCordovaPavementMaterial,
+  hasCordovaPavement,
+} from "./cordova-pavement-material";
 import { buildHoweStationPavilion } from "./howe-station-pavilion";
 import { createHoweStationPavilionMaterials } from "./howe-station-pavilion-materials";
 import { batchFallbackTrees } from "./fallback-tree-batch";
@@ -101,6 +105,7 @@ export class World {
   private readonly casterVolume = new ShadowCasterVolume();
   root = new T.Group();
   materials = new Materials();
+  private cordovaPavement?: T.MeshStandardMaterial;
   collision: CollisionWorld;
   chunks: T.Mesh[] = [];
   sun = new T.DirectionalLight(0xffe0b3, 3.2);
@@ -597,6 +602,7 @@ export class World {
   roads() {
     const b = new Batcher(this.root, 450),
       m = this.materials;
+    this.cordovaPavement = createCordovaPavementMaterial(m);
     const cobble = m.pbr("cobblestone_floor_05", 0xb1aaa2, 0.88);
     const stripes = new T.MeshStandardMaterial({
       color: 0xdfd8c0,
@@ -742,7 +748,9 @@ export class World {
           : historic
             ? cobble
             : street || (seawall && r.surface === "asphalt")
-              ? m.asphalt
+              ? hasCordovaPavement(r)
+                ? this.cordovaPavement
+                : m.asphalt
               : m.concrete,
         x,
         z,
@@ -1350,6 +1358,10 @@ export class World {
     this.materials.setNight(night ? 1 : 0.1);
     this.materials.asphalt.roughness = rain ? 0.45 : night ? 0.65 : 1;
     this.materials.asphalt.metalness = 0;
+    if (this.cordovaPavement) {
+      this.cordovaPavement.roughness = this.materials.asphalt.roughness;
+      this.cordovaPavement.metalness = this.materials.asphalt.metalness;
+    }
     this.rain.visible = rain;
     this.water.uniforms.deep.value.set(
       night ? 0x091923 : rain ? 0x344d57 : 0x294956,

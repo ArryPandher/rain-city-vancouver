@@ -59,7 +59,7 @@ export function createTerminalCityAssembly(
       );
       clubProbe = {
         name: "Terminal City Cordova club exterior",
-        resolution: 256,
+        resolution: 512,
         // 4.5m outside the mapped street face, at the broad ribbon's height.
         // Captures actual Cordova surroundings, not the distant Hornby view.
         // Still a single-point approximation for the higher setback glazing.
