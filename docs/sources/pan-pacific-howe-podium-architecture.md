@@ -60,9 +60,9 @@ The raised original boundary remains legible as a retaining face and thin open t
 
 ## Verification and budget
 
-`tests/pan-pacific-howe-podium.test.ts` verifies perspective-derived nonuniform support spacing; preservation of all source tier vertices; continuous mitered bends; rays through glass to closed backing with physical cavity depth; the opaque gaps between isolated window groups; no broad upward-facing added floor at PIER elevation; column-floor contact; and full-height near/far end closures. All six geometry tests passed. Type checking passed at authoring.
+`tests/pan-pacific-howe-podium.test.ts` verifies perspective-derived nonuniform support spacing; preservation of all source tier vertices; continuous mitered bends; rays through glass to closed backing with physical cavity depth; the opaque gaps between isolated window groups; no broad upward-facing added floor at PIER elevation; column-floor contact; and full-height near/far end closures. All seven geometry tests passed. Type checking passed at authoring.
 
-Measured geometry factory result: **10,814 unique triangles**, **300 panes**, **six long-face supports**, **five merged geometry batches**. The material owner's paired glass requires two optical submissions, making six material draws before shadows/integrated batching. This is a factory budget, not a complete scene performance measurement.
+Measured geometry factory result: **10,806 unique triangles**, **300 panes**, **six long-face supports**, **five merged geometry batches**. The material owner's paired glass requires two optical submissions, making six material draws before shadows/integrated batching. This is a factory budget, not a complete scene performance measurement.
 
 The coordinator owns source-removal guards, real GLB preservation/ray tests, capability/collision integration, normal third-person browser comparison, motion/drive/exit inspection, actual submissions, and final visual acceptance. Remaining unchanged tower and neighboring hall inaccuracies must be reported separately; unit tests cannot establish GTA-reference realism.
 
@@ -77,3 +77,11 @@ Panels have physical 18mm joints with a pale substrate 65mm behind the front fac
 A dark bounded upper rectangle is visible approximately `(1072,1233)→(1084,1256)`. Only that bounded feature is interpreted as a shallow opaque service recess, normalized u.13302→.15011, with metric height y11.95→13.30 fitted inside the unchanged gallery datum. Its lower continuation is hidden by terrace masonry; no door, transparent pane or accessible interior is inferred. Physical jambs/sill/head return to an opaque backing .40m behind the pale front face. No parking openings below the retained PIER were added.
 
 The added ray test verifies that sampled upper-gallery stations hit closed pale geometry and no glass, that the single bounded recess hits its opaque backing, and that the lower strip and isolated middle-tier windows remain glazed. Eight combined geometry/material tests pass. Final visual comparison remains the coordinator's responsibility; this correction addresses observed architecture, without asserting final realism or changing the retained envelope.
+
+## Original PIER retaining wall contact correction
+
+Decoded source audit identified original concrete triangles80–85 (ordered IDs240–257) as existing PIER wall, covering HOTEL edges38–40: normalized u.4100776860725485→1, local y.001029999461025→7.798935890197754. A new full-run retaining skirt would duplicate that existing wall. The source's quantized coordinates differ slightly from the authored footprint (up to4mm), producing sign-changing near-coplanar contacts rather than a reliable depth ordering.
+
+The added retaining face now stops at u.4100776860725485; only edges36/37 need new skirt. Its terminal x/z uses the decoded original wall endpoint `(-108.36808776855469,94.16445922851562)` so the vertical seam meets exactly. The far skirt return was also removed because that added skirt no longer exists. Every original PIER wall and floor triangle remains untouched; no depth-offset workaround or new floor is used. Source audit evidence is retained in `artifacts/local/pan-pacific-source-pier-overlap.json`.
+
+The added contact test verifies absence of new low wall hits across the preserved original-wall interval, presence across the near missing interval, and the exact decoded seam endpoint. Nine combined geometry/material tests pass; current factory geometry is10,806 triangles and300 panes in five merged batches.

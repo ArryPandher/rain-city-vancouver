@@ -136,7 +136,7 @@ test("retaining face meets PIER without a duplicate horizontal floor", () => {
       }
     }
   }
-  const retaining = ray(0.52, D.floor - 0.7).intersectObject(mesh("concrete"));
+  const retaining = ray(0.2, D.floor - 0.7).intersectObject(mesh("concrete"));
   assert.ok(retaining.length > 0);
   assert.ok(Math.abs(retaining[0].distance - 4) < 0.001);
   for (const support of D.supports) {
@@ -216,4 +216,31 @@ test("upper gallery is pale closed panelling with only the photo-bounded dark re
   assert.ok(
     ray(0.15, 16.4, "middle").intersectObject(mesh("glass")).length > 0,
   );
+});
+
+test("new retaining skirt stops exactly where original PIER wall begins", () => {
+  assert.ok(Math.abs(D.retainingEnd - 0.4100776860725485) < 1e-10);
+  for (const u of [0.43, 0.6, 0.8, 0.98]) {
+    const hits = ray(u, D.floor - 0.7).intersectObject(mesh("concrete"));
+    assert.equal(
+      hits.length,
+      0,
+      "no duplicate new skirt over retained source wall",
+    );
+  }
+  for (const u of [0.04, 0.2, 0.39])
+    assert.ok(
+      ray(u, D.floor - 0.7).intersectObject(mesh("concrete")).length > 0,
+    );
+  const pos = parts.concrete.getAttribute("position");
+  const target = new T.Vector3(
+    D.retainingEndPoint[0],
+    D.floor,
+    D.retainingEndPoint[1],
+  );
+  let found = false;
+  for (let i = 0; i < pos.count; i++)
+    if (new T.Vector3().fromBufferAttribute(pos, i).distanceTo(target) < 1e-5)
+      found = true;
+  assert.ok(found, "new vertical face meets decoded original PIER endpoint");
 });

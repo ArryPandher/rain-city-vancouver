@@ -112,6 +112,10 @@ export const PAN_PACIFIC_HOWE_PODIUM = {
   floor: 7.7989358902,
   // This vertical skirt closes the already-raised PIER edge. No floor is added.
   retainingBottom: 3.7,
+  // Original PIER wall triangles80–85 already close edges38–40, y.00103–floor.
+  // New skirt only closes edges36/37. Match the decoded shared endpoint exactly.
+  retainingEnd: 25.3779523062 / PAN_PACIFIC_HOWE_LENGTH,
+  retainingEndPoint: [-108.36808776855469, 94.16445922851562],
   recess: 2.8,
   columnInset: 0.69,
   columnRadius: 0.43,

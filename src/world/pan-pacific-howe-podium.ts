@@ -275,8 +275,21 @@ export function createPanPacificHowePodiumGeometry(): PanPacificHowePodiumGeomet
   }
   // Existing PIER already supplies the floor. Only a vertical retaining face
   // fills the photographed stepped base below it and terminates at that floor.
-  face("concrete", "lower", 0, 1, D.retainingBottom, D.floor, 0);
-  for (const u of [0, 1]) {
+  // PIER triangles80–85 already supply the wall on edges38–40. Do not put
+  // another near-coplanar face there: decoded quantization differs by millimetres.
+  slices(0, D.retainingEnd, (a, b) => {
+    const at = (u: number, y: number) =>
+      u === D.retainingEnd
+        ? new T.Vector3(D.retainingEndPoint[0], y, D.retainingEndPoint[1])
+        : p(u, y, 0);
+    quad("concrete", [
+      at(a, D.retainingBottom),
+      at(b, D.retainingBottom),
+      at(b, D.floor),
+      at(a, D.floor),
+    ]);
+  });
+  for (const u of [0]) {
     const along = p(1, 0)
       .sub(p(0, 0))
       .normalize()
