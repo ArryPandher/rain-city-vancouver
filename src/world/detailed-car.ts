@@ -1,4 +1,5 @@
 import { attachCarLOD } from "./car-lod";
+import { trafficCarExteriorSource } from "./traffic-car-lod";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
@@ -16,7 +17,8 @@ import {
 let heroTemplate: T.Group | null = null;
 let template: T.Group | null = null,
   trafficTemplate: T.Group | null = null,
-  distantTemplate: T.Group | null = null;
+  distantTemplate: T.Group | null = null,
+  distantTrafficTemplate: T.Group | null = null;
 async function buildCarTemplate(path: string, reference?: T.Group) {
   const gltf = await new GLTFLoader().loadAsync(`${BASE}models/${path}`);
   return buildDetailedCarTemplate(gltf.scene, undefined, reference);
@@ -215,6 +217,14 @@ export async function loadDetailedCar(useE30 = true) {
     `${BASE}models/car-traffic.glb`,
   );
   trafficTemplate = buildDetailedCarTemplate(traffic.scene.clone(true));
+  trafficTemplate.userData.trafficCarSource = true;
+  // Always prepare ambient traffic LOD, including the successful E30 path.
+  // Registration to the near template preserves tyre contact and axle pose.
+  distantTrafficTemplate = buildDetailedCarTemplate(
+    trafficCarExteriorSource(traffic.scene),
+    undefined,
+    trafficTemplate,
+  );
   if (useE30) {
     try {
       const gltf = await new GLTFLoader()
@@ -302,10 +312,11 @@ export function cloneDetailedCar(
 
 /** Called after near wheel batching; only the render level changes at distance. */
 export function attachDetailedCarLOD(model: VehicleModel, multiDraw: boolean) {
-  if (distantTemplate && model.group.userData.sourceNormalization)
-    attachCarLOD(
-      model,
-      cloneDetailedCar(distantTemplate, model.color),
-      multiDraw,
-    );
+  const far = model.group.userData.trafficCarSource
+    ? distantTrafficTemplate
+    : model.group.userData.vehicleAsset === "e30-coupe"
+      ? null
+      : distantTemplate;
+  if (far && model.group.userData.sourceNormalization)
+    attachCarLOD(model, cloneDetailedCar(far, model.color), multiDraw);
 }

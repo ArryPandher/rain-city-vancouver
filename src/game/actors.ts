@@ -138,7 +138,7 @@ export class Actors {
     model.wheels.forEach(mergeGroup);
     if (kind === "car") {
       batchCarWheels(model.group, this.wheelMultiDraw);
-      if (!ai) attachDetailedCarLOD(model, this.wheelMultiDraw);
+      attachDetailedCarLOD(model, this.wheelMultiDraw);
     }
     model.group.position.set(
       x,
