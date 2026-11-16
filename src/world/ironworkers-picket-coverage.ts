@@ -110,6 +110,20 @@ float ironworkersBarCoverage(float cell,float footprint,float duty){
 }`,
       )
       .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+// A far ribbon represents both exposed faces of a rectangular steel bar.
+// Its flat fence normal alone incorrectly turns a grazing view into a dark
+// sheet. Weight the two face normals by projected section area; this is a
+// filtered-normal approximation, not a change to the steel colour or BRDF.
+vec3 ironworkersShadingView=normalize(vViewPosition);
+vec3 ironworkersSideNormal=normalize(vIronworkersPicketAlong);
+ironworkersSideNormal*=dot(ironworkersShadingView,ironworkersSideNormal)<0.?-1.:1.;
+float ironworkersFrontArea=ironworkersPicketSection.x*abs(dot(ironworkersShadingView,normal));
+float ironworkersSideArea=ironworkersPicketSection.y*abs(dot(ironworkersShadingView,ironworkersSideNormal));
+normal=normalize(normal*ironworkersFrontArea+ironworkersSideNormal*ironworkersSideArea);`,
+      )
+      .replace(
         "#include <opaque_fragment>",
         `vec3 ironworkersView=normalize(vViewPosition);
 float ironworkersSlope=abs(dot(ironworkersView,normalize(vIronworkersPicketAlong)))/max(abs(dot(ironworkersView,normalize(vIronworkersPicketNormal))),.00001);
@@ -119,6 +133,6 @@ diffuseColor.a=ironworkersBarCoverage(vIronworkersPicketCell,fwidth(vIronworkers
       );
   };
   material.customProgramCacheKey = () =>
-    `${sourceKey}:ironworkers-picket-coverage-v1`;
+    `${sourceKey}:ironworkers-picket-coverage-v2-projected-normal`;
   return material;
 }
