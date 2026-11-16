@@ -9,6 +9,7 @@ import {
 import {
   createGranvilleHoweMaterials,
   createGranvilleHoweSignMap,
+  granvilleHoweCavityUVs,
   type GranvilleHoweMaterials,
 } from "./granville-square-howe-materials";
 import type { Materials } from "./materials";
@@ -36,11 +37,20 @@ export function buildGranvilleSquareHowe(
 ) {
   if (building.id !== ID) return false;
   const mesh = new ArchitecturalMesh(batch, ...centre);
+  // A second UV set belongs only to this concrete. Batcher merges attributes
+  // without normalizeGeometry(), so UV1 survives without a shared-layout change.
+  const concrete = {
+    p: [] as number[],
+    uv: [] as number[],
+    uv1: [] as number[],
+    ix: [] as number[],
+  };
   const quad = (
     material: T.Material,
     p: Vertex3[],
     normal: Vertex3,
     metric = true,
+    cavityUV?: number[],
   ) => {
     const cross = new T.Vector3(...p[1])
       .sub(new T.Vector3(...p[0]))
@@ -48,11 +58,19 @@ export function buildGranvilleSquareHowe(
     const w = metric ? Math.hypot(...p[1].map((v, i) => v - p[0][i])) : 1,
       h = metric ? Math.hypot(...p[3].map((v, i) => v - p[0][i])) : 1;
     let uv = [0, 0, w, 0, w, h, 0, h];
+    let uv1 = cavityUV ?? Array(8).fill(0.5 / 128);
     if (cross.dot(new T.Vector3(...normal)) < 0) {
       p = [p[0], p[3], p[2], p[1]];
       uv = [0, 0, 0, h, w, h, w, 0];
+      uv1 = [0, 3, 2, 1].flatMap((i) => uv1.slice(i * 2, i * 2 + 2));
     }
-    mesh.quad(material, p[0], p[1], p[2], p[3], uv);
+    if (material === m.concrete) {
+      const n = concrete.p.length / 3;
+      concrete.p.push(...p.flat());
+      concrete.uv.push(...uv);
+      concrete.uv1.push(...uv1);
+      concrete.ix.push(n, n + 1, n + 2, n, n + 2, n + 3);
+    } else mesh.quad(material, p[0], p[1], p[2], p[3], uv);
   };
   type Frame = ReturnType<typeof facadeFrame>;
   const face = (
@@ -87,6 +105,7 @@ export function buildGranvilleSquareHowe(
     near: number,
     far: number,
     up = true,
+    cavityUV?: number[],
   ) =>
     quad(
       material,
@@ -97,6 +116,8 @@ export function buildGranvilleSquareHowe(
         f.p(left, y, far),
       ],
       [0, up ? 1 : -1, 0],
+      true,
+      cavityUV,
     );
   const end = (
     f: Frame,
@@ -107,6 +128,7 @@ export function buildGranvilleSquareHowe(
     near: number,
     far: number,
     toward: 1 | -1,
+    cavityUV?: number[],
   ) => {
     const a = f.p(0, 0),
       b = f.p(f.length, 0);
@@ -119,6 +141,8 @@ export function buildGranvilleSquareHowe(
         f.p(u, high, near),
       ],
       [toward * (b[0] - a[0]), 0, toward * (b[2] - a[2])],
+      true,
+      cavityUV,
     );
   };
   const cap = (poly: Point[][], y: number, material: T.Material) =>
@@ -145,10 +169,34 @@ export function buildGranvilleSquareHowe(
         right = b - pier / 2;
       face(f, m.concrete, a, left, low, high);
       face(f, m.concrete, right, b, low, high);
-      end(f, m.concrete, left, low, high, 0, depth, 1);
-      end(f, m.concrete, right, low, high, 0, depth, -1);
-      horizontal(f, m.concrete, left, right, low, 0, depth);
-      horizontal(f, m.concrete, left, right, high, 0, depth, false);
+      const jambUV = granvilleHoweCavityUVs(
+          m.concrete,
+          right - left,
+          high - low,
+          depth,
+          "jamb",
+        ),
+        horizontalUV = granvilleHoweCavityUVs(
+          m.concrete,
+          right - left,
+          high - low,
+          depth,
+          "horizontal",
+        );
+      end(f, m.concrete, left, low, high, 0, depth, 1, jambUV);
+      end(f, m.concrete, right, low, high, 0, depth, -1, jambUV);
+      horizontal(f, m.concrete, left, right, low, 0, depth, true, horizontalUV);
+      horizontal(
+        f,
+        m.concrete,
+        left,
+        right,
+        high,
+        0,
+        depth,
+        false,
+        horizontalUV,
+      );
       const trim = 0.065;
       face(f, m.frame, left, right, low, high, depth);
       face(
@@ -327,6 +375,22 @@ export function buildGranvilleSquareHowe(
       false,
     );
   }
+  const concreteGeometry = new T.BufferGeometry();
+  concreteGeometry.setAttribute(
+    "position",
+    new T.Float32BufferAttribute(concrete.p, 3),
+  );
+  concreteGeometry.setAttribute(
+    "uv",
+    new T.Float32BufferAttribute(concrete.uv, 2),
+  );
+  concreteGeometry.setAttribute(
+    "uv1",
+    new T.Float32BufferAttribute(concrete.uv1, 2),
+  );
+  concreteGeometry.setIndex(concrete.ix);
+  concreteGeometry.computeVertexNormals();
+  mesh.add(concreteGeometry, m.concrete);
   mesh.finish();
   return true;
 }

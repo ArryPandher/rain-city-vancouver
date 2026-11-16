@@ -231,3 +231,53 @@ reflections remain plausible and bounded; inspect the raw cube if the result
 is uniformly black or mirror-bright. Recheck ordinary station-front walking
 and report capture/steady-state cost separately. No AAA-quality claim follows
 from this scoped material change.
+
+## Driving-camera diagnosis and cavity AO candidate, 2026-11-15
+
+The first native glass-only comparison was **not accepted**. The matching
+`granville-glass-baseline.png` and `granville-glass-candidate.png` show almost
+no change in the large pale bands to the left of the sign, despite a valid
+256px capture and active glass draws. The narrow side window changed, which
+was insufficient evidence of an improved frontage.
+
+Reconstruction of the saved 1021×839 native camera, with the actual horizontal
+building datum 7.944614875631354 m, identifies the cause. Rays through pixels
+(687,151), (696,145), (711,133), (679,212), (696,209) and (711,204) first hit
+the wing's **concrete jambs/heads**, with correct outward normals. Several
+lower rays reach the glass only 4–6 m farther along the grazing ray, after
+one or two concrete returns. Evidence: local `granville-visible-rays.ts` and
+`granville-visible-rays.json`. The normal-to-facade rays in the initial tests
+were valid but did not describe this nearly along-facade driving view. Neither
+increasing cube resolution nor further tinting the glass fixes these pixels.
+
+The bounded follow-up preserves the section and all surface positions, normals,
+indices and metric primary UVs. Each concrete window return receives a second
+UV set sampling the **cosine-weighted visibility of its actual rectangular
+opening**. The aperture's spherical-polygon edge integral supplies the diffuse
+view factor; jambs and horizontal heads/sills use separate tiles calculated
+from the actual opening width, height and depth. Sixteen samples per tile axis
+and duplicated edge texels provide a smooth field. Exposed piers, the concrete
+splay, closures and other exterior faces sample white. There is no noise,
+weathering, baked direct shadow or arbitrary painted dark band.
+
+This field uses Three's existing `aoMap` path on the same concrete material.
+It attenuates indirect diffuse and Three's roughness-aware indirect specular
+occlusion only; direct sunlight, shadow maps, albedo, roughness, normal maps,
+global lighting and exposure are unchanged. This is geometric ambient
+visibility, not a complete diffuse-interreflection bake or directional GI.
+The missing secondary bounces can make deep returns too dark, so the native
+same-camera comparison is still required before accepting it.
+
+The generated linear single-channel 128×128 texture occupies 16,384 bytes
+before driver overhead, has no mip chain and needs no downloaded asset. It
+adds one secondary UV pair per concrete vertex, one standard AO texture lookup
+on concrete, zero material groups and zero triangles: the assembly remains
+2,910 triangles and six groups. `Batcher` preserves UV1 and no custom shader or
+static-batch eligibility exception is introduced.
+
+Focused verification passes 27 tests covering independent cosine-weighted
+hemisphere rays against the aperture integral, bilinear AO values at all four
+actual reveal orientations, the six saved native-camera rays, exterior white
+samples, UV1 preservation through static batching, and the existing geometry,
+glass-energy and reflection-lifecycle checks. Native image acceptance and
+steady-state timing remain the parent's next checks.

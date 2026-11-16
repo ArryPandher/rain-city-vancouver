@@ -21,6 +21,7 @@ import {
 } from "../src/world/granville-square-howe";
 import {
   createGranvilleHoweMaterials,
+  granvilleHoweApertureVisibility,
   GRANVILLE_HOWE_MINERAL_REPEAT_METRES as repeat,
 } from "../src/world/granville-square-howe-materials";
 import {
@@ -35,6 +36,7 @@ import {
 } from "../src/world/granville-square-howe-site";
 import source from "../src/world/granville-square-howe-parts.json";
 import { SceneReflections } from "../src/rendering/reflection-probes";
+import { batchStaticChunks } from "../src/world/static-chunk-batch";
 
 const library = { texture: () => new T.Texture<HTMLImageElement>() },
   materials = createGranvilleHoweMaterials(library, new T.Texture()),
@@ -70,6 +72,188 @@ const polygonArea = (polys: Point[][][]) =>
       s + area(p[0]) - p.slice(1).reduce((h, hole) => h + area(hole), 0),
     0,
   );
+function sampleAO(hit: T.Intersection) {
+  const uv = hit.uv1!;
+  assert.ok(uv, "concrete AO coordinates survived geometry merging");
+  const map = materials.concrete.aoMap as T.DataTexture;
+  const { width, height, data } = map.image;
+  assert.ok(data);
+  const x = uv.x * width - 0.5,
+    y = uv.y * height - 0.5;
+  const ix = Math.floor(x),
+    iy = Math.floor(y),
+    tx = x - ix,
+    ty = y - iy;
+  const at = (a: number, b: number) => data[b * width + a] / 255;
+  return (
+    (at(ix, iy) * (1 - tx) + at(ix + 1, iy) * tx) * (1 - ty) +
+    (at(ix, iy + 1) * (1 - tx) + at(ix + 1, iy + 1) * tx) * ty
+  );
+}
+
+test("rectangular aperture view factors agree with independent cosine-weighted visibility rays", () => {
+  const width = 2.9,
+    height = 1.9;
+  for (const [y, depth] of [
+    [0.3, 0.2],
+    [0.95, 0.6],
+    [1.6, 1.1],
+  ]) {
+    let visible = 0;
+    const count = 512 * 512;
+    for (let i = 0; i < 512; i++)
+      for (let j = 0; j < 512; j++) {
+        const u = (i + 0.5) / 512,
+          phi = ((j + 0.5) / 512) * Math.PI * 2;
+        const dx = Math.sqrt(1 - u),
+          dy = Math.sqrt(u) * Math.cos(phi),
+          dz = Math.sqrt(u) * Math.sin(phi);
+        if (dz >= 0) continue;
+        const t = -depth / dz,
+          hitX = t * dx,
+          hitY = y + t * dy;
+        if (hitX <= width && hitY >= 0 && hitY <= height) visible++;
+      }
+    const exact = granvilleHoweApertureVisibility(
+      width,
+      height,
+      new T.Vector3(0, y, depth),
+      new T.Vector3(1, 0, 0),
+    );
+    near(exact, visible / count, 0.003);
+    near(
+      exact,
+      granvilleHoweApertureVisibility(
+        width,
+        height,
+        new T.Vector3(0, height - y, depth),
+        new T.Vector3(1, 0, 0),
+      ),
+      1e-9,
+    );
+    assert.ok(exact > 0 && exact < 0.5);
+  }
+});
+
+test("all four reveal orientations sample local opening visibility while exposed concrete stays white", () => {
+  const f = facadeFrame(ring[3], ring[4]);
+  const width = f.length / Math.round(f.length / section.targetBay),
+    left = 3 * width + section.pier / 2,
+    right = 4 * width - section.pier / 2,
+    low = section.middle.sill,
+    high = section.middle.head;
+  for (const fraction of [0.1, 0.5, 0.9]) {
+    const depth = section.middle.recess * fraction;
+    for (const u of [left, right]) {
+      const toward = u === left ? 1 : -1;
+      const hit = ray(
+        vector(f.p(u + toward * 0.1, low + 0.7, depth)),
+        vector(f.p(u - toward * 0.1, low + 0.7, depth)),
+      )[0];
+      assert.equal(materialOf(hit), materials.concrete);
+      near(
+        sampleAO(hit),
+        granvilleHoweApertureVisibility(
+          right - left,
+          high - low,
+          new T.Vector3(0, 0.7, depth),
+          new T.Vector3(1, 0, 0),
+        ),
+        0.01,
+      );
+    }
+    for (const y of [low, high]) {
+      const toward = y === low ? 1 : -1;
+      const hit = ray(
+        vector(f.p(left + 0.8, y + toward * 0.1, depth)),
+        vector(f.p(left + 0.8, y - toward * 0.1, depth)),
+      )[0];
+      near(
+        sampleAO(hit),
+        granvilleHoweApertureVisibility(
+          right - left,
+          high - low,
+          new T.Vector3(0.8, 0, depth),
+          new T.Vector3(0, 1, 0),
+        ),
+        0.01,
+      );
+    }
+  }
+  const exterior = ray(
+    vector(f.p(3 * width, low + 0.7, -0.1)),
+    vector(f.p(3 * width, low + 0.7, 0.1)),
+  )[0];
+  near(sampleAO(exterior), 1);
+});
+
+test("saved driving-camera pale bands hit occluded concrete returns, not the glass receiver", () => {
+  const datum = 7.944614875631354;
+  const camera = new T.PerspectiveCamera(62, 1021 / 839, 0.1, 2000);
+  camera.position.set(
+    444.43034755610324,
+    12.057983241019594 - datum,
+    -400.87143742489593,
+  );
+  camera.lookAt(
+    451.94567602325657,
+    9.092366805363275 - datum,
+    -409.8385907095675,
+  );
+  camera.updateMatrixWorld(true);
+  for (const [x, y] of [
+    [687, 151],
+    [696, 145],
+    [711, 133],
+    [679, 212],
+    [696, 209],
+    [711, 204],
+  ]) {
+    const caster = new T.Raycaster();
+    caster.setFromCamera(
+      new T.Vector2((x / 1021) * 2 - 1, 1 - (y / 839) * 2),
+      camera,
+    );
+    const hits = caster.intersectObject(root, true);
+    assert.equal(materialOf(hits[0]), materials.concrete);
+    assert.ok(sampleAO(hits[0]) > 0.05 && sampleAO(hits[0]) < 0.5);
+    if (y > 200) assert.ok(hits.some((h) => materialOf(h) === materials.glass));
+  }
+});
+
+test("AO uses standard indirect-light facilities and UV1 survives eligible static batching", () => {
+  const concrete = materials.concrete;
+  assert.equal(concrete.onBeforeCompile, T.Material.prototype.onBeforeCompile);
+  assert.equal(
+    concrete.customProgramCacheKey,
+    T.Material.prototype.customProgramCacheKey,
+  );
+  assert.equal(concrete.vertexColors, false);
+  assert.equal(concrete.aoMap!.channel, 1);
+  assert.equal(concrete.aoMap!.colorSpace, T.NoColorSpace);
+  assert.equal(concrete.aoMap!.generateMipmaps, false);
+  assert.equal(
+    (concrete.aoMap as T.DataTexture).image.data!.byteLength,
+    16_384,
+  );
+  const original = meshes.find((m) => m.material === concrete)!;
+  const parent = new T.Group();
+  const chunks = [0, 1].map(() => {
+    const mesh = new T.Mesh(original.geometry.clone(), concrete);
+    parent.add(mesh);
+    return mesh;
+  });
+  const result = batchStaticChunks(parent, chunks, true);
+  assert.equal(result.length, 1);
+  const copied = result[0].geometry.getAttribute("uv1"),
+    source = original.geometry.getAttribute("uv1");
+  for (let i = 0; i < source.count; i++) {
+    near(copied.getX(i), source.getX(i), 1e-8);
+    near(copied.getY(i), source.getY(i), 1e-8);
+  }
+  result[0].geometry.dispose();
+  chunks.forEach((m) => m.geometry.dispose());
+});
 function activeMap() {
   const data = JSON.parse(
       fs.readFileSync("public/data/vancouver.json", "utf8"),
