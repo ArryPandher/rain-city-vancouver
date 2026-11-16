@@ -491,3 +491,27 @@ test("lighting invalidation never re-exposes a stale reflection while capture is
   assert.equal(f.state.draws, 2);
   p.dispose();
 });
+
+test("independent ripple toggle preserves captured target and flat comparison without additional capture or shader ownership", () => {
+  const f = fixture(),
+    p = new WaterPlanarReflections(f.context);
+  capture(f, p);
+  const shader = compile(f.context.water),
+    map = shader.uniforms.waterPlanarMap.value;
+  const key = f.context.water.customProgramCacheKey();
+  assert.equal(shader.uniforms.waterPlanarDistortion.value, 0);
+  p.setDistortion(true);
+  p.update(f.renderer, f.camera);
+  assert.equal(shader.uniforms.waterPlanarDistortion.value, 1);
+  assert.equal(p.diagnostics().distortion.active, true);
+  assert.equal(shader.uniforms.waterPlanarMap.value, map);
+  assert.equal(f.state.draws, 1);
+  p.setDistortion(false);
+  p.update(f.renderer, f.camera);
+  assert.equal(shader.uniforms.waterPlanarDistortion.value, 0);
+  assert.equal(f.context.water.customProgramCacheKey(), key);
+  assert.equal(f.state.draws, 1);
+  p.dispose();
+  p.setDistortion(true);
+  assert.equal(p.diagnostics().distortion.active, false);
+});

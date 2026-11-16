@@ -1,6 +1,10 @@
 import * as T from "three";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { addWaterShaderLayer } from "./water-shader-layers";
+import {
+  WATER_PLANAR_DISTORTION,
+  waterPlanarDistortionGLSL,
+} from "./water-planar-distortion";
 
 export const WATER_PLANAR = {
   name: "Canada North water — current-camera planar reflection",
@@ -36,6 +40,8 @@ export function waterPlanarFragment(original: string) {
   return `uniform sampler2D waterPlanarMap;
 uniform mat4 waterPlanarWorldProjection;
 uniform float waterPlanarWeight;
+uniform float waterPlanarDistortion;
+${waterPlanarDistortionGLSL}
 ${original.replace(
   NOISE,
   `
@@ -45,7 +51,8 @@ ${original.replace(
     vec4 planarProjected=waterPlanarWorldProjection*vec4(vWorld,1.0);
     vec2 planarUV=planarProjected.xy/max(planarProjected.w,0.000001);
     if(planarProjected.w>0.0 && all(greaterThanEqual(planarUV,vec2(0.0))) && all(lessThanEqual(planarUV,vec2(1.0)))){
-      vec3 planarRadiance=texture2D(waterPlanarMap,planarUV).rgb;
+      vec2 planarSampleUV=waterPlanarDistortion>0.0?waterPlanarRippleUV(planarUV,v,n):planarUV;
+      vec3 planarRadiance=texture2D(waterPlanarMap,planarSampleUV).rgb;
       // Replace the complete previous sky/analytic-sun alternative exactly once.
       color=mix(color,mix(deep,planarRadiance,fres*.85),waterPlanarWeight);
     }
@@ -81,6 +88,7 @@ export class WaterPlanarReflections {
     waterPlanarMap: { value: null as T.Texture | null },
     waterPlanarWorldProjection: { value: new T.Matrix4() },
     waterPlanarWeight: { value: 0 },
+    waterPlanarDistortion: { value: 0 },
   };
   private weather = "day";
   private dirty = true;
@@ -139,6 +147,10 @@ export class WaterPlanarReflections {
     } finally {
       this.waterMeshes.forEach((o, i) => (o.visible = visibility[i]));
     }
+  }
+  setDistortion(enabled: boolean) {
+    if (!this.disposed)
+      this.uniforms.waterPlanarDistortion.value = enabled ? 1 : 0;
   }
   invalidate(weather: string) {
     if (this.disposed) return;
@@ -357,6 +369,16 @@ export class WaterPlanarReflections {
       totalCaptureDrawCalls: this.totalCaptureDrawCalls,
       totalCaptureTriangles: this.totalCaptureTriangles,
       cameraWeight: this.uniforms.waterPlanarWeight.value,
+      distortion: {
+        requested:
+          !this.disposed && this.uniforms.waterPlanarDistortion.value > 0,
+        active:
+          !this.disposed &&
+          this.uniforms.waterPlanarWeight.value > 0 &&
+          this.uniforms.waterPlanarDistortion.value > 0,
+        angularGain: WATER_PLANAR_DISTORTION.angularGain,
+        maximumTargetTexels: WATER_PLANAR_DISTORTION.maxTexels,
+      },
       width: this.ready && !this.disposed ? WATER_PLANAR.resolution : 0,
       height: this.ready && !this.disposed ? WATER_PLANAR.resolution : 0,
       level: WATER_PLANAR.level,
@@ -370,7 +392,7 @@ export class WaterPlanarReflections {
       scope:
         "whole visible ocean at y=.065; camera90m full/170m fade around Canada NorthPoint, day only",
       limitation:
-        "mean-plane reflection, no wave ray displacement; retained root chunk visibility, actors and scene-level detail trees excluded; movement may capture every frame, no claimed FPS benefit",
+        "mean-plane capture with optional bounded normal UV approximation, no depth ray trace; retained root chunk visibility, actors and scene-level detail trees excluded; movement may capture every frame, no claimed FPS benefit",
     };
   }
   dispose() {

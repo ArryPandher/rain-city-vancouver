@@ -855,10 +855,20 @@ class Game {
       });
       waterSceneLabel.append(waterSceneCheckbox, " Planar north-harbour reflection (day only)");
       comparisons.append(waterSceneLabel);
+      const planarRippleLabel = document.createElement("label");
+      const planarRippleCheckbox = document.createElement("input");
+      planarRippleCheckbox.type = "checkbox";
+      planarRippleCheckbox.addEventListener("change", () => {
+        this.finishFrameSample("planar water ripples changed");
+        if (!this.world.setDebugWaterPlanarDistortion(planarRippleCheckbox.checked)) planarRippleCheckbox.checked = false;
+      });
+      planarRippleLabel.append(planarRippleCheckbox, " Ripple planar reflection (comparison)");
+      comparisons.append(planarRippleLabel);
       window.addEventListener(
         "pagehide",
         () => {
           this.world.setDebugWaterScene(false);
+          this.world.setDebugWaterPlanarDistortion(false);
           this.world.setDebugWaterWaves(false);
           this.world.setDebugWaterOptics(this.renderer, false);
         },

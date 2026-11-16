@@ -186,6 +186,7 @@ export class World {
   private waterOpticsError: string | null = null;
   private waterWavesComparison?: WaterWavesComparison;
   private waterSceneComparison?: WaterPlanarReflections;
+  private waterPlanarDistortion = false;
   weather: Weather = "day";
   rain!: T.Points;
   time = 0;
@@ -1611,8 +1612,15 @@ export class World {
       this.waterSceneComparison = new WaterPlanarReflections({
         scene: this.scene, root: this.root, sun: this.sun, water: this.water,
       });
+      this.waterSceneComparison.setDistortion(this.waterPlanarDistortion);
       this.waterSceneComparison.invalidate(this.weather);
     }
+    return true;
+  }
+  setDebugWaterPlanarDistortion(enabled: boolean) {
+    if (enabled && (typeof location === "undefined" || !new URLSearchParams(location.search).has("debug"))) return false;
+    this.waterPlanarDistortion = enabled;
+    this.waterSceneComparison?.setDistortion(enabled);
     return true;
   }
   updateDebugWaterScene(renderer: T.WebGLRenderer, camera: T.PerspectiveCamera, allowCapture: boolean) {
