@@ -1,6 +1,6 @@
 # Robson rink exterior candidate — opt-in support contract
 
-2026-11-16. Pure geometry and shared cut/guard data only; no World, collision, terrain, material, camera, or loader integration. Root must review this conservative exterior approximation before enabling it.
+2026-11-16. Geometry/source contract for the conservative exterior candidate. The subsequent bounded World/collision/material integration is documented in [robson-rink-integration.md](robson-rink-integration.md); native visual review remains pending.
 
 ## Source registration and deliberate approximation
 

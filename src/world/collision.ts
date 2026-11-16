@@ -4,6 +4,7 @@ import {
   ironworkersContains,
 } from "./ironworkers-alignment";
 import { createHoweSceneTerrain } from "./howe-scene-terrain";
+import { createRobsonRinkContact } from "./robson-rink-contact";
 import { panPacificHowePodiumCameraClearance } from "./pan-pacific-howe-podium-camera";
 import {
   createHoweCordovaJunctionSite,
@@ -289,6 +290,7 @@ export class CollisionWorld {
   harbour = false;
   gallery = false;
   robsonGarden?: Building;
+  robsonRink?: ReturnType<typeof createRobsonRinkContact>;
   convention?: ConventionSite;
   canada?: CanadaPlaceSite;
   howeTerrain?: Terrain;
@@ -335,7 +337,10 @@ export class CollisionWorld {
             7.2,
           );
       }
-      if (b.id === ROBSON_GARDEN_ID) this.robsonGarden = b;
+      if (b.id === ROBSON_GARDEN_ID) {
+        this.robsonGarden = b;
+        this.robsonRink = createRobsonRinkContact();
+      }
       if (robsonWalkableBuilding(b.id)) continue;
       const xs = b.pts.filter((_, i) => !(i % 2)),
         zs = b.pts.filter((_, i) => i % 2);
@@ -513,6 +518,8 @@ export class CollisionWorld {
   }
   /** On-foot contact includes the finish; the baseline remains the construction datum. */
   walkingHeight(x: number, z: number, referenceY = Infinity): number {
+    const rink = this.robsonRink?.support(x, z, referenceY);
+    if (rink !== undefined) return rink;
     const apron = this.pacificApron?.height(x, z);
     if (apron !== undefined) return apron;
     const junction = this.howeCordovaJunction?.height(x, z);
@@ -543,6 +550,8 @@ export class CollisionWorld {
       : (previousWalking ?? base);
   }
   groundHeight(x: number, z: number): number {
+    const rink = this.robsonRink?.floor(x, z);
+    if (rink !== undefined) return rink;
     for (const recess of this.exteriorRecesses.values()) {
       const y = recess.floorAt(x, z);
       if (y !== undefined) return y;
@@ -625,6 +634,8 @@ export class CollisionWorld {
     return null;
   }
   height(x: number, z: number, referenceY = Infinity) {
+    const rink = this.robsonRink?.support(x, z, referenceY);
+    if (rink !== undefined) return rink;
     const b = this.bridgeAt(x, z, referenceY);
     return b
       ? this.bridgeHeight(b.bridge, b.t)
@@ -668,6 +679,7 @@ export class CollisionWorld {
     referenceY: number,
     camera: boolean,
   ) {
+    if (this.robsonRink?.blocked(x, z, r, referenceY, camera)) return true;
     if (
       this.canada &&
       referenceY - (camera ? r : 0) < HOWE_STATION.maxY &&

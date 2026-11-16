@@ -1,4 +1,9 @@
 import { createHoweStationRoadFinishClipper } from "./howe-station-road-finish";
+import {
+  clipRobsonRinkOpenings,
+  ROBSON_RINK_TERRAIN_CUTOUTS,
+} from "./robson-rink-openings";
+import { createRobsonRinkExteriorMeshes } from "./robson-rink-materials";
 import { HOWE_STATION_SPEC } from "./howe-station-site";
 import { buildCordovaStreetDetails } from "./cordova-street-details";
 import {
@@ -208,6 +213,11 @@ export class World {
     this.forestHabitat = new ForestHabitat(this.data, this.collision);
     await report("Building terrain and ground batches", 0.15);
     this.terrain();
+    if (this.collision.robsonRink) {
+      const rink = createRobsonRinkExteriorMeshes(this.materials);
+      this.root.add(...rink);
+      this.chunks.push(...rink);
+    }
     if (this.collision.robsonGarden)
       this.chunks.push(
         ...buildRobsonMound(this.root, this.materials, this.data.roads),
@@ -471,15 +481,15 @@ export class World {
   }
   terrain() {
     const m = this.materials;
-    const floor = mesh(
-      new T.PlaneGeometry(24000, 24000),
-      m.grass,
-      this.root,
-      2000,
-      -0.09,
-      0,
-    );
-    floor.rotation.x = -Math.PI / 2;
+    const rinkCut = (g: T.BufferGeometry) =>
+      this.collision.robsonRink ? clipRobsonRinkOpenings(g) : g;
+    const rinkCutouts = this.collision.robsonRink
+      ? ROBSON_RINK_TERRAIN_CUTOUTS
+      : [];
+    const floorGeometry = new T.PlaneGeometry(24000, 24000);
+    floorGeometry.rotateX(-Math.PI / 2);
+    floorGeometry.translate(2000, -0.09, 0);
+    const floor = mesh(rinkCut(floorGeometry), m.grass, this.root);
     floor.geometry
       .getAttribute("uv")
       .array.forEach((_, i, a) => (a[i] *= 2800));
@@ -530,11 +540,13 @@ export class World {
                   ? -0.008
                   : -0.02;
         b.add(
-          flatPolygon(
-            a.pts,
-            a.holes,
-            elevation,
-            mat === woodlandMaterial ? 2.11 : 5,
+          rinkCut(
+            flatPolygon(
+              a.pts,
+              a.holes,
+              elevation,
+              mat === woodlandMaterial ? 2.11 : 5,
+            ),
           ),
           mat,
           x,
@@ -556,7 +568,7 @@ export class World {
         })),
         cover(cliff(m.grass)),
         this.data.ocean,
-        [PROSPECT_FORECOURT, ...LOOKOUT_CUTOUTS],
+        [PROSPECT_FORECOURT, ...LOOKOUT_CUTOUTS, ...rinkCutouts],
       );
       ground.push(
         terrainCutWall(elevationGrid, PROSPECT_FORECOURT, 2.06, cliff(m.stone)),
@@ -578,26 +590,28 @@ export class World {
         [],
         m.concrete,
         this.data.ocean,
-        this.collision.howeTerrainCutouts,
+        [...this.collision.howeTerrainCutouts, ...rinkCutouts],
       );
       this.root.add(...ground);
       this.chunks.push(...ground);
     }
     const cityBase = mesh(
-      flatPolygon(
-        [
-          bounds.minX,
-          bounds.minZ,
-          bounds.maxX,
-          bounds.minZ,
-          bounds.maxX,
-          bounds.maxZ,
-          bounds.minX,
-          bounds.maxZ,
-        ],
-        [],
-        -0.035,
-        5,
+      rinkCut(
+        flatPolygon(
+          [
+            bounds.minX,
+            bounds.minZ,
+            bounds.maxX,
+            bounds.minZ,
+            bounds.maxX,
+            bounds.maxZ,
+            bounds.minX,
+            bounds.maxZ,
+          ],
+          [],
+          -0.035,
+          5,
+        ),
       ),
       m.concrete,
       this.root,
