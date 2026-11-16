@@ -165,6 +165,9 @@ test("synchronous failure and separate cache owners never retain or cross-share 
     requests: 2,
     sourceLoads: 2,
     currentURLs: 0,
+    readyCount: 0,
+    pendingURLs: [],
+    failedURLs: ["bad"],
   });
   const { loader, requests } = delayedLoader();
   const a = new SharedTextureSources(loader),
@@ -182,7 +185,14 @@ test("statistics are snapshots of requests, attempted loads and currently retain
   const m = Object.create(Materials.prototype) as Materials;
   m.loader = loader as T.TextureLoader;
   const empty = m.textureSourceStats();
-  assert.deepEqual(empty, { requests: 0, sourceLoads: 0, currentURLs: 0 });
+  assert.deepEqual(empty, {
+    requests: 0,
+    sourceLoads: 0,
+    currentURLs: 0,
+    readyCount: 0,
+    pendingURLs: [],
+    failedURLs: [],
+  });
   m.texture("a");
   m.texture("a", true);
   m.texture("b");
@@ -190,12 +200,18 @@ test("statistics are snapshots of requests, attempted loads and currently retain
     requests: 3,
     sourceLoads: 2,
     currentURLs: 2,
+    readyCount: 0,
+    pendingURLs: [`${BASE}textures/a`, `${BASE}textures/b`],
+    failedURLs: [],
   });
   requests[0].fail();
   assert.deepEqual(m.textureSourceStats(), {
     requests: 3,
     sourceLoads: 2,
     currentURLs: 1,
+    readyCount: 0,
+    pendingURLs: [`${BASE}textures/b`],
+    failedURLs: [`${BASE}textures/a`],
   });
   m.texture("a");
   requests[0].fail();
@@ -205,13 +221,27 @@ test("statistics are snapshots of requests, attempted loads and currently retain
     complete: true,
   } as HTMLImageElement);
   const complete = m.textureSourceStats();
-  assert.deepEqual(complete, { requests: 4, sourceLoads: 3, currentURLs: 2 });
+  assert.deepEqual(complete, {
+    requests: 4,
+    sourceLoads: 3,
+    currentURLs: 2,
+    readyCount: 1,
+    pendingURLs: [`${BASE}textures/b`],
+    failedURLs: [],
+  });
   assert.notEqual(
     complete,
     m.textureSourceStats(),
     "inspection cannot mutate cache counters",
   );
-  assert.deepEqual(empty, { requests: 0, sourceLoads: 0, currentURLs: 0 });
+  assert.deepEqual(empty, {
+    requests: 0,
+    sourceLoads: 0,
+    currentURLs: 0,
+    readyCount: 0,
+    pendingURLs: [],
+    failedURLs: [],
+  });
   const throwing = new SharedTextureSources({
     load() {
       throw new Error("loader threw");
@@ -222,5 +252,142 @@ test("statistics are snapshots of requests, attempted loads and currently retain
     requests: 1,
     sourceLoads: 1,
     currentURLs: 0,
+    readyCount: 0,
+    pendingURLs: [],
+    failedURLs: ["bad"],
   });
+});
+
+test("actual Three loader and renderer defer pending/nested/failed uploads, then upload every surviving consumer", async () => {
+  const { WebGLTextures } = await import(
+    "three/src/renderers/webgl/WebGLTextures.js"
+  );
+  const previousDocument = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "document",
+  );
+  const previousWarn = console.warn;
+  const images: FakeImage[] = [];
+  class FakeImage extends EventTarget {
+    width = 32;
+    height = 32;
+    complete = false;
+    src = "";
+    crossOrigin = "";
+    finish() {
+      this.complete = true;
+      this.dispatchEvent(new Event("load"));
+    }
+    fail() {
+      this.dispatchEvent(new Event("error"));
+    }
+  }
+  const warnings: string[] = [];
+  const properties = new WeakMap<object, object>();
+  let uploads = 0;
+  const reachedUpload = new Error(
+    "test stopped at actual GPU allocation boundary",
+  );
+  const args = [
+    {
+      TEXTURE_2D: 3553,
+      createTexture() {
+        uploads++;
+        throw reachedUpload;
+      },
+    },
+    {
+      has() {
+        return false;
+      },
+    },
+    { bindTexture() {} },
+    {
+      get(texture: object) {
+        if (!properties.has(texture)) properties.set(texture, {});
+        return properties.get(texture);
+      },
+    },
+    { maxTextures: 16 },
+    {},
+    { memory: { textures: 0 } },
+  ] as unknown as ConstructorParameters<typeof WebGLTextures>;
+  const rendererTextures = new WebGLTextures(...args);
+  try {
+    Object.defineProperty(globalThis, "document", {
+      configurable: true,
+      value: {
+        createElementNS(_namespace: string, tag: string) {
+          assert.equal(tag, "img");
+          const image = new FakeImage();
+          images.push(image);
+          return image;
+        },
+      },
+    });
+    console.warn = (...parts: unknown[]) => warnings.push(parts.join(" "));
+    const loader = new T.TextureLoader(new T.LoadingManager());
+    // Reproduce the pre-fix path through the installed renderer, not a copied
+    // condition: the same incomplete clone warns on each attempted draw.
+    const old = loader.load("old.webp").clone().clone();
+    rendererTextures.setTexture2D(old, 0);
+    rendererTextures.setTexture2D(old, 0);
+    assert.equal(warnings.length, 2);
+    assert.ok(
+      warnings.every((w) =>
+        w.includes("Texture marked for update but no image data found"),
+      ),
+    );
+    warnings.length = 0;
+    images[0].fail();
+
+    const cache = new SharedTextureSources(loader);
+    const a = cache.texture("slow.webp"),
+      nested = a.clone().clone();
+    const b = cache.texture("slow.webp");
+    for (let frame = 0; frame < 60; frame++)
+      for (const texture of [a, nested, b])
+        rendererTextures.setTexture2D(texture, 0);
+    assert.deepEqual(warnings, []);
+    assert.equal(uploads, 0);
+    images[1].finish();
+    for (const texture of [a, nested, b, cache.texture("slow.webp")]) {
+      assert.equal(texture.image, images[1]);
+      assert.throws(
+        () => rendererTextures.setTexture2D(texture, 0),
+        (e) => e === reachedUpload,
+      );
+    }
+    assert.equal(uploads, 4, "all loaded consumers reach the real upload path");
+    assert.deepEqual(warnings, []);
+
+    const failed = cache.texture("failed.webp"),
+      failedNested = failed.clone();
+    images[2].fail();
+    assert.deepEqual(cache.stats.failedURLs, ["failed.webp"]);
+    assert.equal(cache.stats.readyCount, 1);
+    for (let frame = 0; frame < 60; frame++)
+      for (const texture of [failed, failedNested, failed.clone()])
+        rendererTextures.setTexture2D(texture, 0);
+    assert.deepEqual(warnings, []);
+    assert.equal(uploads, 4);
+    const retry = cache.texture("failed.webp");
+    assert.notEqual(retry.source, failed.source);
+    assert.deepEqual(cache.stats.pendingURLs, ["failed.webp"]);
+    images[3].finish();
+    assert.equal(cache.stats.readyCount, 2);
+    assert.deepEqual(cache.stats.pendingURLs, []);
+    assert.deepEqual(cache.stats.failedURLs, []);
+    assert.throws(
+      () => rendererTextures.setTexture2D(retry, 0),
+      (e) => e === reachedUpload,
+    );
+    assert.equal(uploads, 5);
+    assert.equal(failed.image, null);
+  } finally {
+    console.warn = previousWarn;
+    if (previousDocument)
+      Object.defineProperty(globalThis, "document", previousDocument);
+    else Reflect.deleteProperty(globalThis, "document");
+  }
 });
