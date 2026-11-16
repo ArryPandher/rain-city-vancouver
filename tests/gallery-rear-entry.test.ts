@@ -8,12 +8,7 @@ import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { MeshoptDecoder } from "meshoptimizer";
 import data from "../src/world/gallery-rear-entry-data.json";
 import { repairGalleryRearEntry } from "../src/world/gallery-rear-entry";
-import { geo, ORIGIN, KX, type CityData } from "../src/world/data";
-import { CollisionWorld } from "../src/world/collision";
-import {
-  galleryRearStepHeight,
-  GALLERY_REAR_STEPS,
-} from "../src/world/gallery-rear-entry";
+import { geo } from "../src/world/data";
 
 test("actual quantized gallery repair moves only reviewed rear-entry vertices, preserving fronts, roofs, dome and materials", async () => {
   assert.equal(
@@ -201,59 +196,20 @@ test("actual quantized gallery repair moves only reviewed rear-entry vertices, p
       "column base is supported at the original3.2m plinth datum",
     );
   }
-  const city = JSON.parse(
-    fs.readFileSync("public/data/vancouver.json", "utf8"),
-  ) as CityData;
-  const ox = (ORIGIN.lon - city.meta.bbox[1]) * KX,
-    oz = (city.meta.bbox[2] - ORIGIN.lat) * 110540;
-  city.buildings = city.buildings
-    .filter((b) => b.id === "w69701736")
-    .map((b) => ({
-      ...b,
-      pts: b.pts.map((v, i) => v / 2 - (i % 2 ? oz : ox)),
-    }));
-  city.roads = [];
-  city.areas = [];
-  city.ocean = [];
-  const collision = new CollisionWorld(city),
-    steps = GALLERY_REAR_STEPS;
-  for (let i = 0; i < steps.count; i++)
+  // This test verifies the historical source translation independently of the
+  // replacement. The new shared stair/render/contact contract has its own test.
+  const oldStart = 12.1 + data.translationV;
+  for (let i = 0; i < 12; i++)
     for (const u of [-6, -1.9, 2]) {
-      const p = point(u, 10, steps.startV + (i + 0.5) * steps.tread);
+      const p = point(u, 10, oldStart + (i + 0.5) * 0.35);
       const hit = new T.Raycaster(p, new T.Vector3(0, -1, 0)).intersectObjects(
         meshes.filter((m) => m.name === "foundation"),
       )[0];
-      assert.ok(hit, "each exposed tread has a rendered top");
+      assert.ok(hit);
       assert.ok(
-        Math.abs(hit.point.y - collision.groundHeight(p.x, p.z)) < 0.005,
-        "actual quantized tread matches collision within5mm",
+        Math.abs(hit.point.y - (0.08 + ((12 - i) * 3.2) / 12)) < 0.005,
+        "translated original tread retains source datum",
       );
-      assert.equal(
-        collision.groundHeight(p.x, p.z),
-        galleryRearStepHeight(p.x, p.z),
-      );
-      if (i >= 2)
-        assert.equal(
-          collision.blocked(p.x, p.z, 0.2),
-          false,
-          "outside-facade treads remain open",
-        );
     }
-  const closed = point(-1.9, 3.28, steps.startV - 0.5);
-  assert.equal(
-    collision.blocked(closed.x, closed.z, 0.2),
-    true,
-    "historic facade remains closed",
-  );
-  const beyond = point(
-    -1.9,
-    0,
-    steps.startV + steps.count * steps.tread + 0.05,
-  );
-  assert.equal(
-    galleryRearStepHeight(beyond.x, beyond.z),
-    undefined,
-    "support is bounded to actual stair",
-  );
   for (const mesh of [...meshes, ...beforeMeshes]) mesh.geometry.dispose();
 });

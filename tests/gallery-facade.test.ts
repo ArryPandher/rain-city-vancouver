@@ -61,10 +61,22 @@ async function scene() {
         source.materials[name as keyof typeof source.materials]?.ranges ?? [];
       for (let i = 0; i < oldIndex.length; i += 3) {
         const triangle = oldIndex.slice(i, i + 3);
-        if (triangle.some((id) => ranges.some(([a, b]) => id >= a && id <= b)))
+        if (
+          name === "foundation" &&
+          triangle.every((id) => id >= 3819 && id <= 4062)
+        )
+          assert.equal(
+            kept.has(triangle.join(",")),
+            false,
+            "every superseded source-stair triangle removed",
+          );
+        if (
+          name !== "foundation" &&
+          triangle.some((id) => ranges.some(([a, b]) => id >= a && id <= b))
+        )
           assert.ok(
             kept.has(triangle.join(",")),
-            "every original translated stair/column/pediment triangle retained",
+            "every original translated column/pediment triangle retained",
           );
       }
       assert.deepEqual(
@@ -107,7 +119,7 @@ test("actual gallery source replacement preserves landing and all other material
   const { root, before, removed } = await scene();
   t.diagnostic(JSON.stringify({ removed }));
   assert.deepEqual(removed, {
-    foundation: 210,
+    foundation: 210 + 144,
     glass: 54,
     stone: 380,
     copper: 0,
@@ -185,7 +197,7 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
         p.getX(i) > -10.951 &&
           p.getX(i) < 20 &&
           p.getZ(i) > 22 &&
-          p.getZ(i) < 27.66,
+          p.getZ(i) < 33.4,
       );
       if (p.getZ(i) >= 25 || p.getY(i) < -0.001)
         assert.ok(
@@ -200,7 +212,7 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
   }
   t.diagnostic(`${triangles} added triangles in ${chunks.length} draws`);
   assert.ok(
-    triangles < 7000,
+    triangles < 9000,
     `${triangles} added triangles including terrace framing`,
   );
   const hit = wingRay((0.5 * GALLERY_FACADE.length) / 6, 4.25, root)[0];

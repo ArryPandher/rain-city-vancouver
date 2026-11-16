@@ -1,6 +1,13 @@
 import { geo } from "./data";
 import * as T from "three";
 import source from "./gallery-rear-entry-data.json";
+import {
+  GALLERY_REAR_STEPS,
+  galleryStairLocalHeight,
+  galleryStairBackV,
+  GALLERY_RETAINED_CAP_Y,
+} from "./gallery-entry-stairs-data";
+export { GALLERY_REAR_STEPS } from "./gallery-entry-stairs-data";
 /** Repair only the authored rear entrance buried behind the mapped south wall.
  * Explicit reviewed source vertex ranges preserve all unrelated model surfaces. */
 export function repairGalleryRearEntry(
@@ -30,17 +37,7 @@ export function repairGalleryRearEntry(
   return part.selectedVertices;
 }
 
-/** Original source staircase, translated with the visual repair. */
-export const GALLERY_REAR_STEPS = {
-  origin: [-123.12046, 49.28287] as const,
-  minU: -7.75,
-  maxU: 3.95,
-  startV: 12.1 + source.translationV,
-  tread: 0.35,
-  count: 12,
-  rise: 3.2 / 12,
-  datum: 0.08,
-};
+/** Shared visible two-flight profile; source gallery height is unchanged. */
 export function galleryRearStepHeight(x: number, z: number) {
   const [ox, oz] = geo(
     GALLERY_REAR_STEPS.origin[1],
@@ -53,18 +50,12 @@ export function galleryRearStepHeight(x: number, z: number) {
   const u = c * xx + s * zz,
     v = -s * xx + c * zz,
     p = GALLERY_REAR_STEPS;
-  if (
-    u < p.minU ||
-    u > p.maxU ||
-    v < p.startV ||
-    v >= p.startV + p.tread * p.count
-  )
-    return;
-  const index = Math.min(
-    p.count - 1,
-    Math.floor((v - p.startV) / p.tread + 1e-8),
-  );
-  return p.datum + (p.count - index) * p.rise;
+  if (u < p.minU || u > p.maxU || v < p.startV || v >= p.endV) return;
+  const y =
+    v < galleryStairBackV(u)
+      ? GALLERY_RETAINED_CAP_Y
+      : galleryStairLocalHeight(v);
+  return y === undefined ? undefined : p.datum + y;
 }
 
 /** Remove only the part of a generic path ribbon covering the custom stair.
@@ -106,7 +97,7 @@ export function clipGalleryStairPath(
     steps.minU - eps,
     steps.maxU + eps,
     steps.startV - eps,
-    steps.startV + steps.tread * steps.count + eps,
+    steps.endV + eps,
   ];
   if (
     maxU < bounds[0] ||

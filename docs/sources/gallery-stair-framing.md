@@ -1,5 +1,7 @@
 # Gallery entrance terrace and stair framing
 
+Current revision: the2026-11-16 [stair and landing correction](gallery-entry-stairs.md) supersedes the original12-tread geometry described below. It replaces the source stair with an estimated24-riser two-flight profile, extends/refits these walls and rails to the intermediate landing, and fits coping backs to the exact retained foundation cap boundary. The lower text records the first framing pass and its limitations.
+
 2026-11-16. Bounded interpretation of the Robson-facing gallery entrance, visible from the new ordinary map arrival and on the walk toward the rink. This adds structural depth around the existing staircase; it is not a survey of the entire restaurant terrace or a reconstruction of its interior.
 
 ## Source and diagnosis

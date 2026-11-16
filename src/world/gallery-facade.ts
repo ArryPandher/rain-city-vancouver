@@ -6,6 +6,10 @@ import entry from "./gallery-rear-entry-data.json";
 import { addGalleryEntryCornice } from "./gallery-entry-cornice";
 import { createGalleryAshlarMaterial } from "./gallery-ashlar-material";
 import { addGalleryStairFraming } from "./gallery-stair-framing";
+import {
+  addGalleryEntryStairs,
+  removeOriginalGalleryStairs,
+} from "./gallery-entry-stairs";
 
 // Two nearly collinear mapped rear edges form one continuous nine-bay elevation.
 function edge(a: number[], b: number[], bays: number) {
@@ -53,6 +57,7 @@ export function galleryFacadeCompatible(root: T.Object3D) {
  * explicitly protect translated stair, column and pediment geometry. */
 export function replaceGalleryWingFaces(g: T.BufferGeometry, material: string) {
   if (!["stone", "foundation", "glass"].includes(material)) return 0;
+  const removedStairs = removeOriginalGalleryStairs(g, material);
   const p = g.getAttribute("position"),
     ix = g.getIndex(),
     kept: number[] = [];
@@ -94,7 +99,7 @@ export function replaceGalleryWingFaces(g: T.BufferGeometry, material: string) {
     else kept.push(...ids);
   }
   if (removed) g.setIndex(kept);
-  return removed;
+  return removed + removedStairs;
 }
 
 export function addGalleryFacade(
@@ -276,6 +281,7 @@ export function addGalleryFacade(
   }
   addGalleryEntryCornice(mesh, stone);
   addGalleryStairFraming(mesh, base, frame);
+  addGalleryEntryStairs(mesh, base);
   mesh.finish();
   const chunks = batch.finish();
   for (const chunk of chunks) {

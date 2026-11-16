@@ -1,4 +1,5 @@
 import * as T from "three";
+import { galleryStairBackV } from "./gallery-entry-stairs-data";
 import type { ArchitecturalMesh } from "./architectural-mesh";
 import {
   GALLERY_STAIR_FRAMING as D,
@@ -24,13 +25,14 @@ export function addGalleryStairFraming(
       D.maxV - D.minV - 0.03,
       stone,
     );
-    mesh.box(
-      [midU, D.top - 0.06, midV],
-      t.maxU - t.minU,
-      0.12,
-      D.maxV - D.minV,
-      stone,
-    );
+    const cap = new T.BoxGeometry(t.maxU - t.minU, 0.12, D.maxV - D.minV);
+    cap.translate(midU, D.top - 0.06, midV);
+    const p = cap.getAttribute("position");
+    for (let i = 0; i < p.count; i++)
+      if (Math.abs(p.getZ(i) - D.minV) < 1e-5)
+        p.setZ(i, galleryStairBackV(p.getX(i)));
+    cap.computeVertexNormals();
+    mesh.add(cap, stone);
   }
   for (const { a, b } of galleryStairRails())
     mesh.beam(a, b, D.railRadius, rail, 8);

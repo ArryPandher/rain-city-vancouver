@@ -1,13 +1,17 @@
 import { geo } from "./data";
 import source from "./gallery-rear-entry-data.json";
-import { GALLERY_REAR_STEPS as S } from "./gallery-rear-entry";
+import {
+  GALLERY_REAR_STEPS as S,
+  GALLERY_STAIR_SURFACES as SURFACES,
+  galleryStairBackV,
+} from "./gallery-entry-stairs-data";
 
 /** Source-local gallery coordinates. The retained tread geometry fixes the
  * landing datum; terrace depth/width and rail gauge are photographic estimates. */
 export const GALLERY_STAIR_FRAMING = {
   minV: S.startV - 0.18, // bounded penetration into the retained foundation
-  maxV: S.startV + S.tread * 9, // leave the lowest three treads open
-  top: S.count * S.rise,
+  maxV: SURFACES.find((s) => s.kind === "landing" && s.index === 1)!.minV, // upper flight only
+  top: S.top,
   bottom: -S.datum, // gallery group is +.08m; public forecourt ground is y0
   datum: S.datum,
   terraces: [
@@ -29,22 +33,45 @@ export function galleryStairRails(): GalleryRail[] {
   const add = (a: GalleryRail["a"], b: GalleryRail["b"]) =>
     rails.push({ a, b });
   for (const u of [S.minU + 0.35, S.maxU - 0.35]) {
-    // Posts land on retained tread centres; top follows the pitch line.
-    const points = [0, 4, 8, 11].map((i) => {
-      const v = S.startV + (i + 0.5) * S.tread;
-      const y = (S.count - i) * S.rise;
-      add([u, y - 0.025, v], [u, y + D.railHeight, v]);
-      return [u, y + D.railHeight, v] as GalleryRail["a"];
-    });
-    add(points[0], points[3]);
-    // Short horizontal ends remain inside the stair footprint.
-    add([u, points[0][1], S.startV + 0.015], points[0]);
-    add(points[3], [u, points[3][1], S.startV + S.count * S.tread - 0.015]);
+    const upper = SURFACES.filter((s) => s.flight === 1);
+    const lower = SURFACES.filter((s) => s.flight === 2);
+    const landing = SURFACES.find(
+      (s) => s.kind === "landing" && s.index === 1,
+    )!;
+    const point = (v: number, y: number): GalleryRail["a"] => [
+      u,
+      y + D.railHeight,
+      v,
+    ];
+    const centre = (s: (typeof SURFACES)[number]) =>
+      point((s.minV + s.maxV) / 2, s.y);
+    const path = [
+      point(S.startV + 0.2, S.top),
+      centre(upper[0]),
+      centre(upper.at(-1)!),
+      point(landing.minV + 0.1, landing.y),
+      point(landing.maxV - 0.1, landing.y),
+      centre(lower[0]),
+      centre(lower.at(-1)!),
+      point(S.endV - 0.02, lower.at(-1)!.y),
+    ];
+    for (let i = 1; i < path.length; i++) add(path[i - 1], path[i]);
+    const supports = [
+      SURFACES[0],
+      ...upper.filter((_, i) => i % 5 === 0 || i === upper.length - 1),
+      landing,
+      lower[0],
+      lower.at(-1)!,
+    ];
+    for (const s of supports) {
+      const v = (s.minV + s.maxV) / 2;
+      add([u, s.y - 0.025, v], point(v, s.y));
+    }
   }
   for (const [i, t] of D.terraces.entries()) {
     const outer = i === 0 ? t.minU + 0.13 : t.maxU - 0.13;
     const inner = i === 0 ? t.maxU - 0.13 : t.minU + 0.13;
-    const back = D.minV + 0.25,
+    const back = Math.max(D.minV + 0.25, galleryStairBackV(outer) + 0.1),
       front = D.maxV - 0.13;
     const y = D.top + 1.04;
     // Two rails close the exposed terrace edges; existing gallery closes back.
@@ -52,13 +79,12 @@ export function galleryStairRails(): GalleryRail[] {
       add([outer, h, back], [outer, h, front]);
       add([outer, h, front], [inner, h, front]);
     }
-    for (const [u, v] of [
-      [outer, back],
-      [outer, (back + front) / 2],
-      [outer, front],
-      [inner, front],
-    ])
-      add([u, D.top - 0.025, v], [u, y, v]);
+    const posts = Math.ceil((front - back) / 1.7);
+    for (let j = 0; j <= posts; j++) {
+      const v = back + ((front - back) * j) / posts;
+      add([outer, D.top - 0.025, v], [outer, y, v]);
+    }
+    add([inner, D.top - 0.025, front], [inner, y, front]);
   }
   return rails;
 }

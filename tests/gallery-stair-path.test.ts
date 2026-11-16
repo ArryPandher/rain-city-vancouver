@@ -10,6 +10,7 @@ import {
 import { geo, roadWidth, type Road } from "../src/world/data";
 import { ribbon } from "../src/world/geometry";
 import source from "../src/world/gallery-rear-entry-data.json";
+import { GALLERY_STAIR_SURFACES } from "../src/world/gallery-entry-stairs-data";
 const [ox, oz] = geo(
   ...([GALLERY_REAR_STEPS.origin[1], GALLERY_REAR_STEPS.origin[0]] as [
     number,
@@ -37,13 +38,13 @@ test("clipping a stair-crossing ribbon preserves both approaches without leaving
   const clipped = clipGalleryStairPath(original, height, 0.15),
     mesh = new T.Mesh(clipped, material);
   mesh.updateMatrixWorld(true);
-  for (let i = 0; i < 12; i++)
+  for (const s of GALLERY_STAIR_SURFACES)
     assert.equal(
-      ray(-1.9, v + (i + 0.5) * 0.35).intersectObject(mesh).length,
+      ray(-1.9, (s.minV + s.maxV) / 2).intersectObject(mesh).length,
       0,
       "custom treads remain visible",
     );
-  for (const sample of [21, 30, 35, 39]) {
+  for (const sample of [21, 34, 35, 39]) {
     const hits = ray(-1.9, sample).intersectObject(mesh);
     assert.ok(
       hits.length > 0,
@@ -87,12 +88,10 @@ test("actual mapped footways leave every repaired gallery tread free of generic 
     affected > 0,
     "exercise the actual path crossing rather than an empty fixture",
   );
-  for (let i = 0; i < 12; i++)
+  for (const s of GALLERY_STAIR_SURFACES)
     for (const u of [-6, -1.9, 2])
       assert.equal(
-        ray(u, GALLERY_REAR_STEPS.startV + (i + 0.5) * 0.35).intersectObjects(
-          meshes,
-        ).length,
+        ray(u, (s.minV + s.maxV) / 2).intersectObjects(meshes).length,
         0,
       );
 });

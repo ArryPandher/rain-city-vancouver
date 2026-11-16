@@ -4,6 +4,10 @@ import {
   galleryStairRails,
 } from "./gallery-stair-framing-data";
 
+import {
+  GALLERY_REAR_STEPS as S,
+  galleryStairBackV,
+} from "./gallery-entry-stairs-data";
 const rails = galleryStairRails();
 /** Finite wall and matching cylindrical rail contact, in the same source frame. */
 export function galleryStairFramingBlocked(
@@ -16,7 +20,7 @@ export function galleryStairFramingBlocked(
   const [u, v] = galleryStairLocal(x, z);
   if (
     v < D.minV - radius - 0.5 ||
-    v > D.maxV + radius + 1.1 ||
+    v > S.endV + radius + 0.1 ||
     u < D.terraces[0].minU - radius ||
     u > D.terraces[1].maxU + radius
   )
@@ -73,6 +77,11 @@ export function galleryStairFramingHeight(
 ) {
   const [u, v] = galleryStairLocal(x, z),
     top = D.top + D.datum;
-  if (referenceY < top - 0.35 || v < D.minV || v > D.maxV) return;
+  if (
+    referenceY < top - 0.35 ||
+    v < Math.max(D.minV, galleryStairBackV(u)) ||
+    v > D.maxV
+  )
+    return;
   if (D.terraces.some((t) => u >= t.minU && u <= t.maxU)) return top;
 }

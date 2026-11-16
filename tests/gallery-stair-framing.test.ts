@@ -26,6 +26,14 @@ import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { MeshoptDecoder } from "meshoptimizer";
 import { repairGalleryRearEntry } from "../src/world/gallery-rear-entry";
+import {
+  addGalleryEntryStairs,
+  removeOriginalGalleryStairs,
+} from "../src/world/gallery-entry-stairs";
+import {
+  GALLERY_STAIR_SURFACES,
+  galleryStairBackV,
+} from "../src/world/gallery-entry-stairs-data";
 
 function assembly(world = false) {
   const root = new T.Group(),
@@ -52,7 +60,7 @@ const ray = (root: T.Object3D, p: number[], d: number[], far = 20) =>
     far,
   ).intersectObject(root, true)[0];
 
-test("actual retained gallery foundation closes terrace backs and supports all stair rail feet", async () => {
+test("retained gallery foundation closes terrace backs and shared stair geometry supports rail feet", async () => {
   await MeshoptDecoder.ready;
   const doc = await new NodeIO()
     .registerExtensions(ALL_EXTENSIONS)
@@ -76,9 +84,15 @@ test("actual retained gallery foundation closes terrace backs and supports all s
       g.setIndex(new T.BufferAttribute(primitive.getIndices()!.getArray()!, 1));
       g.applyMatrix4(new T.Matrix4().fromArray(node.getWorldMatrix()));
       repairGalleryRearEntry(g, "foundation");
+      removeOriginalGalleryStairs(g, "foundation");
       g.rotateY(entry.angle); // inspect common authored u/y/v frame
       root.add(new T.Mesh(g, new T.MeshBasicMaterial({ side: T.DoubleSide })));
     }
+  const batch = new Batcher(root, 512),
+    builder = new ArchitecturalMesh(batch, 0, 0);
+  addGalleryEntryStairs(builder, new T.MeshBasicMaterial());
+  builder.finish();
+  batch.finish();
   root.updateMatrixWorld(true);
   for (const t of D.terraces)
     for (const f of [0.1, 0.5, 0.9]) {
@@ -90,13 +104,15 @@ test("actual retained gallery foundation closes terrace backs and supports all s
         `bounded overlap ${hit.point.z - D.minV}`,
       );
     }
-  for (const { a, b } of galleryStairRails().slice(0, 14)) {
+  for (const { a, b } of galleryStairRails().filter(
+    (r) => r.a[0] > S.minU && r.a[0] < S.maxU,
+  )) {
     if (a[0] !== b[0] || a[2] !== b[2]) continue;
     const hit = ray(root, [a[0], D.top + 0.1, a[2]], [0, -1, 0], 5)!;
     assert.ok(hit);
     assert.ok(
       Math.abs(hit.point.y - (a[1] + 0.025)) < 0.006,
-      "rail feet penetrate retained source tread25mm",
+      "rail feet penetrate shared authored tread25mm",
     );
   }
 });
@@ -151,13 +167,20 @@ test("closed terrace walls have visible top, bottom, end and side faces in two r
       "all physical solids have paired oriented boundary edges",
     );
   }
-  assert.ok(triangles <= 1100, `${triangles} added triangles`);
+  assert.ok(triangles <= 2200, `${triangles} added triangles`);
 });
 
 test("matching finite contacts preserve tread width, ground approach and overhead camera clearance", () => {
   const { root } = assembly(true);
   for (const t of D.terraces)
-    for (let v = D.minV + 0.3; v < D.maxV - 0.2; v += 0.25) {
+    for (
+      let v = Math.max(
+        D.minV + 0.3,
+        galleryStairBackV((t.minU + t.maxU) / 2) + 0.1,
+      );
+      v < D.maxV - 0.2;
+      v += 0.25
+    ) {
       const [x, z] = galleryStairWorld((t.minU + t.maxU) / 2, v);
       const hit = ray(root, [x, 8, z], [0, -1, 0])!;
       assert.ok(Math.abs(height(x, z, 4)! - hit.point.y) < 1e-5);
@@ -170,7 +193,7 @@ test("matching finite contacts preserve tread width, ground approach and overhea
       assert.equal(blocked(x, z, 0.25, 1.5, true), true);
       assert.equal(blocked(x, z, 0.25, 6, true), false, "finite camera height");
     }
-  for (let v = S.startV; v < S.startV + S.count * S.tread + 0.8; v += 0.07) {
+  for (let v = S.startV; v < S.endV + 0.8; v += 0.07) {
     const [x, z] = galleryStairWorld((S.minU + S.maxU) / 2, v);
     const y = galleryRearStepHeight(x, z) ?? 0;
     assert.equal(
@@ -229,10 +252,10 @@ test("actual full-city arrival and central stair remain safe; new terraces touch
     assert.equal(collision.cameraBlocked(x, z, 0.25, 1.5), true);
     assert.equal(collision.height(x, z, 4), D.top + D.datum);
   }
-  for (let i = 0; i < S.count; i++) {
+  for (const [i, surface] of GALLERY_STAIR_SURFACES.entries()) {
     const [x, z] = galleryStairWorld(
       (S.minU + S.maxU) / 2,
-      S.startV + (i + 0.5) * S.tread,
+      (surface.minV + surface.maxV) / 2,
     );
     const y = galleryRearStepHeight(x, z)!;
     assert.ok(Math.abs(collision.walkingHeight(x, z, y) - y) < 1e-8);
@@ -240,7 +263,11 @@ test("actual full-city arrival and central stair remain safe; new terraces touch
     collision.gallery = false; // disable only Gallery-specific contact gates
     const before = collision.blocked(x, z, 0.36, y);
     collision.gallery = true;
-    assert.equal(after, before, `existing facade closure unchanged at tread${i}`);
+    assert.equal(
+      after,
+      before,
+      `existing facade closure unchanged at tread${i}`,
+    );
     if (i >= 2) assert.equal(after, false, `exposed ascent clear at tread${i}`);
   }
 });
