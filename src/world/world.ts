@@ -28,6 +28,7 @@ import {
   createCordovaPavementMaterial,
   hasCordovaPavement,
 } from "./cordova-pavement-material";
+import { createRobsonRoadMaterial, hasRobsonAsphalt } from "./robson-road-material";
 import { buildHoweStationPavilion } from "./howe-station-pavilion";
 import { createHoweStationPavilionMaterials } from "./howe-station-pavilion-materials";
 import { batchFallbackTrees } from "./fallback-tree-batch";
@@ -143,6 +144,7 @@ export class World {
     return materials;
   })();
   private cordovaPavement?: T.MeshStandardMaterial;
+  private robsonRoadMaterial?: T.MeshStandardMaterial;
   collision: CollisionWorld;
   private vehicleRoadSurface?: VehicleRoadSurface;
   chunks: T.Mesh[] = [];
@@ -720,6 +722,7 @@ export class World {
     const b = new Batcher(this.root, 450),
       m = this.materials;
     this.cordovaPavement = createCordovaPavementMaterial(m);
+    this.robsonRoadMaterial = createRobsonRoadMaterial(m);
     const cobble = m.pbr("cobblestone_floor_05", 0xb1aaa2, 0.88);
     const stripes = new T.MeshStandardMaterial({
       color: 0xdfd8c0,
@@ -914,7 +917,9 @@ export class World {
             : street || (seawall && r.surface === "asphalt")
               ? hasCordovaPavement(r)
                 ? this.cordovaPavement
-                : m.asphalt
+                : hasRobsonAsphalt(r)
+                  ? this.robsonRoadMaterial
+                  : m.asphalt
               : m.concrete,
         x,
         z,
@@ -1574,6 +1579,10 @@ export class World {
     if (this.cordovaPavement) {
       this.cordovaPavement.roughness = this.materials.asphalt.roughness;
       this.cordovaPavement.metalness = this.materials.asphalt.metalness;
+    }
+    if (this.robsonRoadMaterial) {
+      this.robsonRoadMaterial.roughness = this.materials.asphalt.roughness;
+      this.robsonRoadMaterial.metalness = this.materials.asphalt.metalness;
     }
     this.rain.visible = rain;
     this.water.uniforms.deep.value.set(
