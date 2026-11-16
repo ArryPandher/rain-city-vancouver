@@ -29,7 +29,8 @@ export const IRONWORKERS_PATH = {
   curbWidth: 0.45,
   curbHeight: 0.4,
   chunkLength: 64,
-  nearDistance: 180,
+  nearDistance: 48,
+  nearHysteresis: 0.04,
   replacedCycleways: ["w35260598", "w62125826"],
 } as const;
 /** Exact vertices of the external mapped approaches, not new road coordinates. */
@@ -577,7 +578,7 @@ export function createIronworkersPathBoundary(
       near.computeBoundingSphere();
       far.computeBoundingSphere();
       lod.addLevel(near, 0);
-      lod.addLevel(far, d.nearDistance, 0.1);
+      lod.addLevel(far, d.nearDistance, d.nearHysteresis);
       group.add(lod);
       chunks++;
     }

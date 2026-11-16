@@ -10,7 +10,13 @@ import {
   createIronworkersPathBoundary,
   IRONWORKERS_PATH,
 } from "../src/world/ironworkers-path-boundary";
-import { IRONWORKERS_PLAN_LENGTH } from "../src/world/ironworkers-alignment";
+import {
+  IRONWORKERS_PLAN_LENGTH,
+  ironworkersPoint,
+  ironworkersTAtDistance,
+  ironworkersGradeT,
+} from "../src/world/ironworkers-alignment";
+import { BRIDGES, bridgeY } from "../src/world/collision";
 
 const section = { width: 0.05, depth: 0.04, pitch: 0.13 };
 
@@ -140,6 +146,7 @@ test("installed far cells preserve physical member centres, near boxes and LOD/c
     if (!(child instanceof T.LOD)) continue;
     lods++;
     assert.equal(child.levels[1].distance, IRONWORKERS_PATH.nearDistance);
+    assert.equal(child.levels[1].hysteresis, IRONWORKERS_PATH.nearHysteresis);
     const near = child.levels[0].object as T.InstancedMesh;
     const far = child.levels[1].object as T.InstancedMesh;
     assert.equal(near.count, far.count);
@@ -170,6 +177,88 @@ test("installed far cells preserve physical member centres, near boxes and LOD/c
     boundary.members.map((m) => m.matrix.elements),
     memberMatrices,
   );
+  const geometries = new Set<T.BufferGeometry>(),
+    materials = new Set<T.Material>();
+  view.group.traverse((o) => {
+    if (o instanceof T.Mesh) {
+      geometries.add(o.geometry);
+      for (const m of Array.isArray(o.material) ? o.material : [o.material])
+        materials.add(m);
+    }
+  });
+  geometries.forEach((g) => g.dispose());
+  materials.forEach((m) => m.dispose());
+});
+
+test("mid-distance LOD protects close physical bars across walking/car chunk phases, including hysteresis", () => {
+  const bridge = BRIDGES.find((b) => b.id === "ironworkers")!;
+  const height = (t: number) => bridgeY(bridge, t, [0, 0]);
+  const boundary = createIronworkersPathBoundary(height, () => 0.07);
+  const view = boundary.createRenderGroup(
+    new T.MeshBasicMaterial(),
+    new T.MeshStandardMaterial(),
+  );
+  const lods = view.group.children.filter(
+    (o): o is T.LOD => o instanceof T.LOD,
+  );
+  view.group.updateMatrixWorld(true);
+  const camera = new T.PerspectiveCamera(),
+    matrix = new T.Matrix4(),
+    p = new T.Vector3();
+  // Include the fine full-span sweep's worst transition stations plus phases
+  // across a whole chunk at the slope and crest. Force far visibility first so
+  // the return threshold, not only the easier outward threshold, is exercised.
+  const stations = [
+    74.5,
+    75.5,
+    77,
+    1208,
+    1268,
+    ...Array.from({ length: 33 }, (_, i) => 64 + i * 2),
+    ...Array.from({ length: 33 }, (_, i) => 640 + i * 2),
+  ];
+  for (const mode of [
+    { side: 16.55, y: 2.632 },
+    { side: 8, y: 3.808 },
+    { side: 12.5, y: 3.808 },
+  ]) {
+    for (const sign of [-1, 1])
+      for (const s of stations) {
+        camera.position.set(0, 1000, 0);
+        camera.updateMatrixWorld(true);
+        for (const lod of lods) lod.update(camera);
+        const [x, z] = ironworkersPoint(
+          ironworkersTAtDistance(s),
+          sign * mode.side,
+        );
+        camera.position.set(
+          x,
+          height(ironworkersGradeT(x, z)) + 0.12 + mode.y,
+          z,
+        );
+        camera.updateMatrixWorld(true);
+        for (const lod of lods) {
+          lod.update(camera);
+          if (lod.getCurrentLevel() !== 1) continue;
+          const near = lod.levels[0].object as T.InstancedMesh;
+          // First/last pickets bound the closest end of each unbent short cell.
+          for (const i of [0, near.count - 1]) {
+            near.getMatrixAt(i, matrix);
+            p.setFromMatrixPosition(matrix).add(lod.position);
+            const horizontal = Math.hypot(p.x - x, p.z - z);
+            const vertical = Math.max(
+              0,
+              Math.abs(p.y - camera.position.y) - 1.5,
+            );
+            assert.ok(
+              Math.hypot(horizontal, vertical) - 0.033 > 10,
+              `physical bar switched too close at station ${s}, side ${sign * mode.side}`,
+            );
+          }
+        }
+      }
+  }
+  assert.equal(view.stats.maxDrawCalls, 24);
   const geometries = new Set<T.BufferGeometry>(),
     materials = new Set<T.Material>();
   view.group.traverse((o) => {
