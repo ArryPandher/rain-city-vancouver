@@ -88,8 +88,13 @@ test("Rendered garden substrate follows the continuous ramp datum within ten cen
     texture: () => new T.Texture(),
     concrete,
   } as any);
-  const surface = batch.finish().find((m) => m.material === concrete)!;
-  assert.ok(surface);
+  const surface = batch
+    .finish()
+    .find((m) => (m.material as T.Material).userData.robsonPaving)!;
+  assert.ok(
+    surface,
+    "the garden substrate renders with its scoped paving material",
+  );
   const p = surface.geometry.getAttribute("position"),
     ix = surface.geometry.getIndex()!;
   let error = 0;
