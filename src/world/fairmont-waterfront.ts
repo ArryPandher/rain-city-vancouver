@@ -374,6 +374,27 @@ export function buildFairmontWaterfront(
         const l = (j * f.length) / cols,
           r = ((j + 1) * f.length) / cols;
         const outside = f.p((l + r) / 2, 0, -0.07);
+        // The main tower's revised lower datum must also close outside Howe.
+        // Stepped-wing heights remain independent, and the dedicated arcade
+        // owns the complete shaped transfer band on its registered intervals.
+        if (part.name === "tower") {
+          const cuts = [
+            l,
+            r,
+            ...intervals.flat().filter((u) => u > l && u < r),
+          ].sort((a, b) => a - b);
+          for (let k = 1; k < cuts.length; k++) {
+            const left = cuts[k - 1],
+              right = cuts[k],
+              mid = (left + right) / 2;
+            const q = f.p(mid, 0, -0.07);
+            if (
+              !intervals.some(([a, b]) => mid >= a && mid <= b) &&
+              fairmontWaterfrontPartHeight(q[0], q[2]) <= 8
+            )
+              face(f, m.panel, left, right, 8, howeBaseTop);
+          }
+        }
         for (let floor = 0; floor < levels.length - 1; floor++) {
           const lo = levels[floor],
             hi = levels[floor + 1];

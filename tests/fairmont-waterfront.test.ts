@@ -4,7 +4,13 @@ import fs from "node:fs";
 import * as T from "three";
 import { Batcher } from "../src/world/geometry";
 import { facadeFrame } from "../src/world/architectural-mesh";
-import { KX, ORIGIN, pointInPoly, segmentPoint } from "../src/world/data";
+import {
+  KX,
+  ORIGIN,
+  pointInPoly,
+  segmentPoint,
+  centroid,
+} from "../src/world/data";
 import {
   buildFairmontWaterfront,
   type FairmontWaterfrontMaterials,
@@ -81,7 +87,7 @@ test("Fairmont Waterfront replaces only the correct hotel and retains the existi
 test("registered curved tower, inset crown and stepped wing use bounded separate source parts", () => {
   assert.equal(H, 69.44);
   assert.equal(fairmontWaterfrontLevel(23), H);
-  assert.equal(fairmontWaterfrontLevel(2), 8);
+  assert.equal(fairmontWaterfrontLevel(2), 9.65);
   assert.equal(fairmontWaterfrontLevel(21), 64);
   assert.deepEqual(
     parts.map((p) => p.high),
@@ -301,6 +307,8 @@ test("Howe canopy clears the active approach grade and adds no low posts outside
     site = createFairmontArcadeSite(grade),
     activeRoot = new T.Group(),
     activeBatch = new Batcher(activeRoot);
+  // Match runtime's building datum; the baseline sampler returns world heights.
+  activeBatch.offsetY = grade(...centroid(ring.flat()));
   buildFairmontWaterfront(
     activeBatch,
     { id: ID, pts: ring.flat() },

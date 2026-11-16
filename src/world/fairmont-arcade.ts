@@ -10,7 +10,7 @@ import {
   createFairmontArcadeSite,
   type FairmontArcadeSite,
 } from "./fairmont-arcade-site";
-import { FAIRMONT_WATERFRONT_HOWE_BASE_TOP } from "./fairmont-waterfront-site";
+import { buildFairmontTransferBand } from "./fairmont-transfer-band";
 
 /** Estimated visual lining behind fixed, collision-closed glazing. The MCM
  * photo establishes depth and pale/dark structure, not these dimensions. */
@@ -283,17 +283,6 @@ export function buildFairmontArcade(
     );
     const highL = Math.min(rearCeilingL - 0.4, lowL + 2.35),
       highR = Math.min(rearCeilingR - 0.4, lowR + 2.35);
-    // Close the graded top of this base at the untouched fourth-level row.
-    quad(
-      m.panel,
-      [
-        f.p(l * f.length, ceilingL),
-        f.p(r * f.length, ceilingR),
-        f.p(r * f.length, FAIRMONT_WATERFRONT_HOWE_BASE_TOP),
-        f.p(l * f.length, FAIRMONT_WATERFRONT_HOWE_BASE_TOP),
-      ],
-      normal,
-    );
     for (const [loL, loR, hiL, hiR] of [
       [lowL, lowR, lowL + 0.07, lowR + 0.07],
       [highL, highR, highL + 0.06, highR + 0.06],
@@ -310,6 +299,7 @@ export function buildFairmontArcade(
         normal,
       );
   }
+  buildFairmontTransferBand(mesh, m.panel, site);
   for (const section of site.sections) {
     const f = facadeFrame(section.a, section.b),
       windows = Math.max(1, Math.round(f.length / 2.1)),

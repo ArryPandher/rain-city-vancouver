@@ -15,8 +15,11 @@ export const FAIRMONT_WATERFRONT_CANOPY_SOURCE_RING = source.canopy
 export const FAIRMONT_WATERFRONT_CANOPY_TOP = 6.43;
 export const FAIRMONT_WATERFRONT_CANOPY_UNDERSIDE =
   FAIRMONT_WATERFRONT_CANOPY_TOP - 0.64;
-/** Preserve the existing fourth-level row; only the Howe base grows to it. */
-export const FAIRMONT_WATERFRONT_HOWE_BASE_TOP = 8 + (2 * 56) / 19;
+/** Photo-fit lower room datum:19 visible body rows above the transfer band.
+ * The old13.8947m threshold suppressed two rows after the canopy grade changed.
+ * Lower podium/stepped-wing source anchors remain8/14/20/26m. */
+export const FAIRMONT_WATERFRONT_ROOM_BASE = 9.65;
+export const FAIRMONT_WATERFRONT_HOWE_BASE_TOP = FAIRMONT_WATERFRONT_ROOM_BASE;
 // Historical roof points exceed the retained wall by roughly 1–2 m. Move only
 // the attachment edge into that wall; preserve the mapped outer projection.
 export const FAIRMONT_WATERFRONT_CANOPY_RING: Point[] =
@@ -48,9 +51,10 @@ export const FAIRMONT_WATERFRONT_PARTS = source.parts as {
 }[];
 export const fairmontWaterfrontLevel = (level: number) =>
   level <= 2
-    ? level * 4
+    ? (level * FAIRMONT_WATERFRONT_ROOM_BASE) / 2
     : level <= 21
-      ? 8 + ((level - 2) * 56) / 19
+      ? FAIRMONT_WATERFRONT_ROOM_BASE +
+        ((level - 2) * (64 - FAIRMONT_WATERFRONT_ROOM_BASE)) / 19
       : 64 + ((level - 21) * (FAIRMONT_WATERFRONT_HEIGHT - 64)) / 2;
 /** Heights are shared by parts and internal-face suppression; no ground uplift. */
 export function fairmontWaterfrontPartHeight(x: number, z: number) {

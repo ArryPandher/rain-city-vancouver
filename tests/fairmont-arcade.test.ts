@@ -16,6 +16,7 @@ import { FAIRMONT_LOBBY_CAVITY as cavity } from "../src/world/fairmont-arcade";
 import { buildFairmontWaterfront } from "../src/world/fairmont-waterfront";
 import { createFairmontWaterfrontMaterials } from "../src/world/fairmont-waterfront-materials";
 import {
+  fairmontWaterfrontLevel,
   FAIRMONT_WATERFRONT_ID as ID,
   FAIRMONT_WATERFRONT_RING as ring,
   FAIRMONT_WATERFRONT_CANOPY_SOURCE_RING as canopy,
@@ -292,9 +293,9 @@ test("a genuinely graded caller surface produces matched sloping floor triangles
   );
 });
 
-test("planar roof and straight frame members fit the apron reference without moving upper room rows", () => {
+test("planar roof and straight frame members fit below the restored room rows", () => {
   assert.equal(roofRise, 6.43);
-  assert.ok(Math.abs(rowAnchor - 13.894736842105264) < 1e-10);
+  assert.equal(rowAnchor, 9.65);
   const roof = meshes.find((mesh) => mesh.material === materials.canopyGlass)!,
     position = roof.geometry.getAttribute("position");
   let low = Infinity,
@@ -737,4 +738,41 @@ test("broad structural-bay centres have closed extra recesses without changing f
       "deeper centre has a floor and upper return",
     );
   }
+});
+
+test("Howe restores all19 room rows without raising roof or covering glazing with the old wall", () => {
+  const tower = parts[0].ring;
+  for (const index of [12, 13]) {
+    const f = facadeFrame(tower[index], tower[(index + 1) % tower.length]),
+      columns = Math.max(1, Math.round(f.length / 3.8)),
+      u = (f.length / columns) * 0.27;
+    let visible = 0;
+    for (let row = 0; row < 19; row++) {
+      const y =
+          (fairmontWaterfrontLevel(row + 2) +
+            fairmontWaterfrontLevel(row + 3)) /
+          2,
+        hits = ray(
+          new T.Vector3(...f.p(u, y, -0.5)),
+          new T.Vector3(...f.p(u, y, 0.6)),
+        );
+      assert.ok(hits[0], `row${row} closes`);
+      assert.equal(
+        (hits[0].object as T.Mesh).material,
+        materials.glass,
+        `room row${row} is real recessed glass, not old opaque base`,
+      );
+      assert.ok(Math.abs(hits[0].distance - 0.82) < 0.003);
+      visible++;
+    }
+    assert.equal(visible, 19);
+  }
+  assert.equal(fairmontWaterfrontLevel(2), 9.65);
+  assert.equal(fairmontWaterfrontLevel(21), 64);
+  assert.equal(fairmontWaterfrontLevel(23), 69.44);
+  for (const sample of site.canopyPlane.samples)
+    assert.ok(
+      site.canopyTopAt(...sample.point) + 0.25 < rowAnchor + 0.32,
+      "restored lowest glazing clears the entire canopy and its headroom",
+    );
 });
