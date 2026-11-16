@@ -25,9 +25,27 @@ function fixture(capability: boolean, method: "roads" | "terrain") {
     a.holes = a.holes?.map(convert);
   });
   data.ocean = [];
-  data.roads = JSON.parse(
+  const allRoads = JSON.parse(
     fs.readFileSync("public/data/vancouver-roads.json", "utf8"),
-  ).roads.slice(0, 240);
+  ).roads as CityData["roads"];
+  // Preserve the original sample and include the actual Howe/Cordova legs,
+  // service access and crossings. The first 240 alone omit this junction and
+  // produce only an empty curb-material chunk, not a meaningful shadow fixture.
+  data.roads = [
+    ...new Set([
+      ...allRoads.slice(0, 240),
+      ...allRoads.filter((r) =>
+        r.pts.some(
+          (x, i) =>
+            i % 2 === 0 &&
+            x >= 390 &&
+            x <= 470 &&
+            r.pts[i + 1] >= -440 &&
+            r.pts[i + 1] <= -365,
+        ),
+      ),
+    ]),
+  ];
   const materials = Object.create(Materials.prototype) as Materials;
   materials.texture = () => new T.Texture();
   for (const name of [
@@ -63,9 +81,69 @@ function fixture(capability: boolean, method: "roads" | "terrain") {
   world.root.updateMatrixWorld(true);
   return { world, snapshots };
 }
+/** World.roads explicitly enables shadows only on the separately generated
+ * formed curb. Its vertical 14cm profile should shade the gutter; flat road,
+ * sidewalk, gutter and terrain surfaces retain their previous no-cast policy. */
+function assertGroundShadowPolicy(
+  world: World,
+  snapshots: Map<T.Mesh, T.BufferGeometry>,
+  method: "roads" | "terrain",
+) {
+  const curbs = new Set(
+    [...snapshots.keys()].filter(
+      (mesh) =>
+        !Array.isArray(mesh.material) &&
+        mesh.material.name === "Howe Cordova formed curb",
+    ),
+  );
+  assert.equal(
+    curbs.size,
+    method === "roads" ? 1 : 0,
+    "the actual roads generator emits exactly one bounded curb chunk; terrain emits none",
+  );
+  for (const curb of curbs) {
+    const site = world.collision.howeCordovaJunction!;
+    assert.ok(
+      site.curbFaces.length > 0,
+      "the exception is a formed vertical curb, not flat paving",
+    );
+    const original = snapshots.get(curb)!;
+    assert.equal(
+      original.index!.count / 3,
+      site.triangles.filter((triangle) => triangle.surface === "curb").length +
+        site.curbFaces.length * 2,
+      "only the geometry from the dedicated curb generator receives this policy",
+    );
+    original.computeBoundingBox();
+    const box = original.boundingBox!;
+    assert.ok(
+      box.min.x >= site.bounds.minX - 0.0001 &&
+        box.max.x <= site.bounds.maxX + 0.0001,
+    );
+    assert.ok(
+      box.min.z >= site.bounds.minZ - 0.0001 &&
+        box.max.z <= site.bounds.maxZ + 0.0001,
+    );
+  }
+  for (const mesh of snapshots.keys()) {
+    const expected = curbs.has(mesh);
+    assert.equal(
+      mesh.castShadow,
+      expected,
+      "only the source-bounded formed curb casts ground shadows",
+    );
+    assert.equal(
+      mesh.userData.allowShadow,
+      expected,
+      "shadow eligibility agrees with the explicit curb policy",
+    );
+  }
+  return curbs;
+}
 for (const method of ["roads", "terrain"] as const) {
   test(`actual mapped ${method} preserve payload, bounds and shadow policy with owned-buffer release`, (t) => {
     const { world, snapshots } = fixture(true, method);
+    assertGroundShadowPolicy(world, snapshots, method);
     const batches = world.root.children.filter(
       (c): c is T.BatchedMesh => c instanceof T.BatchedMesh,
     );
@@ -185,13 +263,14 @@ for (const method of ["roads", "terrain"] as const) {
   });
   test(`actual mapped ${method} unsupported fallback retains original full chunks`, () => {
     const { world, snapshots } = fixture(false, method);
+    const curbs = assertGroundShadowPolicy(world, snapshots, method);
     assert.ok(snapshots.size > 1);
     assert.ok(world.root.children.every((c) => !(c instanceof T.BatchedMesh)));
     for (const [mesh, original] of snapshots) {
       assert.equal(mesh.parent, world.root);
       assert.ok(world.chunks.includes(mesh));
-      assert.equal(mesh.castShadow, false);
-      assert.equal(mesh.userData.allowShadow, false);
+      assert.equal(mesh.castShadow, curbs.has(mesh));
+      assert.equal(mesh.userData.allowShadow, curbs.has(mesh));
       assert.deepEqual(
         Array.from(mesh.geometry.index!.array),
         Array.from(original.index!.array),
