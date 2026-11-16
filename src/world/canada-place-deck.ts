@@ -13,6 +13,8 @@ import concourse from "./canada-place-concourse-data.json";
 /** Finished source-model surface, not a surveyed geodetic elevation. */
 export const CANADA_PLACE_DECK_Y = 7.88;
 export const CANADA_PLACE_PIER_ID = "w223635729";
+/** Mapped Pan Pacific hotel envelope; never a general public-deck exemption. */
+export const CANADA_PLACE_HOTEL_ID = "r16532084";
 /** Only these mapped site envelopes can be superseded on validated public deck.
  * Callers must ALSO require supportedDeck and an actor at deck/approach level. */
 export const CANADA_PLACE_DECK_COLLIDER_IDS = new Set(["w223635729"]);
@@ -65,7 +67,58 @@ const trail = worldRing([
   [b[0] + ix * 24, b[1] + iz * 24],
   [a[0] + ix * 24, a[1] + iz * 24],
 ]);
-export const CANADA_PLACE_PUBLIC_MASKS = [front, trail];
+/** Visible east/front apron: bounded by the source HOTEL southeast return and
+ * PIER's short front edges. Every supported point remains outside HOTEL and
+ * inside the original PIER top; this does not open the recessed hotel arcade. */
+export const CANADA_PLACE_EAST_FRONT_APRON = worldRing([
+  ...source.hotel.slice(32, 39),
+  ...source.pier.slice(26, 30),
+]);
+export const CANADA_PLACE_PUBLIC_MASKS = [
+  front,
+  trail,
+  CANADA_PLACE_EAST_FRONT_APRON,
+];
+const apronRailA = source.pier[25],
+  apronRailB = source.pier[26];
+const apronRailDX = apronRailB[0] - apronRailA[0],
+  apronRailDZ = apronRailB[1] - apronRailA[1];
+const apronRailLength = Math.hypot(apronRailDX, apronRailDZ);
+/** Source geometry.js creates this rail only on long PIER edge25→26. The
+ * neighboring short front edges26→29 remain open; no invented entry barrier. */
+export const CANADA_PLACE_EAST_FRONT_RAIL = {
+  a: canadaPlaceWorld(
+    apronRailA[0] + (apronRailDZ / apronRailLength) * 0.05,
+    apronRailA[1] - (apronRailDX / apronRailLength) * 0.05,
+  ),
+  b: canadaPlaceWorld(
+    apronRailB[0] + (apronRailDZ / apronRailLength) * 0.05,
+    apronRailB[1] - (apronRailDX / apronRailLength) * 0.05,
+  ),
+  // Actual baked steel extrema, expanded by 6mm for contact tolerance.
+  halfWidth: 0.07922757691816752 + 0.006,
+  bottom: 7.7764430809021 - 0.006,
+  top: 8.955096321105957 + 0.006,
+} as const;
+
+/** Collision for the existing visible east rail, gated by loaded source in the
+ * caller. Height-aware for normal 1.8m actors and camera spheres. */
+export function canadaPlaceEastFrontRailAt(
+  x: number,
+  z: number,
+  r = 0.36,
+  referenceY = Infinity,
+  camera = false,
+): boolean {
+  if (!valid(x, z, r) || Number.isNaN(referenceY)) return false;
+  const rail = CANADA_PLACE_EAST_FRONT_RAIL;
+  if (Number.isFinite(referenceY)) {
+    const low = referenceY - (camera ? r : 0),
+      high = referenceY + (camera ? r : 1.8);
+    if (high < rail.bottom || low > rail.top) return false;
+  }
+  return segmentPoint(x, z, ...rail.a, ...rail.b).d <= r + rail.halfWidth;
+}
 /** Estimated level street-to-plaza connector; OUTSIDE the source pier it needs
  * approach-owned rendered support. Never use this ring as a water exemption alone. */
 export const CANADA_PLACE_ENTRY_CONNECTOR = [
@@ -231,6 +284,15 @@ export function supportedDeck(
     solidAt(x, z, r, CANADA_PLACE_DECK_Y, capabilities)
   )
     return false;
+  // The observed front arrival crosses the short, unrailed PIER edge26/27.
+  // Its real surface reaches the rim; the older .65m trail inset wrongly drops
+  // feet below that visible floor. Keep the complete actor circle on source
+  // support with 12mm for decoded quantization, plus all solid exclusions above.
+  if (
+    containsCircle(x, z, CANADA_PLACE_EAST_FRONT_APRON, r) &&
+    containsCircle(x, z, CANADA_PLACE_PIER, r + 0.012)
+  )
+    return true;
   const entryOpening = inCanadaPlaceEntryConnector(x, z, r);
   if (!entryOpening && !containsCircle(x, z, CANADA_PLACE_PIER, r + 0.65))
     return false;
