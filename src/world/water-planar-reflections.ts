@@ -162,7 +162,7 @@ export class WaterPlanarReflections {
     const weight =
       this.weather === "day" ? waterPlanarViewerWeight(position) : 0;
     this.uniforms.waterPlanarWeight.value =
-      this.ready && !this.failed ? weight : 0;
+      this.ready && !this.dirty && !this.failed ? weight : 0;
     if (!weight || this.failed || !allowCapture) return;
     const changed =
       this.dirty ||
@@ -370,7 +370,7 @@ export class WaterPlanarReflections {
       scope:
         "whole visible ocean at y=.065; camera90m full/170m fade around Canada NorthPoint, day only",
       limitation:
-        "mean-plane reflection, no wave ray displacement; retained normal chunk visibility, static actors excluded; movement may capture every frame, no claimed FPS benefit",
+        "mean-plane reflection, no wave ray displacement; retained root chunk visibility, actors and scene-level detail trees excluded; movement may capture every frame, no claimed FPS benefit",
     };
   }
   dispose() {

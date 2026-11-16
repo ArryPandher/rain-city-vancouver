@@ -464,3 +464,30 @@ test("failed target bind reports no inherited main-frame draw cost and camera fa
   assert.equal(f.state.target, f.oldTarget);
   p.dispose();
 });
+
+test("lighting invalidation never re-exposes a stale reflection while capture is deferred", () => {
+  const f = fixture(),
+    p = new WaterPlanarReflections(f.context);
+  capture(f, p);
+  const shader = compile(f.context.water);
+  assert.equal(shader.uniforms.waterPlanarWeight.value, 1);
+  assert.equal(f.state.draws, 1);
+  f.context.sun.intensity *= 0.5;
+  p.invalidate("day");
+  for (let frame = 0; frame < 4; frame++) {
+    p.update(f.renderer, f.camera, false);
+    assert.equal(shader.uniforms.waterPlanarWeight.value, 0);
+    assert.equal(p.diagnostics().active, false);
+    assert.equal(f.state.draws, 1);
+  }
+  p.update(f.renderer, f.camera, true);
+  assert.equal(f.state.draws, 2);
+  assert.equal(shader.uniforms.waterPlanarWeight.value, 1);
+  // Ordinary sub-threshold motion has not invalidated the lighting capture.
+  f.camera.position.x += WATER_PLANAR.positionThreshold / 2;
+  p.update(f.renderer, f.camera, false);
+  assert.equal(shader.uniforms.waterPlanarWeight.value, 1);
+  p.update(f.renderer, f.camera, true);
+  assert.equal(f.state.draws, 2);
+  p.dispose();
+});
