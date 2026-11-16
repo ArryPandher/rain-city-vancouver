@@ -1,6 +1,6 @@
 # Debug daylight orientation comparison
 
-2026-11-16. **Debug-only candidate; the default southeast daylight is unchanged.** No native appearance acceptance or new default is implied.
+2026-11-16. **Current candidate: south180° for normal daylight.** The earlier comparison history below records the former southeast default. Public release remains982a753 until the new candidate passes integration and native checks.
 
 ## Physical reason for the comparison
 
@@ -42,3 +42,12 @@ The 990a850 native build was reviewed with the same player/camera pose for each 
 A third **S180° comparison** is now available only in the same debug selector. It applies−π/4 to the baseline sun and photographic environment, preserving their measured elevation and alignment. This intermediate direction can illuminate both southeast- and southwest-facing architecture without moving the sun between areas. The actual HDR solar-disc test covers all three directions. Native south acceptance remains pending. Default reload and normal gameplay remain southeast.
 
 Evidence: artifacts/local/{gallery,howe,bridge}-daylight-{se,sw}.png and matching daylight-comparison.json profiles. The Gallery two-flight stairs reached the full3.28m landing through ordinaryW input and returned to ground withS, without jumping. Stairs still needed a separate grey mineral finish; the later material candidate was not part of these captures.
+
+
+## South gameplay candidate, 2026-11-16
+
+The scene comparison favors south180° as a shared daytime compromise: the Gallery rear stone gains directional relief, while Canada Place and the bridge retain a coherent shared sun. The south native comparisons are recorded in `three-scenes-reflection-native.json` and `gallery-portico-shadow-review.json`; the latter also records normal stair-to-terrace walking. These comparisons do not establish AAA appearance or a performance improvement.
+
+The normal World now initializes `DEFAULT_DAYLIGHT_ORIENTATION` to south. The physical HDR disc, direct light, water highlight and distant environment use the same45° rotation from the original measured southeast baseline. Elevation28.288107°, intensity3.4, material settings, exposure and reflection budgets remain unchanged. The fixed daytime HUD reads12:00 to suit the authored noon direction; it is not a calendar simulation. The debug selector labels south as gameplay and southeast as previous. Night, overcast and golden behavior remains unchanged.
+
+Nine weather tests pass, including actual owning weather/update methods across Gallery, harbour and bridge positions and day/night/day restoration. Existing measured-HDR tests remain required. A fresh normal startup and all-three-region native check are still required before publishing this candidate.

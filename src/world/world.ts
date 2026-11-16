@@ -46,6 +46,7 @@ import {
   comparisonSunOffset as sunOffset,
   applyDaylightOrientation,
   daylightOrientationProfile,
+  DEFAULT_DAYLIGHT_ORIENTATION,
   type DebugDaylightOrientation,
 } from "./daylight-orientation";
 import { batchStaticChunks } from "./static-chunk-batch";
@@ -159,7 +160,7 @@ export class World {
   private cordovaPavement?: T.MeshStandardMaterial;
   private robsonRoadMaterial?: T.MeshStandardMaterial;
   private ironworkersRoadMaterial?: T.MeshStandardMaterial;
-  debugDaylightOrientation: DebugDaylightOrientation = "southeast";
+  debugDaylightOrientation: DebugDaylightOrientation = DEFAULT_DAYLIGHT_ORIENTATION;
   collision: CollisionWorld;
   private vehicleRoadSurface?: VehicleRoadSurface;
   chunks: T.Mesh[] = [];

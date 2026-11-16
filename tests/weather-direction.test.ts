@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as T from "three";
 import { World, type Weather } from "../src/world/world";
-import { changeDebugDaylightOrientation } from "../src/world/daylight-orientation";
+import { DEFAULT_DAYLIGHT_ORIENTATION, changeDebugDaylightOrientation } from "../src/world/daylight-orientation";
 import { SceneReflections } from "../src/rendering/reflection-probes";
 
 // Exercise the owning weather/update methods without browser texture loading.
@@ -13,6 +13,7 @@ function fixture() {
   sun.target.position.set(125, 17, -680);
   return {
     weather: "day",
+    debugDaylightOrientation: "southeast",
     scene,
     sun,
     ambient: new T.HemisphereLight(),
@@ -400,4 +401,25 @@ test("southwest comparison illuminates the registered Gallery face at the same p
       ),
     );
   assert.ok(Math.abs(declination) < 23.44);
+});
+
+
+test("normal gameplay south daylight stays coherent across Gallery, harbour and bridge", () => {
+  const world = fixture();
+  world.debugDaylightOrientation = DEFAULT_DAYLIGHT_ORIENTATION;
+  World.prototype.setWeather.call(world, "day");
+  for (const [x, z] of [[-68.79, 51.52], [540, -450], [6800, -1449]]) {
+    World.prototype.update.call(world, 0, x, z, 0);
+    const profile = World.prototype.daylightOrientationProfile.call(world);
+    assert.equal(profile.active, "south");
+    assert.ok(Math.abs(profile.azimuthDegrees - 180) < 1e-10);
+    assert.ok(Math.abs(profile.elevationDegrees - 28.288107223038665) < 1e-10);
+    assert.equal(world.scene.environmentRotation.y, world.scene.backgroundRotation.y);
+    assert.ok(new T.Vector3(...profile.direction).distanceTo(world.water.uniforms.sunDir.value) < 1e-12);
+    assert.equal(world.sun.intensity, 3.4);
+  }
+  World.prototype.setWeather.call(world, "night");
+  assert.equal(world.scene.backgroundRotation.y, 2.3);
+  World.prototype.setWeather.call(world, "day");
+  assert.ok(Math.abs(World.prototype.daylightOrientationProfile.call(world).azimuthDegrees - 180) < 1e-10);
 });

@@ -2,12 +2,14 @@ import * as T from "three";
 import { DAYLIGHT_SKY_ROTATION, sunOffset } from "./daylight";
 
 export type DebugDaylightOrientation = "southeast" | "south" | "southwest";
+/** Shared daylight across all gameplay regions: noon south, measured HDR elevation. */
+export const DEFAULT_DAYLIGHT_ORIENTATION: DebugDaylightOrientation = "south";
 const up = new T.Vector3(0, 1, 0);
 const yaw = (orientation: DebugDaylightOrientation = "southeast") =>
   orientation === "southwest" ? -Math.PI / 2 : orientation === "south" ? -Math.PI / 4 : 0;
 
-/** Debug comparison only. The existing authored SE baseline is unchanged;
- * SW rotates the same measured HDR disc and direct light around vertical. */
+/** Rotate the measured SE source sky and direct light together. The world
+ * selects south for normal gameplay; SE/SW remain explicit review options. */
 export function comparisonSunOffset(
   weather: string,
   target = new T.Vector3(),

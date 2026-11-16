@@ -759,9 +759,9 @@ class Game {
         "Debug daylight direction",
       );
       daylightDirectionSelect.add(
-        new Option("SE 135° · baseline", "southeast"),
+        new Option("SE 135° · previous", "southeast"),
       );
-      daylightDirectionSelect.add(new Option("S 180° · comparison", "south"));
+      daylightDirectionSelect.add(new Option("S 180° · gameplay", "south"));
       daylightDirectionSelect.add(
         new Option("SW 225° · comparison", "southwest"),
       );
@@ -2116,7 +2116,7 @@ class Game {
         : this.world.weather === "overcast"
           ? "14:08"
           : this.world.weather === "day"
-            ? "08:30"
+            ? "12:00"
             : "17:42";
     ui.show("speed-panel", !!veh);
     ui.show("ammo", !veh && !this.combat.holstered);
