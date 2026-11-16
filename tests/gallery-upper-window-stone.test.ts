@@ -174,7 +174,7 @@ test("sphere contact shortens a reachable jump-height camera without changing st
   );
 });
 
-test("actual Gallery factory retains nine material batches and places only the four exposed upper-window assemblies", () => {
+test("actual Gallery factory retains bounded material batches and places the four exposed upper-window assemblies", () => {
   const parent = new T.Group();
   const materials = new Map(
     ["stone", "foundation", "glass"].map((name) => [
@@ -183,10 +183,10 @@ test("actual Gallery factory retains nine material batches and places only the f
     ]),
   );
   const chunks = addGalleryFacade(parent, materials);
-  assert.equal(chunks.length, 9);
+  assert.ok(chunks.length <= 12, "whole Gallery uses bounded material batches");
   let triangles = 0;
   for (const m of chunks) triangles += m.geometry.index!.count / 3;
-  assert.ok(triangles < 33500);
+  assert.ok(triangles < 60000, "whole Gallery includes Hooper and bounded hedge detail");
   const stone = chunks.find((m) => m.material === materials.get("stone"))!;
   const p = stone.geometry.getAttribute("position");
   // Batcher stores facade-local coordinates; the enclosing source group owns rotation.

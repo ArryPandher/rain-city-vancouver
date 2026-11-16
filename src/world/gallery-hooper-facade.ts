@@ -99,6 +99,7 @@ export function addGalleryHooperFacade(
   stone: T.Material,
   frame: T.Material,
   glass: T.Material,
+  wall: T.Material = stone,
 ) {
   const d = GALLERY_HOOPER,
     { p: at } = facadeFrame(d.a, d.b);
@@ -188,7 +189,7 @@ export function addGalleryHooperFacade(
         )
       )
         continue;
-      quad(stone, l, r, b, t);
+      quad(wall, l, r, b, t);
     }
   for (const h of holes) {
     const { l, r, b, t } = h,
