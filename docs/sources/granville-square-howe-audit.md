@@ -189,9 +189,10 @@ are unchanged; native confirmation of the corrected lettering follows separately
 The normal driving view `artifacts/local/howe-final-driving.png` exposes the
 Howe wing behind the separate station pavilion. The cached 2015 source image
 `artifacts/local/granville-howe-reference.jpg` shows distinctly dark window
-ribbons under the concrete splay; the prior light opaque metallic/clearcoat
-proxy made those openings read as pale panels. This pass supersedes only the
-old glazing response described above. Source geometry, concrete, roof,
+ribbons under the concrete splay. The first candidate replaced the prior
+opaque metallic/clearcoat glazing proxy, but the native comparison below
+subsequently proved that concrete returns caused the dominant pale bands.
+This first pass superseded only the old glazing response. Source geometry, concrete, roof,
 lettering, mapped footprint, datum and all 0.70–1.10 m reveals remain unchanged.
 
 The existing `createExteriorLobbyGlass` two-interface dielectric sheet now
@@ -224,13 +225,10 @@ receiver's exclusion, retained neighboring glass/backings, omitted actors,
 scene restoration and invalidation. These tests establish integration and
 bounded optics, not the appearance of a rendered GPU image.
 
-Native acceptance remains pending: compare the exact saved driving camera with
-`granville-howe-reference.jpg`, with both builds settled in the same daylight.
-Keep the candidate only if the window ribbons read darker/deeper while local
-reflections remain plausible and bounded; inspect the raw cube if the result
-is uniformly black or mirror-bright. Recheck ordinary station-front walking
-and report capture/steady-state cost separately. No AAA-quality claim follows
-from this scoped material change.
+The glass-only native comparison failed the intended large-band improvement,
+as detailed below. The combined glass and cavity-AO pass was subsequently
+accepted at the same driving camera and during ordinary station-front walking.
+No AAA-quality or frame-rate claim follows from this scoped material change.
 
 ## Driving-camera diagnosis and cavity AO candidate, 2026-11-15
 
@@ -265,8 +263,8 @@ It attenuates indirect diffuse and Three's roughness-aware indirect specular
 occlusion only; direct sunlight, shadow maps, albedo, roughness, normal maps,
 global lighting and exposure are unchanged. This is geometric ambient
 visibility, not a complete diffuse-interreflection bake or directional GI.
-The missing secondary bounces can make deep returns too dark, so the native
-same-camera comparison is still required before accepting it.
+Missing secondary bounces remain a modeling limitation. The native comparison
+below checks whether this approximation causes visibly crushed returns.
 
 The generated linear single-channel 128×128 texture occupies 16,384 bytes
 before driver overhead, has no mip chain and needs no downloaded asset. It
@@ -279,5 +277,35 @@ Focused verification passes 27 tests covering independent cosine-weighted
 hemisphere rays against the aperture integral, bilinear AO values at all four
 actual reveal orientations, the six saved native-camera rays, exterior white
 samples, UV1 preservation through static batching, and the existing geometry,
-glass-energy and reflection-lifecycle checks. Native image acceptance and
-steady-state timing remain the parent's next checks.
+glass-energy and reflection-lifecycle checks. Targeted TypeScript reports zero
+diagnostics. These checks establish implementation behavior; the native review
+below provides the visual acceptance evidence.
+
+### Accepted native comparison
+
+The parent accepted the combined candidate after the exact saved driving
+camera comparison. `artifacts/local/granville-glass-baseline-profile.json` and
+`artifacts/local/granville-cavity-candidate-profile.json` retain identical car,
+player and camera state; camera position is
+[444.43034755610324, 12.057983241019594, -400.87143742489593], yaw
+2.4440506464219784, pitch 0.18 and FOV 62. In
+`artifacts/local/granville-cavity-candidate.png`, the upper and middle bands now
+read as dark recesses while the exterior fascia, piers and sign remain bright.
+The independent geometry agent's native visual review agreed with this result.
+
+Ordinary gameplay checks included driving, leaving the car and walking toward
+the station. `artifacts/local/granville-cavity-close-walk.png` and
+`artifacts/local/granville-cavity-near-station.png` retain graded detail on the
+returns, without broad black crushing or an observed geometry/street-contact
+regression. The near-station profile records player
+[476.3462413231306, 8.136786342137015, -434.85935899697404], camera
+[472.14364775331586, 10.206786342137017, -433.9493000500082], yaw
+1.7840506464219783, pitch -0.12705 and FOV approximately 62. The parent reported
+`reflectionError: null` and runtime `errors: []` during these checks.
+
+The existing glass candidate is retained as part of this accepted frontage
+correction; it is not credited with fixing the concrete pixels. Uniformly
+clean surfaces still differ from the real reference, and local cube parallax
+and omitted indirect bounces remain approximations. This acceptance covers a
+visible, playable improvement in the tested approach and walking views. It
+does not establish AAA realism, measured FPS or a general performance gain.
