@@ -23,6 +23,10 @@ import {
   replaceCanadaPlaceWestFaces,
 } from "../src/world/canada-place-facade";
 import { extractCanadaPlacePaving } from "../src/world/canada-place-paving";
+import {
+  createPanPacificHowePodiumGeometry,
+  panPacificHowePodiumPoint,
+} from "../src/world/pan-pacific-howe-podium";
 
 type Mesh = T.Mesh<T.BufferGeometry, T.Material>;
 const counts: Record<string, number> = { concrete: 30, glass: 20, trim: 20 };
@@ -326,4 +330,107 @@ test("retained source PIER floor supports every inward edge sample after all sou
       );
     }
   }
+});
+
+test("new retaining skirt closes only the near frontage and never duplicates retained PIER walls", async () => {
+  const { meshes } = await load();
+  const mesh = meshes.find((m) => m.material.name === "concrete")!;
+  const g = bakeGeometry(mesh.geometry, mesh.matrixWorld);
+  // Original PIER wall triangles 80–85, independent of new geometry metadata.
+  const original = Array.from(g.index!.array);
+  assert.deepEqual(
+    original.slice(80 * 3, 86 * 3),
+    Array.from({ length: 18 }, (_, i) => 240 + i),
+  );
+  for (let id = 240; id <= 257; id++) {
+    const y = g.getAttribute("position").getY(id);
+    assert.ok(
+      Math.abs(y - 0.001029999461025) < 1e-9 ||
+        Math.abs(y - 7.798935890197754) < 1e-9,
+    );
+  }
+  extractCanadaPlacePaving(g, "concrete");
+  replaceCanadaPlaceHotelFaces(g, "concrete");
+  replaceCanadaPlaceCanopyFaces(g, "concrete");
+  replaceCanadaPlaceWestFaces(g, "concrete");
+  assert.equal(replacePanPacificHowePodiumFaces(g, "concrete"), 30);
+  const retained = Array.from(g.index!.array);
+  assert.deepEqual(
+    retained.filter((id) => id >= 240 && id <= 257),
+    Array.from({ length: 18 }, (_, i) => 240 + i),
+    "original PIER walls stay intact",
+  );
+  const added = createPanPacificHowePodiumGeometry();
+  const material = new T.MeshBasicMaterial({ side: T.DoubleSide });
+  const source = new T.Mesh(g, material),
+    skirt = new T.Mesh(added.concrete, material);
+  for (const u of [
+    0.05, 0.15, 0.25, 0.35, 0.43, 0.55, 0.7, 0.76, 0.81, 0.84, 0.88, 0.94, 0.99,
+  ]) {
+    for (const y of [3.9, 5.2, 7.5]) {
+      const start = panPacificHowePodiumPoint(u, y, 0.3);
+      const end = panPacificHowePodiumPoint(u, y, -0.3);
+      const ray = new T.Raycaster(start, end.sub(start).normalize(), 0, 0.6);
+      const addedHits = ray.intersectObject(skirt);
+      const sourceHits = ray.intersectObject(source);
+      if (u < 0.4100776860725485) {
+        assert.equal(addedHits.length, 1, `near skirt missing at ${u}/${y}`);
+        assert.equal(
+          sourceHits.length,
+          0,
+          `unexpected near duplicate at ${u}/${y}`,
+        );
+      } else {
+        assert.equal(
+          sourceHits.length,
+          1,
+          `retained PIER wall missing at ${u}/${y}`,
+        );
+        assert.equal(
+          addedHits.length,
+          0,
+          `new skirt duplicates PIER at ${u}/${y}`,
+        );
+      }
+    }
+  }
+  // The omitted run must join the quantized source endpoint, not leave the
+  // millimetre-scale gap between the original OSM and decoded GLB positions.
+  const seam = new T.Vector3().fromBufferAttribute(
+    g.getAttribute("position"),
+    240,
+  );
+  seam.y = 6.5;
+  const along = new T.Vector3()
+    .fromBufferAttribute(g.getAttribute("position"), 241)
+    .sub(seam);
+  along.y = 0;
+  along.normalize();
+  const outward = new T.Vector3(-along.z, 0, along.x);
+  for (const offset of [-0.01, -0.001, 0, 0.001, 0.01]) {
+    const start = seam
+      .clone()
+      .addScaledVector(along, offset)
+      .addScaledVector(outward, 0.3);
+    const hits = new T.Raycaster(
+      start,
+      outward.clone().negate(),
+      0,
+      0.6,
+    ).intersectObjects([source, skirt]);
+    assert.ok(hits.length, `gap at decoded PIER/skirt seam offset ${offset}`);
+    // The pre-existing PIER return angles outward on the near side, so its
+    // first hit may precede the seam plane slightly at negative offsets.
+    assert.ok(Math.abs(hits[0].distance - 0.3) < (offset === 0 ? 0.001 : 0.03));
+  }
+  for (const role of [
+    "concrete",
+    "glass",
+    "frame",
+    "backing",
+    "soffit",
+  ] as const)
+    added[role].dispose();
+  g.dispose();
+  material.dispose();
 });
