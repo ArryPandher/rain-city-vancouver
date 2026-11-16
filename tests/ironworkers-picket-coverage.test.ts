@@ -190,7 +190,7 @@ test("installed far cells preserve physical member centres, near boxes and LOD/c
   materials.forEach((m) => m.dispose());
 });
 
-test("ordinary bridge cameras retain physical bars throughout the span, including hysteresis", () => {
+test("physical comparison mode retains bars throughout the ordinary bridge span, including hysteresis", () => {
   const bridge = BRIDGES.find((b) => b.id === "ironworkers")!;
   const height = (t: number) => bridgeY(bridge, t, [0, 0]);
   const boundary = createIronworkersPathBoundary(height, () => 0.07);

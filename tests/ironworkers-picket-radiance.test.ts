@@ -131,12 +131,30 @@ test("trial averages separately lit face radiance, keeps source steel, and appli
     createIronworkersRadianceCoverageMaterial(source, { ...section, pitch: 0 }),
   );
 });
-test("projected trial preserves exact physical members, split side domains and bounded draw capacity", () => {
+test("projected rendering preserves exact physical members, contacts, split side domains and bounded draw capacity", () => {
   const boundary = createIronworkersPathBoundary(
     (t) => 5 + 40 * Math.sin(Math.PI * t),
     () => 0.07,
   );
   const original = boundary.members.map((m) => m.matrix.elements.slice());
+  // Query the live finite support/contact providers before either rendering mode
+  // exists. Include real top-surface centroids and physical member centres.
+  const queries = [
+    ...boundary.topTriangles
+      .filter((_, i) => i % 173 === 0)
+      .map((tri) =>
+        [0, 1, 2].map((axis) => tri.reduce((n, p) => n + p[axis], 0) / 3),
+      ),
+    ...boundary.members.filter((_, i) => i % 1024 === 0).map((m) => m.centre),
+  ];
+  const contacts = () =>
+    queries.map(([x, y, z]) => [
+      boundary.supportAt(x, z),
+      boundary.blockedAt(x, z, 0.25, y, true),
+      boundary.blockedAt(x, z, 0.25, y, false),
+      boundary.blockedAt(x, z, 0.25, y + 8, false),
+    ]);
+  const originalContacts = contacts();
   const steel = new T.MeshStandardMaterial(),
     plain = boundary.createRenderGroup(new T.MeshBasicMaterial(), steel),
     trial = boundary.createRenderGroup(new T.MeshBasicMaterial(), steel, {
@@ -184,6 +202,25 @@ test("projected trial preserves exact physical members, split side domains and b
   assert.deepEqual(
     (plain.group.children[0] as T.Mesh).geometry.attributes.position.array,
     (trial.group.children[0] as T.Mesh).geometry.attributes.position.array,
+  );
+  assert.deepEqual(contacts(), originalContacts);
+  // Native Scene hook partitions matrices at render time; contacts must still
+  // be backed by the original source members, including above-fence clearance.
+  const scene = new T.Scene();
+  scene.add(trial.group);
+  scene.updateMatrixWorld(true);
+  const camera = new T.PerspectiveCamera(62, 821 / 839, 0.1, 3000);
+  camera.position.set(6815.87, 6.8, -983.15);
+  camera.lookAt(6815.7, 3.75, -994.85);
+  camera.updateMatrixWorld(true);
+  const renderer = {
+    getCurrentViewport: (v: T.Vector4) => v.set(0, 0, 1108, 1133),
+  } as T.WebGLRenderer;
+  (scene.onBeforeRender as Function)(renderer, scene, camera, null);
+  assert.deepEqual(contacts(), originalContacts);
+  assert.deepEqual(
+    boundary.members.map((m) => m.matrix.elements),
+    original,
   );
   trial.disposeSelection?.();
 });
