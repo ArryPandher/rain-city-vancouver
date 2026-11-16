@@ -88,6 +88,8 @@ import {
   sidewalkSides,
 } from "./road-profile";
 import { ROBSON_PLANTERS, gridXZ } from "./robson-site";
+import { clipRobsonGardenPaths } from "./robson-garden-paths";
+import { isIronworkersCarriageway } from "./ironworkers-alignment";
 import { buildRobsonMound, fitRobsonMoundPath } from "./robson-mound";
 import { robsonMoundIntersects } from "./robson-mound-site";
 import {
@@ -697,6 +699,7 @@ export class World {
       const moundRoad =
         !!this.collision.robsonGarden && robsonMoundIntersects(r.pts);
       const onTerrain =
+        isIronworkersCarriageway(r.id) ||
         moundRoad ||
         (this.collision.canada?.intersects(r.pts) ?? false) ||
         (this.collision.howeTerrain?.intersects(r.pts) ?? false) ||
@@ -741,6 +744,13 @@ export class World {
           ["footway", "path", "pedestrian", "steps"].includes(r.kind)
         )
           geometry = clipCanadaPlacePaths(geometry, height, y);
+        geometry = clipRobsonGardenPaths(
+          geometry,
+          this.collision.robsonGarden,
+          height,
+          y,
+          r,
+        );
         return this.collision.gallery &&
           ["footway", "path", "pedestrian", "steps"].includes(r.kind)
           ? clipGalleryStairPath(geometry, height, y)
