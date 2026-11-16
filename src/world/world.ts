@@ -1,3 +1,4 @@
+import { galleryWestTreeExcluded } from "./gallery-west-tree-placement";
 import { createNorthShorePhotoHorizon, NORTH_SHORE_PHOTO_HORIZON } from "./north-shore-photo-horizon";
 import { createNorthShoreDemGroup } from "./north-shore-dem";
 import { createNorthShoreUrbanHorizon } from "./north-shore-urban-horizon";
@@ -1048,6 +1049,7 @@ export class World {
         this.data.publicTrees,
       ).filter(
         (t) =>
+          !(this.collision.gallery && galleryWestTreeExcluded(t)) &&
           !jackSurface(t.x, t.z) &&
           !(this.collision.harbour && harbourClearGround(t.x, t.z)) &&
           !this.collision.water(t.x, t.z) &&
