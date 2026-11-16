@@ -553,6 +553,7 @@ class Game {
           "rink-north",
           "rink-south",
           "gallery",
+          "hornby-tower",
           "terrace",
           "north-point",
         ] as const
@@ -562,6 +563,7 @@ class Game {
           check === "north-point"
             ? "Walk at Canada Place north approach"
             : check === "gallery" ||
+                check === "hornby-tower" ||
                 check === "terrace" ||
                 check.startsWith("rink-")
               ? `Walk at Robson ${check}`
@@ -692,6 +694,7 @@ class Game {
               reflectionCaptures: this.reflections?.captures,
               startupReflections: this.startupReflectionSummary,
               waterOptics: this.world.waterOpticsDiagnostics(),
+              waterWaves: this.world.waterWavesDiagnostics(),
               reflectionProbeSizes: this.reflections?.probes.map((probe) => ({
                 name: probe.spec.name,
                 size: probe.target.width,
@@ -814,6 +817,19 @@ class Game {
         " HDR water reflection (day only)",
       );
       comparisons.append(waterOpticsLabel);
+      const waterWavesLabel = document.createElement("label");
+      const waterWavesCheckbox = document.createElement("input");
+      waterWavesCheckbox.type = "checkbox";
+      waterWavesCheckbox.addEventListener("change", () => {
+        this.finishFrameSample("water wave comparison changed");
+        if (!this.world.setDebugWaterWaves(waterWavesCheckbox.checked))
+          waterWavesCheckbox.checked = false;
+      });
+      waterWavesLabel.append(
+        waterWavesCheckbox,
+        " Directional harbour waves (day only)",
+      );
+      comparisons.append(waterWavesLabel);
       window.addEventListener(
         "pagehide",
         () => this.world.setDebugWaterOptics(this.renderer, false),
@@ -1027,6 +1043,7 @@ class Game {
       | "rink-north"
       | "rink-south"
       | "gallery"
+      | "hornby-tower"
       | "terrace"
       | "north-point",
   ) {
@@ -1038,6 +1055,7 @@ class Game {
       check === "north-point"
         ? "Canada Place"
         : check === "gallery" ||
+            check === "hornby-tower" ||
             check === "terrace" ||
             check.startsWith("rink-")
           ? "Robson"
@@ -1050,6 +1068,14 @@ class Game {
             yaw: Math.PI / 2,
             pitch: 0.19,
           }
+        : check === "hornby-tower"
+          ? {
+              // Reached by ordinary Gallery/Hornby walking; saved native profile.
+              x: -20.320975053860824,
+              z: -44.33765995587639,
+              yaw: 2.9989594283507928,
+              pitch: -0.5794999999999999,
+            }
         : check === "tower-wide"
           ? { x: 515, z: -480, yaw: 0.52, pitch: -0.51 }
           : check === "tower-near"
