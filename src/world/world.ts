@@ -1,3 +1,4 @@
+import { NorthHarbourWater } from "./north-harbour-water";
 import { galleryWestTreeExcluded } from "./gallery-west-tree-placement";
 import { createNorthShorePhotoHorizon, NORTH_SHORE_PHOTO_HORIZON } from "./north-shore-photo-horizon";
 import { createNorthShoreDemGroup } from "./north-shore-dem";
@@ -173,6 +174,8 @@ export class World {
   sun = new T.DirectionalLight(0xffe0b3, 3.2);
   ambient = new T.HemisphereLight(0xc6dfed, 0x697265, 2.0);
   water!: T.ShaderMaterial;
+  private northHarbourWater?: NorthHarbourWater;
+  private northHarbourWaterDebugDisabled = false;
   weather: Weather = "day";
   rain!: T.Points;
   time = 0;
@@ -1572,9 +1575,35 @@ export class World {
     );
     this.scene.add(this.rain);
   }
+  updateNorthHarbourWater(renderer: T.WebGLRenderer, camera: T.PerspectiveCamera, quality: string, enabled: boolean, allowCapture: boolean) {
+    if (!this.water) return;
+    if (!this.northHarbourWater) {
+      this.northHarbourWater = new NorthHarbourWater({ scene: this.scene, root: this.root, sun: this.sun, water: this.water });
+      this.northHarbourWater.invalidate(this.weather);
+    }
+    this.northHarbourWater.update(renderer, camera, {
+      quality, allowCapture,
+      enabled: enabled && !this.northHarbourWaterDebugDisabled,
+    });
+  }
+  withoutNorthHarbourWaterFeedback(action: () => void) {
+    if (this.northHarbourWater) this.northHarbourWater.withoutWater(action);
+    else action();
+  }
+  northHarbourWaterDiagnostics() {
+    return this.northHarbourWater?.diagnostics() ?? { enabled: true, status: "not entered", retainedTextureBytes: 0, depthBudgetBytes: 0 };
+  }
+  setDebugNorthHarbourWater(enabled: boolean) {
+    if (typeof location === "undefined" || !new URLSearchParams(location.search).has("debug")) return false;
+    this.northHarbourWaterDebugDisabled = !enabled;
+    if (!enabled) this.northHarbourWater?.suspend("debug disabled");
+    return true;
+  }
+  disposeNorthHarbourWater() { this.northHarbourWater?.dispose(); }
   setDebugDaylightOrientation(orientation: DebugDaylightOrientation) {
     this.debugDaylightOrientation = orientation;
     applyDaylightOrientation(this, orientation);
+    this.northHarbourWater?.invalidate(this.weather);
   }
   daylightOrientationProfile() {
     return daylightOrientationProfile(this, this.debugDaylightOrientation);
@@ -1642,6 +1671,7 @@ export class World {
       .normalize();
     this.water.uniforms.night.value = night ? 1 : 0;
     this.nightLights.forEach((m) => (m.emissiveIntensity = night ? 2.0 : 0.25));
+    this.northHarbourWater?.invalidate(w);
   }
 
   update(
