@@ -595,6 +595,7 @@ class Game {
               this.render(),
             ),
             worldConstruction: { ...this.world.constructorTimings },
+            northShore: this.world.northShoreDiagnostics(),
             staticTextureSources: {
               ...this.world.materials.textureSourceStats(),
               note: "Static image source allocations and requests; not GPU residency or network traffic",
