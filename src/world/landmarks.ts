@@ -1,3 +1,4 @@
+import { registerIronworkersStaticOrigins } from "./ironworkers-static-origin";
 import * as T from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { Materials, box, mesh, beam, label } from "./materials";
@@ -340,6 +341,7 @@ export function buildLandmarks(
     }
     if (b.id === "ironworkers") {
       addIronworkersBridgeStructure(g, b, deckY, m.concrete);
+      registerIronworkersStaticOrigins(g);
       continue;
     }
     for (let t = 0.1; t < 1; t += 0.13) {

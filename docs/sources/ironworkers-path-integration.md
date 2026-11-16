@@ -34,3 +34,13 @@ The existing pure candidate tests additionally cover9,373 source strip vertices,
 `npx tsx --test tests/ironworkers-path-boundary.test.ts tests/ironworkers-path-integration.test.ts tests/ironworkers-alignment.test.ts tests/ironworkers-bridge.test.ts`
 
 All17 focused tests and `tsc --noEmit` passed. No browser, full build, full suite or push was performed. Root's next check is a northbound drive in the actual northbound carriageway, both path approaches, close fence-camera behavior, and native frame cost. The earlier crest traffic audit established that the hero had driven north in a southbound lane; this integration intentionally does not alter source-correct traffic flow.
+
+## Native shoulder-floor correction
+
+Root's `ironworkers-fence-native-path.png` recorded an apparently watery floor at world `[6790.03,35.59,−1441.31]`. That point is on the inboard bridge shoulder, between the source carriageway and the new sidewalk. The new path is farther west at the shared16.55m offset.
+
+The actual failure was static distance culling, not reversed path triangles. The Ironworkers deck and merged underside builders emitted world-coordinate vertices while their mesh positions remained at world origin. `World.mergeStatic` selected a batch centre from those mesh positions (`[200,200]` after cell rounding), then `World.update` hid the batch more than2,900m away from the real player. Source road ribbons had correct batch locations and stayed visible, leaving the shoulders open to the water and port below.
+
+`registerIronworkersStaticOrigins` moves only these owned bridge meshes' vertex origins to their own bounding centres and compensates their object transforms. World-space geometry is preserved. It runs in the Ironworkers landmark branch before static batching; all other landmarks/bridges and the global culling policy remain unchanged. The full deck and below-deck structure now receive nearby culling cells. Restored previously hidden geometry adds about48,492 visible triangles before frustum culling, so native frame cost should be checked again.
+
+Three regressions in `ironworkers-static-origin.test.ts` reproduce the old failure using actual `World.mergeStatic` and `World.update`, confirm the corrected shoulder and35 deck-section positions with FrontSide rays, confirm the new path's upward normals/FrontSide hits, and preserve all below-deck world vertices within1mm while restoring their visibility. No DoubleSide workaround or support widening was applied.
