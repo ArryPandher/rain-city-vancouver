@@ -1,4 +1,5 @@
 import { createNorthShoreDemGroup } from "./north-shore-dem";
+import { createNorthShoreUrbanHorizon } from "./north-shore-urban-horizon";
 import { readNorthShoreDiagnostics } from "./north-shore-diagnostics";
 import { buildRobsonStreetEdge } from "./robson-street-edge-materials";
 import { clipRobsonStreetPaths } from "./robson-street-edge-paths";
@@ -173,6 +174,7 @@ export class World {
   nightLights: T.MeshStandardMaterial[] = [];
   northShore?: T.MeshBasicMaterial;
   northShoreTerrain?: T.Group;
+  northShoreUrban?: ReturnType<typeof createNorthShoreUrbanHorizon>;
   detailedTrees?: DetailedTrees;
   broadleafVolume?: ReturnType<typeof installBroadleafVolumes>;
   forestHabitat!: ForestHabitat;
@@ -1500,7 +1502,12 @@ export class World {
     this.chunks.push(...batch.finish());
   }
   northShoreDiagnostics() {
-    return readNorthShoreDiagnostics(this.northShoreTerrain, this.northShore);
+    return {
+      ...readNorthShoreDiagnostics(this.northShoreTerrain, this.northShore),
+      urban: this.northShoreUrban
+        ? { ...this.northShoreUrban.stats, visibleCells: this.northShoreUrban.group.children.filter((c) => c.visible).length }
+        : null,
+    };
   }
   mountains() {
     const params = new URLSearchParams(
@@ -1509,6 +1516,11 @@ export class World {
     if (params.has("debug") && params.get("terrain") === "dem") {
       this.northShoreTerrain = createNorthShoreDemGroup({ imagery: true });
       this.root.add(this.northShoreTerrain);
+      this.northShoreUrban = createNorthShoreUrbanHorizon(this.data?.buildings ?? []);
+      if (this.northShoreUrban) {
+        this.northShoreUrban.update(0, 0);
+        this.root.add(this.northShoreUrban.group);
+      }
       return;
     }
     const photo = new T.TextureLoader().load(
@@ -1683,6 +1695,7 @@ export class World {
       a.needsUpdate = true;
     }
     this.casterVolume.update(this.sun);
+    this.northShoreUrban?.update(x, z);
     for (const c of this.chunks) {
       const p = c.userData.center;
       if (!p) continue;
