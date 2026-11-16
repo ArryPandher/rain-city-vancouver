@@ -594,6 +594,7 @@ class Game {
             ...profileRender(this.renderer, this.scene, this.camera, () =>
               this.render(),
             ),
+            worldConstruction: { ...this.world.constructorTimings },
             staticTextureSources: {
               ...this.world.materials.textureSourceStats(),
               note: "Static image source allocations and requests; not GPU residency or network traffic",

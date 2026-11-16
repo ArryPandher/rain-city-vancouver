@@ -134,7 +134,13 @@ export type Weather = "day" | "golden" | "overcast" | "night";
 export class World {
   private readonly casterVolume = new ShadowCasterVolume();
   root = new T.Group();
-  materials = new Materials();
+  readonly constructorTimings = { materialsMs: 0, collisionMs: 0 };
+  materials = (() => {
+    const started = performance.now();
+    const materials = new Materials();
+    this.constructorTimings.materialsMs = performance.now() - started;
+    return materials;
+  })();
   private cordovaPavement?: T.MeshStandardMaterial;
   collision: CollisionWorld;
   private vehicleRoadSurface?: VehicleRoadSurface;
@@ -168,7 +174,9 @@ export class World {
     private readonly fallbackTreeExperiment = false,
     private readonly vehicleSurfaceSupport = false,
   ) {
+    const collisionStarted = performance.now();
     this.collision = new CollisionWorld(data);
+    this.constructorTimings.collisionMs = performance.now() - collisionStarted;
     scene.add(this.root);
     scene.add(this.sun, this.sun.target, this.ambient);
     sunOffset(this.weather, this.sun.position);
