@@ -691,6 +691,7 @@ class Game {
                 this.scene.background === this.scene.environment,
               reflectionCaptures: this.reflections?.captures,
               startupReflections: this.startupReflectionSummary,
+              waterOptics: this.world.waterOpticsDiagnostics(),
               reflectionProbeSizes: this.reflections?.probes.map((probe) => ({
                 name: probe.spec.name,
                 size: probe.target.width,
@@ -797,6 +798,27 @@ class Game {
         daylightDirectionSelect,
       );
       comparisons.append(daylightDirectionLabel);
+      const waterOpticsLabel = document.createElement("label");
+      const waterOpticsCheckbox = document.createElement("input");
+      waterOpticsCheckbox.type = "checkbox";
+      waterOpticsCheckbox.addEventListener("change", () => {
+        this.finishFrameSample("water reflection comparison changed");
+        const accepted = this.world.setDebugWaterOptics(
+          this.renderer,
+          waterOpticsCheckbox.checked,
+        );
+        if (!accepted) waterOpticsCheckbox.checked = false;
+      });
+      waterOpticsLabel.append(
+        waterOpticsCheckbox,
+        " HDR water reflection (day only)",
+      );
+      comparisons.append(waterOpticsLabel);
+      window.addEventListener(
+        "pagehide",
+        () => this.world.setDebugWaterOptics(this.renderer, false),
+        { once: true },
+      );
       const shadowLabel = document.createElement("label");
       const shadowCheckbox = document.createElement("input");
       shadowCheckbox.type = "checkbox";
