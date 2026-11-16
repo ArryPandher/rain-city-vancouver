@@ -154,7 +154,10 @@ test("bank preserves water, all building pads and service underpass while roads 
   const under = railContextPoint(-7.4);
   assert.equal(c.sampleSurface(...under), undefined);
   const first = c.point(10, 0, 0);
-  assert.equal(c.sampleSurface(first[0], first[2]), undefined);
+  assert.ok(
+    Math.abs(c.sampleSurface(first[0], first[2])! - 4.45) < 0.02,
+    "visible front earth rises continuously below the retained rail girders",
+  );
 });
 
 test("northbound downhill members retain upright cross sections and ballast remains below sleepers and rails", () => {
@@ -190,7 +193,7 @@ test("northbound downhill members retain upright cross sections and ballast rema
   }
 });
 
-test("constrained bank has no artificial cliff faces and closes its actual outward-facing abutment edge", () => {
+test("bank front is a continuous visible earth slope with a finite concrete bearing", () => {
   for (const t of c.triangles) {
     const [a, b, d] = t.points,
       n = new T.Vector3(...b)
@@ -201,21 +204,44 @@ test("constrained bank has no artificial cliff faces and closes its actual outwa
       "no thin artificial soil cliff",
     );
   }
-  const wall = new T.Mesh(c.parts.concrete, new T.MeshBasicMaterial());
-  wall.updateMatrixWorld();
-  let checked = 0;
-  for (let u = -28; u <= 28; u += 0.4) {
-    const a = c.point(D.bankStart - 0.5, u, 0),
-      b = c.point(D.bankStart + 0.001, u, 0),
-      height = c.sampleSurface(b[0], b[2]);
-    if (height === undefined || height < 0.1) continue;
-    const origin = new T.Vector3(a[0], height - 0.04, a[2]),
-      direction = new T.Vector3(b[0] - a[0], 0, b[2] - a[2]).normalize();
+  const concrete = c.parts.concrete.getAttribute("position");
+  const cap = c.point(D.bankStart, 0, 0);
+  for (let i = 0; i < concrete.count; i++) {
     assert.ok(
-      new T.Raycaster(origin, direction, 0, 1).intersectObject(wall).length,
-      `closed front ${u}`,
+      Math.hypot(concrete.getX(i) - cap[0], concrete.getZ(i) - cap[2]) < 3.5,
+      "only the finite bearing cap is concrete, no full-width retaining wall",
+    );
+    assert.ok(concrete.getY(i) > 7.8);
+  }
+  // This is the failing native viewing side: all broad front hits must now be
+  // real upward-facing earth triangles, with continuous ground contact below.
+  let checked = 0;
+  for (let u = -12; u <= 12; u += 0.5) {
+    const a = c.point(-2, u, 0),
+      b = c.point(30, u, 0);
+    const ray = new T.Raycaster(
+      new T.Vector3(a[0], 2, a[2]),
+      new T.Vector3(b[0] - a[0], 0, b[2] - a[2]).normalize(),
+      0,
+      40,
+    );
+    const hit = ray.intersectObject(mesh)[0];
+    assert.ok(hit, `earth visible from front ${u}`);
+    assert.ok(hit.face!.normal.y > 0.72);
+    assert.ok(
+      Math.abs(c.sampleSurface(hit.point.x, hit.point.z)! - hit.point.y) < 1e-5,
     );
     checked++;
   }
-  assert.ok(checked > 70);
+  assert.equal(checked, 49);
+  let previous = 0;
+  for (let s = 0; s <= 20; s += 0.1) {
+    const p = c.point(s, 0, 0),
+      y = c.sampleSurface(p[0], p[2]) ?? 0;
+    assert.ok(
+      y >= previous - 0.005 && y - previous < 0.072,
+      `continuous toe ${s}`,
+    );
+    previous = y;
+  }
 });

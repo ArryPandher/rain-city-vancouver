@@ -184,7 +184,7 @@ test("actual World elevated road triangles and their finite deck contact remain 
   );
 });
 
-test("bank retaining face blocks low body/camera while actual ballast/sleeper surfaces support a gradual ordinary approach", () => {
+test("bank earth blocks low body/camera while actual ballast/sleeper surfaces support a gradual ordinary approach", () => {
   const [x, , z] = c.point(20.5, 0, 0);
   assert.equal(candidate.blocked(x, z, 0.36, 0), true);
   assert.equal(candidate.cameraBlocked(x, z, 0.2, 1.7), true);
@@ -214,9 +214,20 @@ test("bank retaining face blocks low body/camera while actual ballast/sleeper su
   const contact = c.support(p[0], p[2], floor);
   assert.ok(contact !== undefined && contact > floor + 0.35);
   assert.ok(hits.some((h) => Math.abs(h.point.y - contact) < 0.0001));
-  // No upward teleport to the20m continuation from the service-ground level.
+  // The new earth toe is visible support, not a hidden promotion to the rail deck.
   const open = c.point(10, 0, 0);
-  assert.equal(c.support(open[0], open[2], 0), undefined);
+  assert.ok(Math.abs(c.support(open[0], open[2], 0)! - 4.45) < 0.02);
+  assert.ok(c.support(open[0], open[2], 0)! < railContextTop(10) - 4);
+  const native = [6957.8, -1732.9] as const,
+    yaw = 3.588;
+  assert.equal(candidate.groundHeight(...native), 0);
+  assert.equal(candidate.blocked(...native, 0.36, 0), false);
+  assert.equal(candidate.water(...native, 0), false);
+  for (let d = 0; d <= 4.3; d += 0.1) {
+    const x = native[0] - Math.sin(yaw) * d,
+      z = native[1] - Math.cos(yaw) * d;
+    assert.equal(candidate.cameraBlocked(x, z, 0.2, 1.7 + 0.12 * d), false);
+  }
 });
 
 test("three actual World service ribbons match rendered ground, walking contact and source junction grade", () => {

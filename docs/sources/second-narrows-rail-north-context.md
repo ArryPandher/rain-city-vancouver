@@ -12,7 +12,7 @@ Offline samples from the already cached coarse Terrarium tiles give approximatel
 
 The main/lift rail stays13m. Only the north fixed approaches descend to9.6m at the shore, a0.918265% grade. The continuation stays level through its first20m, then descends to0.7m rail/0m soil at650m, with30m eased ends and maximum1.4833% grade. The650m tie into the flattened yard is a coordinated scene adaptation; it must not be presented as the real track profile. North span members, sleepers, bearings and piers use one shared elevation function; submerged pier toes stay fixed. All18 south/main/tower geometry parts remain byte-identical, while the20 north span/pier parts retain their vertex counts.
 
-The source service loop crosses roughly7.4m **south** of the bridge endpoint, not north. Its underpass stays open at the existing ground datum. A20m open steel bearing continuation precedes the bank. The estimated bank-end abutment closes the actual soil perimeter; no tunnel interior or new public rooftop route is added.
+The source service loop crosses roughly7.4m **south** of the bridge endpoint, not north. Its underpass stays open at the existing ground datum. The first20m retain steel rail-support girders. The earth now toes in continuously from ground0 at station0 to the full bank at20m, below those girders; only the finite central bearing cap is concrete. No tunnel interior or new public rooftop route is added.
 
 ## Geographic and contact scope
 
@@ -34,8 +34,17 @@ Existing ground is cut only inside this same bank mask. The final emitted triang
 
 ## Verification and native gate
 
-Focused tests execute actual retained east buildings/areas/ocean and full road data, real `CollisionWorld`, actual `World.terrain()` and `World.roads()` with only image/material loading stubbed. They verify upward faces and barycentric support, outside-mask terrain/water rays, exact four elevated-road buffers, open service underpass, gradual walking from the yard, all three graded road finish/contact rays, zero raised building overlap, upright rail/ballast sections and outward bank-end closure. The bridge's existing corridor/stringer tests now query the shared graded datum rather than assuming every span remains13m.
+Focused tests execute actual retained east buildings/areas/ocean and full road data, real `CollisionWorld`, actual `World.terrain()` and `World.roads()` with only image/material loading stubbed. They verify upward faces and barycentric support, outside-mask terrain/water rays, exact four elevated-road buffers, open service underpass, gradual walking from the yard, all three graded road finish/contact rays, zero raised building overlap, upright rail/ballast sections and the visible graded earth toe. The bridge's existing corridor/stringer tests now query the shared graded datum rather than assuming every span remains13m.
 
 Independent review is recorded in `artifacts/local/second-narrows-rail/GRADED-CANDIDATE-INDEPENDENT-REVIEW.md`:220 actual service-road ray/contact pairs,4,230 preserved elevated-height checks,41 joined bridge/context seam rays, plus actual triangle/coast/building intersections. Normal native inspection must check the north shore silhouette, road junctions, abutment, planted slope appearance and highway driving view before release. The south tunnel/approach is a separate, still-unfinished source-registration task.
 
 Source data: ©OpenStreetMap contributors, ODbL1.0, [licence](https://www.openstreetmap.org/copyright). Existing runtime texture attribution remains unchanged.
+
+
+## Native front-face rejection and correction — 2026-11-16 UTC
+
+The first ordinary ground-level review (`rail-north-bank-ground-native.png` and `rail-north-bank-side-native.png`) rejected the broad white triangular face. This was our introduced geometry/material error: the entire vertical soil end closure had been placed in the plain concrete cohort. It was not evidence of a missing grass texture. Treating that invented wall with a darker colour would not fix its unsupported shape.
+
+The correction removes the entire broad vertical closure and introduces a20m eased planted-earth toe under the existing girders, starting at the retained shore endpoint. The actual service-road underpass is7.4m south of that endpoint and remains untouched. Rail datum, girder geometry and all terrain beyond the front transition remain on the prior registration. The terrain's existing exact land clipping preserves the ocean polygon; one shared triangle mesh supplies both the visible slope and ground contact. Only the6m-wide bearing cap retains concrete material. The toe position/profile is an authored exterior adaptation, not a surveyed abutment design.
+
+Nine focused tests pass after this correction. They include49 horizontal sight rays from the failing native side onto upward-facing earth; exact shared barycentric contact; all soil triangles below43degrees; finite cap extent; unchanged water/building pads; real World service-road finish/contact; exact elevated-road buffers; and the native review point[6957.8,−1732.9] with44 normal-camera tail samples. Ordinary native appearance still requires root review of the rebuilt candidate.

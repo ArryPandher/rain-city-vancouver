@@ -137,9 +137,10 @@ export function createSecondNarrowsRailContext(
     return { distance: d, inside: false };
   };
   const baseSoil = (s: number, u: number) =>
-    s < D.bankStart || s > D.length
+    s < D.bankToeStart || s > D.length
       ? 0
       : Math.max(0, railContextTop(s) - D.yardRailTop) *
+        smooth((s - D.bankToeStart) / (D.bankStart - D.bankToeStart)) *
         easedLinear(
           (baseWidth(s) - Math.abs(u)) / (baseWidth(s) - D.shoulderHalfWidth),
         );
@@ -188,10 +189,7 @@ export function createSecondNarrowsRailContext(
   };
   const baseAt = (x: number, z: number) => {
     const q = locate(x, z);
-    return baseSoil(
-      q.s >= D.bankStart - 1 ? Math.max(D.bankStart, q.s) : q.s,
-      q.u,
-    );
+    return baseSoil(q.s, q.u);
   };
   const roadProfiles = createRailContextRoadProfiles(
     data.roads,
@@ -317,7 +315,7 @@ export function createSecondNarrowsRailContext(
         );
     }
   };
-  const bankStations = stations.filter((s) => s >= D.bankStart),
+  const bankStations = stations.filter((s) => s >= D.bankToeStart),
     left: Point[] = [],
     right: Point[] = [];
   const fractions = [
@@ -511,8 +509,8 @@ export function createSecondNarrowsRailContext(
       0.18,
       "timber",
     );
-  // Open underpass: bearing cap at the bank, no fill or false collision below
-  // the first20m. Existing service road passes beneath the retained span at station−7.4.
+  // Bearing cap at the rail/ballast join. The earth toes in below the final
+  // open girders; the actual service road at station−7.4 remains outside the bank.
   beam(
     point(D.bankStart, -3, D.railTop - 1.2),
     point(D.bankStart, 3, D.railTop - 1.2),
@@ -520,50 +518,9 @@ export function createSecondNarrowsRailContext(
     1,
     "concrete",
   );
-  // Close the actual tessellated bank-end perimeter, including road-edge
-  // constraints. Its top vertices are exactly the rendered soil boundary.
-  const endA = point(D.bankStart, -halfWidth(D.bankStart), 0),
-    endB = point(D.bankStart, halfWidth(D.bankStart), 0);
-  const endDX = endB[0] - endA[0],
-    endDZ = endB[2] - endA[2],
-    endLength = Math.hypot(endDX, endDZ);
-  const endDistance = (p: V) =>
-    Math.abs(endDX * (p[2] - endA[2]) - endDZ * (p[0] - endA[0])) / endLength;
-  const endEdges = new Map<string, { a: V; b: V; count: number }>();
-  for (const t of triangles)
-    for (let i = 0; i < 3; i++) {
-      const a = t.points[i],
-        b = t.points[(i + 1) % 3];
-      if (endDistance(a) > 0.001 || endDistance(b) > 0.001) continue;
-      const ak = `${a[0]},${a[2]}`,
-        bk = `${b[0]},${b[2]}`,
-        key = ak < bk ? `${ak}/${bk}` : `${bk}/${ak}`;
-      const old = endEdges.get(key);
-      if (old) old.count++;
-      else endEdges.set(key, { a, b, count: 1 });
-    }
-  for (const { a, b, count } of endEdges.values()) {
-    if (count !== 1 || Math.max(a[1], b[1]) < 1e-5) continue;
-    const ps = [
-      b,
-      a,
-      [a[0], 0, a[2]],
-      b,
-      [a[0], 0, a[2]],
-      [b[0], 0, b[2]],
-    ].flat();
-    const g = new T.BufferGeometry();
-    g.setAttribute("position", new T.Float32BufferAttribute(ps, 3));
-    g.setAttribute(
-      "uv",
-      new T.Float32BufferAttribute(
-        [0, a[1], 1, b[1], 1, 0, 0, a[1], 1, 0, 0, 0],
-        2,
-      ),
-    );
-    g.computeVertexNormals();
-    bins.concrete.push(g);
-  }
+  // The earth now closes continuously to the existing ground at station0.
+  // A broad vertical concrete closure was an unsupported visual wall. Only the
+  // finite bearing cap above remains concrete; the actual underpass at−7.4 is clear.
   const parts = {} as Record<RailContextRole, T.BufferGeometry>;
   for (const role of roles) {
     // Normalize indexed box geometry to the same nonindexed layout as surfaces.

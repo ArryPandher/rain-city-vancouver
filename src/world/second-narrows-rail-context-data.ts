@@ -7,6 +7,8 @@ import source from "./second-narrows-rail-context-source.json";
 export const SECOND_NARROWS_CONTEXT = {
   length: 650,
   bankStart: 20,
+  // Source service underpass is at station−7.4; earth can toe in at the shore.
+  bankToeStart: 0,
   railTop: bridgeSource.elevation.northRailTop,
   yardRailTop: 0.7,
   shoulderHalfWidth: 3.8,
