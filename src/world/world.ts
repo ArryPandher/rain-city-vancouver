@@ -61,6 +61,11 @@ import {
 import { Materials, mesh, box, label, BASE } from "./materials";
 import { Batcher, flatPolygon, ribbon, walls, subdividePath } from "./geometry";
 import { CollisionWorld, BRIDGES } from "./collision";
+import { inCanadaPlacePier } from "./canada-place-deck";
+import {
+  VehicleRoadSurfaceBuilder,
+  type VehicleRoadSurface,
+} from "./vehicle-road-surface";
 import { architecture } from "./architecture";
 import { buildLandmarks } from "./landmarks";
 import { loadVancouverLandmarks } from "./vancouver-landmarks";
@@ -113,6 +118,7 @@ export class World {
   materials = new Materials();
   private cordovaPavement?: T.MeshStandardMaterial;
   collision: CollisionWorld;
+  private vehicleRoadSurface?: VehicleRoadSurface;
   chunks: T.Mesh[] = [];
   sun = new T.DirectionalLight(0xffe0b3, 3.2);
   ambient = new T.HemisphereLight(0xc6dfed, 0x697265, 2.0);
@@ -141,6 +147,7 @@ export class World {
     public data: CityData,
     private readonly facadeMultiDraw = false,
     private readonly fallbackTreeExperiment = false,
+    private readonly vehicleSurfaceSupport = false,
   ) {
     this.collision = new CollisionWorld(data);
     scene.add(this.root);
@@ -162,6 +169,31 @@ export class World {
     scene.fog = new T.FogExp2(0xc2cbd0, 0.00032);
   }
   treeDetailStream?: TreeDetailStream;
+  get vehicleSurfaceStats() {
+    return this.vehicleRoadSurface?.stats;
+  }
+  /** Opt-in car contact with the rendered finish; pedestrian/datum APIs stay intact. */
+  vehicleGroundHeight(x: number, z: number, referenceY = Infinity): number {
+    const collision = this.collision;
+    if (!this.vehicleSurfaceSupport || !this.vehicleRoadSurface)
+      return collision.height(x, z, referenceY);
+    if (collision.bridgeAt(x, z, referenceY))
+      return collision.height(x, z, referenceY);
+    const custom =
+      collision.pacificApron?.height(x, z) ??
+      collision.howeCordovaJunction?.height(x, z);
+    if (custom !== undefined) return custom;
+    // Source pier/deck support depends on loaded landmark capabilities. Never
+    // add a generic road finish to that separately authored surface.
+    if (collision.canada && inCanadaPlacePier(x, z))
+      return collision.walkingHeight(x, z, referenceY);
+    return (
+      this.vehicleRoadSurface.height(x, z, referenceY) ??
+      (collision.canada?.contains(x, z)
+        ? collision.walkingHeight(x, z, referenceY)
+        : collision.height(x, z, referenceY))
+    );
+  }
   onDetailReady = () => {};
   async build(
     report: (text: string, n: number) => void | Promise<void>,
@@ -620,6 +652,9 @@ export class World {
     oceanRect(bounds.minX, 15000, -18000, -8500);
   }
   roads() {
+    const vehicleSurface = this.vehicleSurfaceSupport
+      ? new VehicleRoadSurfaceBuilder()
+      : undefined;
     const b = new Batcher(this.root, 450),
       m = this.materials;
     this.cordovaPavement = createCordovaPavementMaterial(m);
@@ -774,6 +809,9 @@ export class World {
             this.collision.howeCordovaJunction,
           );
       }
+      // Copy only final clipped road triangles, before batching disposes them.
+      // Sidewalks, curb faces and paint decals are not road contact layers.
+      vehicleSurface?.add(surface);
       b.add(
         surface,
         seawall && r.surface === "paving_stones"
@@ -808,6 +846,7 @@ export class World {
         );
       this.stats.roads++;
     }
+    this.vehicleRoadSurface = vehicleSurface?.finish();
     for (const group of b.groups.values())
       for (const geometry of group.geo) {
         const p = geometry.getAttribute("position"),
