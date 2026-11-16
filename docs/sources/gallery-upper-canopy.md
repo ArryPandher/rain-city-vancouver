@@ -1,0 +1,25 @@
+# Gallery upper east tensile canopy
+
+Original exterior geometry, 2026-11-16. No reference image becomes a runtime texture; existing Codriver/OSM source attribution remains unchanged.
+
+## Photo trace and scope
+
+The [official2023 rear photograph](https://www.vanartgallery.bc.ca/wp-content/uploads/2025/07/VAG_exterior_2023_15-5-edited-1.jpg) shows a modern upper east terrace with pale curved fabric, dark blue steel posts, curved cantilever knees, triangulated transverse beams and a front transparent windscreen. This is separate from the distant copper cross-wing roofs already reconstructed by `gallery-roof.ts`. The historical2006 image predates this modern layer and is not a canopy design reference.
+
+The initial four-bay proposal was superseded after enlarging the original: six front steel stations and five intervals are visible. Approximate original854px x-controls are569,611.75,645.5,706.5,775.25,845.5. The two near-end intervals are visibly shorter; the assembly does not equal-space generic awnings. An approximate horizontal vanishing pointx−179 from the front rail/beam line convergence yields normalized station fractions0,.200,.344,.575,.801,1 by reciprocal-distance rectification. The station head/base samples give projected post lengths75.5,82.5,81,86,95,105px; fitting their convergence locates that vanishing point. The earlier rough−54px estimate shifts interior stations by at most150mm and is superseded here. These are fitted photo controls with several-pixel uncertainty. The source crop ends before a verified far terminal attachment, so fitting this sequence to the retained near-wing span is explicitly inferred. Inspection crops/overlay: `artifacts/local/gallery-upper-canopy-reference-crop.jpg` and `gallery-upper-canopy-station-trace.png`.
+
+Post/roof height cannot be recovered as an absolute survey from one oblique photograph. Visible post-to-front-guard proportions support a roughly3–4m open structure; near-wing stone and the retained central pediment give a second silhouette check. The candidate uses a3.4m front eave above the actual cap and a400mm convex transverse rise with120mm fall toward the hidden rear, giving maximumlocaly≈16.90. This lies near the retained16.75m pediment crest and below the18m distant cross-wing crests. Exact frame height, guard scale, rear supports and membrane curvature are estimates; native matched perspective must judge them. No whole-building or roof datum is changed to fit the canopy.
+
+## Exact source support and geometry
+
+The actual source near-wing upward cap is localy13.14921760559082 (world13.22921760559082). Verified surviving stone triples include5500/5501/5498,5500/5498/5496,5503/5500/5496,5503/5496/5491 and5503/5491/5505. The nearest front boundary runs from(0.412977,23.621567) to(19.451900,23.180304), then turns through(19.540802,20.672487). The higher14.000826m roof plinth lies farther back and is not used as a blanket terrace datum.
+
+Six frames fit u7.65..19.05. Main feet are atv22.2/18.15; thin cloth spansv22.95..17.9. Steel plates bear directly on the retained cap. The fabric has a convex transverse shape and75mm maximum inter-frame sag, separate closed underside and closed18mm edges; analytical normals keep the curved surface smooth without averaging across its edge. Paired upper/lower steel chords, diagonal webs, curved front knees, rear posts and longitudinal ties form a complete bounded structural assembly. The hidden rear anchorage is a simple supported interpretation, not an invented interior.
+
+No source triangles are cut, moved or overlaid with a new floor. Existing cornice, portico, copper roofs, bistro and building closures remain. The front windscreen uses one clear, low-opacity material with depth writing disabled and one transparent pass; it does not use the dark rear-window glass or its reflection capture. Existing bistro fabric material is reused when available. All static geometry is merged into three material batches; no per-bay draw or new reflection capture.
+
+## Circulation and validation
+
+No rooftop route, support override or interior is added. The lowest addition is above13.14m, while the existing public terrace is3.28m. Even a4.3m ordinary camera boom plus1.52m focus and a5m/s jump against17m/s² gravity stays below10m from this terrace. Thus ordinary walking/camera paths cannot reach the new structure; their existing geometry/contact remains unchanged.
+
+Three focused actual-GLB/geometry tests verify all feet and the bounded roof footprint against surviving upward cap triangles, exact source positions/index preservation, clearance from the central pediment/distant roofs, finite closed opaque geometry, smooth roof normals, five unequal bays, and three merged material draws. The completed candidate has4102 triangles in3 draws,108 supported plate samples, and every projected authored vertex on the five pinned source-cap triangles. Scoped TypeScript passes. Parent owns the one-hook installation and native comparison; local analytical tests alone do not establish visual acceptance.
