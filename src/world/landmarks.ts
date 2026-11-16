@@ -13,6 +13,10 @@ import {
 import { ribbon } from "./geometry";
 import { addIronworkersBridgeStructure } from "./ironworkers-bridge";
 import {
+  createCruiseForwardAssembly,
+  CRUISE_FORWARD,
+} from "./canada-cruise-forward";
+import {
   createIronworkersDeckGeometry,
   IRONWORKERS_DECK_STATIONS,
   ironworkersPoint,
@@ -110,25 +114,35 @@ export function buildLandmarks(
       roughness: 0.19,
     });
     mesh(new RoundedBoxGeometry(31, 0.8, 221, 4, 3), deckMat, ship, 0, 15, -3);
+    const forward = createCruiseForwardAssembly();
+    mesh(forward.white, m.white, ship);
+    mesh(forward.glass, shipGlass, ship);
     for (let k = 0; k < 5; k++) {
       const length = 199 - k * 13,
         width = 30 - k * 0.7,
         y = 17.1 + k * 3.05;
-      mesh(
-        new RoundedBoxGeometry(width, 2.8, length, 3, 0.8),
-        m.white,
-        ship,
-        0,
-        y,
-        -5 - k * 3,
-      );
-      mesh(
-        new RoundedBoxGeometry(width + 0.6, 0.28, length + 0.6, 3, 0.5),
-        m.white,
-        ship,
-        0,
-        y + 1.4,
-        -5 - k * 3,
+      if (k < 2)
+        mesh(
+          new RoundedBoxGeometry(width, 2.8, length, 3, 0.8),
+          m.white,
+          ship,
+          0,
+          y,
+          -5 - k * 3,
+        );
+      if (k < 2)
+        mesh(
+          new RoundedBoxGeometry(width + 0.6, 0.28, length + 0.6, 3, 0.5),
+          m.white,
+          ship,
+          0,
+          y + 1.4,
+          -5 - k * 3,
+        );
+      const sideStart = -5 - k * 3 - (length - 7) / 2;
+      const sideEnd = Math.min(
+        -5 - k * 3 + (length - 7) / 2,
+        k >= 2 ? CRUISE_FORWARD.cutZ : Infinity,
       );
       for (const side of [-1, 1]) {
         box(
@@ -136,12 +150,17 @@ export function buildLandmarks(
           shipGlass,
           side * (width / 2 + 0.02),
           y + 0.1,
-          -5 - k * 3,
+          (sideStart + sideEnd) / 2,
           0.045,
           1.43,
-          length - 7,
+          sideEnd - sideStart,
         );
-        for (let zz = -length / 2 + 2; zz < length / 2 - 5; zz += 3.4)
+        for (
+          let zz = -length / 2 + 2;
+          zz < length / 2 - 5 &&
+          (k < 2 || zz - 5 - k * 3 + 0.08 <= CRUISE_FORWARD.cutZ);
+          zz += 3.4
+        )
           box(
             ship,
             m.white,
@@ -163,7 +182,10 @@ export function buildLandmarks(
           new T.Vector3(
             side * (width / 2 + 0.35),
             y - 0.38,
-            length / 2 - 7 - k * 3,
+            Math.min(
+              length / 2 - 7 - k * 3,
+              k >= 2 ? CRUISE_FORWARD.cutZ : Infinity,
+            ),
           ),
           0.045,
           5,

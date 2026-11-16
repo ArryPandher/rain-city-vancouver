@@ -134,6 +134,6 @@ test("waterline correction preserves exact berth, heading, ship dimensions and d
         3;
     }
   });
-  assert.equal(meshes, 695);
-  assert.equal(triangles, 30040);
+  assert.equal(meshes, 671);
+  assert.equal(triangles, 31205);
 });

@@ -1,0 +1,27 @@
+# Canada Place cruise forward superstructure
+
+2026-11-16. A bounded, source-guided interpretation on the existing unnamed procedural cruise ship. It is not a reconstruction of an identified vessel. The ship's berth, waterline, hull, overall length/beam/height, lower two decks, aft superstructure, radar domes and funnel retain their prior registration. No terminal, hotel, promenade, collision, lighting or global material changes are included. Native review remains with the parent task.
+
+## Reference and estimate boundaries
+
+The retained [Handford01 photograph](https://www.mcmparchitects.com/wp-content/uploads/2025/09/Handford-MCM-CanadaPlace-01-WEB.jpg), on the [MCM Canada Place project page](https://www.mcmparchitects.com/projects/canada-place/), establishes the forward tier ordering: a widest, outward-sloping bridge glazing band; a nearly equal-width panoramic row above it; and a narrower, recessed upper observation row. The broad front windows continue around angled wings. The lower forward hull remains predominantly solid. The image does not establish this generic ship's metre dimensions, hidden cabins, exact pane schedule or vessel identity.
+
+Approximate visible reference bounds in the 2048 × 1365 original: bridge glazing x1045–1565/y688–723; panorama x1057–1557/y650–680; upper observation x1088–1510/y603–635. These are visual trace bounds with several-pixel uncertainty, not survey controls. The research-only crop `artifacts/local/canada-cruise-forward-reference.png` is original x1020/y570/width580/height240, enlarged2× for inspection. No source photograph or livery is used as a runtime texture. Capture date is unverified; the site's upload path alone is not capture evidence.
+
+The original top three deck heights provide the metric anchors. Estimated main bridge width grows from31.7m at the sill to32.4m at its head, within the existing34m hull beam; the next rows are31m and27.2m wide. Main glazing projects0.35m outward over2.10m of height. The fronts are at localz75.3–75.65,75.3 and72.1m respectively. These source-guided proportions replace the old identical9.5m setback at each deck; they are explicitly fitted estimates, not measured ship dimensions. Front pane counts21/25/19 are visual interpretations; side returns retain a roughly3.4m rhythm compatible with the existing side glazing.
+
+## Geometry and contact
+
+`canada-cruise-forward.ts` clips only the top three original rounded deck bodies/ledges at ship-localz=50m. Every original position behind that cut remains unchanged. The exact clipped convex sections supply the mating bulkheads. The new rear face fills only the polygon difference around those sections; it does not place a second whole cap on the same plane. Existing side glass, mullions and narrow rails terminate at the same cut in the ship-only `landmarks.ts` branch.
+
+The new bridge floor is at21.69m, the top of the retained second-deck ledge. This closes the former0.11m interdeck gap in this forward assembly without lifting the vessel or moving its hull. Its centre is supported by that existing deck; the broader bridge wings cantilever beyond it. The original lower deck geometry is not changed. New tier tops at24.85,27.9 and30.84m retain the old upper height envelope. Intermediate top faces cover only exposed terrace strips; the next tier owns its occupied area, avoiding duplicate visible horizontal floors.
+
+Opaque exterior glass panes are recessed100mm behind their frames and join actual reveal surfaces. They use the ship's existing nontransparent `MeshStandardMaterial` glass, so no invented lit interior, fake texture or transparency sorting is introduced. The outer enclosure closes at those panes; hidden interior pane backs are omitted. Frame ends close into opaque sill/head bands. Their slope, inset and angled returns are geometry, not painted dark stripes on retained blank end walls.
+
+## Cost and verification
+
+The new forward surfaces add **2,521 triangles**, plus **2,412 retained clipped-source triangles**. Removing the old rounded forward portions and obsolete side mullions makes the whole vessel **31,205 triangles**, a net increase of **1,165** over30,040. Construction meshes fall from695 to671. Both added roles reuse the existing white/glass material instances and remain in the same400m static batch cell; no new texture, probe, per-frame update or separate shader is added. Construction mesh count is not runtime draw count: World already merges this landmark by material/cell.
+
+Six focused tests pass, including the actual loaded-source waterline suite. They verify unchanged retained rounded-deck vertices;210 first-hit pane rays; the100mm inset and outward bridge slope; upward terrace rays with one visible floor owner; more than500 closed rear-seam samples; actual ship dispatch with old forward blanks removed; contact between the new bridge floor and retained lower deck; unchanged lower deck ends/hull; and unchanged world berth/heading/scale/bounds/dock distance. Full TypeScript checking passes. Native ordinary promenade/forecourt views must still assess the fitted silhouette and its limited visibility behind the terminal.
+
+The [waterline audit](canada-cruise-waterline-and-next-pass.md) remains the placement evidence. Its historical30,040-triangle/695-construction-mesh cost refers to the prior geometry, before this forward pass. East operational-quay reconstruction and the current promenade composition task remain separate.

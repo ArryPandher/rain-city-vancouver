@@ -14,7 +14,9 @@ Two focused tests execute the actual cruise branch using the complete local base
 
 Before evidence: `artifacts/local/canada-cruise-source-audit.mts` and `.json`. The original measured JSON retains the pre-correction bounds/gap. The source photo comparison sheet is `artifacts/local/canada-ship-reference-contact.png`.
 
-## Source-supported next visual correction, not implemented
+## Source-supported forward correction
+
+The subsequent bounded [forward superstructure pass](canada-cruise-forward.md) implements this proposal. The remaining text records its source basis and the separate terminal scope; historical construction counts above describe the waterline-only checkpoint.
 
 The retained [MCM Canada Place project](https://www.mcmparchitects.com/projects/canada-place/) photograph [Handford01](https://www.mcmparchitects.com/wp-content/uploads/2025/09/Handford-MCM-CanadaPlace-01-WEB.jpg) shows a bow facing the viewer beside the east operational quay. Its ship has a prominent layered forward superstructure: a broad projecting bridge with sloped glazing, a separate glazed observation level above, solid lower forward decks with rounded rectangular windows, and two separated radar domes. This gives the ship recognisable depth even before small railings. The source is a reference photograph only; its upload path does not establish capture date, and it is not a reusable runtime texture licence.
 
