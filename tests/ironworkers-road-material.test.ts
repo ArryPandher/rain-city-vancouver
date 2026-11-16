@@ -79,6 +79,14 @@ test("Ironworkers reuses three licensed Sources with independent metric samplers
     requests: 6,
     sourceLoads: 3,
     currentURLs: 3,
+    // This loader deliberately never completes; all shared Sources stay pending.
+    readyCount: 0,
+    pendingURLs: [
+      "cordova-pavement/color.webp",
+      "cordova-pavement/normal.webp",
+      "cordova-pavement/roughness.webp",
+    ],
+    failedURLs: [],
   });
   const source = JSON.parse(
     fs.readFileSync("public/textures/cordova-pavement/SOURCES.json", "utf8"),
