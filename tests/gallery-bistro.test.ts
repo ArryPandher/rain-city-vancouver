@@ -189,3 +189,69 @@ test("actual full-city transverse path and steps retain ribbon clearance, source
     assert.equal(blocked(x, z, 0.36, y, false), false);
   }
 });
+
+test("planting forms one continuous irregular mass per trough within unchanged contact bounds", async () => {
+  const { galleryBistroHedgeGeometry } = await import(
+    "../src/world/gallery-bistro"
+  );
+  for (const p of D.planters) {
+    const geometry = galleryBistroHedgeGeometry(p),
+      a = geometry.getAttribute("position"),
+      ix = geometry.index!;
+    const neighbors = Array.from({ length: a.count }, () => new Set<number>());
+    for (let i = 0; i < ix.count; i += 3)
+      for (let j = 0; j < 3; j++) {
+        const x = ix.getX(i + j),
+          y = ix.getX(i + ((j + 1) % 3));
+        neighbors[x].add(y);
+        neighbors[y].add(x);
+      }
+    const seen = new Set([0]),
+      queue = [0];
+    while (queue.length) {
+      for (const j of neighbors[queue.pop()!])
+        if (!seen.has(j)) {
+          seen.add(j);
+          queue.push(j);
+        }
+    }
+    assert.equal(
+      seen.size,
+      a.count,
+      "one connected planting surface, no separate repeated beads",
+    );
+    for (let i = 0; i < a.count; i++) {
+      assert.ok(a.getX(i) > p.minU && a.getX(i) < p.maxU);
+      assert.ok(a.getZ(i) > p.minV && a.getZ(i) < p.maxV);
+      assert.ok(
+        a.getY(i) > D.top + D.planterHeight - 0.036 &&
+          a.getY(i) < D.top + D.planterHeight + D.foliageHeight,
+      );
+    }
+    const root = new T.Mesh(geometry, new T.MeshBasicMaterial());
+    root.updateMatrixWorld();
+    const alongU = p.maxU - p.minU > p.maxV - p.minV,
+      start = (alongU ? p.minU : p.minV) + 0.05,
+      end = (alongU ? p.maxU : p.maxV) - 0.05,
+      heights: number[] = [];
+    for (let s = start; s <= end; s += 0.05) {
+      const u = alongU ? s : (p.minU + p.maxU) / 2,
+        v = alongU ? (p.minV + p.maxV) / 2 : s;
+      const hit = ray(root, [u, 6, v], [0, -1, 0]);
+      assert.ok(hit, "continuous unbroken planted top");
+      assert.ok(hit.face!.normal.y > 0.7);
+      heights.push(hit.point.y);
+      const [x, z] = galleryStairWorld(u, v);
+      assert.equal(
+        blocked(x, z, 0.01, hit.point.y + S.datum, true),
+        true,
+        "existing finite foliage contact encloses surface",
+      );
+    }
+    const range = Math.max(...heights) - Math.min(...heights);
+    assert.ok(
+      range > 0.015 && range < 0.14,
+      "restrained irregular top rather than row of domes",
+    );
+  }
+});

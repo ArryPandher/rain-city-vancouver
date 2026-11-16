@@ -60,9 +60,22 @@ retained floor cuts remain as before this pass.
 
 Two new shared opaque materials (off-white canvas, green planting) join the
 existing stone/metal batches. No per-chair or per-parasol draws. Complete Gallery
-facade addition is14,170 triangles in7 draws including the separately committed
+facade addition is11,522 triangles in7 draws including the separately committed
 stair material. All canopy skins have a closed underside and upward-facing roof;
 platform and every furniture solid have paired consistently oriented edges.
 Focused tests inspect actual full-city support and route clearance, finite camera
 contact, supported furniture, exact retained geometry guards and ordinary stair
 ascent preservation. Native visual acceptance remains root's next step.
+
+
+## Native planting correction
+
+The first native south-facing arrival accepted the full-size parasols and terrace
+scale but exposed a visible quality failure: repeated round greenery read as a
+regular string of green beads. The corrected hedge is one connected, closed
+irregular surface per planter, with continuous top/side coverage and unequal
+small-scale height/width variation. It retains the same planter and conservative
+finite contact bounds, reduces geometry by2,648 triangles, and adds no material,
+texture or draw. Dedicated tests verify connectivity, gap-free upward top rays,
+restrained irregularity, planter containment and the unchanged contact envelope.
+Native review of this correction remains pending.

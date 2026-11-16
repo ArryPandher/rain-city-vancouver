@@ -61,21 +61,7 @@ export function addGalleryBistro(
       p.maxV - p.minV,
       stone,
     );
-    // Low clipped greenery with a restrained irregular silhouette. Closed
-    // clusters stay inside their actual planter rather than billboard cards.
-    const length = p.maxU - p.minU,
-      alongU = length > p.maxV - p.minV,
-      n = Math.ceil(Math.max(length, p.maxV - p.minV) / 0.31);
-    for (let i = 0; i < n; i++) {
-      const t = (i + 0.5) / n,
-        u = alongU ? p.minU + t * length : (p.minU + p.maxU) / 2,
-        v = alongU ? (p.minV + p.maxV) / 2 : p.minV + t * (p.maxV - p.minV);
-      const h = D.foliageHeight * (0.9 + 0.08 * Math.sin(i * 2.4));
-      const g = new T.IcosahedronGeometry(1, 1);
-      g.scale(alongU ? 0.24 : 0.28, h / 2, alongU ? 0.29 : 0.24);
-      g.translate(u, D.top + D.planterHeight + h / 2 - 0.035, v);
-      mesh.add(g, leaf);
-    }
+    mesh.add(galleryBistroHedgeGeometry(p), leaf);
   }
   for (const { u, v } of D.parasols) {
     // Square hipped canopy with a thin closed underside and four corner ribs.
@@ -149,4 +135,74 @@ export function addGalleryBistro(
           );
     }
   }
+}
+
+/** A single connected planted mass per trough. Unequal multiscale surface
+ * variation avoids the repeated hemispherical highlight of discrete shrubs. */
+export function galleryBistroHedgeGeometry(p: (typeof D.planters)[number]) {
+  const alongU = p.maxU - p.minU > p.maxV - p.minV;
+  const start = (alongU ? p.minU : p.minV) + 0.035;
+  const end = (alongU ? p.maxU : p.maxV) - 0.035;
+  const centre = alongU ? (p.minV + p.maxV) / 2 : (p.minU + p.maxU) / 2;
+  const half = (alongU ? p.maxV - p.minV : p.maxU - p.minU) / 2 - 0.035;
+  const n = Math.ceil((end - start) / 0.16),
+    positions: number[] = [],
+    uv: number[] = [],
+    indices: number[] = [];
+  const section = [
+    [-0.9, 0],
+    [0.9, 0],
+    [1, 0.4],
+    [0.9, 0.8],
+    [0.4, 1],
+    [-0.35, 0.98],
+    [-0.88, 0.82],
+    [-1, 0.43],
+  ];
+  for (let i = 0; i <= n; i++) {
+    const station = start + ((end - start) * i) / n;
+    for (let j = 0; j < section.length; j++) {
+      const [w, h] = section[j];
+      const noise =
+        Math.sin(i * 1.713 + j * 2.173) * 0.011 +
+        Math.sin(i * 0.419 + j * 0.97) * 0.016;
+      const broad =
+        Math.sin(i * 0.197) * 0.015 + Math.sin(i * 0.071 + 0.7) * 0.018;
+      const width = w * (half - 0.018 + noise * 0.55);
+      const y =
+        D.top +
+        D.planterHeight -
+        0.035 +
+        h * (D.foliageHeight - 0.045 + broad) +
+        (h ? noise : 0);
+      positions.push(
+        ...(alongU
+          ? [station, y, centre + width]
+          : [centre + width, y, station]),
+      );
+      uv.push(station, w);
+    }
+  }
+  const k = section.length;
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < k; j++) {
+      const a = i * k + j,
+        b = (i + 1) * k + j,
+        c = (i + 1) * k + ((j + 1) % k),
+        d = i * k + ((j + 1) % k);
+      indices.push(a, b, c, a, c, d);
+    }
+  for (let j = 1; j < k - 1; j++) {
+    indices.push(0, j, j + 1);
+    indices.push(n * k, n * k + j + 1, n * k + j);
+  }
+  if (!alongU)
+    for (let i = 0; i < indices.length; i += 3)
+      [indices[i + 1], indices[i + 2]] = [indices[i + 2], indices[i + 1]];
+  const g = new T.BufferGeometry();
+  g.setAttribute("position", new T.Float32BufferAttribute(positions, 3));
+  g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
+  g.setIndex(indices);
+  g.computeVertexNormals();
+  return g;
 }
