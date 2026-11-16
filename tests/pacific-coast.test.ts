@@ -219,11 +219,22 @@ test("nine batches have finite outward geometry, continuous metric facade UVs an
             (a, j) => segmentPoint(x, z, ...a, ...ring[(j + 1) % 4]).d,
           ),
         );
-        assert.ok(d < 0.22);
         assert.ok(
-          d < 0.002 || p.getY(i) >= s.baseTop - 0.0001,
-          "walking-height geometry staysinsidecollision",
+          d < 0.265,
+          "the largest corner miter stays within its two 0.18m projections",
         );
+        assert.ok(
+          d < 0.002 || p.getY(i) >= 4.12 - 0.0001,
+          "walking-height geometry stays inside collision; only high stone heads/caps project",
+        );
+        if (d > 0.22) {
+          assert.equal(mesh.material, materials.base);
+          assert.ok(p.getY(i) >= 4.12 && p.getY(i) <= s.baseTop);
+          assert.ok(
+            Math.hypot(x - ring[1][0], z - ring[1][1]) < 0.27,
+            "extra radial distance belongs only to the shared Cordova/Howe miter",
+          );
+        }
       }
     }
     for (let i = 0; i < ix.count; i += 3) {
@@ -239,8 +250,11 @@ test("nine batches have finite outward geometry, continuous metric facade UVs an
   }
   assert.equal(meshes.length, 9);
   assert.ok(
-    triangles <= 10742 + 5200,
-    `${triangles} triangles: bounded cavity/blind addition`,
+    triangles <= 15248 + 900,
+    `${triangles} triangles: bounded shaped street-base addition`,
+  );
+  console.info(
+    `325 Howe geometry: ${triangles} triangles, ${meshes.length} material batches.`,
   );
   const g = meshes.find((m) => m.material === materials.brick)!.geometry,
     p = g.getAttribute("position"),
@@ -405,5 +419,134 @@ test("upper sashes contain varied partial blinds wholly behind the original pane
     );
     assert.ok(depth > s.windowRecess + 0.13 && depth < s.windowRecess + 0.3);
     assert.ok(s.rows.some((row) => y > row.sill + 0.5 && y < row.head - 0.07));
+  }
+});
+
+test("Cordova stone heads have inclined lower and upper surfaces, widened shoulders and closed side returns", () => {
+  const f = facadeFrame(ring[0], ring[1]);
+  for (const b of pacificCoastBays(0)) {
+    const head = ray(
+      vec(f.p(b.centre, 4.52, -0.5)),
+      vec(f.p(b.centre, 4.52, 0.3)),
+    )[0];
+    assert.equal(mat(head), materials.base);
+    near(head.distance, 0.365);
+    const lowerBevel = ray(
+      vec(f.p(b.centre, 4.18, -0.03)),
+      vec(f.p(b.centre, 4.6, -0.03)),
+    )[0];
+    assert.equal(mat(lowerBevel), materials.base);
+    near(lowerBevel.point.y, 4.3);
+    assert.ok(
+      lowerBevel.face!.normal.y < -0.25,
+      "real inclined underside, not an opaque flat header",
+    );
+    const upperBevel = ray(
+      vec(f.p(b.centre, 4.65, -0.12)),
+      vec(f.p(b.centre, 4.45, -0.12)),
+    )[0];
+    assert.equal(mat(upperBevel), materials.base);
+    near(upperBevel.point.y, 4.615);
+    assert.ok(upperBevel.face!.normal.y > 0.25);
+    // The pier cap broadens 140mm into the header span, strictly above glazing.
+    const shoulder = ray(
+      vec(f.p(b.left + 0.1, 4.52, -0.5)),
+      vec(f.p(b.left + 0.1, 4.52, 0.3)),
+    )[0];
+    assert.equal(mat(shoulder), materials.base);
+    near(shoulder.distance, 0.32);
+    const returnHit = ray(
+      vec(f.p(b.left + 0.3, 4.4, -0.12)),
+      vec(f.p(b.left, 4.4, -0.12)),
+    )[0];
+    assert.equal(mat(returnHit), materials.base);
+    near(returnHit.point.distanceTo(vec(f.p(b.left + 0.08, 4.4, -0.12))), 0);
+    near(returnHit.uv!.y, 4.4);
+    const tangent = vec(f.p(1, 0)).sub(vec(f.p(0, 0)));
+    assert.ok(
+      returnHit.face!.normal.dot(tangent) > 0.8,
+      "outward return normal faces into the header",
+    );
+    const clearPane = ray(
+      vec(f.p(b.left + 0.35, 4.0, -0.5)),
+      vec(f.p(b.left + 0.35, 4.0, 0.7)),
+    )[0];
+    assert.equal(
+      mat(clearPane),
+      materials.glass,
+      "cap shoulders do not encroach into the opening below",
+    );
+  }
+});
+
+test("ground top lights use82 percent while door height and upper sash proportions remain separate", () => {
+  for (const edge of [0, 1]) {
+    const f = facadeFrame(ring[edge], ring[edge + 1]);
+    for (const [i, b] of pacificCoastBays(edge).entries()) {
+      const door = edge === 1 && (i === 2 || i === 3),
+        lo = door ? thresholds[i] : edge === 0 ? 0.3 : 0.7,
+        split = door ? lo + 2.42 : lo + (4.25 - lo) * 0.82,
+        u = b.left + 0.5;
+      const transom = ray(vec(f.p(u, split, -0.5)), vec(f.p(u, split, 0.7)))[0];
+      assert.equal(mat(transom), materials.frame);
+      near(transom.distance, 0.5 + s.baseRecess - 0.065);
+      if (!door) {
+        const oldSplit = lo + (4.25 - lo) * 0.66;
+        assert.equal(
+          mat(ray(vec(f.p(u, oldSplit, -0.5)), vec(f.p(u, oldSplit, 0.7)))[0]),
+          materials.glass,
+        );
+      }
+      const row = s.rows[0],
+        upperSplit = row.sill + (row.head - row.sill) * 0.66;
+      assert.equal(
+        mat(
+          ray(vec(f.p(u, upperSplit, -0.5)), vec(f.p(u, upperSplit, 0.7)))[0],
+        ),
+        materials.frame,
+      );
+      const unusedSplit = row.sill + (row.head - row.sill) * 0.82;
+      assert.equal(
+        mat(
+          ray(vec(f.p(u, unusedSplit, -0.5)), vec(f.p(u, unusedSplit, 0.7)))[0],
+        ),
+        materials.glass,
+      );
+    }
+  }
+});
+
+test("Cordova sills shed toward the street and a recessed plinth has closed returns without an apron", () => {
+  const f = facadeFrame(ring[0], ring[1]);
+  for (const b of pacificCoastBays(0)) {
+    const u = b.centre + 0.4;
+    const sill = ray(vec(f.p(u, 0.5, 0.08)), vec(f.p(u, 0.1, 0.08)))[0];
+    assert.equal(mat(sill), materials.trim);
+    near(sill.point.y, 0.2875);
+    assert.ok(
+      sill.face!.normal.y > 0.97,
+      "sloped stone top has an upward normal",
+    );
+    const lowerEdge = ray(vec(f.p(u, 0.12, -0.5)), vec(f.p(u, 0.12, 0.2)))[0];
+    assert.equal(mat(lowerEdge), materials.base);
+    assert.ok(lowerEdge.distance > 0.52 && lowerEdge.distance < 0.56);
+    const panel = ray(vec(f.p(u, -0.1, -0.5)), vec(f.p(u, -0.1, 0.2)))[0];
+    assert.equal(mat(panel), materials.base);
+    near(panel.distance, 0.56);
+    const plinthTop = ray(vec(f.p(u, -0.2, 0.03)), vec(f.p(u, -0.6, 0.03)))[0];
+    assert.equal(mat(plinthTop), materials.base);
+    near(plinthTop.point.y, -0.425);
+    assert.ok(plinthTop.face!.normal.y > 0.5);
+    const side = ray(
+      vec(f.p(b.left + 0.1, -0.1, 0.03)),
+      vec(f.p(b.left - 0.1, -0.1, 0.03)),
+    )[0];
+    assert.equal(mat(side), materials.base);
+    near(side.uv!.y, -0.1);
+    // Empty space outside the mapped facade remains empty at walking height.
+    assert.equal(
+      ray(vec(f.p(u, 0.2, -0.2)), vec(f.p(u, 0.2, -0.002))).length,
+      0,
+    );
   }
 });

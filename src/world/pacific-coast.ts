@@ -28,6 +28,7 @@ export type PacificCoastGeometryMaterials = Record<
   T.Material
 >;
 type Frame = ReturnType<typeof facadeFrame>;
+type StoneSection = { y: number; depth: number; left: number; right: number };
 
 /** Original present-day 325 Howe exterior. Source-specific vertical piers,
  * rectangular paired windows and a restrained parapet replace the unrelated
@@ -133,6 +134,143 @@ export function buildPacificCoast(
     side(f, mat, a, lo, hi, d0, d1, false);
     side(f, mat, b, lo, hi, d0, d1, true);
   };
+  /** Closed, shaped stone volume. Cross-sections change in both depth and
+   * width, giving battered heads/shoulders real inclined faces and returns.
+   * All dimensions below are photographic interpretations, not a survey. */
+  const shapedStone = (
+    f: Frame,
+    sections: StoneSection[],
+    back = 0.12,
+    lip = false,
+  ) => {
+    const tangent = f.p(1, 0).map((v, i) => v - f.p(0, 0)[i]) as Vertex3;
+    for (let i = 1; i < sections.length; i++) {
+      const a = sections[i - 1],
+        b = sections[i];
+      const material = lip && i === sections.length - 1 ? m.trim : m.base;
+      quad(
+        material,
+        [
+          f.p(a.left, a.y, a.depth),
+          f.p(a.right, a.y, a.depth),
+          f.p(b.right, b.y, b.depth),
+          f.p(b.left, b.y, b.depth),
+        ],
+        [f.outward[0], 0, f.outward[1]],
+        [a.left, a.y, a.right, a.y, b.right, b.y, b.left, b.y],
+      );
+      for (const right of [false, true]) {
+        const u0 = right ? a.right : a.left,
+          u1 = right ? b.right : b.left,
+          sign = right ? 1 : -1;
+        quad(
+          material,
+          [
+            f.p(u0, a.y, a.depth),
+            f.p(u0, a.y, back),
+            f.p(u1, b.y, back),
+            f.p(u1, b.y, b.depth),
+          ],
+          [sign * tangent[0], 0, sign * tangent[2]],
+          [a.depth, a.y, back, a.y, back, b.y, b.depth, b.y],
+        );
+      }
+      quad(
+        m.base,
+        [
+          f.p(a.left, a.y, back),
+          f.p(a.right, a.y, back),
+          f.p(b.right, b.y, back),
+          f.p(b.left, b.y, back),
+        ],
+        [-f.outward[0], 0, -f.outward[1]],
+        [a.left, a.y, a.right, a.y, b.right, b.y, b.left, b.y],
+      );
+    }
+    const first = sections[0],
+      last = sections[sections.length - 1];
+    horizontal(
+      f,
+      m.base,
+      first.left,
+      first.right,
+      first.y,
+      first.depth,
+      back,
+      false,
+    );
+    horizontal(
+      f,
+      lip ? m.trim : m.base,
+      last.left,
+      last.right,
+      last.y,
+      last.depth,
+      back,
+    );
+  };
+  // The reference's broad shoulders widen above the opening heads. Keeping
+  // their stations aligned with each individual head makes continuous joints,
+  // while a 30–45 mm depth difference exposes the shoulder returns.
+  const headStations = [
+    [4.25, 0, 0],
+    [4.3, 0.02, -0.03],
+    [4.4, 0.08, -0.1],
+    [4.48, 0.14, -0.135],
+    [4.58, 0.14, -0.135],
+    [4.65, 0.1, -0.105],
+  ];
+  const stoneHead = (f: Frame, left: number, right: number) =>
+    shapedStone(
+      f,
+      headStations.map(([y, shoulder, depth]) => ({
+        y,
+        depth,
+        left: left + shoulder,
+        right: right - shoulder,
+      })),
+    );
+  const pierShoulder = (
+    f: Frame,
+    left: number,
+    right: number,
+    cornerLeft = false,
+    cornerRight = false,
+  ) => {
+    // Exact shared-corner miter: the mapped Cordova/Howe angle is close to,
+    // but not precisely, 90 degrees. Both faces meet at the same outer line.
+    const adjacent = cornerLeft
+      ? facadeFrame(ring[0], ring[1])
+      : facadeFrame(ring[1], ring[2]);
+    const tangent = f.p(1, 0).map((v, i) => v - f.p(0, 0)[i]);
+    const miter = (depth: number) =>
+      (-depth *
+        ((f.outward[0] + adjacent.outward[0]) * tangent[0] +
+          (f.outward[1] + adjacent.outward[1]) * tangent[2])) /
+      (1 +
+        f.outward[0] * adjacent.outward[0] +
+        f.outward[1] * adjacent.outward[1]);
+    const stations = [
+      [4.12, 0, 0],
+      [4.25, 0, -0.045],
+      [4.3, 0.02, -0.075],
+      [4.4, 0.08, -0.145],
+      [4.48, 0.14, -0.18],
+      [4.58, 0.14, -0.18],
+      [4.65, 0.1, -0.105],
+    ];
+    shapedStone(
+      f,
+      stations.map(([y, spread, depth]) => ({
+        y,
+        depth,
+        left: cornerLeft ? miter(depth) : Math.max(0, left - spread),
+        right: cornerRight
+          ? f.length + miter(depth)
+          : Math.min(f.length, right + spread),
+      })),
+    );
+  };
   const pier = (
     f: Frame,
     a: number,
@@ -179,13 +317,14 @@ export function buildPacificCoast(
     hi: number,
     base = false,
     door = false,
+    shapedSill = false,
   ) => {
     const depth = base ? s.baseRecess : s.windowRecess,
       trim = base ? 0.1 : 0.075;
     const revealMaterial = base ? m.base : m.stone;
     side(f, revealMaterial, a, lo, hi, 0, depth, true);
     side(f, revealMaterial, b, lo, hi, 0, depth, false);
-    horizontal(f, revealMaterial, a, b, lo, 0, depth);
+    horizontal(f, revealMaterial, a, b, lo, shapedSill ? 0.18 : 0, depth);
     horizontal(f, revealMaterial, a, b, hi, 0, depth, false);
     // A frame is an opening, not a dark opaque rectangle immediately behind
     // the pane. Its perimeter preserves the previous visible coordinates.
@@ -272,7 +411,9 @@ export function buildPacificCoast(
       solid(f, m.frame, aa, bb, ll, hh, depth - 0.065, depth - 0.008);
     const mid = (a + b) / 2;
     bar(mid - 0.048, mid + 0.048, lo + trim, hi - trim);
-    const transom = door ? lo + 2.42 : lo + (hi - lo) * 0.66;
+    // Source ground windows have narrow top lights. Do not stretch entrance
+    // doors or change the separate paired upper sash proportions with them.
+    const transom = door ? lo + 2.42 : lo + (hi - lo) * (base ? 0.82 : 0.66);
     bar(a + trim, b - trim, transom - 0.034, transom + 0.034);
     // Separate sash edges and slight meeting-rail depth hold up at walking range.
     for (const [left, right] of [
@@ -313,7 +454,21 @@ export function buildPacificCoast(
     // The street base stays within its collision outline; upper sills project
     // above the player, providing an actual underside and modest runoff lip.
     const projection = base ? 0 : -0.095;
-    solid(f, m.trim, a - 0.065, b + 0.065, lo - 0.115, lo, projection, 0.14);
+    if (shapedSill) {
+      shapedStone(
+        f,
+        [
+          { y: lo - 0.22, depth: 0.06, left: a, right: b },
+          { y: lo - 0.14, depth: 0.025, left: a - 0.035, right: b + 0.035 },
+          { y: lo - 0.11, depth: 0, left: a - 0.065, right: b + 0.065 },
+          { y: lo - 0.025, depth: 0, left: a - 0.065, right: b + 0.065 },
+          { y: lo, depth: 0.16, left: a - 0.065, right: b + 0.065 },
+        ],
+        0.18,
+        true,
+      );
+    } else
+      solid(f, m.trim, a - 0.065, b + 0.065, lo - 0.115, lo, projection, 0.14);
     if (!base) solid(f, m.trim, a, b, hi, hi + 0.055, -0.022, 0.05);
   };
   const band = (
@@ -341,14 +496,32 @@ export function buildPacificCoast(
     let previous = 0;
     for (const b of baseBays) {
       pier(f, previous, b.left, s.baseBottom, s.baseTop, m.base, 0.85);
+      if (edge === 0) pierShoulder(f, previous, b.left);
+      // The photographed prominent corner column carries its cap around Howe;
+      // other Howe heads are obscured and do not receive invented matching trim.
+      if (edge === 1 && b.index === 0) pierShoulder(f, previous, b.left, true);
       const sill = b.door ? thresholds[b.index] : edge === 0 ? 0.3 : 0.7,
         head = 4.25;
-      pier(f, b.left, b.right, s.baseBottom, sill, m.base, 0.5);
+      if (edge === 0) {
+        // Recessed plinth panel and its bevelled stone cap are all
+        // inside the original outline. No uncollidable stone apron is added.
+        pier(f, b.left, b.right, s.baseBottom, -0.52, m.base, 0.5);
+        shapedStone(f, [
+          { y: -0.52, depth: 0, left: b.left, right: b.right },
+          { y: -0.46, depth: 0, left: b.left, right: b.right },
+          { y: -0.39, depth: 0.06, left: b.left, right: b.right },
+        ]);
+        face(f, m.base, b.left, b.right, -0.39, sill - 0.22, 0.06);
+        side(f, m.base, b.left, -0.39, sill - 0.22, 0, 0.06, true);
+        side(f, m.base, b.right, -0.39, sill - 0.22, 0, 0.06, false);
+      } else pier(f, b.left, b.right, s.baseBottom, sill, m.base, 0.5);
       face(f, m.base, b.left, b.right, head, s.baseTop);
-      window(f, b.left, b.right, sill, head, true, b.door);
+      if (edge === 0) stoneHead(f, b.left, b.right);
+      window(f, b.left, b.right, sill, head, true, b.door, edge === 0);
       previous = b.right;
     }
     pier(f, previous, f.length, s.baseBottom, s.baseTop, m.base, 0.85);
+    if (edge === 0) pierShoulder(f, previous, f.length, false, true);
     band(f, m.base, s.baseTop, s.baseTop + 0.16, -0.105);
     band(f, m.trim, s.baseTop + 0.16, s.beltTop, -0.15);
 
