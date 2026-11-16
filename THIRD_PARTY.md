@@ -74,6 +74,12 @@ Changes for Rain City: orientation/scale conversion, material recolouring, remov
 
 Khronos and 3D Commerce marks embedded in the original asset belong to their respective owners. No endorsement or affiliation is implied.
 
+## E30 coupe — CC BY 4.0
+
+`public/models/e30-coupe.glb` derives from **[FREE] BMW M3 E30**, **Martin Trafas** ([original model](https://sketchfab.com/3d-models/free-bmw-m3-e30-ac3c7013434e403e8faff87948caf422), [artist](https://sketchfab.com/TinoD2)), licensed [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/). The input redistribution by **pedrosoandre/carros**, [commit 2d18dfd](https://github.com/pedrosoandre/carros/tree/2d18dfd9db96bbf0d9cffa949deaf7f571388cbf), declares prior weld, simplify, prune and meshopt processing. Rain City retains three key wheel maps at 1024px, resizes the other fifteen maps to 512px, renormalizes resized normal vectors, and repacks PNG images with explicit attribution. Geometry, source transforms, material names and physical material settings in the prepared asset are unchanged. This asset retains CC BY 4.0 separately from the game's MIT code.
+
+BMW and Brembo names/marks belong to their respective owners; no endorsement or affiliation is implied. [License evidence and exact source chain](docs/sources/e30-coupe-license-evidence.json), [preparation, hashes and limitations](docs/sources/e30-coupe.md), [reproduction script](scripts/prepare-e30-coupe.mjs).
+
 ## Software and typefaces
 
 - Three.js: MIT, three.js authors.

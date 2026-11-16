@@ -1,0 +1,301 @@
+{
+  "version": 1,
+  "output": "public/models/e30-coupe.glb",
+  "source": {
+    "url": "https://raw.githubusercontent.com/pedrosoandre/carros/2d18dfd9db96bbf0d9cffa949deaf7f571388cbf/assets/bmw-m3-e30.glb",
+    "sha256": "35cad98e89e6f1e54ccd238a3df049d29f20ecec3fc0aa2a85e0ad6c2663d330",
+    "bytes": 9952032
+  },
+  "outputSha256": "62c0cbd8a6997c3c4029c2edd009b68067a8786c2f89b0d517431f10d919c487",
+  "outputBytes": 5897216,
+  "preparation": {
+    "sourceUrl": "https://raw.githubusercontent.com/pedrosoandre/carros/2d18dfd9db96bbf0d9cffa949deaf7f571388cbf/assets/bmw-m3-e30.glb",
+    "sourceSha256": "35cad98e89e6f1e54ccd238a3df049d29f20ecec3fc0aa2a85e0ad6c2663d330",
+    "derivativeAuthor": "pedrosoandre/carros",
+    "derivativeCommit": "2d18dfd9db96bbf0d9cffa949deaf7f571388cbf",
+    "priorModifications": "weld, simplify, prune and meshopt compression (declared by redistributor)",
+    "modifications": "Rain City: rim color/normal and tire normal retained at 1024; other 15 maps resized to 512; resized normal vectors renormalized; PNG repacking. Geometry, transforms, nodes, material names and physical settings unchanged.",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "tools": {
+    "node": "v26.11.0",
+    "sharp": "0.35.5",
+    "vips": "8.18.7",
+    "gltfTransform": "4.5.1"
+  },
+  "geometry": {
+    "triangles": 52728,
+    "meshes": 30,
+    "materials": 15,
+    "decodedAccessorsVerifiedIdentical": 119,
+    "retainedCompressedPayloadBytes": 815100,
+    "retainedCompressedPayloadSha256": "de3519ee33bdb1a3693c859e9b7a1a57ea4f31f9c7a436353fc21c5754fac40b"
+  },
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_materials_clearcoat",
+    "KHR_materials_emissive_strength",
+    "KHR_materials_transmission",
+    "KHR_mesh_quantization"
+  ],
+  "textureBudget": {
+    "images": 18,
+    "retained1024": 3,
+    "resized512": 15,
+    "sourceRGBA8MipMiB": 96,
+    "preparedRGBA8MipMiB": 36,
+    "currentCarConceptUniqueImageRGBA8MipMiB": 38.265625,
+    "note": "Unique embedded images as RGBA8 with full mip chains; excludes duplicate uploads, driver storage, geometry, texture samplers and CPU copies. Not measured runtime VRAM."
+  },
+  "images": [
+    {
+      "index": 0,
+      "resolution": 512,
+      "role": "linear-data",
+      "users": [
+        "BMW_E30_M3_PAINT:pbrMetallicRoughness.metallicRoughnessTexture",
+        "BMW_E30_M3_PAINT:occlusionTexture"
+      ],
+      "sourceBytes": 124112,
+      "bytes": 81201,
+      "sourceSha256": "5e4f815d072d16af0025e92ce7b2bcebd2b1bfe2a2b43aff78918b3aa0210d33",
+      "sha256": "f3c51d56c916e26968a9cfd32d6bcb3a03a16f41c4e1a2963d00e7c9852f0875",
+      "unchanged": false
+    },
+    {
+      "index": 1,
+      "resolution": 512,
+      "role": "color",
+      "users": [
+        "BMW_E30_M3_TAILLIGHT_REFLECTOR:emissiveTexture"
+      ],
+      "sourceBytes": 50348,
+      "bytes": 32701,
+      "sourceSha256": "c05eb402624faedc59b44a0ca0475db4bdcd7801c5bece682a171565bc9b1751",
+      "sha256": "74edfb1d069bfa3040a15f41c857356bd885ac9487578019c99fe705d0cf4cb5",
+      "unchanged": false
+    },
+    {
+      "index": 2,
+      "resolution": 512,
+      "role": "color",
+      "users": [
+        "BMW_E30_M3_EMBLEMS:pbrMetallicRoughness.baseColorTexture"
+      ],
+      "sourceBytes": 145358,
+      "bytes": 44945,
+      "sourceSha256": "553f207839f9683df859ffb7fe7723484a0e496e2569ba71581bc8dfa28e07a5",
+      "sha256": "deeeb2021b51b666162aec251461d103dadd35db7d75a5cbb8fe9fb340974759",
+      "unchanged": false
+    },
+    {
+      "index": 3,
+      "resolution": 512,
+      "role": "linear-data",
+      "users": [
+        "BMW_E30_M3_EMBLEMS:pbrMetallicRoughness.metallicRoughnessTexture"
+      ],
+      "sourceBytes": 67064,
+      "bytes": 37336,
+      "sourceSha256": "12ee061f7a19c034a88e97e04c43e79dc2ed92ab51f017d89dfc6791d3d337d8",
+      "sha256": "9c5fb94bd68c41adf7516badc44b5d019ac7a1df28f3ed0f385e972d25818536",
+      "unchanged": false
+    },
+    {
+      "index": 4,
+      "resolution": 512,
+      "role": "color",
+      "users": [
+        "BMW_E30_M3_LENS:pbrMetallicRoughness.baseColorTexture"
+      ],
+      "sourceBytes": 123224,
+      "bytes": 46471,
+      "sourceSha256": "404f2d74358c3de683580063080bcfe5f6d821c68a19af8d4c97d123b25d73c1",
+      "sha256": "54e071181c66cc67011c05063ccdde3c75244950f0b2a7bd62121d863bcabe9e",
+      "unchanged": false
+    },
+    {
+      "index": 5,
+      "resolution": 512,
+      "role": "normal",
+      "users": [
+        "BMW_E30_M3_LENS:normalTexture"
+      ],
+      "sourceBytes": 1184973,
+      "bytes": 513808,
+      "sourceSha256": "57d2dc8d2ec80d550f4600f1d1741bfc5d9d2487699fe27beedd392e52228a98",
+      "sha256": "0881a63aff57b14bee87291cbec1dcbf6bc148c96824d443d8f87b914c50838d",
+      "unchanged": false,
+      "maximumUnitVectorError": 0.006526487833136696
+    },
+    {
+      "index": 6,
+      "resolution": 1024,
+      "role": "color",
+      "users": [
+        "BMW_E30_M3_RIM:pbrMetallicRoughness.baseColorTexture"
+      ],
+      "sourceBytes": 371602,
+      "bytes": 371602,
+      "sourceSha256": "b967a7b2ead8557af6f4da69c4bf1d02c50ca80390e1a9aa56cbf61a9e5f330b",
+      "sha256": "b967a7b2ead8557af6f4da69c4bf1d02c50ca80390e1a9aa56cbf61a9e5f330b",
+      "unchanged": true
+    },
+    {
+      "index": 7,
+      "resolution": 512,
+      "role": "linear-data",
+      "users": [
+        "BMW_E30_M3_RIM:pbrMetallicRoughness.metallicRoughnessTexture",
+        "BMW_E30_M3_RIM:occlusionTexture"
+      ],
+      "sourceBytes": 549877,
+      "bytes": 298292,
+      "sourceSha256": "f96d3da43878b88ce4716928aa05d8f8ebf42f42270e2dce0baaf2383624bc6a",
+      "sha256": "8975ac6ac3e549ea5e6dbc79687d5cf444631c483f1b39408e92febe7d5c04e8",
+      "unchanged": false
+    },
+    {
+      "index": 8,
+      "resolution": 1024,
+      "role": "normal",
+      "users": [
+        "BMW_E30_M3_RIM:normalTexture",
+        "BMW_E30_M3_RIM:extensions.KHR_materials_clearcoat.clearcoatNormalTexture"
+      ],
+      "sourceBytes": 590907,
+      "bytes": 590907,
+      "sourceSha256": "84a040ef9df0728967b88d0acae8468d12e52ab9ea2e5db7c0f06ac3a0aa14ae",
+      "sha256": "84a040ef9df0728967b88d0acae8468d12e52ab9ea2e5db7c0f06ac3a0aa14ae",
+      "unchanged": true
+    },
+    {
+      "index": 9,
+      "resolution": 512,
+      "role": "color",
+      "users": [
+        "BMW_E30_M3_TIRE:pbrMetallicRoughness.baseColorTexture"
+      ],
+      "sourceBytes": 205179,
+      "bytes": 875,
+      "sourceSha256": "88e39a116b3a1ef6dc2d1b0569d08ff3c0c5dc54d2129860954052aa1f80bef6",
+      "sha256": "fa1d36bd471e02888b1fbc32b8288b0166045e7b8e20e6a164ac09af0e38d49f",
+      "unchanged": false
+    },
+    {
+      "index": 10,
+      "resolution": 512,
+      "role": "linear-data",
+      "users": [
+        "BMW_E30_M3_TIRE:pbrMetallicRoughness.metallicRoughnessTexture",
+        "BMW_E30_M3_TIRE:occlusionTexture"
+      ],
+      "sourceBytes": 979719,
+      "bytes": 337511,
+      "sourceSha256": "2ec8208f21a9ada42ac3a168ccb5b6968f5423daca351f1be7b11a93b105caf1",
+      "sha256": "79486b7c56cfc402cd9fee9465c0d6c21dda9b3000ecabc390a27a5cbcbb6ca1",
+      "unchanged": false
+    },
+    {
+      "index": 11,
+      "resolution": 1024,
+      "role": "normal",
+      "users": [
+        "BMW_E30_M3_TIRE:normalTexture"
+      ],
+      "sourceBytes": 1065255,
+      "bytes": 1065255,
+      "sourceSha256": "e93d725d094eb0eeec2f933ba1a8fa3e14423c026ca25909a5052d56ef6b1173",
+      "sha256": "e93d725d094eb0eeec2f933ba1a8fa3e14423c026ca25909a5052d56ef6b1173",
+      "unchanged": true
+    },
+    {
+      "index": 12,
+      "resolution": 512,
+      "role": "color",
+      "users": [
+        "Brake_Disc:pbrMetallicRoughness.baseColorTexture"
+      ],
+      "sourceBytes": 352995,
+      "bytes": 144298,
+      "sourceSha256": "4f464bc4f016af9ab2bd98e4d438f5a50c75cad41f850d8c7d1301090fe0bfdc",
+      "sha256": "95a06858c88d4bef4afbb77fe83fbfdac911daee58d0cd00cc6643132ff73072",
+      "unchanged": false
+    },
+    {
+      "index": 13,
+      "resolution": 512,
+      "role": "linear-data",
+      "users": [
+        "Brake_Disc:pbrMetallicRoughness.metallicRoughnessTexture",
+        "Brake_Disc:occlusionTexture"
+      ],
+      "sourceBytes": 255695,
+      "bytes": 126430,
+      "sourceSha256": "5dac247d3a9c8890b652002dd65a0a9a150367fede9cce22e9f3d6bf7c4c38eb",
+      "sha256": "a59657e02a8f98448a2ad409084f28d05478dc5ca07c329b76bf5b4cc722d122",
+      "unchanged": false
+    },
+    {
+      "index": 14,
+      "resolution": 512,
+      "role": "normal",
+      "users": [
+        "Brake_Disc:normalTexture"
+      ],
+      "sourceBytes": 411021,
+      "bytes": 183531,
+      "sourceSha256": "c0ea8c8ee0261ffa30f301725f2e519ff92c89027c8735d9875a6f64c61637d3",
+      "sha256": "0b20b234f54fff203d13336262d3b2f43173840880ba456dc6ea6a175751d419",
+      "unchanged": false,
+      "maximumUnitVectorError": 0.006086819413139599
+    },
+    {
+      "index": 15,
+      "resolution": 512,
+      "role": "color",
+      "users": [
+        "Brembo_Calipers:pbrMetallicRoughness.baseColorTexture"
+      ],
+      "sourceBytes": 693529,
+      "bytes": 187995,
+      "sourceSha256": "cbd974c5e8c858aaa88cac108246ae05d1c083edf50ce74a5f7dbd2379f52e89",
+      "sha256": "58f89d369dc95fca5f0e463a2564baa148c45bea9cc2cdd9b92daa36789603c5",
+      "unchanged": false
+    },
+    {
+      "index": 16,
+      "resolution": 512,
+      "role": "linear-data",
+      "users": [
+        "Brembo_Calipers:pbrMetallicRoughness.metallicRoughnessTexture",
+        "Brembo_Calipers:occlusionTexture"
+      ],
+      "sourceBytes": 930441,
+      "bytes": 547275,
+      "sourceSha256": "ff4a0fca6923692c7470fd3266ae57ad65d957bab64afffd8ce3a8dcdf511383",
+      "sha256": "0ef443ebf1ff069007984fe7b40ed992b168ba0862d0f0cbd1248fa9527f1b75",
+      "unchanged": false
+    },
+    {
+      "index": 17,
+      "resolution": 512,
+      "role": "normal",
+      "users": [
+        "Brembo_Calipers:normalTexture",
+        "Brembo_Calipers:extensions.KHR_materials_clearcoat.clearcoatNormalTexture"
+      ],
+      "sourceBytes": 983119,
+      "bytes": 418452,
+      "sourceSha256": "0e805a1b8cf574270de81c87e164f6b246674976e3f00e4cb0f24b314cceaf4e",
+      "sha256": "727f5a804596673907aff6d5c9f704084aa803c010d667d52a0e3c2c6e2c939a",
+      "unchanged": false,
+      "maximumUnitVectorError": 0.006086819413139599
+    }
+  ]
+}

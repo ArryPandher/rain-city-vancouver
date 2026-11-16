@@ -1,0 +1,40 @@
+{
+  "checked": "2026-11-15",
+  "modelId": "ac3c7013434e403e8faff87948caf422",
+  "title": "[FREE] BMW M3 E30",
+  "author": {
+    "name": "Martin Trafas",
+    "url": "https://sketchfab.com/TinoD2",
+    "embeddedPreviousProfile": "https://sketchfab.com/Bexxie"
+  },
+  "source": "https://sketchfab.com/3d-models/free-bmw-m3-e30-ac3c7013434e403e8faff87948caf422",
+  "originalApi": {
+    "url": "https://api.sketchfab.com/v3/models/ac3c7013434e403e8faff87948caf422",
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "localSnapshotSha256": "9f2873fa2dfbb15bb7bc40a18c50cdcf26611afac9a51712445b8c60701aba87"
+  },
+  "redistributor": {
+    "name": "pedrosoandre/carros",
+    "commit": "2d18dfd9db96bbf0d9cffa949deaf7f571388cbf",
+    "records": [
+      {
+        "url": "https://raw.githubusercontent.com/pedrosoandre/carros/2d18dfd9db96bbf0d9cffa949deaf7f571388cbf/LICENSE-3D-MODELS.md",
+        "sha256": "258b71efcdc8552950614998508cb6048e8c60a5bbef5468364e18b2b2b744e8",
+        "excerpt": "## Modificações aplicadas\n\nOs arquivos `.glb` distribuídos aqui **não são idênticos** aos originais no\nSketchfab. Foram processados com a pipeline abaixo (gltf-transform):\n\n1. `weld` — deduplicação de vértices\n2. `simplify` — decimação de geometria (target ~30% dos triângulos)\n3. `prune` — remoção de nodes, materiais e texturas não referenciados\n4. `meshopt` — compressão meshopt de geometria e atributos\n\nRedução medida: **mediana de -71% por carro** e **-68% no agregado**, com a\nmetade central dos casos entre -45% e -81%. O ganho não é uniforme: o melhor\ncaso caiu -92% e o pior apenas -4%, porque modelo já enxuto na origem tem pouco\na decimar. Cenários comprimem menos (mediana -31%) — boa parte do peso deles é\ntextura, não geometria.\n\nNenhuma alteração foi feita à identidade visual do modelo, à autoria, ao nome ou\nà licença. Esta nota satisfaz a exigência da CC de \"indicar se mudanças foram\nfeitas\".\n\n"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/pedrosoandre/carros/2d18dfd9db96bbf0d9cffa949deaf7f571388cbf/CREDITS.md",
+        "sha256": "6d5d87934e095eee9f1d9b84a563cd66f54efebb5bac82445258e1167b779742",
+        "excerpt": "| [[FREE] BMW M3 E30](https://sketchfab.com/3d-models/none-ac3c7013434e403e8faff87948caf422) | Martin Trafas | CC Attribution | `bmw-m3-e30.glb` |"
+      }
+    ]
+  },
+  "scope": "Evidence applies only to this model. Other entries and generic licensing assertions in the distributor repository were not relied on."
+}

@@ -66,6 +66,18 @@
     "credit": "Eric Chadwick / Darmstadt Graphics Group GmbH; source model by Unity Fan"
   },
   {
+    "file": "models/e30-coupe.glb",
+    "source": "https://sketchfab.com/3d-models/free-bmw-m3-e30-ac3c7013434e403e8faff87948caf422",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "credit": "Martin Trafas; simplified/meshopt redistribution by pedrosoandre/carros",
+    "derivativeSource": "https://raw.githubusercontent.com/pedrosoandre/carros/2d18dfd9db96bbf0d9cffa949deaf7f571388cbf/assets/bmw-m3-e30.glb",
+    "modifications": "Prior distributor: weld, simplify, prune, meshopt. Rain City: retain rim color/normal and tire normal at 1024; resize remaining 15 maps to 512, renormalize resized normal vectors, PNG repacking and attribution. Geometry, transforms and physical material settings unchanged.",
+    "provenance": "docs/sources/e30-coupe-preparation.json",
+    "sha256": "62c0cbd8a6997c3c4029c2edd009b68067a8786c2f89b0d517431f10d919c487",
+    "bytes": 5897216
+  },
+  {
     "file": "textures/sunset.hdr",
     "source": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/belfast_sunset_puresky_2k.hdr",
     "license": "CC0",
