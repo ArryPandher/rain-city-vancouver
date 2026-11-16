@@ -68,3 +68,39 @@ and back, including one photo-camera move and daylight change. Watch for black
 panes, missing surfaces, obsolete lighting or repeated capture errors. Attribute
 any waiting reduction to startup only; no steady FPS claim follows. No browser,
 full build or push was performed for this candidate.
+
+## Native counter verification — 2026-11-16
+
+Root reviewed the combined startup-selection + Cathedral candidate. The saved
+`artifacts/local/nearby-startup-native-profile.json` verifies 40 total probes,
+16 initially nearby, 16 attempts, 16 successful startup captures and 24 still
+dirty/deferred. Thus this build actually prepared only its 16 nearby probes;
+24 remote captures were avoided during startup, rather than merely renamed.
+The additional probe versus the earlier build belongs to the changed world.
+
+| Observed stage metric | Earlier 8e world | Combined nearby candidate |
+| --- | ---: | ---: |
+| Reflection preparation stages | 39 | 16 |
+| Sum of reflection-stage wall time | 6,844.6 ms | 5,620.7 ms |
+| First capture synchronous invocation | 4,822.7 ms | 4,645.7 ms |
+| Startup ready timestamp | 39,821.3 ms | 36,691.9 ms |
+
+Earlier evidence is `artifacts/local/canada-east-terminal-apron-profile.json`.
+The observed reflection-stage difference is 1,223.9 ms; the first candidate
+capture still consumes 4,645.7 ms synchronously (4,650.8 ms including its stage
+yield), dominating the remaining reflection wait. Reducing the number of captures
+therefore delivered a modest observed reduction, not a proportional 39/16 speedup.
+These sequential wall times are not GPU timings. World geometry changed between
+builds, and this was not a controlled same-head/cache A/B; the 3,129.4 ms difference
+in overall ready timestamps cannot be attributed solely to reflection scheduling.
+
+After ordinary map travel to Gallery, saved
+`artifacts/local/nearby-startup-gallery-travel-profile.json` reports 18 completed
+captures, up from 16, confirming deferred nearby preparation through normal play.
+The root's native review found valid appearance and empty error logs; saved car
+reflection filter error is null. This provides first-arrival evidence, not a claim
+that every deferred region or weather/quality combination was natively exercised.
+
+No FPS, steady-frame, GPU-memory or RAM improvement is claimed. Remote work can
+still cause first-arrival capture hitches. No further optimization is included in
+this evidence-only update.
