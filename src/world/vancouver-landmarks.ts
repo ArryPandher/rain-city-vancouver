@@ -73,6 +73,7 @@ import {
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import { addCanadaPlaceGroundStays } from "./canada-place-ground-stays";
 import { canadaPlacePlinthMaterial } from "./canada-place-plinth-material";
+import { replaceHotelVancouverCornices } from "./hotel-vancouver-cornices";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
@@ -187,6 +188,10 @@ export async function loadVancouverLandmarks(
       if (!(object instanceof T.Mesh)) return;
       const geometry = bakeGeometry(object.geometry, object.matrixWorld);
       const original = object.material as T.MeshStandardMaterial;
+      const hotelCornices =
+        asset.id === "fairmont-hotel-vancouver"
+          ? replaceHotelVancouverCornices(geometry, original.name)
+          : null;
       if (refinePanPacificTower || refineNearPodium || refineEastTerminal)
         canadaReplacementSource.push({ geometry, material: original.name });
       const paving =
@@ -245,6 +250,12 @@ export async function loadVancouverLandmarks(
       const mesh = new T.Mesh(geometry, mat);
       mesh.castShadow = mesh.receiveShadow = true;
       group.add(mesh);
+      if (hotelCornices) {
+        const cornices = new T.Mesh(hotelCornices, mat);
+        cornices.name = "Hotel Vancouver layered stone cornices";
+        cornices.castShadow = cornices.receiveShadow = true;
+        group.add(cornices);
+      }
       if (paving) {
         const deck = new T.Mesh(
           paving,
