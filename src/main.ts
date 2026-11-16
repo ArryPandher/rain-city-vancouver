@@ -695,6 +695,7 @@ class Game {
               startupReflections: this.startupReflectionSummary,
               waterOptics: this.world.waterOpticsDiagnostics(),
               waterWaves: this.world.waterWavesDiagnostics(),
+              waterScene: this.world.waterSceneDiagnostics(),
               reflectionProbeSizes: this.reflections?.probes.map((probe) => ({
                 name: probe.spec.name,
                 size: probe.target.width,
@@ -830,9 +831,22 @@ class Game {
         " Directional harbour waves (day only)",
       );
       comparisons.append(waterWavesLabel);
+      const waterSceneLabel = document.createElement("label");
+      const waterSceneCheckbox = document.createElement("input");
+      waterSceneCheckbox.type = "checkbox";
+      waterSceneCheckbox.addEventListener("change", () => {
+        this.finishFrameSample("water scene comparison changed");
+        if (!this.world.setDebugWaterScene(waterSceneCheckbox.checked)) waterSceneCheckbox.checked = false;
+      });
+      waterSceneLabel.append(waterSceneCheckbox, " Local north-harbour reflection (day only)");
+      comparisons.append(waterSceneLabel);
       window.addEventListener(
         "pagehide",
-        () => this.world.setDebugWaterOptics(this.renderer, false),
+        () => {
+          this.world.setDebugWaterScene(false);
+          this.world.setDebugWaterWaves(false);
+          this.world.setDebugWaterOptics(this.renderer, false);
+        },
         { once: true },
       );
       const shadowLabel = document.createElement("label");
@@ -2335,11 +2349,14 @@ class Game {
     this.frameCount++;
   }
   render() {
+    const priorReflectionCaptures = this.reflections?.captures ?? 0;
     if (!ui.introOpen && this.quality !== "low")
-      this.reflections?.update(
+      this.world.withoutDebugWaterSceneFeedback(() => this.reflections?.update(
         this.renderer,
         this.photo ? this.photoPos : this.player,
-      );
+      ));
+    this.world.updateDebugWaterScene(this.renderer, this.camera.position,
+      !ui.introOpen && this.quality !== "low" && (this.reflections?.captures ?? 0) === priorReflectionCaptures);
     const reflectionTime = performance.now();
     this.carStreetReflections?.update(
       this.actors.vehicles.map((v) => v.model),

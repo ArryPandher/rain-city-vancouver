@@ -1,4 +1,5 @@
 import * as T from "three";
+import { addWaterShaderLayer } from "./water-shader-layers";
 
 /** Authored sheltered-harbour approximation, not a measured wind spectrum.
  * Heights in metres, wave numbers in rad/m, deep-water omega in rad/s. */
@@ -99,25 +100,19 @@ export function waterWaveSample(
  * A uniform day gate avoids recompilation during ordinary weather switches. */
 export class WaterWavesComparison {
   private disposed = false;
-  private readonly originalCompile: T.ShaderMaterial["onBeforeCompile"];
-  private readonly originalKey: T.ShaderMaterial["customProgramCacheKey"];
-  private readonly compile: T.ShaderMaterial["onBeforeCompile"];
-  private readonly key: T.ShaderMaterial["customProgramCacheKey"];
+  private readonly removeLayer: () => void;
   private readonly enabled = { value: 0 };
   private readonly onDispose = () => this.dispose();
   constructor(private readonly material: T.ShaderMaterial) {
     waterWavesFragment(material.fragmentShader); // Fail before changing ownership.
-    this.originalCompile = material.onBeforeCompile;
-    this.originalKey = material.customProgramCacheKey;
-    const inheritedKey = material.customProgramCacheKey();
-    this.compile = (shader, renderer) => {
-      this.originalCompile.call(material, shader, renderer);
-      shader.fragmentShader = waterWavesFragment(shader.fragmentShader);
-      shader.uniforms.waterWavesEnabled = this.enabled;
-    };
-    this.key = () => `${inheritedKey}|harbour-directional-waves-v1`;
-    material.onBeforeCompile = this.compile;
-    material.customProgramCacheKey = this.key;
+    this.removeLayer = addWaterShaderLayer(
+      material,
+      "harbour-directional-waves-v1",
+      (shader) => {
+        shader.fragmentShader = waterWavesFragment(shader.fragmentShader);
+        shader.uniforms.waterWavesEnabled = this.enabled;
+      },
+    );
     material.addEventListener("dispose", this.onDispose);
     material.needsUpdate = true;
   }
@@ -142,10 +137,7 @@ export class WaterWavesComparison {
     this.disposed = true;
     this.enabled.value = 0;
     this.material.removeEventListener("dispose", this.onDispose);
-    if (this.material.onBeforeCompile === this.compile)
-      this.material.onBeforeCompile = this.originalCompile;
-    if (this.material.customProgramCacheKey === this.key)
-      this.material.customProgramCacheKey = this.originalKey;
+    this.removeLayer();
     this.material.needsUpdate = true;
   }
 }
