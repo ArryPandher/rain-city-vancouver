@@ -74,7 +74,7 @@ test("wall response reuses exactly one metric joint field and its relief", () =>
   );
   assert.deepEqual(
     shader.uniforms.galleryAshlarRange.value.toArray(),
-    [0.88, 1.12],
+    [0.94, 1.06],
   );
   assert.equal(
     GALLERY_ASHLAR_FINISH.albedoRange[0] + GALLERY_ASHLAR_FINISH.albedoRange[1],

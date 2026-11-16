@@ -3,7 +3,7 @@ import * as T from "three";
 /** Authored linear-light range, not a measured reflectance range. The existing
  * 1.2 × .55m ashlar cells provide the scale; no second joint grid is introduced. */
 export const GALLERY_ASHLAR_FINISH = {
-  albedoRange: [0.88, 1.12] as const,
+  albedoRange: [0.94, 1.06] as const,
   roughnessVariation: 0.04,
 };
 

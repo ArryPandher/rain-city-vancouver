@@ -15,7 +15,7 @@ The actual loading path in `vancouver-landmarks.ts` applies `LandmarkSurfaces.ma
 The generated upper nine-bay wall, aperture reveals, sills and shallow surrounds use this clone. Existing source stone, added column shafts, capitals, cornice, foundation and its physical rustication retain their previous materials. The hookup is confined to `gallery-facade.ts`; no world, camera, lighting or other building hook changes.
 
 - Existing course dimensions remain 1.2 × 0.55m, 4mm joint width and 3mm shader relief. These are the existing authored scale, not dimensions measured from the oblique source photo.
-- Existing block-cell identity drives a neutral linear-light albedo multiplier of 0.88–1.12 instead of 0.98–1.02. The symmetric range preserves the nominal stone hue and unit mean. This is a bounded art-direction candidate, not measured reflectance. It strengthens stone-scale variation without increasing joint darkness or width.
+- Existing block-cell identity drives a neutral linear-light albedo multiplier of 0.94–1.06 instead of 0.98–1.02. The symmetric range preserves the nominal stone hue and unit mean. This is a bounded art-direction candidate, not measured reflectance. It strengthens stone-scale variation without increasing joint darkness or width.
 - Roughness varies by at most 0.04 around the existing mapped response using the same cell. This correlation is authored, not a measured property of the building.
 - Existing footprint filtering, normal detail, joint relief and map scale remain intact. The metric tangent-plane UVs supplied by `gallery-facade.ts` are required; one UV unit is one metre.
 - No weathering was added: a defensible registered weathering mask is absent, and arbitrary dark bands would duplicate architectural shadowing.
@@ -29,3 +29,7 @@ The clone owns no textures. Dispose the material with the facade; shared maps re
 Seven focused tests pass: the new material tests plus `gallery-facade.test.ts`. They exercise the real `LandmarkSurfaces` callback, confirm a single joint field and preserved relief, shader ordering, maps/source immutability and disposal ownership, wall-only assignment, unchanged complete vertex multiset, bounded material count, and the existing actual-GLB replacement/reveal invariants. Scoped TypeScript checking passes with the project's Vite/Node ambient types.
 
 No full build, browser or native capture was run for this candidate. Root should compare the same ordinary Gallery start and daylight view with the previous cornice screenshot in the combined dome build. Accept only if the upper walls read as coherent pale masonry without a checkerboard effect or mismatch against the retained columns/trim. This is not a claim of native visual acceptance.
+
+## Native review correction
+
+The first combined native capture `artifacts/local/gallery-ashlar-native.png` showed .88–1.12 as an overly prominent checkerboard at the ordinary Gallery start. Comparison with the official rear photograph and the prior `robson-cornice-detail.png` supports retaining readable stone variation with half that amplitude. The current .94–1.06 range is the resulting correction; hue, geometry, joint width/relief, roughness variation and scope are unchanged. Root must verify this reduced range in the next native build; the first native image does not show the corrected result.
