@@ -2,6 +2,7 @@ import { cathedralPlace } from "./cathedral-place";
 import { createG3TerminalAssembly } from "./g3-terminal";
 import { createIronworkersYardAssembly } from "./ironworkers-yard";
 import { createRepairShedAssembly } from "./ironworkers-repair-shed";
+import { createSecondNarrowsRailAssembly } from "./second-narrows-rail-bridge";
 import { buildHoweBuildingFoundation } from "./howe-building-foundations";
 import { CACTUS_ID } from "./jack-poole-site";
 import * as T from "three";
@@ -88,6 +89,7 @@ export function architecture(
   );
   const ironworkersYard = createIronworkersYardAssembly(data.buildings);
   const repairShed = createRepairShedAssembly(data.buildings);
+  const secondNarrowsRail = createSecondNarrowsRailAssembly(data.buildings);
   const shopNames = [
     ["PACIFIC COFFEE", "THE CORNER CAFÉ", "WEST COAST COFFEE"],
     ["WATER STREET LIVING", "HARBOUR HOME", "COASTAL INTERIORS"],
@@ -195,6 +197,7 @@ export function architecture(
       continue;
     }
     if (
+      secondNarrowsRail(b, shell) ||
       repairShed(b, shell) ||
       ironworkersYard(b, shell) ||
       g3Terminal(b, shell) ||

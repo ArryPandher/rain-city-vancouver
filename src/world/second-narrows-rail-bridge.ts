@@ -276,6 +276,9 @@ export function createSecondNarrowsRailGeometry(): RailBridgePart[] {
           0.22,
         );
     }
+    // Stringers seat on the transverse floor beams and meet sleeper undersides.
+    for (const x of [-0.7175, 0.7175])
+      beam([x, e.railTop - 0.49, low], [x, e.railTop - 0.49, -low], 0.16, 0.3);
     for (const x of [-0.7175, 0.7175])
       beam(
         [x, e.railTop - 0.09, low],

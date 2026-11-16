@@ -204,3 +204,40 @@ test("tower mid-height is open lattice; real piers and drive houses remain close
     );
   }
 });
+
+test("continuous stringers physically connect the actual floor-beam and sleeper elevations", () => {
+  const spans = parts.filter(
+    (p) => p.role === "steel" && !stations.includes(p.station),
+  );
+  assert.equal(spans.length, 8);
+  for (const span of spans) {
+    const mesh = new T.Mesh(span.geometry, new T.MeshBasicMaterial());
+    mesh.updateMatrixWorld(true);
+    for (const side of [-0.7175, 0.7175]) {
+      // Away from a transverse floor beam, ray the real stringer's two faces.
+      const upper = point(span.station + 0.8, side, 12.8);
+      const lower = point(span.station + 0.8, side, 12.0);
+      const top = new T.Raycaster(
+        new T.Vector3(...upper),
+        new T.Vector3(0, -1, 0),
+        0,
+        1,
+      ).intersectObject(mesh)[0];
+      const bottom = new T.Raycaster(
+        new T.Vector3(...lower),
+        new T.Vector3(0, 1, 0),
+        0,
+        1,
+      ).intersectObject(mesh)[0];
+      assert.ok(top && bottom);
+      assert.ok(Math.abs(top.point.y - 12.66) < 1e-4);
+      assert.ok(Math.abs(bottom.point.y - 12.36) < 1e-4);
+      const floorTop = S.elevation.railTop - 0.3 - 0.5 + 0.35 / 2;
+      const sleeperBottom = S.elevation.railTop - 0.3 + 0.03 - 0.18 / 2;
+      assert.ok(
+        bottom.point.y <= floorTop && top.point.y >= sleeperBottom,
+        "no air gap between transverse beam, stringer and sleeper",
+      );
+    }
+  }
+});
