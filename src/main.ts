@@ -650,6 +650,7 @@ class Game {
               : null,
             pedestrianActivity: this.actors.canadaPedestrianSummary(),
             howePedestrianActivity: this.actors.howePedestrianSummary(),
+            robsonPedestrianActivity: this.actors.robsonPedestrianSummary(),
             lastPedestrianContact: this.lastPedestrianContact,
             fallbackTreeBatching:
               getFallbackTreeBatchController(this.world.root)?.enabled ?? false,
