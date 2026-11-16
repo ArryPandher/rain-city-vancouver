@@ -1,4 +1,9 @@
 import { createHoweSceneTerrain } from "./howe-scene-terrain";
+import {
+  createPacificCoastApronSite,
+  type PacificCoastApronSite,
+} from "./pacific-coast-apron-site";
+import { PACIFIC_COAST_ID, PACIFIC_COAST_CENTRE } from "./pacific-coast-site";
 import { HOWE_FORECOURT, HOWE_STATION } from "./howe-station-site";
 import type { Terrain } from "./terrain";
 import {
@@ -273,6 +278,7 @@ export class CollisionWorld {
   howeTerrain?: Terrain;
   howeTerrainCutouts: number[][] = [];
   fairmontArrivalIsland?: FairmontArrivalIsland;
+  pacificApron?: PacificCoastApronSite;
   private canadaWalking?: ReturnType<typeof createCanadaWalkingSurface>;
   private exteriorRecesses = new Map<string, ExteriorRecessCollision>();
   buildings = new SpatialHash<Building>();
@@ -467,9 +473,26 @@ export class CollisionWorld {
         }),
       );
     }
+    if (data.buildings.some((building) => building.id === PACIFIC_COAST_ID)) {
+      this.pacificApron = createPacificCoastApronSite(
+        this.baselineGroundHeight.bind(this),
+        this.baselineGroundHeight(...PACIFIC_COAST_CENTRE),
+      );
+      for (const rail of this.pacificApron.rails)
+        this.addBarrier(
+          rail.a[0],
+          rail.a[2],
+          rail.b[0],
+          rail.b[2],
+          0.025,
+          Math.max(rail.a[1], rail.b[1]),
+        );
+    }
   }
   /** On-foot contact includes the finish; the baseline remains the construction datum. */
   walkingHeight(x: number, z: number, referenceY = Infinity): number {
+    const apron = this.pacificApron?.height(x, z);
+    if (apron !== undefined) return apron;
     if (this.canada && pointInPoly(x, z, HOWE_STATION.landing.flat()))
       return HOWE_STATION.landingHeight;
     const base = this.height(x, z, referenceY);
@@ -565,7 +588,9 @@ export class CollisionWorld {
   }
   height(x: number, z: number, referenceY = Infinity) {
     const b = this.bridgeAt(x, z, referenceY);
-    return b ? this.bridgeHeight(b.bridge, b.t) : this.groundHeight(x, z);
+    return b
+      ? this.bridgeHeight(b.bridge, b.t)
+      : (this.pacificApron?.height(x, z) ?? this.groundHeight(x, z));
   }
   water(x: number, z: number, referenceY = Infinity) {
     if (

@@ -43,6 +43,7 @@ assert.equal(
     library,
     reflections,
     collision.groundHeight.bind(collision),
+    collision.pacificApron,
   ),
   true,
 );
@@ -73,10 +74,23 @@ test("325 Howe base meets the real shared street along both sloping public faces
         ((hits[0].object as T.Mesh).material as T.Material).name,
         /granite|ashlar|stone/i,
       );
+      // The previous 1m sample is now on the source-grounded Howe apron rail.
+      // Check the retained outer through-route instead of requiring that new
+      // physical railing to remain non-colliding.
+      const sidewalk = frame.p(
+        frame.length * fraction,
+        0,
+        edge === 0 ? -2 : -1.6,
+      );
       assert.equal(
-        collision.blocked(a[0], a[2], 0.25, y),
+        collision.blocked(
+          sidewalk[0],
+          sidewalk[2],
+          0.25,
+          collision.walkingHeight(sidewalk[0], sidewalk[2]),
+        ),
         false,
-        "sidewalk remains outside building collision",
+        "public through-route remains outside building and railing collision",
       );
     }
   }

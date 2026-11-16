@@ -1,4 +1,5 @@
 import { HOWE_STATION_SPEC } from "./howe-station-site";
+import { buildCordovaStreetDetails } from "./cordova-street-details";
 import { buildHoweStationPavilion } from "./howe-station-pavilion";
 import { createHoweStationPavilionMaterials } from "./howe-station-pavilion-materials";
 import { batchFallbackTrees } from "./fallback-tree-batch";
@@ -1219,6 +1220,9 @@ export class World {
         }
       }
     }
+    this.streetFurniture.push(
+      ...buildCordovaStreetDetails(b, this.collision, this.streetFurniture),
+    );
     const chunks = b.finish();
     batchStaticChunks(this.root, chunks, this.facadeMultiDraw, {
       releaseOwnedPreRenderGeometry: true,

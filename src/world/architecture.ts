@@ -196,6 +196,7 @@ export function architecture(
         m,
         reflections,
         collision.groundHeight.bind(collision),
+        collision.pacificApron,
       ) ||
       fairmontWaterfront(
         b,

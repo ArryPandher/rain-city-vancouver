@@ -3,6 +3,8 @@ import type { Batcher } from "./geometry";
 import type { Materials } from "./materials";
 import type { ReflectionProbeSpec } from "../rendering/reflection-probes";
 import { buildPacificCoast } from "./pacific-coast";
+import { buildPacificCoastApron } from "./pacific-coast-apron";
+import type { PacificCoastApronSite } from "./pacific-coast-apron-site";
 import { createPacificCoastMaterials } from "./pacific-coast-materials";
 import { facadeFrame } from "./architectural-mesh";
 import { applyHoweMasonryWeathering } from "./howe-masonry-weathering";
@@ -19,6 +21,7 @@ export function pacificCoast(
   library: Pick<Materials, "texture">,
   reflections: ReflectionProbeSpec[],
   groundHeight: (x: number, z: number) => number = () => batch.offsetY,
+  apron?: PacificCoastApronSite,
 ) {
   if (building.id !== "w143683962") return false;
   const materials = createPacificCoastMaterials(library);
@@ -55,6 +58,7 @@ export function pacificCoast(
       maxDarkening: 0.14,
     });
   if (!buildPacificCoast(batch, building, materials)) return false;
+  if (apron) buildPacificCoastApron(batch, apron, materials);
   reflections.push({
     name: "325 Howe Cordova paired windows",
     resolution: 256,
