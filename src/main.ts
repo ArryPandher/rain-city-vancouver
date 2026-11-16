@@ -155,7 +155,7 @@ class Game {
     this.composer.addPass(this.contactOcclusion);
     this.bloom = new UnrealBloomPass(
       new T.Vector2(innerWidth, innerHeight),
-      0.12,
+      this.daylightBloomStrength,
       0.4,
       2.2,
     );
