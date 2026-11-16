@@ -13,6 +13,8 @@ import * as T from "three";
 import { StaticShadowCache } from "./rendering/static-shadow-cache";
 import { LiveShadowCache } from "./rendering/live-shadow-cache";
 import { profileRender } from "./rendering/render-profile";
+import { BroadleafShadowGeometry } from "./world/broadleaf-shadow-geometry";
+import { canadaPlaceWorld } from "./world/canada-place-deck";
 import { getFallbackTreeBatchController } from "./world/fallback-tree-batch";
 import { CANADA_PLACE_CANOPY_OPTICS } from "./world/canada-place-canopy-glass";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -116,6 +118,8 @@ class Game {
   private startupReport?: HTMLPreElement;
   shadowCache = new StaticShadowCache();
   private liveShadowCache = new LiveShadowCache();
+  private broadleafShadowGeometry = new BroadleafShadowGeometry();
+  private compactBroadleafShadows = false;
   footstepDistance = 0;
   headlights: T.SpotLight[] = [];
   constructor() {
@@ -539,15 +543,18 @@ class Game {
           "rink-south",
           "gallery",
           "terrace",
+          "north-point",
         ] as const
       ).map((check) => {
         const button = document.createElement("button");
         button.textContent =
-          check === "gallery" ||
-          check === "terrace" ||
-          check.startsWith("rink-")
-            ? `Walk at Robson ${check}`
-            : `Walk at Howe ${check}`;
+          check === "north-point"
+            ? "Walk at Canada Place north approach"
+            : check === "gallery" ||
+                check === "terrace" ||
+                check.startsWith("rink-")
+              ? `Walk at Robson ${check}`
+              : `Walk at Howe ${check}`;
         button.addEventListener("click", () => {
           this.walkAtSceneCheck(check);
           panel.open = false;
@@ -609,6 +616,8 @@ class Game {
               ? this.world.detailedTrees?.shadowReceiverState
               : undefined,
             liveShadowCache: { ...this.liveShadowCache.stats },
+            compactBroadleafShadows: this.compactBroadleafShadows,
+            broadleafShadowGeometry: this.broadleafShadowGeometry.state,
             carStreetReflections: {
               enabled:
                 this.carStreetReflectionsEnabled && this.quality !== "low",
@@ -752,9 +761,7 @@ class Game {
       daylightDirectionSelect.add(
         new Option("SE 135° · baseline", "southeast"),
       );
-      daylightDirectionSelect.add(
-        new Option("S 180° · comparison", "south"),
-      );
+      daylightDirectionSelect.add(new Option("S 180° · comparison", "south"));
       daylightDirectionSelect.add(
         new Option("SW 225° · comparison", "southwest"),
       );
@@ -790,6 +797,21 @@ class Game {
         " Cache static shadows (experimental)",
       );
       comparisons.append(shadowLabel);
+      const compactShadowLabel = document.createElement("label");
+      const compactShadowCheckbox = document.createElement("input");
+      compactShadowCheckbox.type = "checkbox";
+      compactShadowCheckbox.addEventListener("change", () => {
+        this.finishFrameSample("canopy shadow geometry changed");
+        this.compactBroadleafShadows = compactShadowCheckbox.checked;
+        this.liveShadowCache.setEnabled(this.liveShadowCache.enabled);
+        this.renderer.shadowMap.needsUpdate = true;
+        this.world.sun.shadow.needsUpdate = true;
+      });
+      compactShadowLabel.append(
+        compactShadowCheckbox,
+        " Compact canopy shadows (experimental)",
+      );
+      comparisons.append(compactShadowLabel);
       const carReflectionLabel = document.createElement("label");
       const carReflectionCheckbox = document.createElement("input");
       carReflectionCheckbox.type = "checkbox";
@@ -970,84 +992,96 @@ class Game {
       | "rink-north"
       | "rink-south"
       | "gallery"
-      | "terrace",
+      | "terrace"
+      | "north-point",
   ) {
     if (!this.ready || !new URLSearchParams(location.search).has("debug"))
       return;
     // Recorded ordinary street comparison, cordova-geometry-baseline-profile.
     // Use live walking support and the normal collision-shortened chase boom.
     const place =
-      check === "gallery" || check === "terrace" || check.startsWith("rink-")
-        ? "Robson"
-        : "Howe";
+      check === "north-point"
+        ? "Canada Place"
+        : check === "gallery" ||
+            check === "terrace" ||
+            check.startsWith("rink-")
+          ? "Robson"
+          : "Howe";
     const { x, z, yaw, pitch } =
-      check === "tower-wide"
-        ? { x: 515, z: -480, yaw: 0.52, pitch: -0.51 }
-        : check === "tower-near"
-          ? { x: 570, z: -452, yaw: -0.389, pitch: -0.35 }
-          : check === "rink-street"
-            ? { x: -93.9, z: 74.5, yaw: 1.53494, pitch: 0.08 }
-            : check === "rink-north"
-              ? { x: -63.8, z: 83.4, yaw: -2.40733, pitch: 0.19 }
-              : check === "rink-south"
-                ? { x: -87.9, z: 106.9, yaw: -2.12754, pitch: 0.19 }
-                : check === "hotel"
-                  ? {
-                      x: 480.7306161858139,
-                      z: -456.9860640434517,
-                      yaw: 4.369913102028912,
-                      pitch: -0.49715,
-                    }
-                  : check === "gallery"
+      check === "north-point"
+        ? {
+            x: canadaPlaceWorld(42, -75)[0],
+            z: canadaPlaceWorld(42, -75)[1],
+            yaw: Math.PI / 2,
+            pitch: 0.19,
+          }
+        : check === "tower-wide"
+          ? { x: 515, z: -480, yaw: 0.52, pitch: -0.51 }
+          : check === "tower-near"
+            ? { x: 570, z: -452, yaw: -0.389, pitch: -0.35 }
+            : check === "rink-street"
+              ? { x: -93.9, z: 74.5, yaw: 1.53494, pitch: 0.08 }
+              : check === "rink-north"
+                ? { x: -63.8, z: 83.4, yaw: -2.40733, pitch: 0.19 }
+                : check === "rink-south"
+                  ? { x: -87.9, z: 106.9, yaw: -2.12754, pitch: 0.19 }
+                  : check === "hotel"
                     ? {
-                        x: -68.78511329120707,
-                        z: 51.52276041041648,
-                        yaw: 2.3554594283507932,
-                        pitch: -0.1583,
+                        x: 480.7306161858139,
+                        z: -456.9860640434517,
+                        yaw: 4.369913102028912,
+                        pitch: -0.49715,
                       }
-                    : check === "terrace"
+                    : check === "gallery"
                       ? {
-                          x: -145.8943919801504,
-                          z: 127.92436055962261,
+                          x: -68.78511329120707,
+                          z: 51.52276041041648,
                           yaw: 2.3554594283507932,
-                          pitch: 0.19,
+                          pitch: -0.1583,
                         }
-                      : check === "return"
-                        ? { x: 500, z: -506, yaw: 2.97, pitch: -0.18 }
-                        : check === "podium"
-                          ? {
-                              x: 517.8729019962855,
-                              z: -474.3508166211231,
-                              yaw: 2.7413631020289113,
-                              pitch: 0.21025000000000005,
-                            }
-                          : check === "forecourt"
+                      : check === "terrace"
+                        ? {
+                            x: -145.8943919801504,
+                            z: 127.92436055962261,
+                            yaw: 2.3554594283507932,
+                            pitch: 0.19,
+                          }
+                        : check === "return"
+                          ? { x: 500, z: -506, yaw: 2.97, pitch: -0.18 }
+                          : check === "podium"
                             ? {
-                                x: 486.06376139308657,
-                                z: -436.3726305675954,
-                                yaw: 2.4443631020289107,
-                                pitch: 0.19,
+                                x: 517.8729019962855,
+                                z: -474.3508166211231,
+                                yaw: 2.7413631020289113,
+                                pitch: 0.21025000000000005,
                               }
-                            : check === "apron"
+                            : check === "forecourt"
                               ? {
-                                  x: 421.2023,
-                                  z: -388.0413,
-                                  yaw: 2.35619449,
-                                  pitch: -0.18,
+                                  x: 486.06376139308657,
+                                  z: -436.3726305675954,
+                                  yaw: 2.4443631020289107,
+                                  pitch: 0.19,
                                 }
-                              : check === "sidewalk"
+                              : check === "apron"
                                 ? {
-                                    x: 424.90576707774363,
-                                    z: -389.90909834218024,
-                                    yaw: -1.2648368979710893,
-                                    pitch: -0.39049999999999996,
+                                    x: 421.2023,
+                                    z: -388.0413,
+                                    yaw: 2.35619449,
+                                    pitch: -0.18,
                                   }
-                                : {
-                                    x: 450.2797011432693,
-                                    z: -407.32055060898534,
-                                    yaw: -1.2648368979710893,
-                                    pitch: -0.39049999999999996,
-                                  };
+                                : check === "sidewalk"
+                                  ? {
+                                      x: 424.90576707774363,
+                                      z: -389.90909834218024,
+                                      yaw: -1.2648368979710893,
+                                      pitch: -0.39049999999999996,
+                                    }
+                                  : {
+                                      x: 450.2797011432693,
+                                      z: -407.32055060898534,
+                                      yaw: -1.2648368979710893,
+                                      pitch: -0.39049999999999996,
+                                    };
     const collision = this.world.collision,
       y = collision.walkingHeight(x, z);
     if (
@@ -1442,7 +1476,11 @@ class Game {
     ui.toast("Back on the road.");
   }
   travel(id: string) {
-    const walking = robsonWalkingArrival(id, !this.vehicle, this.world.collision);
+    const walking = robsonWalkingArrival(
+      id,
+      !this.vehicle,
+      this.world.collision,
+    );
     const driving = ironworkersVehicleArrival(
       id,
       this.vehicle?.kind,
@@ -2277,7 +2315,7 @@ class Game {
       this.shadowCache.render(
         this.renderer,
         this.camera,
-        `${this.lastWorldUpdate}/${this.world.weather}/${this.quality}`,
+        `${this.lastWorldUpdate}/${this.world.weather}/${this.quality}/${this.compactBroadleafShadows}`,
         this.running || ui.introOpen,
         () =>
           this.liveShadowCache.render(
@@ -2289,7 +2327,14 @@ class Game {
               root: this.world.root,
               sources: this.world.chunks,
             },
-            () => this.composer.render(),
+            () =>
+              this.broadleafShadowGeometry.render(
+                this.renderer,
+                this.camera,
+                this.world.root,
+                this.compactBroadleafShadows,
+                () => this.composer.render(),
+              ),
           ),
       );
     };
