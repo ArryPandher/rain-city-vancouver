@@ -1,4 +1,5 @@
 import { ShadowCasterVolume } from "./shadow-caster-volume";
+import { installPmremRefreshCompatibility } from "./pmrem-refresh";
 import * as T from "three";
 
 export interface ReflectionProbeSpec {
@@ -25,6 +26,7 @@ export class SceneReflections {
   probes: SceneReflectionProbe[];
   private generation = 0;
   private disposed = false;
+  private readonly pmremRefreshSupported: boolean;
   private listeners = new Set<() => void>();
   captures = 0;
   lastSubmissionMs = 0;
@@ -36,6 +38,10 @@ export class SceneReflections {
     private sun: T.DirectionalLight,
     specs: ReflectionProbeSpec[],
   ) {
+    this.pmremRefreshSupported = installPmremRefreshCompatibility();
+    if (!this.pmremRefreshSupported)
+      this.lastError =
+        "Local reflections unavailable: PMREM refresh compatibility needs review for this Three revision.";
     this.probes = specs.map((spec) => {
       const target = new T.WebGLCubeRenderTarget(spec.resolution ?? 128, {
         type: T.HalfFloatType,
@@ -97,7 +103,7 @@ export class SceneReflections {
     }
   }
   update(renderer: T.WebGLRenderer, viewer: T.Vector3) {
-    if (this.disposed) return;
+    if (this.disposed || !this.pmremRefreshSupported) return;
     const probe = this.probes.find(
       (p) =>
         p.dirty &&

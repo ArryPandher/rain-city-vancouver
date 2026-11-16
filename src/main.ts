@@ -1,4 +1,8 @@
 import { sweepVehiclePedestrians } from "./game/vehicle-pedestrian-contact";
+import {
+  contactMotionClearance,
+  resolveVehicleContacts,
+} from "./game/vehicle-contact";
 import { FrameSample, type FrameSampleContext } from "./rendering/frame-sample";
 import * as T from "three";
 import { StaticShadowCache } from "./rendering/static-shadow-cache";
@@ -23,11 +27,7 @@ import { UI } from "./ui/ui";
 import { Actors, Vehicle } from "./game/actors";
 import { makeCharacter, makeWeapon, Character } from "./game/character";
 import { drive, damp, angleDelta } from "./game/physics";
-import {
-  startupBikeSpot,
-  summonedVehicleSpot,
-  approachingVehicleContact,
-} from "./game/vehicle-placement";
+import { startupBikeSpot, summonedVehicleSpot } from "./game/vehicle-placement";
 import { GameAudio } from "./game/audio";
 import { PointerInput } from "./game/pointer-input";
 import { shortenChaseBoom } from "./game/chase-camera";
@@ -718,9 +718,9 @@ class Game {
         probeSelect,
         probeButton,
         comparisons,
+        probeReport,
         report,
         sampleReport,
-        probeReport,
       );
       document.body.append(panel);
     }
@@ -1477,19 +1477,46 @@ class Game {
         s.vx *= 0.15;
         s.vz *= 0.15;
       }
-      for (const other of this.actors.vehicles) {
-        if (other === v || !other.model.group.visible) continue;
-        if (
-          approachingVehicleContact(
-            { ...s, y: v.model.group.position.y },
-            { ...other.state, y: other.model.group.position.y },
-          ) &&
-          Math.abs(s.speed) > 2
-        ) {
-          s.speed *= -0.2;
-          s.vx *= -0.15;
-          s.vz *= -0.15;
-          other.state.speed = 0;
+      const contactVehicles = this.actors.vehicles.filter(
+        (other) => other !== v && other.model.group.visible,
+      );
+      const vehicleContact = resolveVehicleContacts(
+        { x: ox, z: oz, y: this.player.y, heading: previousHeading },
+        {
+          x: s.x,
+          z: s.z,
+          y: this.world.collision.height(s.x, s.z, this.player.y),
+          heading: s.heading,
+        },
+        v.kind,
+        contactVehicles.map((other) => ({
+          x: other.state.x,
+          z: other.state.z,
+          heading: other.state.heading,
+          kind: other.kind,
+          y:
+            other.model.group.position.y -
+            (other.model.group.userData.roadClearance ?? 0.13),
+        })),
+        s,
+        contactMotionClearance(
+          this.world.collision,
+          this.actors.pedestrianBodies(),
+          v.kind,
+        ),
+      );
+      s.x = vehicleContact.x;
+      s.z = vehicleContact.z;
+      s.heading = vehicleContact.heading;
+      s.vx = vehicleContact.vx;
+      s.vz = vehicleContact.vz;
+      if (vehicleContact.hit) {
+        // Keep tangential/escaping motion; speed must agree with resolved velocity
+        // so drive() cannot reinstate the old inward impulse on the next frame.
+        s.speed = s.vx * Math.sin(s.heading) + s.vz * Math.cos(s.heading);
+        if (vehicleContact.contactIndex >= 0)
+          contactVehicles[vehicleContact.contactIndex].state.speed = 0;
+        if (vehicleContact.impactSpeed > 2) {
           this.damage = 0.3;
           this.audio.hit();
         }
