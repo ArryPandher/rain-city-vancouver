@@ -1,3 +1,8 @@
+import {
+  ironworkersPoint,
+  ironworkersSample,
+  ironworkersContains,
+} from "./ironworkers-alignment";
 import { createHoweSceneTerrain } from "./howe-scene-terrain";
 import { panPacificHowePodiumCameraClearance } from "./pan-pacific-howe-podium-camera";
 import {
@@ -162,6 +167,7 @@ export const BRIDGES: Bridge[] = [
   },
 ];
 export function bridgePoint(b: Bridge, t: number): [number, number] {
+  if (b.id === "ironworkers") return ironworkersPoint(t);
   const pts = b.points || [b.a, b.b],
     lengths = pts
       .slice(1)
@@ -181,6 +187,7 @@ export function bridgePoint(b: Bridge, t: number): [number, number] {
   return b.b;
 }
 export function bridgeSample(b: Bridge, x: number, z: number) {
+  if (b.id === "ironworkers") return ironworkersSample(x, z);
   const pts = b.points || [b.a, b.b],
     lengths = pts
       .slice(1)
@@ -606,8 +613,13 @@ export class CollisionWorld {
   }
   bridgeAt(x: number, z: number, referenceY = Infinity) {
     for (const b of BRIDGES) {
+      const ironworkers = b.id === "ironworkers";
+      if (ironworkers && !ironworkersContains(x, z)) continue;
       const s = bridgeSample(b, x, z);
-      if (s.d < b.width * 0.52 && this.bridgeHeight(b, s.t) <= referenceY + 3)
+      if (
+        (ironworkers || s.d < b.width * 0.52) &&
+        this.bridgeHeight(b, s.t) <= referenceY + 3
+      )
         return { bridge: b, ...s };
     }
     return null;

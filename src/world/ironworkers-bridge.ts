@@ -1,6 +1,15 @@
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { bridgePoint, type Bridge } from "./collision";
+import type { Bridge } from "./collision";
+import {
+  createIronworkersDeckGeometry,
+  IRONWORKERS_PLAN_LENGTH,
+  IRONWORKERS_DECK_STATIONS,
+  ironworkersTAtDistance,
+  ironworkersFrame,
+  ironworkersPoint,
+  ironworkersGradeT,
+} from "./ironworkers-alignment";
 
 /** BC2018/SEABC:142+335+142m main deck truss and four~86m approach spans.
  * Stations are fitted to the existing playable crest, not surveyed pier locations.
@@ -72,19 +81,22 @@ export function createIronworkersBridgeGeometry(
   deckHeight: (t: number) => number,
 ): IronworkersGeometry {
   const d = IRONWORKERS_STRUCTURE,
-    length = Math.hypot(bridge.b[0] - bridge.a[0], bridge.b[1] - bridge.a[1]),
-    span = ironworkersStations(length),
-    nx = (bridge.b[1] - bridge.a[1]) / length,
-    nz = -(bridge.b[0] - bridge.a[0]) / length;
+    length = IRONWORKERS_PLAN_LENGTH,
+    span = ironworkersStations(length);
   const bins: Record<"steel" | "concrete", T.BufferGeometry[]> = {
     steel: [],
     concrete: [],
   };
   const at = (s: number, side: number, y: number) => {
-    const [x, z] = bridgePoint(bridge, s / length);
-    return new T.Vector3(x + nx * side, y, z + nz * side);
+    const t = ironworkersTAtDistance(s),
+      [x, z] = ironworkersPoint(t, side);
+    return new T.Vector3(
+      x,
+      y + deckHeight(ironworkersGradeT(x, z)) - deckHeight(t),
+      z,
+    );
   };
-  const y = (s: number) => deckHeight(s / length);
+  const y = (s: number) => deckHeight(ironworkersTAtDistance(s));
   function member(
     a: T.Vector3,
     b: T.Vector3,
@@ -140,18 +152,23 @@ export function createIronworkersBridgeGeometry(
     bins[role].push(g);
   }
   // Deck underside and fascia only: the live asphalt remains the single top.
-  const deckSegments = Math.ceil(length / 12);
+  const underside = createIronworkersDeckGeometry(deckHeight, -d.deckDepth),
+    undersideIndex = underside.index!;
+  for (let i = 0; i < undersideIndex.count; i += 3) {
+    const a = undersideIndex.getX(i);
+    undersideIndex.setX(i, undersideIndex.getX(i + 1));
+    undersideIndex.setX(i + 1, a);
+  }
+  underside.computeVertexNormals();
+  bins.concrete.push(underside);
+  const deckStations = IRONWORKERS_DECK_STATIONS.map(
+      (t) => ironworkersFrame(t).distance,
+    ),
+    deckSegments = deckStations.length - 1;
   for (let i = 0; i < deckSegments; i++) {
-    const a = (length * i) / deckSegments,
-      b = (length * (i + 1)) / deckSegments,
+    const a = deckStations[i],
+      b = deckStations[i + 1],
       half = bridge.width / 2;
-    quad(
-      "concrete",
-      at(a, -half, y(a) - d.deckDepth),
-      at(a, half, y(a) - d.deckDepth),
-      at(b, half, y(b) - d.deckDepth),
-      at(b, -half, y(b) - d.deckDepth),
-    );
     for (const sign of [-1, 1]) {
       const v = [
         at(a, sign * half, y(a) - 0.025),

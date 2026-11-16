@@ -1,4 +1,10 @@
 import test from "node:test";
+import {
+  IRONWORKERS_PLAN_LENGTH,
+  ironworkersPoint,
+  ironworkersGradeT,
+  ironworkersTAtDistance,
+} from "../src/world/ironworkers-alignment";
 import assert from "node:assert/strict";
 import * as T from "three";
 import {
@@ -14,7 +20,7 @@ import {
   IRONWORKERS_STRUCTURE as D,
 } from "../src/world/ironworkers-bridge";
 const bridge = BRIDGES.find((b) => b.id === "ironworkers")!;
-const length = Math.hypot(bridge.b[0] - bridge.a[0], bridge.b[1] - bridge.a[1]);
+const length = IRONWORKERS_PLAN_LENGTH;
 const height = (t: number) => bridgeY(bridge, t);
 const built = createIronworkersBridgeGeometry(bridge, height);
 const material = new T.MeshBasicMaterial({ side: T.DoubleSide });
@@ -25,10 +31,8 @@ root.add(
 );
 root.updateMatrixWorld(true);
 function at(t: number, side: number, y: number) {
-  const [x, z] = bridgePoint(bridge, t),
-    nx = (bridge.b[1] - bridge.a[1]) / length,
-    nz = -(bridge.b[0] - bridge.a[0]) / length;
-  return new T.Vector3(x + nx * side, y, z + nz * side);
+  const [x, z] = ironworkersPoint(t, side);
+  return new T.Vector3(x, y + height(ironworkersGradeT(x, z)) - height(t), z);
 }
 function cast(origin: T.Vector3, direction: T.Vector3, far: number) {
   return new T.Raycaster(origin, direction, 0, far).intersectObject(root, true);
@@ -49,16 +53,16 @@ test("documented main spans form a continuous below-deck cantilever with support
   );
   for (const bearing of [s.start, s.southPier, s.northPier, s.end])
     for (const side of [-D.trussSpacing / 2, D.trussSpacing / 2]) {
-      const bottom =
-        height(bearing / length) - ironworkersTrussDepth(bearing, length);
+      const t = ironworkersTAtDistance(bearing),
+        bottom = height(t) - ironworkersTrussDepth(bearing, length);
       const pier = new T.Raycaster(
-        at(bearing / length, side, bottom + 0.1),
+        at(t, side, bottom + 0.1),
         new T.Vector3(0, -1, 0),
         0,
         2,
       ).intersectObject(root.children[1])[0];
       const chord = new T.Raycaster(
-        at(bearing / length, side, bottom - 0.6),
+        at(t, side, bottom - 0.6),
         new T.Vector3(0, 1, 0),
         0,
         1.2,
@@ -102,7 +106,7 @@ test("deck underside follows the existing playable grade without creating a dupl
         hit = cast(at(t, side, height(t) + 0.1), new T.Vector3(0, -1, 0), 1)[0];
       assert.ok(hit, `deck underside missing ${t}/${side}`);
       assert.ok(
-        Math.abs(hit.point.y - (height(t) - D.deckDepth)) < 0.018,
+        Math.abs(hit.point.y - at(t, side, height(t) - D.deckDepth).y) < 0.018,
         `deck thickness differs at ${t}: ${hit.point.y}`,
       );
     }

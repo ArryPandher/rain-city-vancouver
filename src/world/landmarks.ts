@@ -11,6 +11,12 @@ import {
 } from "./collision";
 import { ribbon } from "./geometry";
 import { addIronworkersBridgeStructure } from "./ironworkers-bridge";
+import {
+  createIronworkersDeckGeometry,
+  IRONWORKERS_DECK_STATIONS,
+  ironworkersPoint,
+  ironworkersGradeT,
+} from "./ironworkers-alignment";
 export function buildLandmarks(
   parent: T.Group,
   m: Materials,
@@ -249,29 +255,49 @@ export function buildLandmarks(
     const g = new T.Group();
     parent.add(g);
     const length = Math.hypot(b.b[0] - b.a[0], b.b[1] - b.a[1]),
-      n = Math.ceil(length / 12),
+      n =
+        b.id === "ironworkers"
+          ? IRONWORKERS_DECK_STATIONS.length - 1
+          : Math.ceil(length / 12),
       points: number[] = [];
+    const station = (i: number) =>
+      b.id === "ironworkers" ? IRONWORKERS_DECK_STATIONS[i] : i / n;
     for (let i = 0; i <= n; i++) {
-      const t = i / n;
+      const t = station(i);
       points.push(...bridgePoint(b, t));
     }
     const height = (x: number, z: number) => {
       return deckY(bridgeSample(b, x, z).t);
     };
-    mesh(ribbon(points, b.width, 0.0, height), m.asphalt, g);
+    mesh(
+      b.id === "ironworkers"
+        ? createIronworkersDeckGeometry(deckY)
+        : ribbon(points, b.width, 0.0, height),
+      m.asphalt,
+      g,
+    );
     const dx = (b.b[0] - b.a[0]) / length,
       dz = (b.b[1] - b.a[1]) / length,
       nx = dz,
       nz = -dx;
-    const p = (t: number, side: number, y: number) =>
-      new T.Vector3(
+    const p = (t: number, side: number, y: number) => {
+      if (b.id === "ironworkers") {
+        const [x, z] = ironworkersPoint(t, side);
+        return new T.Vector3(
+          x,
+          y + deckY(ironworkersGradeT(x, z)) - deckY(t),
+          z,
+        );
+      }
+      return new T.Vector3(
         bridgePoint(b, t)[0] + nx * side,
         y,
         bridgePoint(b, t)[1] + nz * side,
       );
+    };
     for (let i = 0; i < n; i++) {
-      const t = i / n,
-        tt = (i + 1) / n;
+      const t = station(i),
+        tt = station(i + 1);
       for (const s of [-1, 1]) {
         const edge = (b.width / 2) * s;
         beam(
