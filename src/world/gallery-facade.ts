@@ -5,6 +5,7 @@ import { landmarkSurfaceUV } from "./landmark-surfaces";
 import entry from "./gallery-rear-entry-data.json";
 import { addGalleryEntryCornice } from "./gallery-entry-cornice";
 import { createGalleryAshlarMaterial } from "./gallery-ashlar-material";
+import { addGalleryStairFraming } from "./gallery-stair-framing";
 
 // Two nearly collinear mapped rear edges form one continuous nine-bay elevation.
 function edge(a: number[], b: number[], bays: number) {
@@ -274,6 +275,7 @@ export function addGalleryFacade(
     mesh.box([x, 13.65, z], 1.218, 0.5, 1.134, stone);
   }
   addGalleryEntryCornice(mesh, stone);
+  addGalleryStairFraming(mesh, base, frame);
   mesh.finish();
   const chunks = batch.finish();
   for (const chunk of chunks) {

@@ -180,13 +180,18 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
       normal = mesh.geometry.getAttribute("normal");
     for (let i = 0; i < p.count; i++) {
       assert.ok(Number.isFinite(p.getX(i) + p.getY(i) + p.getZ(i)));
-      assert.ok(p.getY(i) >= -0.001 && p.getY(i) <= 16.751);
+      assert.ok(p.getY(i) >= -0.081 && p.getY(i) <= 16.751);
       assert.ok(
         p.getX(i) > -10.951 &&
           p.getX(i) < 20 &&
           p.getZ(i) > 22 &&
-          p.getZ(i) < 25,
+          p.getZ(i) < 27.66,
       );
+      if (p.getZ(i) >= 25 || p.getY(i) < -0.001)
+        assert.ok(
+          p.getX(i) >= -8.831 && p.getX(i) <= 5.751 && p.getY(i) <= 4.268,
+          "expanded bounds belong only to bounded terrace/rail assembly",
+        );
       assert.ok(
         Number.isFinite(normal.getX(i) + normal.getY(i) + normal.getZ(i)),
       );
@@ -194,7 +199,10 @@ test("added geometry is finite, bounded, economical and has outward sill faces",
     triangles += mesh.geometry.getIndex()!.count / 3;
   }
   t.diagnostic(`${triangles} added triangles in ${chunks.length} draws`);
-  assert.ok(triangles < 6000, `${triangles} added triangles`);
+  assert.ok(
+    triangles < 7000,
+    `${triangles} added triangles including terrace framing`,
+  );
   const hit = wingRay((0.5 * GALLERY_FACADE.length) / 6, 4.25, root)[0];
   assert.ok(
     hit && hit.distance < 3,

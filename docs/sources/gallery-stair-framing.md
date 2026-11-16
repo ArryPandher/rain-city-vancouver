@@ -1,0 +1,25 @@
+# Gallery entrance terrace and stair framing
+
+2026-11-17. Bounded interpretation of the Robson-facing gallery entrance, visible from the new ordinary map arrival and on the walk toward the rink. This adds structural depth around the existing staircase; it is not a survey of the entire restaurant terrace or a reconstruction of its interior.
+
+## Source and diagnosis
+
+The gallery's [official exterior image](https://www.vanartgallery.bc.ca/wp-content/uploads/2025/07/VAG_exterior_2023_15-5-edited-1.jpg), cached at `artifacts/local/robson-realism-reference/vag-official-robson-exterior.jpg`, clearly shows broad level terrace walls flanking the upper stair flight. Their exposed side faces rise above the descending steps, while the lower steps remain open. Dark round handrails follow the stair pitch; dark guards protect the raised terrace perimeter. The photo's original x180–854/y480–770 crop is saved as `artifacts/local/gallery-stair-framing-source-crop.png`. Its top horizontal terrace-wall edge, descending step contact and slender rails are the primary controls. No open image licence was established; the image is research only and never a runtime texture.
+
+The cached [Dietmar Rabich 2022 gallery view](https://commons.wikimedia.org/wiki/File:Vancouver_(BC,_Canada),_Art_Gallery_--_2022_--_1923.jpg), `rabich-gallery-2022-1923.jpg`, independently shows the side terrace mass and open lower flight on the image right. The native `gallery-ashlar-corrected-native.png` and later `robson-gallery-arrival-native.png` show the missing structure clearly: a bare stair rectangle meets the facade with neither raised side terrace nor rail. The north/Georgia-facing GoToVan image is excluded as a control for this south/Robson entrance.
+
+## Fit and bounded interpretation
+
+The existing translated source staircase owns all twelve350mm treads, its11.7m width, and3.2m rise. Those source proportions remain imperfect compared with the longer photographed flight; this pass does not silently replace them. The common gallery frame and source-data registration remain unchanged: u−7.75..3.95, v23.43..27.63, local landing3.2 plus the existing80mm group datum.
+
+The two closed side terraces occupy only outboard strips. Their source-local widths are1.08m on the left and1.8m on the right. These are deliberately bounded estimates, not photographed measurements: the left retained rear foundation ends at u−8.872, so its terrace stops at−8.83. Both begin180mm behind the tread start and end after the upper nine treads, leaving the lowest three unobstructed. The backs intersect the existing foundation, the sides and end faces are fully closed, and the top meets the retained landing at world3.28m. The lower wall is recessed30mm beneath a120mm coping. Bottoms reach worldy0 rather than floating at the gallery group's+.08m datum.
+
+Two54mm-diameter dark handrails run350mm inside the stair edges. Four posts on each side land25mm into original tread centres. Their960mm top height and gauge are source-informed estimates. Short terminal horizontals remain inside the original stair rectangle. The terrace's exposed outer/front edges receive matching two-rail guards at1.04m above the landing. No central rail divides the public approach. No furniture, umbrellas, planting, lettering, cafe doorway or hidden interior is invented.
+
+## Contact, rendering and verification
+
+`gallery-stair-framing-data.ts` owns the common coordinate conversion, terrace dimensions and all rail segments. `gallery-stair-framing.ts` emits closed boxes/cylinders into the existing foundation and sash-frame batches through `gallery-facade.ts`. The addition is1,008 triangles. Material count stays four for the complete gallery facade; no texture, light or reflection capture is added.
+
+The finite contact provider uses the same wall/coping extents and rail segment list. A low actor cannot snap onto a raised terrace: its top support requires an existing height within350mm of that surface. Cameras collide with the physical walls/rails at their actual heights and remain free above them. The existing gallery-ID presence gate controls contact. This does not modify roads, ground construction height, well openings, garden/terrace paths or the on-foot arrival.
+
+Focused tests verify closed oriented surfaces and outward normals, exact top/support equality, worldy0 contact, retained-foundation attachment, original tread contact under every handrail post, no new surface over the central staircase, finite camera obstruction and unrestricted overhead clearance. Full unchanged city data tests cover the normal gallery arrival and every central tread. The historic closed facade already blocks the top two tread centres; that existing boundary is preserved, while all ten exposed central treads retain their body clearance. Existing actual-GLB facade tests preserve all source stair/column/pediment vertices and triangles. Native visual acceptance of the new framing remains coordinator-owned; use map Robson on foot, approach the stairs and walk laterally to inspect the asymmetric returns and rail contact.
