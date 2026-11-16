@@ -14,6 +14,8 @@ export const CANADA_PLACE_NORTH_SEATING = {
   depth: 2.16,
   bevel: 0.012,
   legRadius: 0.07,
+  // Ordinary walking capsule; near-top support and side contact must agree.
+  landingRadius: 0.36,
   placements: [
     { x: 74, z: -76, yaw: -0.2 },
     { x: 84, z: -66, yaw: 0.35 },
@@ -147,5 +149,9 @@ export function canadaPlaceNorthSeatHeight(
     CANADA_PLACE_NORTH_SEATING.ground +
     CANADA_PLACE_NORTH_SEATING.datum +
     CANADA_PLACE_NORTH_SEATING.height;
-  if (referenceY >= top - 0.2 && inside(x, z, 0)) return top;
+  if (
+    referenceY >= top - 0.2 &&
+    inside(x, z, CANADA_PLACE_NORTH_SEATING.landingRadius)
+  )
+    return top;
 }

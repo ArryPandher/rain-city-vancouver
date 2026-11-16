@@ -75,3 +75,11 @@ impulse 5m/s, normal walking speed 3.2m/s and gravity 17m/s² onto the seat, and
 Native appearance/interaction acceptance remains pending. Manufacturer and MCM
 images are reference-only; existing Codriver/OSM and CC0 runtime attribution is
 unchanged.
+
+## Native concave-notch landing correction — 2026-11-16
+
+Native58 at world(718.59,−697.72), y7.88 exposed a new support/contact mismatch. The side blocker tested the36cm player capsule, while near-top landing support tested only the centre point. A jump could therefore descend into a concave notch narrower than the capsule and leave all eight walking directions blocked. This was a regression in the new bench provider, not a source terrain or legacy collision issue. The previous nominal centre-landing test did not exercise it.
+
+Near/above-top support now uses the same36cm finite footprint overlap and bevel tolerance as side contact. The existing `referenceY >= top −0.20` gate remains: ground queries stay at the original pier and do not promote the player onto a bench. The shape, coordinates, materials, source mask and global terrain are unchanged. A descending body overlapping either lobe is supported until its complete capsule clears the seat, so it cannot fall into the narrow notch or embed in the outer rim on step-off.
+
+Actual full-city regression starts at the recorded notch, lands vertically from above, then walks all eight directions for2seconds with ordinary3.2m/s movement and17m/s² gravity. Every path must remain unblocked and return to original pier height. A separate Space/5m/s-impulse escape from the already-recorded ground pose also verifies recovery without teleporting or disabling collision. Native retest remains required before claiming the bench top accepted.

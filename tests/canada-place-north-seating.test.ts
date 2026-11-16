@@ -169,6 +169,78 @@ test("actual full-city walking, bench jump landing, step off and existing promen
   }
   const c = new CollisionWorld(data);
   c.setCanadaPlaceCapabilities(canadaPlaceCapabilities(true, true, true, true));
+  // Native58: a descending body could enter the narrow notch because the old
+  // support tested its centre while the side blocker tested its full capsule.
+  const nativeNotch: [number, number] = [718.59, -697.72];
+  const seatTop = D.ground + D.datum + D.height;
+  assert.equal(
+    c.walkingHeight(...nativeNotch, 7.88),
+    7.88,
+    "ground remains unpromoted, including the historical trapped pose",
+  );
+  for (let direction = 0; direction < 8; direction++) {
+    const angle = (direction * Math.PI) / 4,
+      dx = Math.cos(angle),
+      dz = Math.sin(angle);
+    let body: [number, number] = [...nativeNotch],
+      y = seatTop + 0.3,
+      vy = 0;
+    // Land vertically in the recorded notch first, rather than hiding the
+    // support mismatch by steering the foot centre onto the solid slab.
+    for (let step = 0; step < 100; step++) {
+      const floor = c.walkingHeight(...body, y);
+      vy -= 17 / 120;
+      y = Math.max(floor, y + vy / 120);
+      if (y <= floor) vy = 0;
+    }
+    assert.ok(
+      Math.abs(y - seatTop) < 1e-8,
+      "capsule rests on lobes instead of falling between them",
+    );
+    assert.equal(c.blocked(...body, 0.36, y), false);
+    for (let step = 0; step < 240; step++) {
+      const move = c.move(...body, (dx * 3.2) / 120, (dz * 3.2) / 120, 0.36, y);
+      assert.equal(
+        move.hit,
+        false,
+        `notch landing then walk direction${direction}`,
+      );
+      body = [move.x, move.z];
+      const floor = c.walkingHeight(...body, y);
+      vy -= 17 / 120;
+      y = Math.max(floor, y + vy / 120);
+      if (y <= floor) vy = 0;
+      assert.equal(
+        c.blocked(...body, 0.36, y),
+        false,
+        "descent never embeds the body in a seat edge",
+      );
+    }
+    assert.ok(
+      Math.hypot(body[0] - nativeNotch[0], body[1] - nativeNotch[1]) > 6,
+    );
+    assert.ok(
+      Math.abs(y - 7.88) < 0.002,
+      "ordinary step-off returns to original pier",
+    );
+  }
+  // Also recover the already-recorded ground pose using ordinary Space + walk.
+  let escaped: [number, number] = [...nativeNotch],
+    escapeY = 7.88,
+    escapeVy = 5;
+  for (let step = 0; step < 240; step++) {
+    const move = c.move(...escaped, -3.2 / 120, 0, 0.36, escapeY);
+    escaped = [move.x, move.z];
+    const floor = c.walkingHeight(...escaped, escapeY);
+    escapeVy -= 17 / 120;
+    escapeY = Math.max(floor, escapeY + escapeVy / 120);
+    if (escapeY <= floor) escapeVy = 0;
+  }
+  assert.ok(
+    nativeNotch[0] - escaped[0] > 5.8,
+    "ordinary jump recovers historical trapped pose",
+  );
+  assert.equal(c.blocked(...escaped, 0.36, escapeY), false);
   const route = [
     ...CANADA_PLACE_DECK_ROUTE,
     ...approach.slice(1).map(([x, z]) => canadaPlaceWorld(x, z)),
