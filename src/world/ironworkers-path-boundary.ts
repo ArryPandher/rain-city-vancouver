@@ -1,4 +1,5 @@
 import * as T from "three";
+import { createIronworkersPicketCoverageMaterial } from "./ironworkers-picket-coverage";
 import {
   IRONWORKERS_ALIGNMENT as A,
   IRONWORKERS_DECK_STATIONS,
@@ -506,7 +507,17 @@ export function createIronworkersPathBoundary(
       path = new T.Mesh(geometry([...top, ...sides]), concrete);
     path.position.set(6800, 0, -1600);
     group.add(path);
-    const farMaterial = steel.clone();
+    // Match the distributed physical members, not the nominal pitch rounded
+    // before the integer count. Each filtered cell covers one full interval.
+    const actualPitch = LENGTH / Math.ceil(LENGTH / d.picketPitch);
+    const filtered = steel instanceof T.MeshStandardMaterial;
+    const farMaterial = filtered
+      ? createIronworkersPicketCoverageMaterial(steel, {
+          width: d.picketWidth,
+          depth: d.picketDepth,
+          pitch: actualPitch,
+        })
+      : steel.clone();
     farMaterial.side = T.DoubleSide;
     farMaterial.forceSinglePass = true;
     const staticMembers = members.filter((m) => m.kind !== "picket"),
@@ -547,7 +558,13 @@ export function createIronworkersPathBoundary(
           n = new T.Vector3().crossVectors(u, v),
           matrix = new T.Matrix4()
             .makeBasis(u, v, n)
-            .scale(new T.Vector3(d.picketWidth, d.fenceHeight, 1))
+            .scale(
+              new T.Vector3(
+                filtered ? actualPitch : d.picketWidth,
+                d.fenceHeight,
+                1,
+              ),
+            )
             .setPosition(m.centre[0] - x, m.centre[1] - y, m.centre[2] - z);
         far.setMatrixAt(i, matrix);
       });
