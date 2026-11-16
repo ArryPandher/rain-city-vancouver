@@ -137,6 +137,59 @@ test("real splayed stone, solid corners and closed two-level base replace the th
   }
 });
 
+test("photo-fitted short mezzanine retains closed structural bands and the original graded base", () => {
+  for (let edge = 0; edge < 4; edge++) {
+    const f = facadeFrame(ring[edge], ring[(edge + 1) % 4]);
+    for (let bay = 0; bay < 4; bay++) {
+      const u = ((bay + 0.35) * f.length) / 4;
+      // Independently chosen photo-zone probes: lower pane, inter-level belt,
+      // short mezzanine pane, and deep transfer head below the unchanged body.
+      for (const [relativeY, expected] of [
+        [1.8, m.lobbyGlass],
+        [4.1, m.concrete],
+        [6.3, m.lobbyGlass],
+        [8.8, m.concrete],
+      ] as const) {
+        const hits = cast(
+          f.p(u, base + relativeY, -0.3),
+          f.p(u, base + relativeY, 1.6),
+        );
+        assert.ok(hits.length);
+        assert.equal(
+          material(hits[0]),
+          expected,
+          `edge${edge} bay${bay} y${relativeY}`,
+        );
+        if (expected === m.lobbyGlass) {
+          assert.ok(
+            Math.abs(
+              hits[0].point.distanceTo(
+                new T.Vector3(...f.p(u, base + relativeY, 1.05)),
+              ),
+            ) < 0.00005,
+          );
+          assert.ok(hits.some((h) => material(h) === m.backing));
+        }
+      }
+      // The previous over-tall mezzanine centre is now real front stone,
+      // while frame/reveal/pane positions still close at each new aperture.
+      for (const relativeY of [5.1, 7.55])
+        assert.equal(
+          material(
+            cast(
+              f.p(u, base + relativeY, -0.3),
+              f.p(u, base + relativeY, 1.6),
+            )[0],
+          ),
+          m.concrete,
+        );
+    }
+  }
+  assert.equal(D.bodyBaseAboveGround, 10.8);
+  assert.equal(D.baseSplitAboveGround, 4.6);
+  assert.equal(D.baseRecess, 1.05);
+});
+
 test("roof, mechanical and control cab close at City world heights with no duplicate lower cap", () => {
   for (const [x, z, y] of [
     [ring[0][0] - 0.8, ring[0][1] + 0.4, D.roof],

@@ -22,6 +22,14 @@ export const GRANVILLE_SQUARE_TOWER = {
   bays: [12, 8, 12, 8] as readonly number[],
   bodyBaseAboveGround: 10.8,
   baseSplitAboveGround: 4.6,
+  /** Owner aerial, same-face measured vertical ratios. These are opening
+   * boundaries within the retained base envelope, not floor elevations.
+   * The mezzanine is shorter than the ground glazing; the existing split
+   * falls inside the substantial opaque belt between them. */
+  baseOpeningFractions: [
+    [0.06, 0.29],
+    [0.485, 0.685],
+  ] as const,
   bodyTopBelowRoof: 2.2,
   shadowSlitHeight: 0.65,
   openingSide: 0.4,

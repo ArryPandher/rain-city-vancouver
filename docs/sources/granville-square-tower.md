@@ -18,12 +18,12 @@ The photographs/PDFs are reference-only; no open photographic texture licence is
 
 The retained live quad, in x-east/z-south game metres, is:
 
-| Corner | x | z |
-| --- | ---: | ---: |
-| A | 575.548599 | −426.130000 |
-| B | 559.048599 | −386.630000 |
-| C | 531.548599 | −398.130000 |
-| D | 549.048599 | −438.630000 |
+| Corner |          x |           z |
+| ------ | ---------: | ----------: |
+| A      | 575.548599 | −426.130000 |
+| B      | 559.048599 | −386.630000 |
+| C      | 531.548599 | −398.130000 |
+| D      | 549.048599 | −438.630000 |
 
 A–B and C–D are the 12-bay faces, lengths42.808/44.119 m; B–C and D–A are the 8-bay faces, lengths29.808/29.300 m. This approximately1.47 aspect agrees with the plan's12:8 rhythm. The slight trapezoid is retained from the live footprint; the builder does not invent the generic procedural setback. The principal City roof extends roughly1–5 m beyond that live envelope. A bilinear map from its four principal corners to the retained quad registers the higher roof polygons while preserving their relative arrangement. All registered roof parts are wholly inside the live tower. Raw and registered rings remain in `granville-square-tower-parts.json`; `plan-registration.svg` is the research comparison.
 
@@ -56,3 +56,24 @@ The complete tower is45,138 triangles in six merged material batches, below the6
 The hook is now installed in `architecture.ts` immediately after the existing Howe-wing dispatch and before the generic fallback. The tower's exact ID also bypasses the generic pre-dispatch foundation, because its own grade-following footers already close the complete footprint. A second generic foundation would otherwise be redundant and could hide a narrow strip of the low-side glazing. Other foundation exclusions and all neighboring dispatches remain unchanged.
 
 Two integration tests execute the actual `architecture()` pipeline against converted live map/tag records and the real CollisionWorld. Only browser image loading and canvas rasterization are stubbed. The tower produces exactly one reflection registration, six batches and45,138 triangles, with no generic facade, roof, foundation or detail batches. A combined tower/Howe-wing/unrelated-building run preserves the finished w208599553 wing and actual generic garage w459134074 geometry buffers byte-for-byte against their isolated run, and leaves their source/collision records unchanged. TypeScript passes. The integrated candidate has not yet received native visual acceptance or a production build in this subtask.
+
+## Mezzanine / base correction (2026-11-16)
+
+The first native close view (`granville-tower-cache-native.png`) revealed a source mismatch in the base: the upper opening was about4.73m high, larger than the roughly3.3–3.5m lower pane. The owner's aerial instead shows a shorter mezzanine aperture, broad pale intermediate structure and a substantial head below the office grid. This is a geometry proportion correction; concrete/glass materials and reflections remain unchanged.
+
+The measurement is made within one vertical line on the same facade, avoiding comparisons across differently foreshortened faces. At **original owner-aerial x950** (2000×1500 image), approximate controls are: office/base join y1178, mezzanine opening y1210–1228, lower glazing y1248–1270 and plaza/base bottom y1276. Edge reading uncertainty is about±2px. The full annotated research crop is `artifacts/local/granville-tower-reference/base-measurement-grid.jpg`. Nearby front bays confirm the short-upper/tall-lower relationship; a rough earlier0.55–0.75 ratio from a resized crop was too low and is superseded by these original-pixel measurements. A ratio near0.8–0.9 is supported; this is normalized photographic evidence, not a metric elevation survey or a complete camera solution.
+
+Within the **unchanged10.8m base envelope**, bottom-to-top fractions are fitted to lower opening **0.06–0.29**, mezzanine **0.485–0.685**. This gives front opening levels above the existing tower construction base:
+
+| Element                 | Relative Y (m) | Interpretation                                                                     |
+| ----------------------- | -------------- | ---------------------------------------------------------------------------------- |
+| Lower glazing           | 0.648–3.132    | Existing graded sill clamps the bottom where needed to prevent glass below ground. |
+| Solid intermediate belt | 3.132–5.238    | Contains the unchanged4.6m nominal floor split.                                    |
+| Mezzanine glazing       | 5.238–7.398    | Shorter opening; the physical reveal reduces clear glass height to2.06m.           |
+| Pale transfer head      | 7.398–10.8     | Directly under the unchanged office body; no extra decorative course.              |
+
+Both openings retain1.05m recess, physical frames, closed backing/reveals, four structural base bays per elevation and the original grade-following footer. Exact source footprints, body start, all28 office rows, roof125.46, City roof parts, tower outline and all six materials are unchanged. The retained floor split is not claimed to have been surveyed; it happens to lie inside the source-supported solid belt and requires no visible or collision change.
+
+The owner's mezzanine plan confirms a substantial mezzanine associated with the wider complex, but supplies no trustworthy vertical dimension tying it to current street grade. The previously documented approximately4.23m historical-plaza/current-ground difference therefore remains explicit. **No raised plaza or terrain change is inferred from this correction.** The task is a normalized facade fit within the existing registered envelope. A future complete plaza restoration must independently register the stairs, retaining edges, adjoining low wing and accessible routes.
+
+Six focused geometry tests include all1,120 office/louver rays, the preserved roof contacts, all16 base-bay pane/stone zone checks, retained backing/recess/footers and the six-batch budget. New rays independently target lower glass, solid middle belt, mezzanine glass and pale head; the old overly tall upper opening becomes actual stone. Native acceptance remains a later matched view from the same normal walking camera.

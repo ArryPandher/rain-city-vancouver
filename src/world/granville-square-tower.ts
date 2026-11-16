@@ -214,14 +214,22 @@ export function buildGranvilleSquareTower(
         [f.p(l, lowL), f.p(r, lowR), f.p(r, sill), f.p(l, sill)],
         [f.outward[0], 0, f.outward[1]],
       );
-      for (const [lo, hi] of [
+      const tiers = [
         [sill, split],
         [split, bodyBottom],
-      ]) {
+      ];
+      for (const [tier, [lo, hi]] of tiers.entries()) {
         const ol = l + 0.52,
           or = r - 0.52,
-          ob = lo + 0.12,
-          ot = hi - (hi === bodyBottom ? 1.25 : 0.58);
+          [bottomFraction, topFraction] = D.baseOpeningFractions[tier],
+          // Photo proportions are fitted inside the already registered base;
+          // no inferred raised plaza, threshold or public terrain is introduced.
+          // The existing graded footing still prevents glazing below ground.
+          ob = Math.max(
+            lo + 0.12,
+            base + D.bodyBaseAboveGround * bottomFraction,
+          ),
+          ot = base + D.bodyBaseAboveGround * topFraction;
         surround(
           f,
           l,
