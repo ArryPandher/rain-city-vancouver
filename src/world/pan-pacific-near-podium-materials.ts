@@ -16,7 +16,9 @@ export const PAN_PACIFIC_NEAR_PODIUM_FINISH = {
   backing: 0x253339,
   normalStrength: 0.08,
   glassThroughput: [0.55, 0.74, 0.8] as const,
-  glassIor: 1.5,
+  // Effective sheet Fresnel: about 8.16% normal reflection approximates
+  // multiple glazing interfaces. This is not a measured bulk glass IOR.
+  glassIor: 1.8,
   glassRoughness: 0.12,
   probeIntensity: 0.85,
 } as const;

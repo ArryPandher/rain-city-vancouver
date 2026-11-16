@@ -10,6 +10,11 @@ import {
   replacePanPacificTowerSource,
 } from "./pan-pacific-tower-source";
 import { createPanPacificTower } from "./pan-pacific-tower-install";
+import {
+  panPacificNearPodiumCompatible,
+  replacePanPacificNearPodiumSource,
+} from "./pan-pacific-near-podium-source";
+import { createPanPacificNearPodium } from "./pan-pacific-near-podium-install";
 import { addCanadaPlacePromenadeFixtures } from "./canada-place-promenade-fixtures";
 import { CANADA_PLACE_PROMENADE_FIXTURES } from "./canada-place-promenade-fixtures-data";
 import { createCanadaPlaceDoorGlass } from "./canada-place-door-glass";
@@ -159,7 +164,12 @@ export async function loadVancouverLandmarks(
       asset.id === "canada-place" && panPacificHowePodiumCompatible(gltf.scene);
     const refinePanPacificTower =
       asset.id === "canada-place" && panPacificTowerCompatible(gltf.scene);
-    const towerSource: { geometry: T.BufferGeometry; material: string }[] = [];
+    const refineNearPodium =
+      refineHowePodium && panPacificNearPodiumCompatible(gltf.scene);
+    const canadaReplacementSource: {
+      geometry: T.BufferGeometry;
+      material: string;
+    }[] = [];
     const cache = new Map<T.Material, T.MeshStandardMaterial>();
     const galleryMaterials = new Map<string, T.MeshStandardMaterial>();
     const canadaMaterials = new Map<string, T.MeshStandardMaterial>();
@@ -167,8 +177,8 @@ export async function loadVancouverLandmarks(
       if (!(object instanceof T.Mesh)) return;
       const geometry = bakeGeometry(object.geometry, object.matrixWorld);
       const original = object.material as T.MeshStandardMaterial;
-      if (refinePanPacificTower)
-        towerSource.push({ geometry, material: original.name });
+      if (refinePanPacificTower || refineNearPodium)
+        canadaReplacementSource.push({ geometry, material: original.name });
       const paving =
         asset.id === "canada-place"
           ? extractCanadaPlacePaving(geometry, original.name)
@@ -240,7 +250,11 @@ export async function loadVancouverLandmarks(
     // Meshes retain these same baked buffers. Commit all five source cuts
     // together, after paving and the independently guarded lower facades.
     const installPanPacificTower =
-      refinePanPacificTower && replacePanPacificTowerSource(towerSource) === 3140;
+      refinePanPacificTower &&
+      replacePanPacificTowerSource(canadaReplacementSource) === 3140;
+    const installNearPodium =
+      refineNearPodium &&
+      replacePanPacificNearPodiumSource(canadaReplacementSource) === 70;
     const hull = convexHull(points);
     if (hull.length > 2 && asset.id !== "gastown-steam-clock")
       footprints.push({
@@ -342,6 +356,18 @@ export async function loadVancouverLandmarks(
         // Five metres outside the broad southwest curtain face, halfway up.
         position: [x - 154.744568, 52.08, z + 92.026581],
         materials: [tower.glass],
+        resolution: 256,
+      });
+    }
+    if (installNearPodium) {
+      const frontage = createPanPacificNearPodium(materials);
+      group.add(frontage.group);
+      reflections.push({
+        name: "Pan Pacific near arrival frontage",
+        // Low exterior capture for the arrival glazing; the tower capture
+        // sits above these roofs and cannot show the foreground street.
+        position: [x - 163.673148, 15.08, z + 108.326436],
+        materials: [frontage.glass],
         resolution: 256,
       });
     }
