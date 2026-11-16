@@ -11,6 +11,7 @@ import {
   type VehicleBody,
   type VehiclePose,
   type VehicleKind,
+  type VehicleFootprint,
 } from "../src/game/vehicle-contact";
 
 const pose = (x = 0, z = 0, heading = 0, y = 8): VehiclePose => ({
@@ -351,4 +352,251 @@ test("corrupt and unbounded motion fails closed without searching the world", ()
     close(result.vx, 0);
     close(result.vz, 0);
   }
+});
+
+// A conservative fixture at the audited E30 scale, kept independent of its asset
+// adapter. The legacy traffic body stays wider/longer throughout these checks.
+const hero: VehicleFootprint = {
+  halfWidth: 0.96,
+  halfLength: 2.182,
+  height: 1.4,
+};
+function resolveShape(
+  from: VehiclePose,
+  to: VehiclePose,
+  others: VehicleBody[],
+  footprint?: VehicleFootprint,
+) {
+  return resolveVehicleContacts(
+    from,
+    to,
+    "car",
+    others,
+    { vx: to.x - from.x, vz: to.z - from.z },
+    clear,
+    footprint,
+  );
+}
+
+test("mixed car footprints stop at their own bumper/side surfaces in both roles", () => {
+  for (const sign of [-1, 1]) {
+    const movingHero = resolveShape(
+      pose(0, sign * 20),
+      pose(0, -sign * 20),
+      [body()],
+      hero,
+    );
+    close(movingHero.z, sign * (hero.halfLength + 2.45 + 0.003), 1e-8);
+    assert.equal(vehicleOverlapDepth(movingHero, "car", body(), hero), 0);
+    const parkedHero = { ...body(), footprint: hero };
+    const movingTraffic = resolveShape(
+      pose(0, sign * 20),
+      pose(0, -sign * 20),
+      [parkedHero],
+    );
+    close(movingTraffic.z, movingHero.z, 1e-8);
+    assert.equal(vehicleOverlapDepth(movingTraffic, "car", parkedHero), 0);
+    const twoHeroes = resolveShape(
+      pose(0, sign * 20),
+      pose(0, -sign * 20),
+      [parkedHero],
+      hero,
+    );
+    close(twoHeroes.z, sign * (2 * hero.halfLength + 0.003), 1e-8);
+  }
+  const mixedGap = hero.halfWidth + VEHICLE_FOOTPRINTS.car.halfWidth + 0.04;
+  assert.equal(
+    resolveShape(pose(mixedGap, -12), pose(mixedGap, 12), [body()], hero).hit,
+    false,
+  );
+  assert.equal(
+    resolveShape(pose(mixedGap, -12), pose(mixedGap, 12), [
+      { ...body(), footprint: hero },
+    ]).hit,
+    false,
+  );
+  assert.equal(
+    resolveShape(pose(mixedGap, -12), pose(mixedGap, 12), [body()]).hit,
+    true,
+  );
+  const slide = resolveShape(pose(-4), pose(0, 3), [body()], hero);
+  close(slide.x, -(hero.halfWidth + 1.43 + 0.003));
+  close(slide.z, 3);
+  close(slide.vx, 0);
+  close(slide.vz, 3);
+});
+
+test("custom moving and target footprints retain continuous angular collision", () => {
+  for (const sign of [-1, 1]) {
+    for (const [moving, target, distance] of [
+      [hero, undefined, 3.73],
+      [undefined, hero, 3.6],
+    ] as const) {
+      const parked = { ...body(sign * distance), footprint: target };
+      const from = pose(),
+        to = pose(0, 0, (sign * Math.PI) / 2);
+      assert.equal(vehicleOverlapDepth(from, "car", parked, moving), 0);
+      assert.equal(vehicleOverlapDepth(to, "car", parked, moving), 0);
+      const hit = resolveShape(from, to, [parked], moving);
+      assert.ok(
+        hit.hit &&
+          Math.abs(hit.heading) > 0.3 &&
+          Math.abs(hit.heading) < Math.PI / 2,
+      );
+      assert.equal(vehicleOverlapDepth(hit, "car", parked, moving), 0);
+    }
+  }
+});
+
+test("each custom height participates in vertical separation and a descending sweep", () => {
+  const raisedTraffic = body(0, 0, 0, "car", 9.5);
+  assert.equal(
+    resolveShape(pose(0, -9), pose(0, 9), [raisedTraffic], hero).hit,
+    false,
+  );
+  assert.equal(
+    resolveShape(pose(0, -9), pose(0, 9), [raisedTraffic]).hit,
+    true,
+  );
+  const parkedHero = { ...body(), footprint: hero };
+  assert.equal(
+    resolveShape(pose(0, -9, 0, 9.5), pose(0, 9, 0, 9.5), [parkedHero]).hit,
+    false,
+  );
+  const descending = resolveShape(
+    pose(0, -9, 0, 12),
+    pose(0, 9, 0, 8),
+    [parkedHero],
+    hero,
+  );
+  assert.ok(descending.hit);
+  assert.equal(vehicleOverlapDepth(descending, "car", parkedHero, hero), 0);
+});
+
+test("custom footprint overlap recovery uses its dimensions and preserves all other bodies", () => {
+  const start = pose(),
+    parked = body(1);
+  const result = resolveVehicleContacts(
+    start,
+    start,
+    "car",
+    [parked],
+    stopped,
+    clear,
+    hero,
+  );
+  assert.ok(result.recovered && !result.blockedRecovery);
+  close(result.x, -(hero.halfWidth + 1.43 - 1 + 0.003), 1e-8);
+  assert.equal(vehicleOverlapDepth(result, "car", parked, hero), 0);
+  const blocker = { ...body(-3), footprint: hero };
+  const diverted = resolveVehicleContacts(
+    start,
+    start,
+    "car",
+    [parked, blocker],
+    stopped,
+    (_from, to) => Math.abs(to.z) < 0.1,
+    hero,
+  );
+  assert.ok(diverted.recovered && diverted.x > 0);
+  for (const other of [parked, blocker])
+    assert.equal(vehicleOverlapDepth(diverted, "car", other, hero), 0);
+  const trapped = resolveVehicleContacts(
+    start,
+    start,
+    "car",
+    [parked],
+    stopped,
+    () => false,
+    hero,
+  );
+  assert.ok(trapped.blockedRecovery && !trapped.recovered);
+  close(trapped.x, 0);
+  const escape = resolveVehicleContacts(
+    start,
+    pose(-0.05),
+    "car",
+    [parked],
+    { vx: -0.05, vz: 0 },
+    (a, b) => Math.hypot(b.x - a.x, b.z - a.z) < 0.1,
+    hero,
+  );
+  assert.ok(
+    vehicleOverlapDepth(escape, "car", parked, hero) <
+      vehicleOverlapDepth(start, "car", parked, hero),
+  );
+  close(escape.vx, -0.05);
+});
+
+test("custom clearance fits street probes while retaining conservative pedestrian contact", () => {
+  const street = {
+    height: () => 8,
+    water: () => false,
+    blocked: (x: number, _z: number, radius: number) =>
+      Math.abs(x) + radius > 1.3,
+    move: (x: number, z: number, dx: number, dz: number) => ({
+      x: x + dx,
+      z: z + dz,
+      hit: false,
+    }),
+  };
+  assert.equal(
+    contactMotionClearance(street, [], "car", hero)(pose(), pose(0, 3)),
+    true,
+  );
+  assert.equal(
+    contactMotionClearance(street, [], "car")(pose(), pose(0, 3)),
+    false,
+  );
+  // Fitted recovery must not restore the old 1.16m invisible side margin.
+  assert.equal(
+    contactMotionClearance(
+      { ...street, blocked: (x, _z, r) => Math.abs(x) + r > 1.1 },
+      [],
+      "car",
+      hero,
+    )(pose(), pose(0, 3)),
+    true,
+  );
+  assert.equal(
+    contactMotionClearance(
+      street,
+      [{ x: 0, z: 4, y: 8, radius: 0.4, height: 1.8 }],
+      "car",
+      hero,
+    )(pose(), pose(0, 5)),
+    false,
+  );
+});
+
+test("invalid model footprints fail closed without clearance calls or legacy mutation", () => {
+  const legacy = JSON.stringify(VEHICLE_FOOTPRINTS);
+  for (const bad of [
+    { ...hero, halfWidth: 0 },
+    { ...hero, halfLength: -1 },
+    { ...hero, height: NaN },
+    { ...hero, halfWidth: Infinity },
+    { ...hero, halfWidth: 1.7e308, halfLength: 1.7e308 },
+  ]) {
+    const never = () => {
+      throw new Error("invalid shape must not query world");
+    };
+    for (const target of [false, true]) {
+      const result = resolveVehicleContacts(
+        pose(),
+        pose(0, 1),
+        "car",
+        target ? [{ ...body(8), footprint: bad }] : [],
+        { vx: 0, vz: 1 },
+        never,
+        target ? hero : bad,
+      );
+      assert.ok(result.hit && result.blockedRecovery);
+      close(result.x, 0);
+      close(result.z, 0);
+      close(result.vz, 0);
+    }
+    assert.equal(vehicleOverlapDepth(pose(), "car", body(), bad), Infinity);
+  }
+  assert.equal(JSON.stringify(VEHICLE_FOOTPRINTS), legacy);
 });

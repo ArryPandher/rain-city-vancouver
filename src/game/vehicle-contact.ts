@@ -7,7 +7,15 @@ import {
 export type VehicleKind = "car" | "bike";
 /** y is collision-ground height, not the visual model's road clearance. */
 export type VehiclePose = { x: number; z: number; y: number; heading: number };
-export type VehicleBody = VehiclePose & { kind: VehicleKind };
+export type VehicleFootprint = Readonly<{
+  halfWidth: number;
+  halfLength: number;
+  height: number;
+}>;
+export type VehicleBody = VehiclePose & {
+  kind: VehicleKind;
+  footprint?: VehicleFootprint;
+};
 export type VehicleVelocity = { vx: number; vz: number };
 export type VehicleContactClearance = (
   from: VehiclePose,
@@ -33,16 +41,26 @@ export function contactMotionClearance(
   world: ContactWorld,
   pedestrians: readonly PedestrianBody[],
   kind: VehicleKind,
+  footprint?: VehicleFootprint,
 ): VehicleContactClearance {
-  const shape = VEHICLE_FOOTPRINTS[kind];
-  const probes: { along: number; side: number; radius: number }[] =
-    vehicleContactCapsules(kind).map(([along, radius]) => ({
-      along,
-      side: 0,
-      radius,
-    }));
-  // The historical driving capsules are narrower/shorter than the detailed
-  // mesh. Its four corners must also clear walls during any corrective motion.
+  const shape = footprint ?? VEHICLE_FOOTPRINTS[kind];
+  if (!validFootprint(shape)) return () => false;
+  const endRadius = Math.min(0.9, shape.halfWidth, shape.halfLength);
+  const capsules =
+    footprint && kind === "car"
+      ? [
+          [0, Math.min(1.16, shape.halfWidth, shape.halfLength)],
+          [-(shape.halfLength - endRadius), endRadius],
+          [shape.halfLength - endRadius, endRadius],
+        ]
+      : vehicleContactCapsules(kind);
+  const probes = capsules.map(([along, radius]) => ({
+    along,
+    side: 0,
+    radius,
+  }));
+  // Fit the static recovery/slide probes to this car, including its corners.
+  // Pedestrian sweeping below deliberately retains the existing wider margin.
   for (const side of [-shape.halfWidth, shape.halfWidth])
     for (const along of [-shape.halfLength, shape.halfLength])
       probes.push({ along, side, radius: 0.02 });
@@ -96,6 +114,28 @@ const EPS = 1e-9;
 type Normal = { x: number; z: number };
 type SweepHit = { fraction: number; normal: Normal; index: number };
 
+function validFootprint(
+  shape: VehicleFootprint | undefined,
+): shape is VehicleFootprint {
+  return (
+    !!shape &&
+    [shape.halfWidth, shape.halfLength, shape.height].every(
+      (value) => Number.isFinite(value) && value > 0,
+    ) &&
+    Number.isFinite(Math.hypot(shape.halfWidth, shape.halfLength, shape.height))
+  );
+}
+function bodyFootprint(body: VehicleBody): VehicleFootprint {
+  return body.footprint ?? VEHICLE_FOOTPRINTS[body.kind];
+}
+function validBody(body: VehicleBody) {
+  return (
+    finite(body) &&
+    body.kind in VEHICLE_FOOTPRINTS &&
+    validFootprint(bodyFootprint(body))
+  );
+}
+
 function finite(p: VehiclePose) {
   return (
     Number.isFinite(p.x) &&
@@ -123,19 +163,17 @@ function axes(a: VehiclePose, b: VehiclePose): Normal[] {
     { x: Math.sin(b.heading), z: Math.cos(b.heading) },
   ];
 }
-function radius(p: VehiclePose, kind: VehicleKind, n: Normal) {
-  const s = VEHICLE_FOOTPRINTS[kind],
-    sin = Math.sin(p.heading),
+function radius(p: VehiclePose, s: VehicleFootprint, n: Normal) {
+  const sin = Math.sin(p.heading),
     cos = Math.cos(p.heading);
   return (
     s.halfWidth * Math.abs(cos * n.x - sin * n.z) +
     s.halfLength * Math.abs(sin * n.x + cos * n.z)
   );
 }
-function sameLevel(a: VehiclePose, kind: VehicleKind, b: VehicleBody) {
+function sameLevel(a: VehiclePose, shape: VehicleFootprint, b: VehicleBody) {
   return (
-    a.y < b.y + VEHICLE_FOOTPRINTS[b.kind].height - EPS &&
-    a.y + VEHICLE_FOOTPRINTS[kind].height > b.y + EPS
+    a.y < b.y + bodyFootprint(b).height - EPS && a.y + shape.height > b.y + EPS
   );
 }
 
@@ -144,13 +182,19 @@ export function vehicleOverlapDepth(
   a: VehiclePose,
   kind: VehicleKind,
   b: VehicleBody,
+  footprint?: VehicleFootprint,
 ) {
-  if (!sameLevel(a, kind, b)) return 0;
+  const shape = footprint ?? VEHICLE_FOOTPRINTS[kind];
+  if (!finite(a) || !validBody(b) || !validFootprint(shape)) return Infinity;
+  return overlapDepth(a, shape, b);
+}
+function overlapDepth(a: VehiclePose, shape: VehicleFootprint, b: VehicleBody) {
+  if (!sameLevel(a, shape, b)) return 0;
   let depth = Infinity;
   for (const n of axes(a, b)) {
     const d =
-      radius(a, kind, n) +
-      radius(b, b.kind, n) -
+      radius(a, shape, n) +
+      radius(b, bodyFootprint(b), n) -
       Math.abs((a.x - b.x) * n.x + (a.z - b.z) * n.z);
     if (d <= EPS) return 0;
     depth = Math.min(depth, d);
@@ -163,7 +207,7 @@ export function vehicleOverlapDepth(
 function translationSweep(
   a: VehiclePose,
   b: VehiclePose,
-  kind: VehicleKind,
+  shape: VehicleFootprint,
   other: VehicleBody,
   inflation = 0,
 ): Omit<SweepHit, "index"> | undefined {
@@ -172,7 +216,8 @@ function translationSweep(
     normal: Normal = { x: 0, z: 0 },
     minimum = Infinity;
   for (const n of axes(a, other)) {
-    const r = radius(a, kind, n) + radius(other, other.kind, n) + inflation;
+    const r =
+      radius(a, shape, n) + radius(other, bodyFootprint(other), n) + inflation;
     const q = (a.x - other.x) * n.x + (a.z - other.z) * n.z;
     const v = (b.x - a.x) * n.x + (b.z - a.z) * n.z;
     if (Math.abs(v) < EPS) {
@@ -197,8 +242,8 @@ function translationSweep(
       normal = { x: n.x * sign, z: n.z * sign };
     }
   }
-  const low = other.y - VEHICLE_FOOTPRINTS[kind].height,
-    high = other.y + VEHICLE_FOOTPRINTS[other.kind].height,
+  const low = other.y - shape.height,
+    high = other.y + bodyFootprint(other).height,
     vy = b.y - a.y;
   if (Math.abs(vy) < EPS) {
     if (a.y <= low + EPS || a.y >= high - EPS) return;
@@ -215,12 +260,12 @@ function translationSweep(
 function pairSweep(
   from: VehiclePose,
   to: VehiclePose,
-  kind: VehicleKind,
+  shape: VehicleFootprint,
   other: VehicleBody,
 ): Omit<SweepHit, "index"> | undefined {
   const turn = Math.abs(angle(from.heading, to.heading));
-  if (turn < 1e-10) return translationSweep(from, to, kind, other);
-  const f = VEHICLE_FOOTPRINTS[kind],
+  if (turn < 1e-10) return translationSweep(from, to, shape, other);
+  const f = shape,
     reach = Math.hypot(f.halfWidth, f.halfLength);
   // Mid-angle rectangle plus the maximum corner arc bounds the entire rotating
   // sweep. Recursively refine only intersecting intervals. Translation is always
@@ -237,7 +282,7 @@ function pairSweep(
     const envelope = translationSweep(
       { ...a, heading: midHeading },
       { ...b, heading: midHeading },
-      kind,
+      shape,
       other,
       2 * reach * Math.sin(d / 4),
     );
@@ -250,14 +295,14 @@ function pairSweep(
       const exact = translationSweep(
         a,
         { ...b, heading: a.heading },
-        kind,
+        shape,
         other,
       );
       if (
         !exact &&
-        !vehicleOverlapDepth(a, kind, other) &&
-        !vehicleOverlapDepth(at(a, b, 0.5), kind, other) &&
-        !vehicleOverlapDepth(b, kind, other)
+        !overlapDepth(a, shape, other) &&
+        !overlapDepth(at(a, b, 0.5), shape, other) &&
+        !overlapDepth(b, shape, other)
       )
         return;
       return { fraction: lo, normal: exact?.normal ?? envelope.normal };
@@ -271,15 +316,15 @@ function pairSweep(
 function sweep(
   from: VehiclePose,
   to: VehiclePose,
-  kind: VehicleKind,
+  shape: VehicleFootprint,
   others: readonly VehicleBody[],
 ): SweepHit | undefined {
   let first: SweepHit | undefined;
-  const f = VEHICLE_FOOTPRINTS[kind],
+  const f = shape,
     reach = Math.hypot(f.halfWidth, f.halfLength);
   for (let i = 0; i < others.length; i++) {
     const other = others[i],
-      o = VEHICLE_FOOTPRINTS[other.kind],
+      o = bodyFootprint(other),
       r = reach + Math.hypot(o.halfWidth, o.halfLength);
     // Swept AABB broad phase needs no world query or distant-actor allocations.
     if (
@@ -289,7 +334,7 @@ function sweep(
       other.z > Math.max(from.z, to.z) + r
     )
       continue;
-    const hit = pairSweep(from, to, kind, other);
+    const hit = pairSweep(from, to, shape, other);
     if (hit && (!first || hit.fraction < first.fraction))
       first = { ...hit, index: i };
   }
@@ -301,21 +346,22 @@ function sweep(
  * may neither introduce nor deepen contact with any other vehicle. */
 function recover(
   start: VehiclePose,
-  kind: VehicleKind,
+  shape: VehicleFootprint,
   others: readonly VehicleBody[],
   clear: VehicleContactClearance,
 ) {
   let pose = { ...start },
     moved = false;
   for (let iteration = 0; iteration < 8; iteration++) {
-    const depths = others.map((b) => vehicleOverlapDepth(pose, kind, b));
+    const depths = others.map((b) => overlapDepth(pose, shape, b));
     if (!depths.some((d) => d > EPS)) return { pose, moved, blocked: false };
     const candidates: { pose: VehiclePose; distance: number }[] = [];
     for (let i = 0; i < others.length; i++) {
       if (depths[i] <= EPS) continue;
       const other = others[i];
       for (const n of axes(pose, other)) {
-        const r = radius(pose, kind, n) + radius(other, other.kind, n),
+        const r =
+            radius(pose, shape, n) + radius(other, bodyFootprint(other), n),
           q = (pose.x - other.x) * n.x + (pose.z - other.z) * n.z;
         for (const sign of [-1, 1]) {
           const distance = r + SKIN - sign * q;
@@ -334,11 +380,11 @@ function recover(
     const next = candidates.find((c) => {
       let improved = false;
       for (let i = 0; i < others.length; i++) {
-        const d = vehicleOverlapDepth(c.pose, kind, others[i]);
+        const d = overlapDepth(c.pose, shape, others[i]);
         if (d > depths[i] + EPS) return false;
         if (d < depths[i] - EPS) improved = true;
         // Do not escape through a previously separate vehicle on the way.
-        if (depths[i] === 0 && pairSweep(pose, c.pose, kind, others[i]))
+        if (depths[i] === 0 && pairSweep(pose, c.pose, shape, others[i]))
           return false;
       }
       return improved && clear(pose, c.pose);
@@ -350,7 +396,7 @@ function recover(
   return {
     pose,
     moved,
-    blocked: others.some((b) => vehicleOverlapDepth(pose, kind, b) > EPS),
+    blocked: others.some((b) => overlapDepth(pose, shape, b) > EPS),
   };
 }
 
@@ -364,7 +410,9 @@ export function resolveVehicleContacts(
   others: readonly VehicleBody[],
   velocity: VehicleVelocity,
   clear: VehicleContactClearance,
+  footprint?: VehicleFootprint,
 ) {
+  const shape = footprint ?? VEHICLE_FOOTPRINTS[kind];
   let pose = { ...from },
     vx = velocity.vx,
     vz = velocity.vz;
@@ -385,40 +433,36 @@ export function resolveVehicleContacts(
     impactSpeed,
   });
   if (
+    !validFootprint(shape) ||
     !finite(from) ||
     !finite(to) ||
     !Number.isFinite(vx) ||
     !Number.isFinite(vz) ||
     Math.hypot(to.x - from.x, to.z - from.z) > 100 ||
     Math.abs(to.y - from.y) > 10 ||
-    others.some((b) => !finite(b) || !(b.kind in VEHICLE_FOOTPRINTS))
+    others.some((b) => !validBody(b))
   ) {
     vx = vz = 0;
     return finish(true, false, true);
   }
-  const recovery = recover(from, kind, others, clear);
+  const recovery = recover(from, shape, others, clear);
   pose = recovery.pose;
   if (recovery.blocked) {
     // A trapped body must not be teleported through a wall or person to clear it.
     // Explicit separating motion may reduce penetration until an exit is free.
     const reduces =
       others.every(
-        (b) =>
-          vehicleOverlapDepth(to, kind, b) <=
-          vehicleOverlapDepth(pose, kind, b) + EPS,
+        (b) => overlapDepth(to, shape, b) <= overlapDepth(pose, shape, b) + EPS,
       ) &&
       others.some(
-        (b) =>
-          vehicleOverlapDepth(to, kind, b) <
-          vehicleOverlapDepth(pose, kind, b) - EPS,
+        (b) => overlapDepth(to, shape, b) < overlapDepth(pose, shape, b) - EPS,
       );
     if (
       reduces &&
       clear(pose, to) &&
       !others.some(
         (b) =>
-          vehicleOverlapDepth(pose, kind, b) === 0 &&
-          pairSweep(pose, to, kind, b),
+          overlapDepth(pose, shape, b) === 0 && pairSweep(pose, to, shape, b),
       )
     )
       pose = { ...to };
@@ -438,7 +482,7 @@ export function resolveVehicleContacts(
     impactSpeed = 0;
   let needsClearance = recovery.moved;
   for (let iteration = 0; iteration < 4; iteration++) {
-    const hit = sweep(pose, target, kind, others);
+    const hit = sweep(pose, target, shape, others);
     if (!hit) {
       if (!needsClearance || clear(pose, target)) pose = target;
       else {
@@ -453,10 +497,7 @@ export function resolveVehicleContacts(
       dz = target.z - pose.z,
       angularTravel =
         Math.abs(angle(pose.heading, target.heading)) *
-        Math.hypot(
-          VEHICLE_FOOTPRINTS[kind].halfWidth,
-          VEHICLE_FOOTPRINTS[kind].halfLength,
-        ),
+        Math.hypot(shape.halfWidth, shape.halfLength),
       fraction = Math.max(
         0,
         hit.fraction -
