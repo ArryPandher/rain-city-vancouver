@@ -136,9 +136,11 @@ test("actual Gallery facade batching preserves atlas UVs and delegates physical 
   );
   const chunks = addGalleryFacade(new T.Group(), materials),
     sprays = chunks.filter(
-      (m) => (m.material as T.Material).userData.galleryFoliageAtlas,
+      (m) =>
+        (m.material as T.Material).name === "Gallery west licensed twig sprays",
     );
   assert.equal(sprays.length, 1);
+  assert.equal((sprays[0].material as T.Material).userData.galleryFoliageAtlas, true);
   const uv = sprays[0].geometry.getAttribute("uv"),
     expected = D.trees.flatMap((_, i) =>
       Array.from(galleryWestSprayGeometry(i).getAttribute("uv").array),
