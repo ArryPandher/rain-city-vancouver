@@ -7,8 +7,6 @@ import { BASE } from "./materials";
 export const GALLERY_HEDGE_LEAVES = [
   [132, 96, 104, 240],
   [534, 74, 99, 270],
-  [436, 395, 127, 252],
-  [619, 385, 100, 218],
   [229, 643, 115, 294],
   [373, 713, 133, 244],
   [549, 687, 106, 225],
@@ -25,15 +23,50 @@ export function galleryHedgeFoliageGeometry(source: T.BufferGeometry) {
   const bounds = source.boundingBox!.clone(),
     size = bounds.getSize(new T.Vector3()),
     centre = bounds.getCenter(new T.Vector3());
-  const backing = source.clone(),
+  const backing = source.toNonIndexed(),
     p = backing.getAttribute("position");
   for (let i = 0; i < p.count; i++)
     p.setXYZ(
       i,
       centre.x + (p.getX(i) - centre.x) * (1 - 0.12 / size.x),
-      bounds.min.y + (p.getY(i) - bounds.min.y) * (1 - 0.11 / size.y),
-      centre.z + (p.getZ(i) - centre.z) * (1 - 0.16 / size.z),
+      bounds.min.y + (p.getY(i) - bounds.min.y) * (1 - 0.045 / size.y),
+      centre.z + (p.getZ(i) - centre.z) * (1 - 0.07 / size.z),
     );
+  // Each existing box cell samples the dense, seamless tile in the right half.
+  // Duplicated triangle vertices allow repeated tile boundaries without shader fract derivatives.
+  const coreUV = backing.getAttribute("uv"),
+    coreNormal = backing.getAttribute("normal");
+  const along = Math.ceil(size.x / 0.3);
+  for (let i = 0; i < coreUV.count; i += 3) {
+    const ny = Math.abs(coreNormal.getY(i)),
+      nx = Math.abs(coreNormal.getX(i));
+    const su = ny > 0.5 ? along : nx > 0.5 ? 4 : along,
+      sv = ny > 0.5 ? 4 : 2;
+    const cellU = Math.floor(
+      ((coreUV.getX(i) + coreUV.getX(i + 1) + coreUV.getX(i + 2)) / 3) * su +
+        0.000001,
+    );
+    const cellV = Math.floor(
+      ((coreUV.getY(i) + coreUV.getY(i + 1) + coreUV.getY(i + 2)) / 3) * sv +
+        0.000001,
+    );
+    for (let j = 0; j < 3; j++)
+      coreUV.setXY(
+        i + j,
+        0.5 +
+          0.5 / 1024 +
+          T.MathUtils.clamp(coreUV.getX(i + j) * su - cellU, 0, 1) *
+            (0.5 - 1 / 1024),
+        0.5 / 512 +
+          T.MathUtils.clamp(coreUV.getY(i + j) * sv - cellV, 0, 1) *
+            (1 - 1 / 512),
+      );
+  }
+  backing.setAttribute(
+    "color",
+    new T.Float32BufferAttribute(Array(p.count * 3).fill(1), 3),
+  );
+  backing.setIndex(Array.from({ length: p.count }, (_, i) => i));
   backing.computeVertexNormals();
   const positions: number[] = [],
     uv: number[] = [],
@@ -66,8 +99,8 @@ export function galleryHedgeFoliageGeometry(source: T.BufferGeometry) {
             random(id + 17) * Math.PI * 2,
           ),
         );
-        const width = 0.075 + random(id + 23) * 0.03,
-          length = 0.145 + random(id + 29) * 0.045;
+        const width = (0.075 + random(id + 23) * 0.03) * 0.45,
+          length = (0.145 + random(id + 29) * 0.045) * 0.45;
         const offsets = [
           [-0.5, -0.5, 0],
           [0, -0.5, 0.008],
@@ -76,7 +109,7 @@ export function galleryHedgeFoliageGeometry(source: T.BufferGeometry) {
           [0, 0.5, 0.018],
           [0.5, 0.5, 0],
         ].map(([x, y, z]) =>
-          new T.Vector3(x * width, y * length, z).applyQuaternion(q),
+          new T.Vector3(x * width, y * length, z * 0.45).applyQuaternion(q),
         );
         const local = new T.Box3().setFromPoints(offsets),
           origin = centre.clone();
@@ -116,7 +149,7 @@ export function galleryHedgeFoliageGeometry(source: T.BufferGeometry) {
           const v = offsets[k].add(origin);
           positions.push(v.x, v.y, v.z);
           uv.push(
-            (cut[0] + ((k % 3) / 2) * cut[2]) / 1024,
+            (cut[0] + ((k % 3) / 2) * cut[2]) / 2048,
             (cut[1] + (k < 3 ? 1 : 0) * cut[3]) / 1024,
           );
           const tint = 0.84 + random(id + 53) * 0.16;
@@ -152,7 +185,7 @@ export function createGalleryHedgeMaterial(
 ) {
   const material = new T.MeshStandardMaterial({
     name: "Gallery west clipped hedge leaves",
-    color: 0xffffff,
+    color: 0x718c4d,
     vertexColors: true,
     roughness: 0.94,
     metalness: 0,

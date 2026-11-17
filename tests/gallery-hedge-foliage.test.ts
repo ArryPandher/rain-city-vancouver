@@ -37,15 +37,19 @@ test("actual retained hedge envelope contains all folded leaves without modifyin
       assert.ok(Array.from(attr.array).every(Number.isFinite));
   }
   a.backing.computeBoundingBox();
-  assert.ok(a.backing.boundingBox!.max.y < a.bounds.max.y - 0.1);
-  assert.ok(a.backing.boundingBox!.max.z < a.bounds.max.z - 0.07);
+  assert.ok(a.backing.boundingBox!.max.y < a.bounds.max.y - 0.04);
+  assert.ok(a.backing.boundingBox!.max.z < a.bounds.max.z - 0.03);
   const p = a.leaves.attributes.position;
   let folded = 0;
   for (let i = 0; i < p.count; i += 6) {
     const v = (j: number) =>
       new T.Vector3(p.getX(i + j), p.getY(i + j), p.getZ(i + j));
+    assert.ok(
+      v(0).distanceTo(v(3)) <= 0.0856,
+      "edge leaf length stays below8.6cm",
+    );
     const plane = new T.Plane().setFromCoplanarPoints(v(0), v(2), v(3));
-    if (Math.abs(plane.distanceToPoint(v(4))) > 0.01) folded++;
+    if (Math.abs(plane.distanceToPoint(v(4))) > 0.007) folded++;
   }
   assert.equal(
     folded,
@@ -53,7 +57,7 @@ test("actual retained hedge envelope contains all folded leaves without modifyin
     "every leaf has actual folded depth, not a planar billboard",
   );
 });
-test("textures retain source bytes and individual leaf crops contain transparent contour pixels", async () => {
+test("packed atlas preserves licensed resampled source pixels and real contour alpha", async () => {
   const doc = await new NodeIO()
       .registerExtensions(ALL_EXTENSIONS)
       .read("public/models/forest/shrub_04.glb"),
@@ -63,7 +67,33 @@ test("textures retain source bytes and individual leaf crops contain transparent
     ["normal", m.getNormalTexture()],
   ] as const) {
     const bytes = fs.readFileSync(`public/textures/gallery-hedge/${file}.webp`);
-    assert.deepEqual(bytes, Buffer.from(source!.getImage()!));
+    const expected = await sharp(source!.getImage()!)
+      .resize(512, 512)
+      .ensureAlpha()
+      .raw()
+      .toBuffer();
+    const actual = await sharp(bytes)
+      .extract({ left: 0, top: 0, width: 512, height: 512 })
+      .ensureAlpha()
+      .raw()
+      .toBuffer();
+    for (let i = 0; i < actual.length; i += 4)
+      if (expected[i + 3] > 0)
+        assert.deepEqual(
+          actual.subarray(i, i + 4),
+          expected.subarray(i, i + 4),
+        );
+    const dense = await sharp(`public/textures/coastal/leaf-cover-${file}.webp`)
+      .resize(512, 512)
+      .ensureAlpha()
+      .raw()
+      .toBuffer();
+    const core = await sharp(bytes)
+      .extract({ left: 512, top: 0, width: 512, height: 512 })
+      .ensureAlpha()
+      .raw()
+      .toBuffer();
+    assert.deepEqual(core, dense);
     const record = JSON.parse(
       fs.readFileSync("public/textures/gallery-hedge/SOURCES.json", "utf8"),
     ).find((r: { file: string }) => r.file.endsWith(`${file}.webp`));
@@ -77,7 +107,12 @@ test("textures retain source bytes and individual leaf crops contain transparent
     const { data, info } = await sharp(
       "public/textures/gallery-hedge/color.webp",
     )
-      .extract({ left, top, width, height })
+      .extract({
+        left: Math.floor(left / 2),
+        top: Math.floor(top / 2),
+        width: Math.floor(width / 2),
+        height: Math.floor(height / 2),
+      })
       .raw()
       .toBuffer({ resolveWithObject: true });
     let clear = 0,
@@ -86,7 +121,10 @@ test("textures retain source bytes and individual leaf crops contain transparent
       if (data[i] < 20) clear++;
       if (data[i] > 200) solid++;
     }
-    assert.ok(clear > width * height * 0.15 && solid > width * height * 0.15);
+    assert.ok(
+      clear > info.width * info.height * 0.15 &&
+        solid > info.width * info.height * 0.15,
+    );
   }
 });
 test("loader-equivalent facade preserves leaf atlas UVs, one bounded batch, independent samplers and disposal", () => {
@@ -135,14 +173,19 @@ test("loader-equivalent facade preserves leaf atlas UVs, one bounded batch, inde
         (m.material as T.Material).name === "Gallery west clipped hedge leaves",
     );
   assert.equal(selected.length, 1);
-  const expected = galleryHedgeFoliageGeometry(
-    galleryWestHedgeGeometry(),
-  ).leaves;
+  const parts = galleryHedgeFoliageGeometry(galleryWestHedgeGeometry());
+  const expectedUV = new Float32Array([
+    ...parts.backing.attributes.uv.array,
+    ...parts.leaves.attributes.uv.array,
+  ]);
   assert.deepEqual(
     selected[0].geometry.attributes.uv.array,
-    expected.attributes.uv.array,
+    expectedUV,
     "landmark metric projection must not overwrite leaf atlas coordinates",
   );
-  assert.equal(selected[0].geometry.index!.count, expected.index!.count);
+  assert.equal(
+    selected[0].geometry.index!.count,
+    parts.leaves.index!.count + parts.backing.index!.count,
+  );
   assert.equal(requests.filter((n) => n.includes("gallery-hedge/")).length, 6);
 });
