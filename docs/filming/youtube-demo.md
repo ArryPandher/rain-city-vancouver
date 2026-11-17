@@ -68,4 +68,4 @@ If the street is too crowded to summon a car, walk to an open stretch and press 
 >
 > What Vancouver location should we improve next?
 
-**Production note:** Controls and public travel behaviour checked against current source. The final release and exact walking/driving route still require the root agent’s native gameplay pass before this sheet is handed to the user as verified. Do not promise the new harbour reflection until it is included in that checked release. The voice-over works with the existing harbour view either way.
+**Filming note:** Record these as separate takes and cut the map transitions out. The harbour is a finishing shot after you have walked into position; the 90-second timeline is the edited video, not the total travel time. This is a playable prototype, and the larger Ironworkers Bridge rebuild is being kept out of this recording release.
