@@ -366,6 +366,88 @@ export function createSecondNarrowsRailContext(
     [[[...left, ...right.reverse(), left[0]]]],
     localWater,
   );
+  // World base surfaces are at−.035/−.09 while physical ground support is0.
+  // Close that render-only thickness on the exact perimeter; do not raise the
+  // toe or expand the coastline to hide the former blue background seam.
+  const perimeter = masks.flatMap((p) =>
+    p.flatMap((r) => r.slice(1).map((b, i) => ({ a: r[i], b }))),
+  );
+  const perimeterBins = new Map<string, typeof perimeter>();
+  for (const e of perimeter)
+    for (
+      let x = Math.floor((Math.min(e.a[0], e.b[0]) - 0.005) / 16);
+      x <= Math.floor((Math.max(e.a[0], e.b[0]) + 0.005) / 16);
+      x++
+    )
+      for (
+        let z = Math.floor((Math.min(e.a[1], e.b[1]) - 0.005) / 16);
+        z <= Math.floor((Math.max(e.a[1], e.b[1]) + 0.005) / 16);
+        z++
+      ) {
+        const key = `${x},${z}`;
+        if (!perimeterBins.has(key)) perimeterBins.set(key, []);
+        perimeterBins.get(key)!.push(e);
+      }
+  const onPerimeter = (a: V, b: V) => {
+    const x = (a[0] + b[0]) / 2,
+      z = (a[2] + b[2]) / 2;
+    return (
+      perimeterBins.get(`${Math.floor(x / 16)},${Math.floor(z / 16)}`) ?? []
+    ).some((e) => {
+      const dx = e.b[0] - e.a[0],
+        dz = e.b[1] - e.a[1],
+        l = dx * dx + dz * dz;
+      const t = Math.max(
+        0,
+        Math.min(1, ((x - e.a[0]) * dx + (z - e.a[1]) * dz) / l),
+      );
+      return Math.hypot(x - e.a[0] - t * dx, z - e.a[1] - t * dz) < 0.004;
+    });
+  };
+  const boundaryEdges = new Map<string, { a: V; b: V; count: number }>();
+  for (const t of triangles)
+    for (let i = 0; i < 3; i++) {
+      const a = t.points[i],
+        b = t.points[(i + 1) % 3];
+      if (!onPerimeter(a, b)) continue;
+      const ak = a.join(","),
+        bk = b.join(","),
+        key = ak < bk ? `${ak}/${bk}` : `${bk}/${ak}`;
+      const old = boundaryEdges.get(key);
+      if (old) old.count++;
+      else boundaryEdges.set(key, { a, b, count: 1 });
+    }
+  const skirtPositions: number[] = [],
+    skirtUV: number[] = [];
+  for (const { a, b, count } of boundaryEdges.values()) {
+    if (count !== 1) continue;
+    const aa: V = [a[0], -0.091, a[2]],
+      bb: V = [b[0], -0.091, b[2]],
+      length = Math.hypot(b[0] - a[0], b[2] - a[2]);
+    skirtPositions.push(...b, ...a, ...aa, ...b, ...aa, ...bb);
+    skirtUV.push(
+      length,
+      b[1],
+      0,
+      a[1],
+      0,
+      -0.091,
+      length,
+      b[1],
+      0,
+      -0.091,
+      length,
+      -0.091,
+    );
+  }
+  const skirt = new T.BufferGeometry();
+  skirt.setAttribute(
+    "position",
+    new T.Float32BufferAttribute(skirtPositions, 3),
+  );
+  skirt.setAttribute("uv", new T.Float32BufferAttribute(skirtUV, 2));
+  skirt.computeVertexNormals();
+  bins.ground.push(skirt);
   const nearbyGround = (bounds: [number, number, number, number]) => {
     const ids = new Set<number>();
     for (

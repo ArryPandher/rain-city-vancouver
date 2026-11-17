@@ -245,3 +245,45 @@ test("bank front is a continuous visible earth slope with a finite concrete bear
     previous = y;
   }
 });
+
+test("soil perimeter closes the actual negative render-floor join without raising support or expanding shoreline", () => {
+  const surfaceGeometry = new T.BufferGeometry();
+  surfaceGeometry.setAttribute(
+    "position",
+    new T.Float32BufferAttribute(
+      c.triangles.flatMap((t) => t.points.flat()),
+      3,
+    ),
+  );
+  const surfaceOnly = new T.Mesh(surfaceGeometry, new T.MeshBasicMaterial());
+  surfaceOnly.updateMatrixWorld();
+  let checked = 0;
+  for (let u = -12; u <= 12; u += 0.5)
+    for (const y of [-0.02, -0.05, -0.085]) {
+      const a = c.point(-0.25, u, 0),
+        b = c.point(0.25, u, 0);
+      const ray = new T.Raycaster(
+        new T.Vector3(a[0], y, a[2]),
+        new T.Vector3(b[0] - a[0], 0, b[2] - a[2]).normalize(),
+        0,
+        0.75,
+      );
+      assert.equal(
+        ray.intersectObject(surfaceOnly).length,
+        0,
+        "former unclosed surface exposed background",
+      );
+      const hit = ray.intersectObject(mesh)[0];
+      assert.ok(hit, `closed render join ${u}/${y}`);
+      assert.ok(
+        Math.abs(hit.face!.normal.y) < 1e-5,
+        "vertical thickness, not raised terrain",
+      );
+      checked++;
+    }
+  assert.equal(checked, 147);
+  const p = c.point(0, 0, 0);
+  assert.ok(Math.abs(c.sampleSurface(p[0], p[2]) ?? 0) < 0.001);
+  assert.ok(Math.abs(c.parts.ground.boundingBox!.min.y + 0.091) < 1e-6);
+  surfaceGeometry.dispose();
+});
