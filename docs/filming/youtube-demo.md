@@ -2,7 +2,7 @@
 
 [Play Rain City](https://arrypandher.github.io/rain-city-vancouver/)
 
-A short tour of **Robson Square / Vancouver Art Gallery → Canada Place / Howe Street → the harbour**. Record the sections separately, then cut between them. Allow a few minutes to get into position between takes; the timings below are the finished edit, not travel time.
+A short tour of **Robson Square / Vancouver Art Gallery → Canada Place / Howe Street → the sails**. Record the sections separately, then cut between them. Allow a few minutes to get into position between takes; the timings below are the finished edit, not travel time.
 
 ## Before recording
 
@@ -14,8 +14,8 @@ A short tour of **Robson Square / Vancouver Art Gallery → Canada Place / Howe 
 ## Route and shot order
 
 1. **Gallery forecourt:** From the on-foot Robson arrival, walk toward the Art Gallery stairs. Keep the red Gallery banners in frame. Turn the camera left for the Hooper wing and planted terrace, then return toward the entrance. Take a separate short shot walking up the stairs and pausing on a landing.
-2. **Howe street drive:** Press **V** to bring a car; this also puts you in it. Press **M → Canada Place** to bring the same car to the arrival street. Record a short, slow drive along the hotel frontage, framing the street depth and Canada Place as it comes into view. Brake fully with **Space** before **E** to step out. Record the entrance canopy and hotel from the sidewalk.
-3. **Harbour closing shot:** On foot, follow Canada Place's waterfront promenade along the west side toward the northern end. Set up beside the railing with the water and North Shore ahead. Record a slow walking shot, then a gentle turn toward the sails. This positioning walk happens before the take.
+2. **Howe street drive:** While on foot, press **M → Canada Place**, then **V** at the arrival street to bring a car and get in. Tap **W** briefly to reach roughly 20–30 km/h, then coast; avoid holding the accelerator. Record a short approach toward the sails. Brake with **Space** before the zebra crossing and raised waterfront apron, then **E** to step out. Record the entrance canopy and hotel from the sidewalk. If V fails at the Gallery stairs, use this Canada Place street arrival instead.
+3. **Sails closing shot:** Stay on the broad entrance apron, near the crosswalk where you stopped. Walk a few paces toward the water, then turn gently upward so the sails, terminal and cruise ship fill the frame. The narrow path under the hotel columns ends at a railing; it is not the route for this take. The northern waterfront reflection is available for a separate exploration shot, but the quick demo does not require that longer walk.
 
 Take the opening driving shot from step 2 and place it first in the edit. The map transitions can be cut out. The sequence is a tour of two locations, not a claim of an uninterrupted drive between them.
 
@@ -30,7 +30,7 @@ Read conversationally, leaving space for engine noise, footsteps and the view. A
 | 0:23–0:37 | Walk past the planted terrace; gently tilt up the Hooper wing. Separate cut to the stairs. | “Here’s Robson Square and the Vancouver Art Gallery: the entrance, the stonework, the terraces, and the buildings around it. You can walk through this whole scene.” |
 | 0:37–0:55 | Return to the Howe driving take; finish with a clean stop. | “Then you can jump into a car and explore Canada Place and Howe Street. The roads and building footprints come from real map data, with the landmarks developed against Vancouver references.” |
 | 0:55–1:06 | Step out beside the hotel; show the canopy and street frontage in one slow pan. | “The goal is to make Vancouver feel familiar at walking speed, with convincing buildings, materials, lighting and movement.” |
-| 1:06–1:19 | Waterfront walking shot with North Shore, then a restrained turn toward the sails. | “GTA is the visual inspiration, but this is still an early browser prototype. What you’re seeing is ordinary third-person gameplay, not a prerendered cinematic.” |
+| 1:06–1:19 | Short entrance-apron walk, then a restrained upward turn toward the sails. | “GTA is the visual inspiration, but this is still an early browser prototype. What you’re seeing is ordinary third-person gameplay, not a prerendered cinematic.” |
 | 1:19–1:30 | Hold the strongest sails or Gallery composition; finish on a short walk. | “You can try it yourself from the link in the description. Which Vancouver spot should get the next detail pass? Tell me what you recognize—and what still needs work.” |
 
 ## Optional shooting insert
@@ -68,4 +68,4 @@ If the street is too crowded to summon a car, walk to an open stretch and press 
 >
 > What Vancouver location should we improve next?
 
-**Filming note:** Record these as separate takes and cut the map transitions out. The harbour is a finishing shot after you have walked into position; the 90-second timeline is the edited video, not the total travel time. This is a playable prototype, and the larger Ironworkers Bridge rebuild is being kept out of this recording release.
+**Filming note:** Record these as separate takes and cut the map transitions out. The sails are the finishing shot from the entrance apron; the 90-second timeline is the edited video, not the total travel time. This is a playable prototype, and the larger Ironworkers Bridge rebuild is being kept out of this recording release.
