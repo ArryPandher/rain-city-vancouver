@@ -4,15 +4,23 @@
     "source": "https://polyhaven.com/a/shrub_04",
     "author": "Rico Cilliers",
     "license": "CC0-1.0",
-    "sha256": "5143c6a2dac977f65670a51562131809c71a4365cfa5cd72375f4c23a4bda9a3",
-    "changes": "Byte-identical embedded texture extracted from retained shrub_04.glb; seven individual leaf regions reused. No species identity asserted."
+    "sha256": "7acf81e9e7eb2c9851fb0f3271fbce16fc8bdd08944aec4330f21b27030904e6",
+    "inputs": [
+      "public/models/forest/shrub_04.glb",
+      "public/textures/coastal/leaf-cover-color.webp"
+    ],
+    "changes": "1024x512 atlas: original retained leaf map resampled into left512px; existing dense coastal leaf tile into right512px. Edge geometry uses only five green leaf regions. No recoloring in this image; shader tint/leaf size are documented authored calibration."
   },
   {
     "file": "textures/gallery-hedge/normal.webp",
     "source": "https://polyhaven.com/a/shrub_04",
     "author": "Rico Cilliers",
     "license": "CC0-1.0",
-    "sha256": "59efbed386a7516cc3666e339a84aab971a744511787b7ecff88685751700131",
-    "changes": "Byte-identical embedded texture extracted from retained shrub_04.glb; seven individual leaf regions reused. No species identity asserted."
+    "sha256": "566105b867c57a6c19e4bdd967a71006321e591e94dcdf543df988f872f40685",
+    "inputs": [
+      "public/models/forest/shrub_04.glb",
+      "public/textures/coastal/leaf-cover-normal.webp"
+    ],
+    "changes": "1024x512 atlas: original retained leaf map resampled into left512px; existing dense coastal leaf tile into right512px. Edge geometry uses only five green leaf regions. No recoloring in this image; shader tint/leaf size are documented authored calibration."
   }
 ]
