@@ -21,7 +21,7 @@ Take the opening driving shot from step 2 and place it first in the edit. The ma
 
 ## Voice-over and edit
 
-Read conversationally, leaving space for engine noise, footsteps and the view. Approximately 185 words; the pauses fill the remaining time.
+Read conversationally, leaving space for engine noise, footsteps and the view. Approximately 170 words; the pauses fill the remaining time.
 
 | Time | Picture | Narration |
 |---|---|---|
