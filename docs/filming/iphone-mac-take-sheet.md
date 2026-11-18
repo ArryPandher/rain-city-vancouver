@@ -2,9 +2,11 @@
 
 Prepared 2026-11-17 for separate presenter and screen recordings. This is a proposed spoken revision of [the existing 90-second comparison script](youtube-demo.md). Target edit: roughly 90 seconds, with pauses for the scenery. The original script is preserved.
 
-Suggested title: **I Tried to Make GTA 6 in One Weekend**
+Suggested title: **I Tried to Make GTA 6 with AI in 3 Days**
 
-Arry suggested “AI Made Me GTA 6 in One Weekend” and adding token cost to the opening. The title above frames the attempt; the finished footage includes polishing after the weekend. Git history begins Saturday, November 14, and includes runtime changes on Monday, November 16. The cost audit covers November 14–17, so it is a project-total estimate through that cutoff, not weekend-only spending. Time-neutral alternative: **AI Made Me GTA 6 in Vancouver**.
+Arry wants a specific duration in the hook. The original project request is timestamped **2026-11-14T07:15:00.455Z**; the verified public filming-release record is timestamped **2026-11-17T08:07:16.781174Z**. The elapsed span is **3 days, 52 minutes, 16 seconds**. Say “just over three days later” and show “3 days · 52 minutes elapsed” onscreen. These are the request-to-verified-release endpoints, not measured continuous AI execution time. The title describes the prototype-building attempt; the result remains below GTA/AAA quality.
+
+The token-cost figure remains a separate project-total estimate through the November 17 audit cutoff, including work after the filming release. It is not an exact bill for that 3-day/52-minute interval. Earlier weekend-title options are superseded by this duration-led draft.
 
 ## Spoken lines and edit cues
 
@@ -12,12 +14,12 @@ Each row is one iPhone take. Read only the quoted words. Record the matching Mac
 
 | Edit | Say to the iPhone | Show in the edit / capture on the Mac |
 |---|---|---|
-| 0:00–0:14 | “I asked AI to make me GTA 6 in Vancouver. At standard API prices, the tokens alone come to about thirty-nine hundred US dollars. Here's what it built.” | Start on your face. On “thirty-nine hundred,” show a simple cost card: **$3,893.93 USD — estimated API value**. Small readable caption: **Recorded Nov 14–17 usage; actual billing not verified**. Cut to moving Canada Place gameplay on “Here's what it built.” Show the RAIN CITY label and the sails. |
-| 0:14–0:33 | “Let's start at Canada Place. Here's the real view. And here's the game. The sails, the hotel, the waterfront. Now I can walk through it, get into a car, and drive around.” | Real street-level sails/hotel view for about three seconds. Cut to the matching game angle on “here's the game.” Hold one second, then walk. Use separate car-entry and slow-driving clips under the last line. |
-| 0:33–0:50 | “Next is Harbour Green Park. Real life first—then the game. You've got the stairs, the fountain, and the mountains across the water. Let's head down to the waterfront.” | Real park view with the stairs/fountain and harbour direction visible. Cut to the game on “then the game.” Walk down the broad Bute stairs; finish with the fountain, harbour and mountains in frame. |
-| 0:50–1:06 | “Here's Robson Square and the Vancouver Art Gallery. This is the real entrance. And this is the game. I can walk up the stairs and onto the terrace.” | Real Gallery entrance facing Robson Square. Cut to the matching game facade. Walk toward the entrance; use a separate stairs take and a gentle terrace turn. |
-| 1:06–1:15 | “You can also drive and try the weapons. And this whole thing runs in a browser.” | Brief car movement, then an on-foot pistol aim/fire/holster insert. Keep the gameplay HUD visible. A short wider screen shot can show the browser around the game. |
-| 1:15–1:30 | “Okay, Rockstar is safe for now. It's still a prototype, and there's plenty to fix. But you can play it yourself. Link's in the description. Which Vancouver spot should we build next?” | Back to your face for the verdict. Cut to moving Canada Place gameplay under the play invitation. Add the play link, then finish on your face or the sails. |
+| 0:00–0:18 | “I asked AI to make me GTA 6 in Vancouver. Just over three days later, here's what it built. The project's recorded tokens come to about thirty-nine hundred US dollars at standard API prices.” | Start on your face. Show **3 days · 52 minutes elapsed** on “just over three days later.” Cut to moving Canada Place gameplay on “here's what it built,” with RAIN CITY visible. Then overlay **$3,893.93 USD — estimated API value** on the cost line. Readable caption: **Recorded Nov 14–17 usage; actual billing not verified**. |
+| 0:18–0:36 | “Let's start at Canada Place. Here's the real view. And here's the game. The sails, the hotel, the waterfront. Now I can walk through it, get into a car, and drive around.” | Real street-level sails/hotel view for about three seconds. Cut to the matching game angle on “here's the game.” Hold one second, then walk. Use separate car-entry and slow-driving clips under the last line. |
+| 0:36–0:52 | “Next is Harbour Green Park. Real life first—then the game. You've got the stairs, the fountain, and the mountains across the water. Let's head down to the waterfront.” | Real park view with the stairs/fountain and harbour direction visible. Cut to the game on “then the game.” Walk down the broad Bute stairs; finish with the fountain, harbour and mountains in frame. |
+| 0:52–1:07 | “Here's Robson Square and the Vancouver Art Gallery. This is the real entrance. And this is the game. I can walk up the stairs and onto the terrace.” | Real Gallery entrance facing Robson Square. Cut to the matching game facade. Walk toward the entrance; use a separate stairs take and a gentle terrace turn. |
+| 1:07–1:16 | “You can also drive and try the weapons. And this whole thing runs in a browser.” | Brief car movement, then an on-foot pistol aim/fire/holster insert. Keep the gameplay HUD visible. A short wider screen shot can show the browser around the game. |
+| 1:16–1:30 | “Okay, Rockstar is safe for now. It's still a prototype, and there's plenty to fix. But you can play it yourself. Link's in the description. Which Vancouver spot should we build next?” | Back to your face for the verdict. Cut to moving Canada Place gameplay under the play invitation. Add the play link, then finish on your face or the sails. |
 
 If the read runs long, shorten the car and terrace holds. Let the comparisons breathe instead of rushing the voice.
 
@@ -62,7 +64,7 @@ I asked AI to help build a GTA-inspired game set in Vancouver. This is Rain City
 
 Play: https://rain-city-vancouver.vercel.app/
 
-The opening's roughly US$3,900 figure is an API-equivalent estimate for recorded token usage from November 14–17, 2026, not a verified payment. It uses standard list rates and excludes credits, discounts, taxes and other project costs. The project started over the weekend and received further polishing afterward.
+The opening's roughly US$3,900 figure is an API-equivalent estimate for recorded token usage from November 14–17, 2026, not a verified payment. It uses standard list rates and excludes credits, discounts, taxes and other project costs. The filmed prototype was publicly verified 3 days, 52 minutes after the original request. This is elapsed development time, not measured continuous AI execution. The later cost-audit cutoff includes subsequent work.
 
 You can walk, drive and try the weapons. There is still plenty to improve. Which Vancouver location should we build next?
 
