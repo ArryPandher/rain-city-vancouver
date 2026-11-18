@@ -12,3 +12,5 @@
 - Follow-up script preference: Arry suggested a weekend title and sharing token cost in the hook. The revised draft adds the US$3,893.93 estimate/rounded spoken figure, cost-card cue and scope explanation to the description. Final title/footage selection and recording remain open.
 
 - Latest filming preference: Arry wants a precise duration instead of the weekend wording. Original request timestamp and verified public filming-release timestamp give 3 days, 52 minutes, 16 seconds elapsed. Intro, duration overlay, title and description updated; final filming/review remains open.
+
+- Latest opening preference: Arry proposes GTA 6’s billion-dollar budget as the contrast for the weekend challenge. Reuters reports an estimated production budget of $1 billion or more; draft qualifies it as estimated, asks whether AI could build a Vancouver version in a weekend, then reveals the verified 3-day/52-minute elapsed result. The $3,893.93 estimated API value remains an onscreen beat with its separate scope caption. Recording/title review still open.

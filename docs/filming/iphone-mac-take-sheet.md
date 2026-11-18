@@ -10,11 +10,13 @@ The token-cost figure remains a separate project-total estimate through the Nove
 
 ## Spoken lines and edit cues
 
+Latest hook direction: start with GTA 6’s reported production-budget estimate, then pose the weekend challenge and reveal the measured elapsed outcome. [Reuters, November 17, 2026](https://www.reuters.com/lifestyle/grand-theft-auto-vi-heads-launch-amid-feverish-anticipation-2026-11-17/) reports an estimated production budget of $1 billion or more. This is a reported estimate, not a confirmed Rockstar figure. The opening question proposes the challenge; it does not claim the shown prototype was finished within a weekend or equals GTA 6.
+
 Each row is one iPhone take. Read only the quoted words. Record the matching Mac clips separately; the times guide the edit, not how long setup should take.
 
 | Edit | Say to the iPhone | Show in the edit / capture on the Mac |
 |---|---|---|
-| 0:00–0:18 | “I asked AI to make me GTA 6 in Vancouver. Three days and fifty-two minutes later, here's what it built. The project's recorded tokens come to about thirty-nine hundred US dollars at standard API prices.” | Start on your face. Show **3 days · 52 minutes elapsed** on “three days and fifty-two minutes later.” Cut to moving Canada Place gameplay on “here's what it built,” with RAIN CITY visible. Then overlay **$3,893.93 USD — estimated API value** on the cost line. Readable caption: **Recorded Nov 14–17 usage; actual billing not verified**. |
+| 0:00–0:18 | “GTA 6 is estimated to cost a billion dollars or more to make. Could AI build me a version in a weekend—set in Vancouver? Three days and fifty-two minutes later, here's what I got.” | Start on your face; show **GTA 6: $1B+ estimated production budget** with a small Reuters source credit. On the question, show **THE CHALLENGE: VANCOUVER IN A WEEKEND**. Then show **3 days · 52 minutes elapsed** and cut to moving Canada Place gameplay on “here's what I got,” with RAIN CITY visible. During the reveal, add **$3,893.93 USD — estimated API value**, with **Recorded Nov 14–17 usage; actual billing not verified**. The production-budget estimate and API-value estimate have different scopes; do not present a cost ratio or claim AAA equivalence. |
 | 0:18–0:36 | “Let's start at Canada Place. Here's the real view. And here's the game. The sails, the hotel, the waterfront. Now I can walk through it, get into a car, and drive around.” | Real street-level sails/hotel view for about three seconds. Cut to the matching game angle on “here's the game.” Hold one second, then walk. Use separate car-entry and slow-driving clips under the last line. |
 | 0:36–0:52 | “Next is Harbour Green Park. Real life first—then the game. You've got the stairs, the fountain, and the mountains across the water. Let's head down to the waterfront.” | Real park view with the stairs/fountain and harbour direction visible. Cut to the game on “then the game.” Walk down the broad Bute stairs; finish with the fountain, harbour and mountains in frame. |
 | 0:52–1:07 | “Here's Robson Square and the Vancouver Art Gallery. This is the real entrance. And this is the game. I can walk up the stairs and onto the terrace.” | Real Gallery entrance facing Robson Square. Cut to the matching game facade. Walk toward the entrance; use a separate stairs take and a gentle terrace turn. |
@@ -64,7 +66,9 @@ I asked AI to help build a GTA-inspired game set in Vancouver. This is Rain City
 
 Play: https://rain-city-vancouver.vercel.app/
 
-The opening's roughly US$3,900 figure is an API-equivalent estimate for recorded token usage from November 14–17, 2026, not a verified payment. It uses standard list rates and excludes credits, discounts, taxes and other project costs. The filmed prototype was publicly verified 3 days, 52 minutes after the original request. This is elapsed development time, not measured continuous AI execution. The later cost-audit cutoff includes subsequent work.
+The opening cites Reuters' reported GTA 6 production-budget estimate of $1 billion or more; it is not a confirmed Rockstar budget. Source: https://www.reuters.com/lifestyle/grand-theft-auto-vi-heads-launch-amid-feverish-anticipation-2026-11-17/
+
+The reveal's roughly US$3,900 figure is an API-equivalent estimate for recorded token usage from November 14–17, 2026, not a verified payment. It uses standard list rates and excludes credits, discounts, taxes and other project costs. The filmed prototype was publicly verified 3 days, 52 minutes after the original request. This is elapsed development time, not measured continuous AI execution. The later cost-audit cutoff includes subsequent work.
 
 You can walk, drive and try the weapons. There is still plenty to improve. Which Vancouver location should we build next?
 
