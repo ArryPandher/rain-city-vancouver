@@ -4,7 +4,7 @@
 
 **Alternative title:** AI Made Me GTA 6 in Vancouver
 
-[Play Rain City](https://arrypandher.github.io/rain-city-vancouver/)
+[Play Rain City](https://rain-city-vancouver.vercel.app/)
 
 A 90-second real-Vancouver-versus-gameplay reveal. Show the real location first, cut to the closest matching game view, hold it briefly, then start walking or driving. The moving character is the payoff. Record separate takes and cut out map transitions.
 
@@ -43,7 +43,7 @@ Read conversationally; leave room for engine noise, footsteps and the scenery. �
 
 **Gastown:** The game includes a Gastown destination and Steam Clock asset, but this script revision does not verify the final camera match or walking take. Confirm the clock, nearby storefronts and Water Street direction are recognizable before using the comparison. If the take is weak, omit it and give Canada Place and Robson the extra time; do not imply this section has received the same recent detail pass.
 
-**Harbour Green Park:** Arry confirmed this is the requested park and mountain-view walkway. The map destination and reconstructed park are present. Match the exact real/game view before filming; the normal NorthPoint reflection check from the release is a different location and does not establish a matched Harbour Green shot.
+**Harbour Green Park:** Arry confirmed this is the requested park and mountain-view walkway. Public Vercel startup, map arrival, the park approach and walking down the Bute stairs were checked. From the arrival, walk toward the water and down the broad stairs; frame the fountain with the harbour and mountains beyond. This is a verified game route, but the exact real-world camera match still needs selecting before filming. The NorthPoint water reflection check is a different location.
 
 **Optional Cambie Bridge extra:** Keep this for a longer cut, or swap it for one of the other location segments. Show a real pedestrian-side view across False Creek toward downtown first, then the matching game view and a short walk. The exact bridge-side camera match and continuous walking take have not yet been checked for this filming sheet; confirm the character stays on the deck and the water/skyline direction agrees with the real reference. Narration:
 
@@ -60,7 +60,7 @@ The title frames the challenge; it does not establish that the result equals GTA
 1. **Set up:** Choose **Settings → Atmosphere → Pacific daylight** and **Graphics → Balanced**. Start with **Explore on foot**. Use **C → Chase camera** or **Close camera** for third-person shots, with the HUD visible.
 2. **Canada Place drive:** While on foot, use **M → Canada Place**, then **V** at the arrival street to summon and enter the coupe. Tap **W** briefly to reach roughly 20–30 km/h, then coast. Brake with **Space** before the zebra crossing and raised waterfront apron; press **E** to get out.
 3. **Canada Place walk:** Use the broad entrance approach near that crosswalk for the sails view. The narrow path beneath the hotel columns ends at a railing and is not the route for this take.
-4. **Harbour Green walk:** Use **M → Harbour Green Park** on foot. Find a seawall view toward the North Shore, match the real reference, and record a short waterfront walk. This is the scenic park segment, separate from Canada Place’s northern tip.
+4. **Harbour Green walk:** Use **M → Harbour Green Park** on foot. Walk toward the water, past the central lawn and down the broad Bute steps. The fountain, Coal Harbour and North Shore mountains are ahead. Start the take on the steps or continue toward the waterfront path, then match the chosen real-life reference. This is the scenic park segment, separate from Canada Place’s northern tip.
 5. **Gastown walk:** Use **M → Gastown** on foot. Match the Steam Clock view at Water and Cambie, then record a short walk past it. Treat the exact shot as pending the recording check above.
 6. **Robson walk:** Use **M → Robson Square** on foot. Walk toward the Gallery entrance and record the stairs as a separate take. Pan gently across the planted terrace.
 7. **Action insert:** On foot, **1** equips the pistol, **right mouse** aims, **left mouse** fires, and **Q** holsters it. Use a clear background so the action reads.
@@ -90,7 +90,7 @@ If the street is too crowded to summon a car, walk to an open stretch and press 
 >
 > Real Vancouver first, then ordinary third-person gameplay. You can walk, drive and try the weapons, all in your browser. This is an early prototype and there's plenty more work to do.
 >
-> Play: https://arrypandher.github.io/rain-city-vancouver/
+> Play: https://rain-city-vancouver.vercel.app/
 >
 > Which Vancouver location should we build next?
 >

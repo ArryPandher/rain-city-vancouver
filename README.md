@@ -1,6 +1,6 @@
 # Rain City: Vancouver
 
-**[Play in your browser](https://arrypandher.github.io/rain-city-vancouver/)** · [Controls](#controls) · [Credits](THIRD_PARTY.md) · [Verification](docs/PLAYTEST.md)
+**[Play in your browser](https://rain-city-vancouver.vercel.app/)** · [Controls](#controls) · [Credits](THIRD_PARTY.md) · [Verification](docs/PLAYTEST.md)
 
 ![Rain City waterfront with Canada Place and the North Shore](docs/screenshots/vancouver-waterfront.webp)
 
@@ -49,7 +49,7 @@ npm run dev
 
 Open http://127.0.0.1:5178/. Build with `npm run build`, run simulation tests with `npm test`, and preview the built game with `npm run preview` at http://127.0.0.1:4178/. Append `?debug=1` to display performance counters. A developer API is available as `window.rainCity` for reproducible local checks.
 
-GitHub Actions builds and deploys `main` to GitHub Pages. No service keys or paid hosting required. Runtime assets are served with the game; geographic data is not fetched from Overpass during play.
+The primary share link is hosted on Vercel. [Deployment instructions and GitHub connection status](docs/deployment/vercel.md). GitHub Actions also builds and deploys `main` to the [GitHub Pages mirror](https://arrypandher.github.io/rain-city-vancouver/). Runtime assets are served with the game; geographic data is not fetched from Overpass during play.
 
 ![Driving on West Cordova Street in the playable build](docs/screenshots/downtown-driving.webp)
 
