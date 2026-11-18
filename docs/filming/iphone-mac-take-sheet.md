@@ -2,9 +2,9 @@
 
 Prepared 2026-11-17 for separate presenter and screen recordings. This is a proposed spoken revision of [the existing 90-second comparison script](youtube-demo.md). Target edit: roughly 90 seconds, with pauses for the scenery. The original script is preserved.
 
-Suggested title: **What If GTA Was Set in Vancouver?**
+Suggested title: **I Tried to Make GTA 6 in One Weekend**
 
-The weekend hook is available if Arry confirms the timeframe: “Can AI make me GTA 6 in a weekend? I asked it to set the game in Vancouver. This is Rain City.” The default opening below makes no build-time claim.
+Arry suggested “AI Made Me GTA 6 in One Weekend” and adding token cost to the opening. The title above frames the attempt; the finished footage includes polishing after the weekend. Git history begins Saturday, November 14, and includes runtime changes on Monday, November 16. The cost audit covers November 14–17, so it is a project-total estimate through that cutoff, not weekend-only spending. Time-neutral alternative: **AI Made Me GTA 6 in Vancouver**.
 
 ## Spoken lines and edit cues
 
@@ -12,12 +12,12 @@ Each row is one iPhone take. Read only the quoted words. Record the matching Mac
 
 | Edit | Say to the iPhone | Show in the edit / capture on the Mac |
 |---|---|---|
-| 0:00–0:10 | “What if GTA was set in Vancouver? I asked AI to help me build a game I could actually play. This is Rain City.” | Start on your face for the question. Cut to a brief Canada Place gameplay reveal on “Rain City.” Keep the character moving and the sails visible. |
-| 0:10–0:30 | “Let's start at Canada Place. Here's the real view. And here's the game. The sails, the hotel, the waterfront. Now I can walk through it, get into a car, and drive around.” | Real street-level sails/hotel view for about three seconds. Cut to the matching game angle on “here's the game.” Hold one second, then walk. Use separate car-entry and slow-driving clips under the last line. |
-| 0:30–0:47 | “Next is Harbour Green Park. Real life first—then the game. You've got the stairs, the fountain, and the mountains across the water. Let's head down to the waterfront.” | Real park view with the stairs/fountain and harbour direction visible. Cut to the game on “then the game.” Walk down the broad Bute stairs; finish with the fountain, harbour and mountains in frame. |
-| 0:47–1:04 | “Here's Robson Square and the Vancouver Art Gallery. This is the real entrance. And this is the game. I can walk up the stairs and onto the terrace.” | Real Gallery entrance facing Robson Square. Cut to the matching game facade. Walk toward the entrance; use a separate stairs take and a gentle terrace turn. |
-| 1:04–1:14 | “You can also drive and try the weapons. And this whole thing runs in a browser.” | Brief car movement, then an on-foot pistol aim/fire/holster insert. Keep the gameplay HUD visible. A short wider screen shot can show the browser around the game. |
-| 1:14–1:30 | “Okay, Rockstar is safe for now. It's still a prototype, and there's plenty to fix. But you can play it yourself. Link's in the description. Which Vancouver spot should we build next?” | Back to your face for the verdict. Cut to moving Canada Place gameplay under the play invitation. Add the play link, then finish on your face or the sails. |
+| 0:00–0:14 | “I asked AI to make me GTA 6 in Vancouver. At standard API prices, the tokens alone come to about thirty-nine hundred US dollars. Here's what it built.” | Start on your face. On “thirty-nine hundred,” show a simple cost card: **$3,893.93 USD — estimated API value**. Small readable caption: **Recorded Nov 14–17 usage; actual billing not verified**. Cut to moving Canada Place gameplay on “Here's what it built.” Show the RAIN CITY label and the sails. |
+| 0:14–0:33 | “Let's start at Canada Place. Here's the real view. And here's the game. The sails, the hotel, the waterfront. Now I can walk through it, get into a car, and drive around.” | Real street-level sails/hotel view for about three seconds. Cut to the matching game angle on “here's the game.” Hold one second, then walk. Use separate car-entry and slow-driving clips under the last line. |
+| 0:33–0:50 | “Next is Harbour Green Park. Real life first—then the game. You've got the stairs, the fountain, and the mountains across the water. Let's head down to the waterfront.” | Real park view with the stairs/fountain and harbour direction visible. Cut to the game on “then the game.” Walk down the broad Bute stairs; finish with the fountain, harbour and mountains in frame. |
+| 0:50–1:06 | “Here's Robson Square and the Vancouver Art Gallery. This is the real entrance. And this is the game. I can walk up the stairs and onto the terrace.” | Real Gallery entrance facing Robson Square. Cut to the matching game facade. Walk toward the entrance; use a separate stairs take and a gentle terrace turn. |
+| 1:06–1:15 | “You can also drive and try the weapons. And this whole thing runs in a browser.” | Brief car movement, then an on-foot pistol aim/fire/holster insert. Keep the gameplay HUD visible. A short wider screen shot can show the browser around the game. |
+| 1:15–1:30 | “Okay, Rockstar is safe for now. It's still a prototype, and there's plenty to fix. But you can play it yourself. Link's in the description. Which Vancouver spot should we build next?” | Back to your face for the verdict. Cut to moving Canada Place gameplay under the play invitation. Add the play link, then finish on your face or the sails. |
 
 If the read runs long, shorten the car and terrace holds. Let the comparisons breathe instead of rushing the voice.
 
@@ -48,6 +48,8 @@ Use M → Gastown on foot. Find the clock and confirm the Water Street direction
 
 ## Claim and reference checks
 
+- Cost-hook source: the existing private token audit and its cost-summary reconcile to **US$3,893.93**, rounded to **about US$3,900** for speech. It values recorded Nov 14–17 usage at published Standard rates, with default 30-minute cache-write retention assumed. It is not a verified invoice or cash payment. Discounts, credits, taxes, hosting, purchased assets and other third-party tool charges are excluded. Do not say “I spent $3,900,” “the bill was $3,900,” or “the weekend cost $3,900.” Publish only the approved aggregate and scope caption; keep the underlying private audit/account records local.
+
 - Today’s read-only public check: index HTTP 200; runtime `index-f3VmwyCG.js`, 2,340,662 bytes, SHA256 `45723dae4153146e608c8a1d1f59106286020b4e129a3ac1bae299d823d48917`. This exactly matches the documented public filming release. This session did not replay gameplay or capture footage.
 - The existing release records verify normal public Canada Place/Gallery walking, car summon/drive/brake/exit, pistol fire/holster, and Vercel Harbour Green map arrival/approach/Bute stair descent. Controls and destination names were checked against current `src/main.ts`, `src/ui/ui.ts` and `src/world/data.ts`. See [hosting verification](../deployment/vercel.md), [original route limitations](youtube-demo.md) and the Rain City project note.
 - Exact real-to-game camera matches still need selecting. Use the same street side, facing direction and approximate framing, then hold the game shot briefly before moving. The scenery is approximate; no surveyed reconstruction, AAA quality, smooth-performance guarantee or full GTA feature set is claimed.
@@ -59,6 +61,8 @@ Use M → Gastown on foot. Find the clock and confirm the Water Street direction
 I asked AI to help build a GTA-inspired game set in Vancouver. This is Rain City: a playable browser prototype, compared with real views of Canada Place, Harbour Green Park, and Robson Square with the Vancouver Art Gallery.
 
 Play: https://rain-city-vancouver.vercel.app/
+
+The opening's roughly US$3,900 figure is an API-equivalent estimate for recorded token usage from November 14–17, 2026, not a verified payment. It uses standard list rates and excludes credits, discounts, taxes and other project costs. The project started over the weekend and received further polishing afterward.
 
 You can walk, drive and try the weapons. There is still plenty to improve. Which Vancouver location should we build next?
 
