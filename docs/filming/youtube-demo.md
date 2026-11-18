@@ -15,17 +15,19 @@ Read conversationally; leave room for engine noise, footsteps and the scenery. �
 | Time | What you show | What you say |
 |---|---|---|
 | 0:00–0:08 | **Real first:** two seconds of Canada Place's sails in Street View or your own footage. Cut to the matching game angle, then immediately walk forward. Title appears over gameplay. | “Can AI make me GTA 6 in a weekend? I gave it one condition: set it in Vancouver. Here's what we got.” |
-| 0:08–0:27 | **Real, 4 seconds:** Canada Place's sails and Pan Pacific frontage. **Game, 15 seconds:** match the direction and framing; hold for a beat, walk, then cut to the coupe approaching the sails at 20–30 km/h. | “First, Canada Place. These are the real sails and the hotel beside them. Now here's the game. Same spot—except I can walk around, jump into a car, and drive through it.” |
-| 0:27–0:46 | **Real, 4 seconds:** a Cambie Bridge pedestrian view over False Creek toward downtown. **Game, 15 seconds:** match that side and direction, hold, then walk along the bridge with the skyline visible. Check this take before recording, as noted below. | “Next, Cambie Bridge. Look at the water and the downtown skyline in the real view. Now switch to the game. This is the comparison I wanted: Vancouver from somewhere you actually recognize.” |
-| 0:46–1:05 | **Real, 4 seconds:** the Art Gallery entrance and columns from the Robson Square side. **Game, 15 seconds:** align the entrance and columns, then walk toward and up the stairs. Finish with a slow turn across the terrace. | “And here's Robson Square and the Vancouver Art Gallery. Real life first. Then the version AI helped build—the columns, the entrance, the stairs. You can actually walk up here.” |
-| 1:05–1:18 | Gameplay only: short third-person aiming/firing insert, holster, then cut to the car moving through Canada Place. Keep the HUD visible. | “It also gave me driving, third-person movement, and guns to mess around with. All of this runs in a browser.” |
-| 1:18–1:30 | One quick real-to-game Canada Place comparison, then finish on moving gameplay with the sails visible. Add the play-link callout. | “Okay, Rockstar is safe for now. But you can play this yourself. Link's in the description. Which Vancouver spot should we build next?” |
+| 0:08–0:24 | **Real, 4 seconds:** Canada Place's sails and Pan Pacific frontage. **Game, 12 seconds:** match the direction and framing; hold for a beat, walk, then cut to the coupe approaching the sails at 20–30 km/h. | “First, Canada Place. These are the real sails and the hotel beside them. Now here's the game. Same spot—except I can walk around, jump into a car, and drive through it.” |
+| 0:24–0:39 | **Real, 4 seconds:** Gastown's Steam Clock at Water and Cambie, with the brick storefronts down Water Street. **Game, 11 seconds:** match the clock and street direction; pause, then walk past it. Check the exact view before recording. | “And Gastown—the Steam Clock and those old brick storefronts. Here's the real street. Now the game. Let's walk through and see how it compares.” |
+| 0:39–0:54 | **Real, 4 seconds:** a Cambie Bridge pedestrian view over False Creek toward downtown. **Game, 11 seconds:** match that side and direction, hold, then walk along the bridge with the skyline visible. Check this take before recording, as noted below. | “Next, Cambie Bridge. Look at the water and the downtown skyline in the real view. Now switch to the game. This is the comparison I wanted: Vancouver from somewhere you actually recognize.” |
+| 0:54–1:10 | **Real, 4 seconds:** the Art Gallery entrance and columns from the Robson Square side. **Game, 12 seconds:** align the entrance and columns, then walk toward and up the stairs. Finish with a slow turn across the terrace. | “And here's Robson Square and the Vancouver Art Gallery. Real life first. Then the version AI helped build—the columns, the entrance, the stairs. You can actually walk up here.” |
+| 1:10–1:20 | Gameplay only: short third-person aiming/firing insert, holster, then cut to the car moving through Canada Place. Keep the HUD visible. | “It also gave me driving, third-person movement, and guns to mess around with. All of this runs in a browser.” |
+| 1:20–1:30 | One quick real-to-game Canada Place comparison, then finish on moving gameplay with the sails visible. Add the play-link callout. | “Okay, Rockstar is safe for now. But you can play this yourself. Link's in the description. Which Vancouver spot should we build next?” |
 
 ## Matching the real views
 
 | Location | Real-life reference to capture | Match in the game |
 |---|---|---|
 | Canada Place | Start around the Howe Street / Canada Place approach. Frame the sails, lower hotel frontage and waterfront; use a street-level view. | **M → Canada Place** on foot. Use the broad entrance approach for the walking comparison. Summon the car at the street arrival for the driving insert. |
+| Gastown | Street View or your footage at Water Street and Cambie Street. Put the Steam Clock and a run of brick storefronts in frame. | **M → Gastown** on foot. Locate the clock, face down the same stretch of Water Street and match its position in frame before walking past. |
 | Cambie Bridge | A pedestrian-side view with False Creek and downtown visible. Choose a definite side of the bridge and facing direction. | Start with **M → Cambie Bridge** on foot. Find the same side and direction before recording. Compare the waterline and large skyline shapes, then begin the walk. |
 | Robson Square / Art Gallery | The Gallery entrance facing Robson Square, including columns, stairs and terrace. Use the same facade as the game, rather than the opposite side of the building. | **M → Robson Square** on foot places you in the Gallery forecourt. Frame the entrance, walk forward, then take a separate stairs/terrace shot. |
 
@@ -38,9 +40,11 @@ Read conversationally; leave room for engine noise, footsteps and the scenery. �
 
 **Canada Place and Robson:** Normal public walking, shooting and car controls were checked in the filming release. Follow the route notes below.
 
+**Gastown:** The game includes a Gastown destination and Steam Clock asset, but this script revision does not verify the final camera match or walking take. Confirm the clock, nearby storefronts and Water Street direction are recognizable before using the comparison. If the take is weak, omit it and give Canada Place and Robson the extra time; do not imply this section has received the same recent detail pass.
+
 **Cambie Bridge:** This is a new requested comparison. The exact bridge-side camera match and continuous walking take have not yet been checked for this filming sheet. Before recording, confirm the sidewalk is walkable, the character stays on the deck and the water/skyline direction agrees with the real reference. Do not label another waterfront view as Cambie Bridge.
 
-If that take does not work, replace 0:27–0:46 with a **second Canada Place angle**: real hotel/canopy frontage first, then its game counterpart. Get out of the car and walk toward the entrance. Replacement narration:
+If that take does not work, replace 0:39–0:54 with a **second Canada Place angle**: real hotel/canopy frontage first, then its game counterpart. Get out of the car and walk toward the entrance. Replacement narration:
 
 > “Here's another angle at Canada Place—the hotel, the street, and the waterfront approach. Real life first, then the game. I wanted to see whether Vancouver would still feel recognizable when you got out of the car.”
 
@@ -51,8 +55,9 @@ The title frames the challenge; it does not establish that the result equals GTA
 1. **Set up:** Choose **Settings → Atmosphere → Pacific daylight** and **Graphics → Balanced**. Start with **Explore on foot**. Use **C → Chase camera** or **Close camera** for third-person shots, with the HUD visible.
 2. **Canada Place drive:** While on foot, use **M → Canada Place**, then **V** at the arrival street to summon and enter the coupe. Tap **W** briefly to reach roughly 20–30 km/h, then coast. Brake with **Space** before the zebra crossing and raised waterfront apron; press **E** to get out.
 3. **Canada Place walk:** Use the broad entrance approach near that crosswalk for the sails view. The narrow path beneath the hotel columns ends at a railing and is not the route for this take.
-4. **Robson walk:** Use **M → Robson Square** on foot. Walk toward the Gallery entrance and record the stairs as a separate take. Pan gently across the planted terrace.
-5. **Action insert:** On foot, **1** equips the pistol, **right mouse** aims, **left mouse** fires, and **Q** holsters it. Use a clear background so the action reads.
+4. **Gastown walk:** Use **M → Gastown** on foot. Match the Steam Clock view at Water and Cambie, then record a short walk past it. Treat the exact shot as pending the recording check above.
+5. **Robson walk:** Use **M → Robson Square** on foot. Walk toward the Gallery entrance and record the stairs as a separate take. Pan gently across the planted terrace.
+6. **Action insert:** On foot, **1** equips the pistol, **right mouse** aims, **left mouse** fires, and **Q** holsters it. Use a clear background so the action reads.
 
 Record a few extra seconds at either end of each take. The 90-second timeline is the final edit, not total setup/travel time. The unfinished Ironworkers rebuild is outside this video route.
 
@@ -75,7 +80,7 @@ If the street is too crowded to summon a car, walk to an open stretch and press 
 
 ## YouTube description
 
-> I asked AI to help build a GTA-inspired game set in Vancouver. Here's the result, compared with real views of Canada Place, Cambie Bridge, and Robson Square with the Vancouver Art Gallery.
+> I asked AI to help build a GTA-inspired game set in Vancouver. Here's the result, compared with real views of Canada Place, Gastown, Cambie Bridge, and Robson Square with the Vancouver Art Gallery.
 >
 > Real Vancouver first, then ordinary third-person gameplay. You can walk, drive and try the weapons, all in your browser. This is an early prototype and there's plenty more work to do.
 >
@@ -85,4 +90,4 @@ If the street is too crowded to summon a car, walk to an open stretch and press 
 >
 > Rain City is an independent project, unaffiliated with Rockstar Games. GTA 6 is the inspiration, not the game being shown. Built with original work and licensed/open assets. Real-world imagery retains its source credits.
 
-If using the fallback take, remove Cambie Bridge from the description. Add links to the actual Street View captures or other real-world references used in the final edit. No real-life footage was captured as part of this script revision.
+Remove Gastown or Cambie Bridge from the description if its segment is omitted or replaced. Add links to the actual Street View captures or other real-world references used in the final edit. No real-life footage was captured as part of this script revision.
